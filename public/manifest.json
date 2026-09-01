@@ -1,0 +1,16 @@
+{
+  "name": "Travel Tracker & Expense Hub",
+  "short_name": "TravelTracker",
+  "description": "Itinerary Planner & AI Expense Tracker for Japan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09060f",
+  "theme_color": "#ec4899",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
