@@ -91,7 +91,36 @@ export default function TripDetailPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedAuthLink, setCopiedAuthLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+
+  const copyTripCode = () => {
+    if (typeof window !== 'undefined' && tripId) {
+      navigator.clipboard.writeText(tripId);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
+  const copyInviteLink = () => {
+    if (typeof window !== 'undefined' && tripId) {
+      const origin = window.location.origin;
+      const shareUrl = `${origin}/trips/${tripId}`;
+      navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  };
+
+  const copyAuthInviteLink = () => {
+    if (typeof window !== 'undefined' && tripId) {
+      const origin = window.location.origin;
+      const inviteUrl = `${origin}/login?invite=${tripId}`;
+      navigator.clipboard.writeText(inviteUrl);
+      setCopiedAuthLink(true);
+      setTimeout(() => setCopiedAuthLink(false), 2000);
+    }
+  };
 
   // Form states for Expense
   const [scannedData, setScannedData] = useState<any>({
@@ -562,21 +591,7 @@ export default function TripDetailPage() {
     if (!error) fetchTripData();
   };
 
-  // คัดลอกรหัสเชิญ / ลิงก์แชร์
-  const copyInviteLink = () => {
-    if (typeof window !== 'undefined') {
-      const url = `${window.location.origin}/trips/${tripId}`;
-      navigator.clipboard.writeText(url);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    }
-  };
 
-  const copyTripCode = () => {
-    navigator.clipboard.writeText(tripId);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2500);
-  };
 
   // ส่งออก Excel
   const exportToExcel = () => {
@@ -2639,29 +2654,71 @@ export default function TripDetailPage() {
 
       {/* 11. Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#130d22] p-6 shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink">
-            <div className="flex justify-between items-center mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 shadow-2xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#130d22] p-6 shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple animate-in zoom-in-95 duration-200 space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-purple-900/40">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-pink-500/25">
                   <Share2 className="h-5 w-5" />
                 </div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">แชร์ทริปนี้ให้เพื่อน ✈️</h2>
+                <div>
+                  <h2 className="text-base font-black text-slate-900 dark:text-white">แชร์ทริปนี้ให้เพื่อน ✈️</h2>
+                  <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+                    ส่งให้เพื่อนเพื่อร่วมวางแผนเที่ยวและบันทึกค่าใช้จ่าย
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-xs text-slate-600 dark:text-purple-300/70 mb-5 font-medium">
-              คัดลอกลิงก์หรือรหัสเชิญส่งให้เพื่อนในกลุ่มเพื่อร่วมวางแผนเที่ยวและดูรายจ่ายได้แบบ Real-time
-            </p>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
+              {/* 1. Direct Link */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/50 bg-slate-50/60 dark:bg-[#1c1328]/60 space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    🔗 ลิงก์ตรงเข้าหน้าทริป (Direct Link)
+                  </label>
+                  <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-100 dark:bg-pink-950 px-2 py-0.5 rounded-full">
+                    แนะนำ
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-purple-300/70">
+                  สำหรับเพื่อนที่มีบัญชีแล้ว หรือต้องการเปิดดูรายละเอียดทริปทันที
+                </p>
+                <button
+                  onClick={copyInviteLink}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  <span>{copiedLink ? 'คัดลอกลิงก์เรียบร้อยแล้ว!' : 'คัดลอกลิงก์ตรง (Direct Link)'}</span>
+                </button>
+              </div>
+
+              {/* 2. Register / Login & Auto-Join Link */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/50 bg-slate-50/60 dark:bg-[#1c1328]/60 space-y-2">
+                <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  👥 ลิงก์เชิญเพื่อนใหม่ (สมัครเสร็จแล้วเข้าทริปทันที)
+                </label>
+                <p className="text-[11px] text-slate-500 dark:text-purple-300/70">
+                  เพื่อนที่ยังไม่มีบัญชี กดลิงก์นี้เพื่อสมัครสมาชิกแล้วระบบจะดึงเข้ากลุ่มทริปนี้ให้อัตโนมัติ
+                </p>
+                <button
+                  onClick={copyAuthInviteLink}
+                  className="w-full py-2.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-white dark:bg-[#130d22] hover:border-pink-500 text-slate-800 dark:text-purple-200 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {copiedAuthLink ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-purple-500" />}
+                  <span>{copiedAuthLink ? 'คัดลอกลิงก์เชิญเรียบร้อยแล้ว!' : 'คัดลอกลิงก์เชิญสมาชิกใหม่'}</span>
+                </button>
+              </div>
+
+              {/* 3. Trip ID Code */}
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">รหัสเชิญ (Trip ID)</label>
+                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">รหัสเชิญประจำทริป (Trip ID)</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -2676,17 +2733,6 @@ export default function TripDetailPage() {
                     {copiedCode ? 'คัดลอกแล้ว' : 'คัดลอก'}
                   </button>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">ลิงก์แชร์ทริป (Direct Link)</label>
-                <button
-                  onClick={copyInviteLink}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  <span>{copiedLink ? 'คัดลอกลิงก์เรียบร้อยแล้ว!' : 'คัดลอกลิงก์แชร์ทริป'}</span>
-                </button>
               </div>
             </div>
           </div>
