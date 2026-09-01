@@ -277,6 +277,22 @@ export default function HomePage() {
   const userCat = getCatAvatar(profile?.avatar_id);
   const userDisplayName = profile?.display_name || user?.email?.split('@')[0] || 'นักเดินทาง';
 
+  const handleQuickLogout = async () => {
+    if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error('Signout error', err);
+      } finally {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {}
+        window.location.href = '/login';
+      }
+    }
+  };
+
   return (
     <div className="relative min-h-screen pb-20 bg-grid-pattern transition-colors duration-300">
       
@@ -301,7 +317,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Notification Bell */}
             <NotificationBell tripTitle="Travel Hub" />
 
@@ -326,6 +342,15 @@ export default function HomePage() {
               title="สลับโหมด มืด/สว่าง"
             >
               {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-600" />}
+            </button>
+
+            {/* Quick Logout Button */}
+            <button
+              onClick={handleQuickLogout}
+              className="p-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-500 hover:text-rose-600 dark:text-purple-300 dark:hover:text-rose-400 hover:border-rose-400 shadow-xs transition-all cursor-pointer"
+              title="ออกจากระบบ (Sign Out)"
+            >
+              <LogOut className="h-4 w-4" />
             </button>
           </div>
         </div>

@@ -38,7 +38,7 @@ import {
   Copy, Check, Image as ImageIcon, X, AlertCircle, 
   CheckCircle2, DollarSign, Calendar, ArrowUp, ArrowDown,
   PlusCircle, User, Wallet, Filter, Calculator, Navigation, 
-  Bot, Sliders, AlertTriangle, FileText, History, Wifi, WifiOff
+  Bot, Sliders, AlertTriangle, FileText, History, Wifi, WifiOff, LogOut
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -942,6 +942,31 @@ export default function TripDetailPage() {
             >
               {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-600" />}
             </button>
+
+            {/* Quick Logout Button */}
+            {currentUser && (
+              <button
+                onClick={async () => {
+                  if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+                    try {
+                      await supabase.auth.signOut();
+                    } catch (e) {
+                      console.error('Signout error', e);
+                    } finally {
+                      try {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                      } catch {}
+                      window.location.href = '/login';
+                    }
+                  }
+                }}
+                className="p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-500 hover:text-rose-600 dark:text-purple-300 dark:hover:text-rose-400 hover:border-rose-400 shadow-2xs transition-all cursor-pointer"
+                title="ออกจากระบบ (Sign Out)"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </nav>

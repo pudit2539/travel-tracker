@@ -151,10 +151,23 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     }
   };
 
+  const [loggingOut, setLoggingOut] = useState(false);
+
   const handleLogout = async () => {
     if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
-      await supabase.auth.signOut();
-      router.push('/login');
+      setLoggingOut(true);
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error('Sign out error:', err);
+      } finally {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {}
+        onClose();
+        window.location.href = '/login';
+      }
     }
   };
 
@@ -385,9 +398,18 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="w-full py-2.5 rounded-xl border border-rose-300 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    disabled={loggingOut}
+                    className="w-full py-2.5 rounded-xl border border-rose-300 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    <LogOut className="h-4 w-4" /> ออกจากระบบ (Sign Out)
+                    {loggingOut ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 className="h-4 w-4 animate-spin" /> กำลังออกจากระบบ...
+                      </span>
+                    ) : (
+                      <>
+                        <LogOut className="h-4 w-4" /> ออกจากระบบ (Sign Out)
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
