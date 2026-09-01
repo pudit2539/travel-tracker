@@ -9,7 +9,8 @@ import {
   Compass, Plus, Calendar, DollarSign, ArrowRight, 
   LogOut, Moon, Sun, PlaneTakeoff, Search, Edit3, 
   Trash2, Users, Sparkles, TrendingUp, AlertCircle, 
-  Share2, CheckCircle2, Loader2, X, User, Bell, Coins
+  Share2, CheckCircle2, Loader2, X, User, Bell, Coins, 
+  Check, ArrowUpRight, Shield, Globe2, KeyRound, Sparkle
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import ProfileModal from '@/components/ProfileModal';
@@ -35,6 +36,7 @@ export default function HomePage() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<any>(null);
+  const [createdTripSuccess, setCreatedTripSuccess] = useState<any>(null);
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState('');
@@ -104,34 +106,51 @@ export default function HomePage() {
     }
   };
 
-  // สร้างทริปใหม่
+  // สร้างทริปใหม่ พร้อม Popup แจ้งเตือนสวยงามและ Redirect อัตโนมัติ
   const handleCreateTrip = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
     setActionLoading(true);
-    const { data, error } = await supabase
-      .from('trips')
-      .insert([
-        {
-          name: formData.title.trim(),
-          total_budget: Number(formData.budget) || 0,
-          currency: formData.currency,
-          start_date: formData.startDate || null,
-          end_date: formData.endDate || null,
-          created_by: user?.id,
-        },
-      ])
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('trips')
+        .insert([
+          {
+            name: formData.title.trim(),
+            total_budget: Number(formData.budget) || 0,
+            currency: formData.currency,
+            start_date: formData.startDate || null,
+            end_date: formData.endDate || null,
+            created_by: user?.id,
+          },
+        ])
+        .select()
+        .single();
 
-    setActionLoading(false);
-    if (!error && data) {
-      setShowCreateModal(false);
-      resetForm();
-      router.push(`/trips/${data.id}`);
-    } else {
-      alert('เกิดข้อผิดพลาดในการสร้างทริป: ' + (error?.message || ''));
+      if (!error && data) {
+        // Update local state immediately
+        const newTripList = [data, ...trips];
+        setTrips(newTripList);
+        try {
+          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(newTripList));
+        } catch {}
+
+        setShowCreateModal(false);
+        resetForm();
+        setCreatedTripSuccess(data);
+
+        // Auto navigate after 1.5s
+        setTimeout(() => {
+          window.location.href = `/trips/${data.id}`;
+        }, 1500);
+      } else {
+        alert('เกิดข้อผิดพลาดในการสร้างทริป: ' + (error?.message || ''));
+      }
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -141,25 +160,42 @@ export default function HomePage() {
     if (!selectedTrip || !formData.title.trim()) return;
 
     setActionLoading(true);
-    const { error } = await supabase
-      .from('trips')
-      .update({
-        name: formData.title.trim(),
-        total_budget: Number(formData.budget) || 0,
-        currency: formData.currency,
-        start_date: formData.startDate || null,
-        end_date: formData.endDate || null,
-      })
-      .eq('id', selectedTrip.id);
+    try {
+      const { error } = await supabase
+        .from('trips')
+        .update({
+          name: formData.title.trim(),
+          total_budget: Number(formData.budget) || 0,
+          currency: formData.currency,
+          start_date: formData.startDate || null,
+          end_date: formData.endDate || null,
+        })
+        .eq('id', selectedTrip.id);
 
-    setActionLoading(false);
-    if (!error) {
-      setShowEditModal(false);
-      setSelectedTrip(null);
-      resetForm();
-      checkUserAndFetchTrips();
-    } else {
-      alert('เกิดข้อผิดพลาดในการแก้ไขทริป: ' + error.message);
+      if (!error) {
+        const updated = trips.map(t => t.id === selectedTrip.id ? {
+          ...t,
+          name: formData.title.trim(),
+          total_budget: Number(formData.budget) || 0,
+          currency: formData.currency,
+          start_date: formData.startDate || null,
+          end_date: formData.endDate || null,
+        } : t);
+        setTrips(updated);
+        try {
+          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(updated));
+        } catch {}
+
+        setShowEditModal(false);
+        setSelectedTrip(null);
+        resetForm();
+      } else {
+        alert('เกิดข้อผิดพลาดในการแก้ไขทริป: ' + error.message);
+      }
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -175,9 +211,13 @@ export default function HomePage() {
       const { error } = await supabase.from('trips').delete().eq('id', selectedTrip.id);
 
       if (!error) {
+        const updated = trips.filter(t => t.id !== selectedTrip.id);
+        setTrips(updated);
+        try {
+          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(updated));
+        } catch {}
         setShowDeleteModal(false);
         setSelectedTrip(null);
-        checkUserAndFetchTrips();
       } else {
         alert('เกิดข้อผิดพลาดในการลบทริป: ' + error.message);
       }
@@ -218,7 +258,7 @@ export default function HomePage() {
 
       setShowJoinModal(false);
       setJoinCode('');
-      router.push(`/trips/${code}`);
+      window.location.href = `/trips/${code}`;
     } catch (err: any) {
       setJoinError('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
@@ -237,7 +277,7 @@ export default function HomePage() {
     setSelectedTrip(t);
     setFormData({
       title: t.name || t.title || '',
-      budget: String(t.total_budget ?? t.budget ?? '100000'),
+      budget: String(t.total_budget ?? t.budget ?? 100000),
       currency: t.currency || 'JPY',
       startDate: t.start_date || '',
       endDate: t.end_date || '',
@@ -370,53 +410,58 @@ export default function HomePage() {
                 <h1 className="text-lg md:text-xl font-black text-slate-900 dark:text-white">
                   สวัสดี, {userDisplayName}! ✈️
                 </h1>
-                <p className="text-xs text-slate-600 dark:text-purple-200/80 font-medium">
+                <p className="text-xs text-slate-600 dark:text-purple-300/80 font-medium">
                   จัดการแผนเที่ยว สแกนใบเสร็จด้วย AI และติดตามงบประมาณทริปของคุณ
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-200/70 dark:border-purple-900/40">
+            <div className="grid grid-cols-2 gap-4 mt-5 pt-4 border-t border-purple-200/60 dark:border-purple-900/40">
               <div>
-                <span className="text-[11px] font-bold text-slate-500 dark:text-purple-300/70 block">ทริปทั้งหมด</span>
-                <span className="text-2xl font-black text-slate-900 dark:text-purple-100">{trips.length} ทริป</span>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-purple-300/70">ทริปทั้งหมด</div>
+                <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+                  {trips.length} <span className="text-sm font-bold text-pink-600 dark:text-pink-400">ทริป</span>
+                </div>
               </div>
+
               <div>
-                <span className="text-[11px] font-bold text-slate-500 dark:text-purple-300/70 block">งบประมาณรวมทุกทริป</span>
-                <span className="text-2xl font-black bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 bg-clip-text text-transparent">
-                  {totalCombinedBudget.toLocaleString()} <span className="text-sm font-semibold text-slate-500 dark:text-purple-400">JPY</span>
-                </span>
-                <span className="text-[10px] font-extrabold text-pink-600 dark:text-pink-400 block">
+                <div className="text-[11px] font-bold text-slate-500 dark:text-purple-300/70">งบประมาณรวมทุกทริป</div>
+                <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+                  {totalCombinedBudget.toLocaleString()} <span className="text-sm font-bold text-pink-600 dark:text-pink-400">JPY</span>
+                </div>
+                <div className="text-[10px] text-slate-400 dark:text-purple-400 font-medium">
                   ≈ ฿{Math.round(totalCombinedBudget * fxRate).toLocaleString()}
-                </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-purple-800/50 bg-white/95 dark:bg-[#130d22]/95 backdrop-blur-xl card-elevation flex flex-col justify-between space-y-3">
+          <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation flex flex-col justify-between space-y-4">
             <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-900 shadow-2xs">
-                  100 JPY = {(fxRate * 100).toFixed(2)} THB
-                </span>
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-900 mb-2">
+                100 JPY = {(fxRate * 100).toFixed(2)} THB
               </div>
-              <h3 className="font-black text-sm text-slate-900 dark:text-white">Smart Travel Tools</h3>
-              <p className="text-xs text-slate-600 dark:text-purple-300/70 mt-1 font-medium leading-relaxed">
+              <h3 className="font-black text-sm text-slate-900 dark:text-white">
+                Smart Travel Tools
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-purple-300/70 mt-1 font-medium">
                 พยากรณ์อากาศสด, เส้นทางท่องเที่ยว และระบบเคลียร์บิลหารเงินอัตโนมัติ
               </p>
             </div>
+
             <button
               onClick={() => setShowJoinModal(true)}
-              className="w-full py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-800 dark:text-purple-200 hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-[1.02] transition-all cursor-pointer bg-slate-50/50 dark:bg-purple-950/20"
+              className="w-full py-2.5 px-4 rounded-2xl border border-purple-300 dark:border-purple-800 bg-purple-50/60 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-bold text-xs hover:border-pink-500 hover:scale-[1.02] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
             >
-              🔑 เข้าร่วมด้วยรหัสเชิญ
+              <KeyRound className="h-3.5 w-3.5 text-pink-500" />
+              <span>เข้าร่วมด้วยรหัสเชิญ</span>
             </button>
           </div>
         </div>
 
-        {/* ==================== ACTION & SEARCH BAR ==================== */}
+        {/* ==================== ACTION BAR & SEARCH ==================== */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-md">
+          <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-purple-400" />
             <input
               type="text"
@@ -439,7 +484,7 @@ export default function HomePage() {
         </div>
 
         {/* ==================== TRIP CARDS LIST ==================== */}
-        {loading ? (
+        {loading && trips.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
             <span className="text-xs font-bold text-slate-500 dark:text-purple-400">กำลังโหลดรายการทริป...</span>
@@ -465,10 +510,10 @@ export default function HomePage() {
               const tripBudget = Number(t.total_budget ?? t.budget ?? 0);
 
               return (
-                <div
+                <Link
                   key={t.id}
-                  onClick={() => router.push(`/trips/${t.id}`)}
-                  className="group relative p-5 rounded-3xl border border-slate-200/90 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation hover:-translate-y-1.5 hover:border-pink-500/60 dark:hover:border-pink-500/60 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                  href={`/trips/${t.id}`}
+                  className="group relative p-5 rounded-3xl border border-slate-200/90 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation hover:-translate-y-1.5 hover:border-pink-500/60 dark:hover:border-pink-500/60 transition-all duration-300 cursor-pointer flex flex-col justify-between block"
                 >
                   <div>
                     <div className="flex justify-between items-start gap-2 mb-3">
@@ -478,6 +523,7 @@ export default function HomePage() {
                       
                       <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                         <button
+                          type="button"
                           onClick={(e) => openEditModal(t, e)}
                           className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-purple-900/60 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 transition-colors cursor-pointer"
                           title="แก้ไขทริป"
@@ -485,6 +531,7 @@ export default function HomePage() {
                           <Edit3 className="h-3.5 w-3.5" />
                         </button>
                         <button
+                          type="button"
                           onClick={(e) => openDeleteModal(t, e)}
                           className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/60 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
                           title="ลบทริป"
@@ -514,7 +561,7 @@ export default function HomePage() {
                     <span>เปิดดูแผนเที่ยว</span>
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1.5 transition-transform duration-300" />
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -530,97 +577,160 @@ export default function HomePage() {
         onProfileUpdated={(updated) => setProfile((prev: any) => ({ ...prev, ...updated }))}
       />
 
-      {/* ==================== CREATE TRIP MODAL ==================== */}
+      {/* ==================== CREATE TRIP MODAL (BEAUTIFIED) ==================== */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
-              <h2 className="text-base font-black text-slate-900 dark:text-white">
-                สร้างทริปใหม่ ✈️
-              </h2>
-              <button onClick={() => setShowCreateModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            
+            {/* Modal Header */}
+            <div className="p-6 pb-4 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-md shadow-pink-500/25">
+                  ✈️
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-slate-900 dark:text-white">
+                    สร้างทริปท่องเที่ยวใหม่ 🎌
+                  </h2>
+                  <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+                    กำหนดชื่อทริป, งบประมาณ และช่วงเวลาเดินทาง
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowCreateModal(false)} 
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateTrip} className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-3.5">
+            {/* Modal Body Form */}
+            <form onSubmit={handleCreateTrip} className="p-6 pt-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">ชื่อทริป *</label>
+                <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">
+                  ชื่อทริปท่องเที่ยว *
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น Japan Osaka Trip (04-15 Dec 2026)"
-                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                  placeholder="เช่น Japan Osaka & Tokyo Trip (04-15 Dec 2026)"
+                  className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold shadow-2xs"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Budget & Currency */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">งบประมาณ</label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="100000"
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
-                    value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                  />
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">
+                    งบประมาณรวมทริป
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      required
+                      placeholder="100000"
+                      className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-black shadow-2xs"
+                      value={formData.budget}
+                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      {formData.currency}
+                    </span>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">สกุลเงินหลัก</label>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">
+                    สกุลเงินหลัก
+                  </label>
                   <select
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold shadow-2xs cursor-pointer"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   >
-                    <option value="JPY">JPY (¥)</option>
-                    <option value="THB">THB (฿)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="KRW">KRW (₩)</option>
-                    <option value="GBP">GBP (£)</option>
-                    <option value="SGD">SGD (S$)</option>
+                    <option value="JPY">🇯🇵 JPY (เยนญี่ปุ่น - ¥)</option>
+                    <option value="THB">🇹🇭 THB (บาทไทย - ฿)</option>
+                    <option value="USD">🇺🇸 USD (ดอลลาร์สหรัฐ - $)</option>
+                    <option value="EUR">🇪🇺 EUR (ยูโร - €)</option>
+                    <option value="KRW">🇰🇷 KRW (วอนเกาหลี - ₩)</option>
+                    <option value="GBP">🇬🇧 GBP (ปอนด์อังกฤษ - £)</option>
+                    <option value="SGD">🇸🇬 SGD (ดอลลาร์สิงคโปร์ - S$)</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Quick Preset Buttons */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-bold text-slate-400 mr-1">งบแนะนำ:</span>
+                {['50000', '100000', '200000', '300000'].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, budget: preset })}
+                    className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+                      formData.budget === preset
+                        ? 'bg-pink-500 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-purple-950/60 text-slate-600 dark:text-purple-300 hover:bg-slate-200'
+                    }`}
+                  >
+                    {Number(preset).toLocaleString()} {formData.currency}
+                  </button>
+                ))}
+              </div>
+
+              {/* Travel Dates */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">วันเริ่มเดินทาง</label>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">
+                    วันเริ่มเดินทาง (Start Date)
+                  </label>
                   <input
                     type="date"
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500"
+                    className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 shadow-2xs font-medium"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">วันเดินทางกลับ</label>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">
+                    วันเดินทางกลับ (End Date)
+                  </label>
                   <input
                     type="date"
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500"
+                    className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 shadow-2xs font-medium"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-3">
+              {/* Action Buttons */}
+              <div className="flex gap-2.5 pt-3 border-t border-slate-100 dark:border-purple-900/40">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 cursor-pointer"
+                  className="flex-1 py-3 rounded-2xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer hover:scale-[1.02]"
+                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {actionLoading ? 'กำลังสร้าง...' : 'สร้างทริป'}
+                  {actionLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> กำลังสร้างทริป...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" /> สร้างทริปเลย
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -628,93 +738,148 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* ==================== CREATE SUCCESS MODAL TOAST ==================== */}
+      {createdTripSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-pink-500/50 glow-pink-purple p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 text-white text-3xl flex items-center justify-center mx-auto shadow-lg shadow-pink-500/30 animate-bounce">
+              🎉
+            </div>
+
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-pink-600 dark:text-pink-400 bg-pink-100 dark:bg-pink-950/80 px-2.5 py-0.5 rounded-full border border-pink-200 dark:border-pink-900">
+                Created Successfully
+              </span>
+              <h3 className="text-base font-black text-slate-900 dark:text-white mt-2">
+                สร้างทริปสำเร็จเรียบร้อยแล้ว! ✈️
+              </h3>
+              <p className="text-xs font-bold text-purple-600 dark:text-purple-400 mt-1 line-clamp-1">
+                {createdTripSuccess.name}
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-purple-950/40 border border-slate-200 dark:border-purple-900/40 text-xs font-medium text-slate-600 dark:text-purple-300">
+              กำลังนำคุณเข้าสู่หน้าแผนการเดินทาง...
+              <div className="w-full bg-slate-200 dark:bg-purple-950 rounded-full h-1.5 overflow-hidden mt-2">
+                <div className="h-full bg-gradient-to-r from-pink-500 to-purple-600 rounded-full animate-pulse w-full" />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = `/trips/${createdTripSuccess.id}`;
+              }}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:scale-105 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <span>เข้าสู่หน้าทริปทันที</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ==================== EDIT TRIP MODAL ==================== */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-purple max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
-              <h2 className="text-base font-black text-slate-900 dark:text-white">
-                แก้ไขรายละเอียดทริป ✏️
-              </h2>
-              <button onClick={() => setShowEditModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 pb-4 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-md shadow-pink-500/25">
+                  ✏️
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-slate-900 dark:text-white">
+                    แก้ไขรายละเอียดทริป
+                  </h2>
+                  <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+                    ปรับปรุงชื่อทริป, งบประมาณ และช่วงเวลาเดินทาง
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowEditModal(false)} 
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateTrip} className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-3.5">
+            <form onSubmit={handleUpdateTrip} className="p-6 pt-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">ชื่อทริป *</label>
+                <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">ชื่อทริป *</label>
                 <input
                   type="text"
                   required
-                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                  className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold shadow-2xs"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">งบประมาณ</label>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">งบประมาณ</label>
                   <input
                     type="number"
                     required
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-black shadow-2xs"
                     value={formData.budget}
                     onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">สกุลเงินหลัก</label>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">สกุลเงินหลัก</label>
                   <select
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold shadow-2xs cursor-pointer"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   >
-                    <option value="JPY">JPY (¥)</option>
-                    <option value="THB">THB (฿)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="KRW">KRW (₩)</option>
-                    <option value="GBP">GBP (£)</option>
-                    <option value="SGD">SGD (S$)</option>
+                    <option value="JPY">🇯🇵 JPY (¥)</option>
+                    <option value="THB">🇹🇭 THB (฿)</option>
+                    <option value="USD">🇺🇸 USD ($)</option>
+                    <option value="EUR">🇪🇺 EUR (€)</option>
+                    <option value="KRW">🇰🇷 KRW (₩)</option>
+                    <option value="GBP">🇬🇧 GBP (£)</option>
+                    <option value="SGD">🇸🇬 SGD (S$)</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">วันเริ่มเดินทาง</label>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">วันเริ่มเดินทาง</label>
                   <input
                     type="date"
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500"
+                    className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 shadow-2xs font-medium"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">วันเดินทางกลับ</label>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">วันเดินทางกลับ</label>
                   <input
                     type="date"
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500"
+                    className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 shadow-2xs font-medium"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-3">
+              <div className="flex gap-2.5 pt-3 border-t border-slate-100 dark:border-purple-900/40">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 cursor-pointer"
+                  className="flex-1 py-3 rounded-2xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer hover:scale-[1.02]"
+                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
                 </button>
@@ -724,25 +889,106 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ==================== DELETE CONFIRMATION MODAL ==================== */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#130d22] p-6 shadow-2xl border border-rose-200 dark:border-rose-900/60">
-            <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3">
-              <Trash2 className="h-5 w-5" />
+      {/* ==================== JOIN TRIP MODAL ==================== */}
+      {showJoinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-purple-500/40 glow-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 pb-4 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-md shadow-pink-500/25">
+                  🔑
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-slate-900 dark:text-white">
+                    เข้าร่วมทริปท่องเที่ยว 👥
+                  </h2>
+                  <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+                    ใส่รหัสเชิญ (Trip ID) ที่เพื่อนแชร์ให้คุณ
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowJoinModal(false)} 
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <h2 className="text-base font-black text-slate-900 dark:text-white mb-1">
-              ยืนยันการลบทริป?
-            </h2>
-            <p className="text-xs text-slate-600 dark:text-purple-300/70 mb-5 font-medium">
-              คุณต้องการลบทริป <b className="text-rose-500">"{selectedTrip?.name || selectedTrip?.title}"</b> ใช่หรือไม่? ข้อมูลแผนเที่ยวและรายจ่ายทั้งหมดจะถูกลบอย่างถาวร
-            </p>
 
-            <div className="flex gap-2">
+            <form onSubmit={handleJoinTrip} className="p-6 pt-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">
+                  รหัสเชิญเข้าร่วมทริป (Trip ID) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="เช่น 123e4567-e89b-12d3-a456-426614174000"
+                  className="w-full p-3 rounded-2xl border border-slate-300 dark:border-purple-800 bg-slate-50/60 dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-mono shadow-2xs"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value)}
+                />
+              </div>
+
+              {joinError && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-1.5 border border-rose-200 dark:border-rose-900">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{joinError}</span>
+                </div>
+              )}
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowJoinModal(false)}
+                  className="flex-1 py-3 rounded-2xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={joinLoading}
+                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {joinLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> กำลังตรวจสอบ...
+                    </>
+                  ) : (
+                    <>
+                      <Users className="h-4 w-4" /> เข้าร่วมทริป
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== DELETE TRIP MODAL ==================== */}
+      {showDeleteModal && selectedTrip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-rose-500/40 glow-rose p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto shadow-md">
+              <Trash2 className="h-7 w-7" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
+                ยืนยันการลบทริปนี้?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-purple-300/80 mt-1 font-medium">
+                คุณต้องการลบทริป <b className="text-rose-600 dark:text-rose-400 font-bold">&quot;{selectedTrip.name || selectedTrip.title}&quot;</b> ใช่หรือไม่? ข้อมูลแผนเที่ยวและรายจ่ายทั้งหมดจะถูกลบถาวร
+              </p>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 cursor-pointer"
+                className="flex-1 py-3 rounded-2xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
               >
                 ยกเลิก
               </button>
@@ -750,67 +996,11 @@ export default function HomePage() {
                 type="button"
                 onClick={handleDeleteTrip}
                 disabled={actionLoading}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/25 transition-all disabled:opacity-50 cursor-pointer"
+                className="flex-1 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
               >
-                {actionLoading ? 'กำลังลบ...' : 'ยืนยันการลบ'}
+                {actionLoading ? 'กำลังลบ...' : 'ลบทริปถาวร'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==================== JOIN TRIP MODAL ==================== */}
-      {showJoinModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#130d22] p-6 shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-purple">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-base font-black text-slate-900 dark:text-white">
-                เข้าร่วมทริปด้วยรหัสเชิญ 🔑
-              </h2>
-              <button onClick={() => setShowJoinModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-purple-300/70 mb-4 font-medium">
-              นำ Trip ID ที่เพื่อนส่งให้มากรอก เพื่อเข้าถึงแผนเที่ยวและบันทึกรายจ่ายร่วมกัน
-            </p>
-
-            <form onSubmit={handleJoinTrip} className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">รหัสเชิญ (Trip ID)</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="เช่น d1a42b10-86c4-..."
-                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs font-mono outline-none focus:border-pink-500"
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value)}
-                />
-              </div>
-
-              {joinError && (
-                <div className="text-xs font-bold text-rose-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" /> {joinError}
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowJoinModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 cursor-pointer"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  disabled={joinLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer hover:scale-[1.02]"
-                >
-                  {joinLoading ? 'กำลังตรวจสอบ...' : 'เข้าร่วมทริป'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
