@@ -21,9 +21,14 @@ export interface CategoryBudgetMap {
   [categoryId: string]: number;
 }
 
+export interface MemberBudgetMap {
+  [memberIdOrName: string]: number;
+}
+
 // Key format helpers
 const CUSTOM_CAT_KEY = (tripId: string) => `travel_tracker_custom_categories_${tripId}`;
 const CAT_BUDGET_KEY = (tripId: string) => `travel_tracker_cat_budgets_${tripId}`;
+const MEMBER_BUDGET_KEY = (tripId: string) => `travel_tracker_member_budgets_${tripId}`;
 
 export function getTripCategories(tripId: string): CategoryItem[] {
   if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
@@ -87,6 +92,26 @@ export function saveCategoryBudgets(tripId: string, budgets: CategoryBudgetMap) 
     localStorage.setItem(CAT_BUDGET_KEY(tripId), JSON.stringify(budgets));
   } catch (e) {
     console.error('Failed to save category budgets', e);
+  }
+}
+
+export function getMemberBudgets(tripId: string): MemberBudgetMap {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(MEMBER_BUDGET_KEY(tripId));
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+export function saveMemberBudgets(tripId: string, budgets: MemberBudgetMap) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(MEMBER_BUDGET_KEY(tripId), JSON.stringify(budgets));
+  } catch (e) {
+    console.error('Failed to save member budgets', e);
   }
 }
 

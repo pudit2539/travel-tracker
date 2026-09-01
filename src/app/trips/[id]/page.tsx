@@ -23,8 +23,10 @@ import { getCustomJpyToThbRate, formatCurrencyWithThb } from '@/lib/currency';
 import { 
   CategoryItem, 
   CategoryBudgetMap, 
+  MemberBudgetMap, 
   getTripCategories, 
   getCategoryBudgets, 
+  getMemberBudgets, 
   getCategoryMeta 
 } from '@/lib/categories';
 import { getTripPhotos } from '@/lib/photos';
@@ -57,9 +59,11 @@ export default function TripDetailPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetMap>({});
+  const [memberBudgets, setMemberBudgets] = useState<MemberBudgetMap>({});
   const [photosCount, setPhotosCount] = useState<number>(0);
   
   const [activeTab, setActiveTab] = useState<'plan' | 'expenses' | 'analytics' | 'members'>('plan');
+  const [heroBudgetView, setHeroBudgetView] = useState<'all' | 'me' | string>('all');
   const [loading, setLoading] = useState(true);
   const [reordering, setReordering] = useState(false);
   const [fxRate, setFxRate] = useState<number>(0.235);
@@ -125,9 +129,11 @@ export default function TripDetailPage() {
       // Load Categories & Budgets & Photos
       const cats = getTripCategories(tripId);
       const cBudgets = getCategoryBudgets(tripId);
+      const mBudgets = getMemberBudgets(tripId);
       const tripPhotos = getTripPhotos(tripId);
       setCategories(cats);
       setCategoryBudgets(cBudgets);
+      setMemberBudgets(mBudgets);
       setPhotosCount(tripPhotos.length);
 
       // Check if Offline
@@ -588,14 +594,74 @@ export default function TripDetailPage() {
     return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
   }, [expenses]);
 
-  const budgetProgress = useMemo(() => {
-    const b = (trip?.total_budget ?? trip?.budget ?? 0);
-    if (!b || b === 0) return 0;
-    return Math.min(Math.round((totalSpent / b) * 100), 100);
-  }, [totalSpent, trip]);
-
   const userDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
   const userCat = getCatAvatar(userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id);
+
+  // Dynamic Hero Card Data (All vs Me vs Specific Friend)
+  const heroDisplayData = useMemo(() => {
+    // 1. View: รวมทุกคน (All Members)
+    if (heroBudgetView === 'all') {
+      const targetBudget = Number(trip?.total_budget ?? trip?.budget ?? 0);
+      const spent = totalSpent;
+      const progress = targetBudget > 0 ? Math.min(Math.round((spent / targetBudget) * 100), 100) : 0;
+      const isOver = targetBudget > 0 && spent > targetBudget;
+      return {
+        viewType: 'all',
+        title: 'ยอดค่าใช้จ่ายรวมทุกคน (Total Spent)',
+        budgetLabel: 'งบประมาณรวมทริป',
+        spent,
+        targetBudget,
+        progress,
+        isOver,
+        diff: spent - targetBudget,
+      };
+    }
+
+    // 2. View: ของฉัน (My Expenses & Personal Budget)
+    if (heroBudgetView === 'me') {
+      const mySpent = expenses
+        .filter((e) => (e.payer_id && e.payer_id === currentUser?.id) || (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase()))
+        .reduce((a, b) => a + Number(b.amount || 0), 0);
+
+      const targetBudget = memberBudgets['me'] || 0;
+      const progress = targetBudget > 0 ? Math.min(Math.round((mySpent / targetBudget) * 100), 100) : 0;
+      const isOver = targetBudget > 0 && mySpent > targetBudget;
+      return {
+        viewType: 'me',
+        title: `ยอดค่าใช้จ่ายของฉัน (${userDisplayName})`,
+        budgetLabel: 'งบส่วนตัวของฉัน',
+        spent: mySpent,
+        targetBudget,
+        progress,
+        isOver,
+        diff: mySpent - targetBudget,
+      };
+    }
+
+    // 3. View: เฉพาะเพื่อนรายคน
+    const targetMember = members.find((m) => (m.user_id || m.id) === heroBudgetView || m.profiles?.display_name === heroBudgetView);
+    const targetName = targetMember?.profiles?.display_name || targetMember?.profiles?.email?.split('@')[0] || 'เพื่อนในกลุ่ม';
+    const targetKey = targetMember?.user_id || targetMember?.id || heroBudgetView;
+
+    const memberSpent = expenses
+      .filter((e) => e.payer_id === targetKey || (e.payer_name && e.payer_name.toLowerCase() === targetName.toLowerCase()))
+      .reduce((a, b) => a + Number(b.amount || 0), 0);
+
+    const targetBudget = memberBudgets[targetKey] || 0;
+    const progress = targetBudget > 0 ? Math.min(Math.round((memberSpent / targetBudget) * 100), 100) : 0;
+    const isOver = targetBudget > 0 && memberSpent > targetBudget;
+
+    return {
+      viewType: 'friend',
+      title: `ยอดค่าใช้จ่ายของ ${targetName}`,
+      budgetLabel: `งบส่วนตัวของ ${targetName}`,
+      spent: memberSpent,
+      targetBudget,
+      progress,
+      isOver,
+      diff: memberSpent - targetBudget,
+    };
+  }, [heroBudgetView, trip, totalSpent, expenses, currentUser, userDisplayName, memberBudgets, members]);
 
   // RBAC Roles & Permissions
   const isOwner = useMemo(() => {
@@ -917,12 +983,70 @@ export default function TripDetailPage() {
                 </button>
               </div>
 
+              {/* Segmented View Switcher: All vs Me vs Specific Friend */}
+              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/90 dark:bg-[#1c1328]/90 border border-slate-200 dark:border-purple-900/50 rounded-2xl w-fit shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setHeroBudgetView('all')}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    heroBudgetView === 'all'
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                      : 'text-slate-600 dark:text-purple-300 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  👥 รวมทุกคน
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setHeroBudgetView('me')}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    heroBudgetView === 'me'
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                      : 'text-slate-600 dark:text-purple-300 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  👤 ของฉัน ({userDisplayName})
+                </button>
+
+                {members.length > 0 && (
+                  <select
+                    value={heroBudgetView !== 'all' && heroBudgetView !== 'me' ? heroBudgetView : ''}
+                    onChange={(e) => {
+                      if (e.target.value) setHeroBudgetView(e.target.value);
+                    }}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold outline-none cursor-pointer transition-all ${
+                      heroBudgetView !== 'all' && heroBudgetView !== 'me'
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-purple-300 bg-transparent hover:text-slate-900'
+                    }`}
+                  >
+                    <option value="" disabled className="text-slate-900 dark:text-white">เพื่อนในทริป...</option>
+                    {members.map((m) => {
+                      const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
+                      return (
+                        <option key={m.id} value={m.user_id || m.id} className="text-slate-900 dark:text-white">
+                          👤 {mName}
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+              </div>
+
               <div>
-                <div className="text-xs font-bold text-slate-500 dark:text-purple-300/70">ยอดค่าใช้จ่ายรวมทุกคน</div>
-                <div className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-                  {totalSpent.toLocaleString()} <span className="text-lg md:text-xl font-bold text-pink-600 dark:text-pink-400">{trip?.currency || 'JPY'}</span>
+                <div className="text-xs font-bold text-slate-500 dark:text-purple-300/70 flex items-center justify-between">
+                  <span>{heroDisplayData.title}</span>
+                  {heroDisplayData.isOver && (
+                    <span className="text-[11px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
+                      ⚠️ เกินงบ +{heroDisplayData.diff.toLocaleString()} {trip?.currency}
+                    </span>
+                  )}
+                </div>
+                <div className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mt-0.5">
+                  {heroDisplayData.spent.toLocaleString()} <span className="text-lg md:text-xl font-bold text-pink-600 dark:text-pink-400">{trip?.currency || 'JPY'}</span>
                   <span className="text-sm md:text-base font-bold text-slate-500 dark:text-purple-400 block sm:inline sm:ml-2">
-                    (≈ ฿{Math.round(totalSpent * fxRate).toLocaleString()})
+                    (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
                   </span>
                 </div>
               </div>
@@ -930,13 +1054,17 @@ export default function TripDetailPage() {
               {/* Progress Bar with Shimmer */}
               <div className="space-y-1.5 pt-1">
                 <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-purple-200">
-                  <span>ใช้ไปแล้ว {budgetProgress}%</span>
+                  <span>
+                    {heroDisplayData.targetBudget > 0 
+                      ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
+                      : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
+                  </span>
                   <span className="flex items-center gap-1">
-                    งบประมาณ {Number((trip?.total_budget ?? trip?.budget ?? 0)).toLocaleString()} {trip?.currency || 'JPY'}
+                    {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? `${heroDisplayData.targetBudget.toLocaleString()} ${trip?.currency || 'JPY'}` : 'ไม่ระบุ'}
                     <button
                       onClick={() => setShowBudgetCategoryModal(true)}
                       className="p-1 text-slate-400 hover:text-pink-500 transition-colors cursor-pointer"
-                      title="แก้ไขงบประมาณ"
+                      title="ตั้งค่าเป้าหมายงบประมาณ"
                     >
                       <Edit3 className="h-3 w-3" />
                     </button>
@@ -945,11 +1073,11 @@ export default function TripDetailPage() {
                 <div className="w-full bg-slate-200/80 dark:bg-purple-950/80 rounded-full h-3.5 overflow-hidden p-0.5 shadow-inner">
                   <div 
                     className={`h-full rounded-full transition-all duration-700 ${
-                      totalSpent > (trip?.total_budget ?? trip?.budget ?? 0) && (trip?.total_budget ?? trip?.budget ?? 0) > 0
-                        ? 'bg-gradient-to-r from-rose-500 to-pink-600' 
+                      heroDisplayData.isOver
+                        ? 'bg-gradient-to-r from-rose-500 to-red-600' 
                         : 'shimmer-gradient'
                     }`}
-                    style={{ width: `${Math.min(budgetProgress, 100)}%` }}
+                    style={{ width: `${Math.min(heroDisplayData.progress, 100)}%` }}
                   />
                 </div>
               </div>
@@ -1894,6 +2022,9 @@ export default function TripDetailPage() {
         onClose={() => setShowBudgetCategoryModal(false)}
         trip={trip}
         expenses={expenses}
+        members={members}
+        currentUser={currentUser}
+        userDisplayName={userDisplayName}
         fxRate={fxRate}
         onUpdated={fetchTripData}
         onOpenRollback={() => setShowRollbackModal(true)}
