@@ -122,6 +122,27 @@ export default function TripDetailPage() {
 
   const fetchTripData = useCallback(async () => {
     if (!tripId) return;
+    
+    // 1. Load immediate local cache to display content instantaneously
+    try {
+      const offlineCached = getOfflineTripCache();
+      if (offlineCached?.data) {
+        if (offlineCached.data.trip) setTrip(offlineCached.data.trip);
+        if (offlineCached.data.itinerary) setItinerary(offlineCached.data.itinerary);
+        if (offlineCached.data.expenses) setExpenses(offlineCached.data.expenses);
+      } else {
+        const homeCache = localStorage.getItem('travel_tracker_home_trips_cache');
+        if (homeCache) {
+          const list = JSON.parse(homeCache);
+          const found = list.find((t: any) => t.id === tripId);
+          if (found) {
+            setTrip(found);
+            setScannedData((prev: any) => ({ ...prev, currency: found.currency || 'JPY' }));
+          }
+        }
+      }
+    } catch {}
+
     setLoading(true);
     try {
       setFxRate(getCustomJpyToThbRate());
@@ -138,26 +159,24 @@ export default function TripDetailPage() {
 
       // Check if Offline
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        const cached = getOfflineTripCache();
-        if (cached?.data) {
-          if (cached.data.trip) setTrip(cached.data.trip);
-          if (cached.data.itinerary) setItinerary(cached.data.itinerary);
-          if (cached.data.expenses) setExpenses(cached.data.expenses);
-          setLoading(false);
-          return;
-        }
+        setLoading(false);
+        return;
       }
 
-      // 0. ดึง session และโปรไฟล์ปัจจุบัน
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setCurrentUser(session.user);
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        if (prof) setUserProfile(prof);
+      // 0. ดึง session และโปรไฟล์ปัจจุบันอย่างปลอดภัย
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setCurrentUser(session.user);
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          if (prof) setUserProfile(prof);
+        }
+      } catch (e) {
+        console.warn('Session profile fetch warn:', e);
       }
 
       // 1. ดึงข้อมูลทริป
@@ -165,7 +184,8 @@ export default function TripDetailPage() {
         .from('trips')
         .select('*')
         .eq('id', tripId)
-        .single();
+        .maybeSingle();
+
       if (tripData) {
         setTrip(tripData);
         setScannedData((prev: any) => ({ ...prev, currency: tripData.currency || 'JPY' }));
@@ -188,15 +208,29 @@ export default function TripDetailPage() {
       if (expData) setExpenses(expData);
 
       // 4. ดึงรายชื่อสมาชิกทริป
-      const { data: memberData } = await supabase
-        .from('trip_members')
-        .select('*, profiles(*)')
-        .eq('trip_id', tripId);
-      if (memberData) setMembers(memberData);
+      try {
+        const { data: memberData, error: memErr } = await supabase
+          .from('trip_members')
+          .select('*, profiles(*)')
+          .eq('trip_id', tripId);
+        
+        if (memberData && !memErr) {
+          setMembers(memberData);
+        } else {
+          // Fallback to simple select if join fails
+          const { data: simpleMembers } = await supabase
+            .from('trip_members')
+            .select('*')
+            .eq('trip_id', tripId);
+          if (simpleMembers) setMembers(simpleMembers);
+        }
+      } catch (memE) {
+        console.warn('Trip members fetch warn:', memE);
+      }
 
       // Cache offline
       cacheTripOffline({
-        trip: tripData,
+        trip: tripData || trip,
         itinerary: planData || [],
         expenses: expData || [],
         categories: cats,
@@ -205,17 +239,10 @@ export default function TripDetailPage() {
 
     } catch (err) {
       console.error('Fetch error:', err);
-      // Try fallback from offline cache
-      const cached = getOfflineTripCache();
-      if (cached?.data) {
-        if (cached.data.trip) setTrip(cached.data.trip);
-        if (cached.data.itinerary) setItinerary(cached.data.itinerary);
-        if (cached.data.expenses) setExpenses(cached.data.expenses);
-      }
     } finally {
       setLoading(false);
     }
-  }, [tripId, cacheTripOffline, getOfflineTripCache]);
+  }, [tripId, cacheTripOffline, getOfflineTripCache, trip]);
 
   useEffect(() => {
     fetchTripData();

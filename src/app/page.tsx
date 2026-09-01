@@ -123,12 +123,26 @@ export default function HomePage() {
             start_date: formData.startDate || null,
             end_date: formData.endDate || null,
             created_by: user?.id,
+            user_id: user?.id,
           },
         ])
         .select()
         .single();
 
       if (!error && data) {
+        // Auto add creator to trip_members
+        if (user?.id) {
+          try {
+            await supabase.from('trip_members').insert([
+              {
+                trip_id: data.id,
+                user_id: user.id,
+                role: 'owner',
+              },
+            ]);
+          } catch {}
+        }
+
         // Update local state immediately
         const newTripList = [data, ...trips];
         setTrips(newTripList);
@@ -140,10 +154,10 @@ export default function HomePage() {
         resetForm();
         setCreatedTripSuccess(data);
 
-        // Auto navigate after 1.5s
+        // Auto navigate after 1s
         setTimeout(() => {
           window.location.href = `/trips/${data.id}`;
-        }, 1500);
+        }, 1000);
       } else {
         alert('เกิดข้อผิดพลาดในการสร้างทริป: ' + (error?.message || ''));
       }
