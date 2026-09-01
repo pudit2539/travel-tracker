@@ -51,34 +51,57 @@ export default function HomePage() {
 
   useEffect(() => {
     setFxRate(getCustomJpyToThbRate());
+    
+    // Load local cache immediately to prevent blank/hanging state
+    try {
+      const cached = localStorage.getItem('travel_tracker_home_trips_cache');
+      if (cached) {
+        setTrips(JSON.parse(cached));
+      }
+    } catch {}
+
     checkUserAndFetchTrips();
   }, []);
 
   const checkUserAndFetchTrips = async () => {
-    setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      router.push('/login');
-      return;
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+      setUser(session.user);
+
+      // 1. ดึงโปรไฟล์ผู้ใช้อย่างปลอดภัย
+      try {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        if (prof) setProfile(prof);
+      } catch (e) {
+        console.warn('Profile fetch warning', e);
+      }
+
+      // 2. ดึงทริปทั้งหมด
+      const { data, error } = await supabase
+        .from('trips')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setTrips(data);
+        try {
+          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(data));
+        } catch {}
+      }
+    } catch (err) {
+      console.error('Error fetching trips:', err);
+    } finally {
+      setLoading(false);
     }
-    setUser(session.user);
-
-    // 1. ดึงโปรไฟล์ผู้ใช้
-    const { data: prof } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-    if (prof) setProfile(prof);
-
-    // 2. ดึงทริปทั้งหมด
-    const { data, error } = await supabase
-      .from('trips')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (data) setTrips(data);
-    setLoading(false);
   };
 
   // สร้างทริปใหม่
