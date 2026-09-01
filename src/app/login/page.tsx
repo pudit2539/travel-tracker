@@ -187,8 +187,12 @@ function LoginForm() {
         
         {/* Logo and App Title */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3.5 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white shadow-lg shadow-pink-500/30 animate-float-slow">
-            <Compass className="h-8 w-8" />
+          <div className="inline-block p-1 rounded-3xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 shadow-xl shadow-pink-500/25 animate-float-slow">
+            <img
+              src="/app-logo.png"
+              alt="Travel Tracker Logo"
+              className="w-20 h-20 rounded-2xl object-cover"
+            />
           </div>
           <h1 className="text-2xl font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
             {isRegister ? 'สร้างบัญชีผู้ใช้ใหม่' : 'ยินดีต้อนรับสู่ Travel Tracker'}

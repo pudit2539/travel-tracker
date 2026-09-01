@@ -7,9 +7,19 @@ export interface CatAvatar {
   bgGradient: string;
   border: string;
   badgeBg: string;
+  imgUrl?: string;
 }
 
 export const CAT_AVATARS: CatAvatar[] = [
+  {
+    id: 'cat_trio',
+    emoji: '🐾',
+    name: '3 Musketeers Neko (ไอคอนหลัก)',
+    bgGradient: 'from-amber-400 via-orange-500 to-pink-500',
+    border: 'border-amber-400 dark:border-amber-500',
+    badgeBg: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+    imgUrl: '/app-logo.png',
+  },
   {
     id: 'cat_pink',
     emoji: '🐱',

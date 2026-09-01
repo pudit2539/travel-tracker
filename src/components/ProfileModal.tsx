@@ -237,8 +237,12 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                             : 'border-slate-200 dark:border-purple-900/40 bg-slate-50/70 dark:bg-purple-950/20 hover:border-slate-300 dark:hover:border-purple-700'
                         }`}
                       >
-                        <div className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${cat.bgGradient} flex items-center justify-center text-2xl shadow-xs`}>
-                          {cat.emoji}
+                        <div className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${cat.bgGradient} flex items-center justify-center text-2xl shadow-xs overflow-hidden`}>
+                          {cat.imgUrl ? (
+                            <img src={cat.imgUrl} alt={cat.name} className="w-full h-full object-cover" />
+                          ) : (
+                            cat.emoji
+                          )}
                         </div>
                         <span className="text-[10px] font-bold text-slate-800 dark:text-purple-200 truncate w-full text-center">
                           {cat.name.split(' ')[0]}

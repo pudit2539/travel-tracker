@@ -344,17 +344,21 @@ export default function HomePage() {
       <nav className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-900/40 bg-white/85 dark:bg-[#090611]/85 backdrop-blur-xl transition-colors">
         <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-pink-500/25 animate-float-slow">
-              <Compass className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="text-base md:text-lg font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                Travel Tracker
-              </span>
-              <span className="block text-[10px] text-slate-500 dark:text-purple-300/70 font-bold tracking-wider uppercase">
-                Expense & Itinerary Hub
-              </span>
-            </div>
+            <Link href="/" className="flex items-center gap-3 group">
+              <img
+                src="/app-logo.png"
+                alt="Travel Tracker Logo"
+                className="w-10 h-10 rounded-2xl object-cover shadow-md shadow-pink-500/25 border border-pink-300/60 dark:border-purple-800/80 group-hover:scale-110 transition-transform"
+              />
+              <div>
+                <span className="text-base md:text-lg font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                  Travel Tracker
+                </span>
+                <span className="block text-[10px] text-slate-500 dark:text-purple-300/70 font-bold tracking-wider uppercase">
+                  Expense & Itinerary Hub
+                </span>
+              </div>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-2.5">

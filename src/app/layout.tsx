@@ -4,9 +4,14 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 export const metadata = {
-  title: 'Travel Tracker & Planner',
-  description: 'Track expenses and manage your overseas travel plans easily.',
+  title: 'Travel Tracker & Planner 🐱',
+  description: 'Track expenses and manage your overseas travel plans easily with AI & Cat Companion.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/app-logo.png',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
