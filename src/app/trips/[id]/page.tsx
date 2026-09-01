@@ -230,7 +230,7 @@ export default function TripDetailPage() {
 
       // Cache offline
       cacheTripOffline({
-        trip: tripData || trip,
+        trip: tripData,
         itinerary: planData || [],
         expenses: expData || [],
         categories: cats,
@@ -242,11 +242,11 @@ export default function TripDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [tripId, cacheTripOffline, getOfflineTripCache, trip]);
+  }, [tripId]);
 
   useEffect(() => {
     fetchTripData();
-  }, [fetchTripData]);
+  }, [tripId]);
 
   // จัดการการนำเข้าไฟล์ Excel
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
