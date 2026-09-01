@@ -597,6 +597,63 @@ export default function TripDetailPage() {
   const userDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
   const userCat = getCatAvatar(userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id);
 
+  // RBAC Roles & Permissions
+  const isOwner = useMemo(() => {
+    if (!currentUser) return false;
+    if (trip?.user_id && trip.user_id === currentUser.id) return true;
+    if (trip?.created_by && trip.created_by === currentUser.id) return true;
+    const myMember = members.find((m) => m.user_id === currentUser.id);
+    if (myMember?.role === 'owner') return true;
+    if (members.length === 0) return true;
+    return false;
+  }, [currentUser, trip, members]);
+
+  const currentUserRole = useMemo(() => {
+    if (isOwner) return 'owner';
+    if (!currentUser) return 'guest';
+    const myMember = members.find((m) => m.user_id === currentUser.id);
+    return myMember?.role || 'editor';
+  }, [isOwner, currentUser, members]);
+
+  const canEditPlan = isOwner || currentUserRole === 'editor';
+  const canAddExpense = isOwner || currentUserRole === 'editor';
+  const canImportExcel = isOwner; // Specific permission: Only Owner can import Excel to prevent plan wiping
+
+  const handleUpdateMemberRole = async (memberId: string, newRole: 'editor' | 'viewer') => {
+    if (!isOwner) return;
+    try {
+      const { error } = await supabase
+        .from('trip_members')
+        .update({ role: newRole })
+        .eq('id', memberId);
+      if (!error) {
+        setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m)));
+      } else {
+        alert('ไม่สามารถเปลี่ยนสิทธิ์ได้: ' + error.message);
+      }
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string, memberName: string) => {
+    if (!isOwner) return;
+    if (!confirm(`ต้องการลบคุณ ${memberName} ออกจากทริปนี้ใช่หรือไม่?`)) return;
+    try {
+      const { error } = await supabase
+        .from('trip_members')
+        .delete()
+        .eq('id', memberId);
+      if (!error) {
+        setMembers((prev) => prev.filter((m) => m.id !== memberId));
+      } else {
+        alert('ไม่สามารถลบสมาชิกได้: ' + error.message);
+      }
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
+  };
+
   // รายชื่อผู้จ่ายทั้งหมด
   const distinctPayers = useMemo(() => {
     const map = new Map<string, { name: string; avatar: string; count: number; total: number; isMe: boolean }>();
@@ -762,7 +819,7 @@ export default function TripDetailPage() {
 
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Notification Bell */}
-            <NotificationBell expenses={expenses} itinerary={itinerary} tripTitle={trip?.name || trip?.title} />
+            <NotificationBell expenses={expenses} itinerary={itinerary} members={members} tripTitle={trip?.name || trip?.title} />
 
             {/* Profile Avatar Button */}
             <button
@@ -1020,18 +1077,22 @@ export default function TripDetailPage() {
                   <span>AI Co-Pilot</span>
                 </button>
 
-                <button
-                  onClick={() => openAddActivityModal(selectedDayFilter !== 'all' ? selectedDayFilter : undefined)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-xl text-xs font-bold shadow-md shadow-pink-500/20 hover:scale-105 transition-all cursor-pointer"
-                >
-                  <Plus className="h-4 w-4" /> เพิ่มกิจกรรม
-                </button>
+                {canEditPlan && (
+                  <button
+                    onClick={() => openAddActivityModal(selectedDayFilter !== 'all' ? selectedDayFilter : undefined)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-xl text-xs font-bold shadow-md shadow-pink-500/20 hover:scale-105 transition-all cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" /> เพิ่มกิจกรรม
+                  </button>
+                )}
 
-                <label className="flex items-center gap-1.5 px-3.5 py-1.5 border border-slate-300 dark:border-purple-800 bg-white/90 dark:bg-[#130d22]/90 rounded-xl text-xs font-bold text-slate-800 dark:text-purple-200 hover:border-pink-500 hover:scale-105 shadow-2xs cursor-pointer transition-all">
-                  <Upload className="h-4 w-4 text-pink-500" />
-                  <span>Import Excel</span>
-                  <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
-                </label>
+                {canImportExcel && (
+                  <label className="flex items-center gap-1.5 px-3.5 py-1.5 border border-slate-300 dark:border-purple-800 bg-white/90 dark:bg-[#130d22]/90 rounded-xl text-xs font-bold text-slate-800 dark:text-purple-200 hover:border-pink-500 hover:scale-105 shadow-2xs cursor-pointer transition-all" title="เฉพาะผู้สร้างทริป (Owner)">
+                    <Upload className="h-4 w-4 text-pink-500" />
+                    <span>Import Excel</span>
+                    <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
+                  </label>
+                )}
               </div>
             </div>
 
@@ -1083,43 +1144,45 @@ export default function TripDetailPage() {
                         </div>
 
                         {/* Row Controls */}
-                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-purple-950/60 p-1 rounded-xl border border-slate-200 dark:border-purple-900/40 shadow-2xs">
-                          <button
-                            onClick={() => handleMoveActivity(globalIndex, 'up')}
-                            disabled={globalIndex === 0 || reordering}
-                            className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900 disabled:opacity-30 transition-all cursor-pointer hover:scale-110"
-                            title="ย้ายขึ้น (Move Up)"
-                          >
-                            <ArrowUp className="h-3.5 w-3.5" />
-                          </button>
+                        {canEditPlan && (
+                          <div className="flex items-center gap-1 bg-slate-100 dark:bg-purple-950/60 p-1 rounded-xl border border-slate-200 dark:border-purple-900/40 shadow-2xs">
+                            <button
+                              onClick={() => handleMoveActivity(globalIndex, 'up')}
+                              disabled={globalIndex === 0 || reordering}
+                              className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900 disabled:opacity-30 transition-all cursor-pointer hover:scale-110"
+                              title="ย้ายขึ้น (Move Up)"
+                            >
+                              <ArrowUp className="h-3.5 w-3.5" />
+                            </button>
 
-                          <button
-                            onClick={() => handleMoveActivity(globalIndex, 'down')}
-                            disabled={globalIndex === itinerary.length - 1 || reordering}
-                            className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900 disabled:opacity-30 transition-all cursor-pointer hover:scale-110"
-                            title="ย้ายลง (Move Down)"
-                          >
-                            <ArrowDown className="h-3.5 w-3.5" />
-                          </button>
+                            <button
+                              onClick={() => handleMoveActivity(globalIndex, 'down')}
+                              disabled={globalIndex === itinerary.length - 1 || reordering}
+                              className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900 disabled:opacity-30 transition-all cursor-pointer hover:scale-110"
+                              title="ย้ายลง (Move Down)"
+                            >
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </button>
 
-                          <div className="w-[1px] h-3 bg-slate-300 dark:bg-purple-800 mx-0.5" />
+                            <div className="w-[1px] h-3 bg-slate-300 dark:bg-purple-800 mx-0.5" />
 
-                          <button
-                            onClick={() => openEditActivityModal(item)}
-                            className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-pink-100 dark:hover:bg-pink-950 hover:text-pink-600 transition-all cursor-pointer hover:scale-110"
-                            title="แก้ไขกิจกรรม"
-                          >
-                            <Edit3 className="h-3.5 w-3.5" />
-                          </button>
+                            <button
+                              onClick={() => openEditActivityModal(item)}
+                              className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-pink-100 dark:hover:bg-pink-950 hover:text-pink-600 transition-all cursor-pointer hover:scale-110"
+                              title="แก้ไขกิจกรรม"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </button>
 
-                          <button
-                            onClick={() => handleDeleteActivity(item.id)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950 transition-all cursor-pointer hover:scale-110"
-                            title="ลบกิจกรรม"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
+                            <button
+                              onClick={() => handleDeleteActivity(item.id)}
+                              className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950 transition-all cursor-pointer hover:scale-110"
+                              title="ลบกิจกรรม"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Main Place Content */}
@@ -1224,14 +1287,16 @@ export default function TripDetailPage() {
                     </div>
 
                     {/* Quick Add Row Button Below */}
-                    <div className="flex justify-center my-1">
-                      <button
-                        onClick={() => openAddActivityModal(item.date_label, item.city, item.sort_order)}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-purple-300 bg-white/90 dark:bg-[#130d22]/90 px-3.5 py-1 rounded-full border border-slate-300 dark:border-purple-800 shadow-2xs hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 transition-all cursor-pointer"
-                      >
-                        <PlusCircle className="h-3 w-3 text-pink-500" /> แทรกกิจกรรมต่อจากนี้
-                      </button>
-                    </div>
+                    {canEditPlan && (
+                      <div className="flex justify-center my-1">
+                        <button
+                          onClick={() => openAddActivityModal(item.date_label, item.city, item.sort_order)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-purple-300 bg-white/90 dark:bg-[#130d22]/90 px-3.5 py-1 rounded-full border border-slate-300 dark:border-purple-800 shadow-2xs hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 transition-all cursor-pointer"
+                        >
+                          <PlusCircle className="h-3 w-3 text-pink-500" /> แทรกกิจกรรมต่อจากนี้
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -1688,26 +1753,80 @@ export default function TripDetailPage() {
 
                 {members.map((m, idx) => {
                   const mCat = getCatAvatar(m.profiles?.avatar_id);
-                  const mName = m.profiles?.display_name || m.profiles?.email || 'สมาชิกในกลุ่ม';
+                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิกกลุ่ม';
+                  const isCurrentMemberRole = m.role || 'editor';
+
                   return (
-                    <div key={idx} className="py-3 flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-2xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-base shadow-sm`}>
+                    <div key={idx} className="py-3.5 flex flex-wrap justify-between items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-9 h-9 rounded-2xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-base shadow-sm shrink-0`}>
                           {mCat.emoji}
                         </div>
-                        <div>
-                          <div className="font-bold text-xs text-slate-900 dark:text-white">
+                        <div className="min-w-0">
+                          <div className="font-bold text-xs text-slate-900 dark:text-white truncate">
                             {mName}
                           </div>
-                          <div className="text-[11px] text-slate-500 dark:text-purple-400 font-medium">{m.profiles?.email || 'สมาชิกกลุ่ม'}</div>
+                          <div className="text-[11px] text-slate-500 dark:text-purple-400 font-medium truncate">
+                            {m.profiles?.email || 'สมาชิกในทริป'}
+                          </div>
                         </div>
                       </div>
-                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 shadow-2xs">
-                        {m.role || 'Editor'}
-                      </span>
+
+                      <div className="flex items-center gap-2">
+                        {isOwner ? (
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={isCurrentMemberRole}
+                              onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as 'editor' | 'viewer')}
+                              className="px-2.5 py-1 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1c1328] text-xs font-bold text-slate-800 dark:text-purple-200 outline-none focus:border-pink-500 cursor-pointer shadow-2xs"
+                            >
+                              <option value="editor">✏️ ผู้แก้ไข (Editor)</option>
+                              <option value="viewer">👁️ ผู้เข้าชม (Viewer)</option>
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMember(m.id, mName)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
+                              title="ลบสมาชิกออกจากทริป"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs ${
+                            isCurrentMemberRole === 'editor'
+                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
+                              : 'bg-slate-100 text-slate-700 dark:bg-purple-950 dark:text-purple-300'
+                          }`}>
+                            {isCurrentMemberRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Role Permissions Guide */}
+              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-purple-900/40 space-y-2">
+                <span className="text-[11px] font-black text-slate-700 dark:text-purple-200 block">
+                  🛡️ ขอบเขตสิทธิ์การใช้งาน (Role Permissions):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px]">
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-900/40 space-y-1">
+                    <b className="text-pink-600 dark:text-pink-400 block">👑 Owner (ผู้สร้างทริป)</b>
+                    <span className="text-slate-500 dark:text-purple-400">จัดการงบรวม, เปลี่ยนสิทธิ์สมาชิก, Import Excel, และแก้ไขทุกส่วน</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-900/40 space-y-1">
+                    <b className="text-purple-600 dark:text-purple-400 block">✏️ Editor (สมาชิกแก้ไขได้)</b>
+                    <span className="text-slate-500 dark:text-purple-400">เพิ่ม/แก้กิจกรรม, บันทึกรายจ่าย AI OCR, และลงรูปภาพ (ไม่สามารถ Import Excel ทับได้)</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-900/40 space-y-1">
+                    <b className="text-indigo-600 dark:text-indigo-400 block">👁️ Viewer / Guest</b>
+                    <span className="text-slate-500 dark:text-purple-400">เปิดดูแผนเที่ยว, เช็คสภาพอากาศ, พิมพ์ PDF, และดูสถิติ (ดูอย่างเดียว แก้ไขไม่ได้)</span>
+                  </div>
+                </div>
               </div>
             </div>
 
