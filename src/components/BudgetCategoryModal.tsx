@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 import { 
   X, DollarSign, Plus, Trash2, Check, Sparkles, 
   Coins, AlertCircle, CheckCircle2, PieChart, Sliders, 
-  Tag, ShieldAlert, ArrowRight, Layers, History, Users, User 
+  Tag, ShieldAlert, ArrowRight, Layers, History, Users, User, 
+  Divide, Calculator, ArrowDownRight, ArrowUpRight 
 } from 'lucide-react';
 import { 
   CategoryItem, 
@@ -67,6 +68,18 @@ export default function BudgetCategoryModal({
   const [newCatLabel, setNewCatLabel] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('🎢');
   const [showAddCatForm, setShowAddCatForm] = useState(false);
+
+  // List of all members (Owner + Trip Members)
+  const allMembersList = [
+    { key: 'me', name: userDisplayName + ' (ฉัน)', email: currentUser?.email, avatar: 'cat_pink', isMe: true },
+    ...members.map(m => ({
+      key: m.user_id || m.id,
+      name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
+      email: m.profiles?.email,
+      avatar: m.profiles?.avatar_id || 'cat_yellow',
+      isMe: false,
+    }))
+  ];
 
   useEffect(() => {
     if (isOpen && trip) {
@@ -133,6 +146,21 @@ export default function BudgetCategoryModal({
     setTimeout(() => setBudgetSuccess(false), 2500);
   };
 
+  // Auto Split Evenly from Total Trip Budget
+  const handleAutoSplitMembers = () => {
+    const total = Number(totalBudget || 0);
+    if (total <= 0) {
+      alert('กรุณากำหนดงบประมาณรวมทริปก่อนทำการหารเฉลี่ย');
+      return;
+    }
+    const perPerson = Math.floor(total / allMembersList.length);
+    const updated: MemberBudgetMap = {};
+    allMembersList.forEach(m => {
+      updated[m.key] = perPerson;
+    });
+    setMemberBudgets(updated);
+  };
+
   // 4. Add Custom Category
   const handleAddCustomCategory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,21 +207,13 @@ export default function BudgetCategoryModal({
     }));
   };
 
-  // Total allocated category budgets sum
-  const totalAllocated = Object.values(categoryBudgets).reduce((a, b) => a + Number(b || 0), 0);
-  const remainingBudget = Number(totalBudget || 0) - totalAllocated;
+  // Total allocated category budgets sum & remaining
+  const totalCatAllocated = Object.values(categoryBudgets).reduce((a, b) => a + Number(b || 0), 0);
+  const remainingCatBudget = Number(totalBudget || 0) - totalCatAllocated;
 
-  // List of all members (Owner + Trip Members)
-  const allMembersList = [
-    { key: 'me', name: userDisplayName + ' (ฉัน)', email: currentUser?.email, avatar: 'cat_pink', isMe: true },
-    ...members.map(m => ({
-      key: m.user_id || m.id,
-      name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
-      email: m.profiles?.email,
-      avatar: m.profiles?.avatar_id || 'cat_yellow',
-      isMe: false,
-    }))
-  ];
+  // Total allocated member budgets sum & remaining
+  const totalMemberAllocated = Object.values(memberBudgets).reduce((a, b) => a + Number(b || 0), 0);
+  const remainingMemberBudget = Number(totalBudget || 0) - totalMemberAllocated;
 
   if (!isOpen) return null;
 
@@ -212,7 +232,7 @@ export default function BudgetCategoryModal({
                 จัดการงบประมาณ & หมวดหมู่ 🎯
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
-                ตั้งงบรวม, งบส่วนตัวรายคน, จัดสรรตามหมวด และเพิ่มหมวดหมู่เฉพาะตัว
+                เชื่อมโยงงบรวมทริป, งบส่วนตัวรายคน, จัดสรรตามหมวด และคำนวณยอดคงเหลือ
               </p>
             </div>
           </div>
@@ -351,24 +371,42 @@ export default function BudgetCategoryModal({
           {/* TAB 2: งบส่วนตัวรายคน (Personal / Member Budgets) */}
           {activeSubTab === 'members' && (
             <form onSubmit={handleSaveMemberBudgets} className="space-y-4 animate-in fade-in">
-              <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/40">
-                <h3 className="text-xs font-black text-purple-900 dark:text-purple-200 mb-1 flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-pink-500" /> กำหนดงบประมาณเฉพาะคน (Personal Budgets)
-                </h3>
-                <p className="text-[11px] text-slate-600 dark:text-purple-300/80 font-medium">
-                  ตั้งเป้าหมายงบของตัวเองและเพื่อนแต่ละคน เพื่อดูหลอดเปรียบเทียบในหน้าหลัก
-                </p>
+              
+              {/* Real-time Relation Banner */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 border border-purple-200 dark:border-purple-900/50 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-black text-slate-900 dark:text-white">
+                  <span>งบรวมทริปตั้งไว้: {Number(totalBudget || 0).toLocaleString()} {trip?.currency || 'JPY'}</span>
+                  <button
+                    type="button"
+                    onClick={handleAutoSplitMembers}
+                    className="px-2.5 py-1 rounded-xl bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300 hover:bg-pink-200 border border-pink-300 dark:border-pink-800 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105"
+                  >
+                    <Divide className="h-3 w-3" /> หารเฉลี่ยให้ทุกคนเท่ากัน ({Math.floor(Number(totalBudget || 0) / (allMembersList.length || 1)).toLocaleString()} {trip?.currency})
+                  </button>
+                </div>
+
+                <div className="flex justify-between items-center text-[11px] font-bold pt-1 border-t border-purple-200/60 dark:border-purple-900/40">
+                  <span className="text-slate-600 dark:text-purple-300">
+                    รวมงบรายคน: {totalMemberAllocated.toLocaleString()} {trip?.currency}
+                  </span>
+                  <span className={remainingMemberBudget < 0 ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}>
+                    {remainingMemberBudget >= 0 
+                      ? `คงเหลือจัดสรร: ${remainingMemberBudget.toLocaleString()} ${trip?.currency}` 
+                      : `⚠️ เกินงบรวมทริป: +${Math.abs(remainingMemberBudget).toLocaleString()} ${trip?.currency}`}
+                  </span>
+                </div>
               </div>
 
-              <div className="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2.5 max-h-64 overflow-y-auto custom-scrollbar pr-1">
                 {allMembersList.map((m) => {
                   const mCat = getCatAvatar(m.avatar);
                   const currentVal = memberBudgets[m.key] !== undefined ? memberBudgets[m.key] : '';
+                  const memberShare = Number(totalBudget || 0) > 0 ? (Number(currentVal || 0) / Number(totalBudget)) * 100 : 0;
 
                   return (
                     <div
                       key={m.key}
-                      className="p-3 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-slate-50/60 dark:bg-purple-950/20 flex items-center justify-between gap-3"
+                      className="p-3 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-slate-50/60 dark:bg-purple-950/20 flex items-center justify-between gap-3 hover:border-pink-300 transition-all"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-sm shadow-xs shrink-0`}>
@@ -379,7 +417,7 @@ export default function BudgetCategoryModal({
                             {m.name}
                           </span>
                           <span className="text-[10px] text-slate-500 dark:text-purple-400 truncate block">
-                            {m.email || 'สมาชิก'}
+                            {memberShare > 0 ? `${memberShare.toFixed(1)}% ของงบรวมทริป` : 'ยังไม่ระบุงบ'}
                           </span>
                         </div>
                       </div>
@@ -420,14 +458,14 @@ export default function BudgetCategoryModal({
             <form onSubmit={handleSaveCategoryBudgets} className="space-y-4 animate-in fade-in">
               <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/40 space-y-1.5">
                 <div className="flex justify-between items-center text-xs font-black text-purple-950 dark:text-purple-200">
-                  <span>จัดสรรไปแล้ว: {totalAllocated.toLocaleString()} {trip?.currency || 'JPY'}</span>
-                  <span className={remainingBudget < 0 ? 'text-rose-600' : 'text-emerald-600'}>
-                    {remainingBudget >= 0 ? `คงเหลือจัดสรร: ${remainingBudget.toLocaleString()} ${trip?.currency}` : `⚠️ เกินงบรวม: ${Math.abs(remainingBudget).toLocaleString()} ${trip?.currency}`}
+                  <span>จัดสรรไปแล้ว: {totalCatAllocated.toLocaleString()} {trip?.currency || 'JPY'}</span>
+                  <span className={remainingCatBudget < 0 ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}>
+                    {remainingCatBudget >= 0 ? `คงเหลือจัดสรร: ${remainingCatBudget.toLocaleString()} ${trip?.currency}` : `⚠️ เกินงบรวม: +${Math.abs(remainingCatBudget).toLocaleString()} ${trip?.currency}`}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2.5 max-h-64 overflow-y-auto custom-scrollbar pr-1">
                 {categories.map((cat) => {
                   const currentVal = categoryBudgets[cat.id] !== undefined ? categoryBudgets[cat.id] : '';
                   return (

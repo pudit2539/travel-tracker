@@ -597,23 +597,32 @@ export default function TripDetailPage() {
   const userDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
   const userCat = getCatAvatar(userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id);
 
-  // Dynamic Hero Card Data (All vs Me vs Specific Friend)
+  // Dynamic Hero Card Data (All vs Me vs Specific Friend with Relations)
   const heroDisplayData = useMemo(() => {
+    const totalTripBudget = Number(trip?.total_budget ?? trip?.budget ?? 0);
+
     // 1. View: รวมทุกคน (All Members)
     if (heroBudgetView === 'all') {
-      const targetBudget = Number(trip?.total_budget ?? trip?.budget ?? 0);
+      const targetBudget = totalTripBudget;
       const spent = totalSpent;
       const progress = targetBudget > 0 ? Math.min(Math.round((spent / targetBudget) * 100), 100) : 0;
       const isOver = targetBudget > 0 && spent > targetBudget;
+      const remaining = targetBudget > spent ? targetBudget - spent : 0;
+      const overAmount = spent > targetBudget ? spent - targetBudget : 0;
+
       return {
         viewType: 'all',
         title: 'ยอดค่าใช้จ่ายรวมทุกคน (Total Spent)',
         budgetLabel: 'งบประมาณรวมทริป',
         spent,
         targetBudget,
+        totalTripBudget,
         progress,
         isOver,
+        remaining,
+        overAmount,
         diff: spent - targetBudget,
+        shareOfTotal: 100,
       };
     }
 
@@ -626,15 +635,23 @@ export default function TripDetailPage() {
       const targetBudget = memberBudgets['me'] || 0;
       const progress = targetBudget > 0 ? Math.min(Math.round((mySpent / targetBudget) * 100), 100) : 0;
       const isOver = targetBudget > 0 && mySpent > targetBudget;
+      const remaining = targetBudget > mySpent ? targetBudget - mySpent : 0;
+      const overAmount = mySpent > targetBudget ? mySpent - targetBudget : 0;
+      const shareOfTotal = totalTripBudget > 0 ? (mySpent / totalTripBudget) * 100 : 0;
+
       return {
         viewType: 'me',
         title: `ยอดค่าใช้จ่ายของฉัน (${userDisplayName})`,
         budgetLabel: 'งบส่วนตัวของฉัน',
         spent: mySpent,
         targetBudget,
+        totalTripBudget,
         progress,
         isOver,
+        remaining,
+        overAmount,
         diff: mySpent - targetBudget,
+        shareOfTotal,
       };
     }
 
@@ -650,6 +667,9 @@ export default function TripDetailPage() {
     const targetBudget = memberBudgets[targetKey] || 0;
     const progress = targetBudget > 0 ? Math.min(Math.round((memberSpent / targetBudget) * 100), 100) : 0;
     const isOver = targetBudget > 0 && memberSpent > targetBudget;
+    const remaining = targetBudget > memberSpent ? targetBudget - memberSpent : 0;
+    const overAmount = memberSpent > targetBudget ? memberSpent - targetBudget : 0;
+    const shareOfTotal = totalTripBudget > 0 ? (memberSpent / totalTripBudget) * 100 : 0;
 
     return {
       viewType: 'friend',
@@ -657,9 +677,13 @@ export default function TripDetailPage() {
       budgetLabel: `งบส่วนตัวของ ${targetName}`,
       spent: memberSpent,
       targetBudget,
+      totalTripBudget,
       progress,
       isOver,
+      remaining,
+      overAmount,
       diff: memberSpent - targetBudget,
+      shareOfTotal,
     };
   }, [heroBudgetView, trip, totalSpent, expenses, currentUser, userDisplayName, memberBudgets, members]);
 
@@ -1080,6 +1104,33 @@ export default function TripDetailPage() {
                     style={{ width: `${Math.min(heroDisplayData.progress, 100)}%` }}
                   />
                 </div>
+              </div>
+
+              {/* Connected Financial Balance Status Ribbon */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-purple-200/60 dark:border-purple-900/40 text-xs">
+                {heroDisplayData.targetBudget > 0 ? (
+                  heroDisplayData.isOver ? (
+                    <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900 shadow-2xs">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <span>ใช้เกินงบไป: <b>+{heroDisplayData.overAmount.toLocaleString()} {trip?.currency}</b> (≈ ฿{Math.round(heroDisplayData.overAmount * fxRate).toLocaleString()})</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900 shadow-2xs">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                      <span>ยอดเงินคงเหลือ: <b>{heroDisplayData.remaining.toLocaleString()} {trip?.currency}</b> (≈ ฿{Math.round(heroDisplayData.remaining * fxRate).toLocaleString()})</span>
+                    </div>
+                  )
+                ) : (
+                  <div className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+                    💡 กดปุ่ม &quot;ตั้งงบ &amp; หมวดหมู่&quot; เพื่อกำหนดเป้าหมายงบประมาณ
+                  </div>
+                )}
+
+                {heroDisplayData.viewType !== 'all' && heroDisplayData.totalTripBudget > 0 && (
+                  <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-1 rounded-xl border border-purple-200 dark:border-purple-900 shadow-2xs">
+                    🔗 คิดเป็น {heroDisplayData.shareOfTotal.toFixed(1)}% ของงบรวมทริป ({heroDisplayData.totalTripBudget.toLocaleString()} {trip?.currency})
+                  </span>
+                )}
               </div>
             </div>
 
@@ -1653,6 +1704,12 @@ export default function TripDetailPage() {
                 {distinctPayers.map((p) => {
                   const pCat = getCatAvatar(p.avatar);
                   const sharePercent = totalSpent > 0 ? (p.total / totalSpent) * 100 : 0;
+                  
+                  const targetMemberObj = members.find((m) => m.profiles?.display_name?.toLowerCase() === p.name.toLowerCase() || m.user_id === p.key);
+                  const pKey = p.isMe ? 'me' : (targetMemberObj?.user_id || targetMemberObj?.id || p.key);
+                  const pBudget = memberBudgets[pKey] || 0;
+                  const pRemaining = pBudget > p.total ? pBudget - p.total : 0;
+                  const pOver = pBudget > 0 && p.total > pBudget ? p.total - pBudget : 0;
 
                   return (
                     <div
@@ -1688,10 +1745,32 @@ export default function TripDetailPage() {
                         </div>
                       </div>
 
-                      <div className="w-full bg-slate-200 dark:bg-purple-950 rounded-full h-2.5 overflow-hidden mt-1 shadow-inner">
+                      {/* Personal Budget Target & Balance Bar */}
+                      <div className="pt-2 border-t border-slate-200/60 dark:border-purple-900/30 flex justify-between items-center text-[10px] font-bold">
+                        <span className="text-slate-600 dark:text-purple-300">
+                          เป้างบส่วนตัว: {pBudget > 0 ? `${pBudget.toLocaleString()} ${trip?.currency}` : 'ไม่ระบุ'}
+                        </span>
+                        {pBudget > 0 && (
+                          pOver > 0 ? (
+                            <span className="text-rose-600 dark:text-rose-400 font-black">
+                              ⚠️ เกินงบ +{pOver.toLocaleString()} {trip?.currency}
+                            </span>
+                          ) : (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-black">
+                              🟢 คงเหลือ {pRemaining.toLocaleString()} {trip?.currency}
+                            </span>
+                          )
+                        )}
+                      </div>
+
+                      <div className="w-full bg-slate-200 dark:bg-purple-950 rounded-full h-2 overflow-hidden mt-1.5 shadow-inner">
                         <div
-                          className="h-full bg-gradient-to-r from-pink-500 to-purple-600 rounded-full transition-all duration-700"
-                          style={{ width: `${sharePercent}%` }}
+                          className={`h-full rounded-full transition-all duration-700 ${
+                            pOver > 0 
+                              ? 'bg-gradient-to-r from-rose-500 to-red-600' 
+                              : 'bg-gradient-to-r from-pink-500 to-purple-600'
+                          }`}
+                          style={{ width: `${pBudget > 0 ? Math.min(Math.round((p.total / pBudget) * 100), 100) : sharePercent}%` }}
                         />
                       </div>
                     </div>
