@@ -113,6 +113,17 @@ export default function HomePage() {
 
     setActionLoading(true);
     try {
+      // ดึง ID ผู้ใช้ปัจจุบัน
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUserId = session?.user?.id || user?.id;
+
+      if (!currentUserId) {
+        alert('กรุณาเข้าสู่ระบบก่อนสร้างทริป');
+        window.location.href = '/login';
+        return;
+      }
+
+      // บันทึกลงตาราง trips (ใช้ created_by)
       const { data, error } = await supabase
         .from('trips')
         .insert([
@@ -122,28 +133,33 @@ export default function HomePage() {
             currency: formData.currency,
             start_date: formData.startDate || null,
             end_date: formData.endDate || null,
-            created_by: user?.id,
-            user_id: user?.id,
+            created_by: currentUserId,
           },
         ])
         .select()
         .single();
 
-      if (!error && data) {
-        // Auto add creator to trip_members
-        if (user?.id) {
-          try {
-            await supabase.from('trip_members').insert([
-              {
-                trip_id: data.id,
-                user_id: user.id,
-                role: 'owner',
-              },
-            ]);
-          } catch {}
+      if (error) {
+        console.error('Create trip error:', error);
+        alert('เกิดข้อผิดพลาดในการสร้างทริป: ' + error.message);
+        return;
+      }
+
+      if (data) {
+        // เพิ่มเจ้าของทริปในตารางสมาชิก (role: owner)
+        try {
+          await supabase.from('trip_members').insert([
+            {
+              trip_id: data.id,
+              user_id: currentUserId,
+              role: 'owner',
+            },
+          ]);
+        } catch (memErr) {
+          console.warn('Trip members auto add warn:', memErr);
         }
 
-        // Update local state immediately
+        // อัปเดต State และ Local Cache ทันที
         const newTripList = [data, ...trips];
         setTrips(newTripList);
         try {
@@ -154,15 +170,14 @@ export default function HomePage() {
         resetForm();
         setCreatedTripSuccess(data);
 
-        // Auto navigate after 1s
+        // Auto navigate ไปยังหน้าทริป
         setTimeout(() => {
           window.location.href = `/trips/${data.id}`;
-        }, 1000);
-      } else {
-        alert('เกิดข้อผิดพลาดในการสร้างทริป: ' + (error?.message || ''));
+        }, 1200);
       }
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      console.error('Create trip exception:', err);
+      alert('เกิดข้อผิดพลาด: ' + (err.message || 'ไม่สามารถสร้างทริปได้'));
     } finally {
       setActionLoading(false);
     }
@@ -385,8 +400,12 @@ export default function HomePage() {
               className="flex items-center gap-2 p-1.5 pr-3 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 hover:border-pink-500 hover:scale-105 shadow-xs transition-all cursor-pointer group"
               title="ตั้งค่าโปรไฟล์"
             >
-              <div className={`w-7 h-7 rounded-xl bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-sm shadow-sm group-hover:scale-110 transition-transform`}>
-                {userCat.emoji}
+              <div className={`w-7 h-7 rounded-xl bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-sm shadow-sm group-hover:scale-110 transition-transform overflow-hidden`}>
+                {userCat.imgUrl ? (
+                  <img src={userCat.imgUrl} alt={userCat.name} className="w-full h-full object-cover" />
+                ) : (
+                  userCat.emoji
+                )}
               </div>
               <span className="text-xs font-black text-slate-800 dark:text-purple-100 max-w-[100px] truncate hidden sm:inline">
                 {userDisplayName}
@@ -421,8 +440,12 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 p-6 rounded-3xl border border-purple-200/70 dark:border-purple-800/50 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/90 dark:bg-[#130d22]/90 backdrop-blur-xl card-elevation relative overflow-hidden group">
             <div className="flex items-center gap-3.5 mb-2">
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-2xl shadow-md group-hover:scale-105 transition-transform`}>
-                {userCat.emoji}
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-2xl shadow-md group-hover:scale-105 transition-transform overflow-hidden`}>
+                {userCat.imgUrl ? (
+                  <img src={userCat.imgUrl} alt={userCat.name} className="w-full h-full object-cover" />
+                ) : (
+                  userCat.emoji
+                )}
               </div>
               <div>
                 <h1 className="text-lg md:text-xl font-black text-slate-900 dark:text-white">
@@ -528,10 +551,12 @@ export default function HomePage() {
               const tripBudget = Number(t.total_budget ?? t.budget ?? 0);
 
               return (
-                <Link
+                <div
                   key={t.id}
-                  href={`/trips/${t.id}`}
-                  className="group relative p-5 rounded-3xl border border-slate-200/90 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation hover:-translate-y-1.5 hover:border-pink-500/60 dark:hover:border-pink-500/60 transition-all duration-300 cursor-pointer flex flex-col justify-between block"
+                  onClick={() => {
+                    window.location.href = `/trips/${t.id}`;
+                  }}
+                  className="group relative p-5 rounded-3xl border border-slate-200/90 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation hover:-translate-y-1.5 hover:border-pink-500/60 dark:hover:border-pink-500/60 transition-all duration-300 cursor-pointer flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex justify-between items-start gap-2 mb-3">
@@ -579,7 +604,7 @@ export default function HomePage() {
                     <span>เปิดดูแผนเที่ยว</span>
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1.5 transition-transform duration-300" />
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -595,7 +620,7 @@ export default function HomePage() {
         onProfileUpdated={(updated) => setProfile((prev: any) => ({ ...prev, ...updated }))}
       />
 
-      {/* ==================== CREATE TRIP MODAL (BEAUTIFIED) ==================== */}
+      {/* ==================== CREATE TRIP MODAL ==================== */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
