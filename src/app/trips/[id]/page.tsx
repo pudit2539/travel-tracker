@@ -802,6 +802,31 @@ export default function TripDetailPage() {
       {/* ==================== MAIN CONTENT CONTAINER ==================== */}
       <main className="relative z-10 max-w-5xl mx-auto px-4 pt-6 space-y-6">
 
+        {/* Guest Preview & Join Invitation Banner */}
+        {!currentUser && (
+          <div className="p-4 rounded-3xl bg-gradient-to-r from-pink-500/15 via-purple-600/15 to-indigo-600/15 border border-pink-300 dark:border-purple-800/80 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md animate-in fade-in">
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-sm shrink-0">
+                👋
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                  คุณกำลังดูทริปนี้ในฐานะผู้มาเยือน (Guest Preview)
+                </h3>
+                <p className="text-[11px] text-slate-600 dark:text-purple-300/80 font-medium">
+                  เข้าสู่ระบบหรือสมัครสมาชิกใหม่เพื่อบันทึกค่าใช้จ่าย แก้ไขแผนเที่ยว และสแกนบิลด้วย AI
+                </p>
+              </div>
+            </div>
+            <Link
+              href={`/login?returnUrl=/trips/${tripId}`}
+              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-black shadow-md shadow-pink-500/25 hover:scale-105 transition-all shrink-0 cursor-pointer"
+            >
+              เข้าสู่ระบบ / สมัครสมาชิก
+            </Link>
+          </div>
+        )}
+
         {/* ==================== HERO BUDGET & QUICK ACTION CARD ==================== */}
         <div className="relative overflow-hidden rounded-3xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/90 dark:bg-[#130d22]/90 backdrop-blur-xl card-elevation p-6 md:p-7">
           <div className="absolute -top-16 -right-16 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl pointer-events-none animate-float-slow" />

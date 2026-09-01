@@ -1,14 +1,21 @@
 // src/app/login/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, User, Compass, KeyRound, ArrowRight, Loader2, Sparkles, Sun, Moon } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { 
+  Eye, EyeOff, Lock, Mail, User, Compass, KeyRound, 
+  ArrowRight, Loader2, Sparkles, Sun, Moon, AlertCircle, 
+  CheckCircle2, Users, ArrowLeft 
+} from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || '/';
+
   const { theme, setTheme } = useTheme();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
@@ -24,6 +31,31 @@ export default function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotMsg, setForgotMsg] = useState('');
+
+  const autoJoinTripIfInvited = async (userId: string) => {
+    if (!returnUrl.startsWith('/trips/')) return;
+    try {
+      const parts = returnUrl.split('/trips/');
+      const tripId = parts[1]?.split('?')[0];
+      if (!tripId) return;
+
+      // Check if already member
+      const { data: existing } = await supabase
+        .from('trip_members')
+        .select('id')
+        .eq('trip_id', tripId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('trip_members').insert([
+          { trip_id: tripId, user_id: userId, role: 'editor' }
+        ]);
+      }
+    } catch (e) {
+      console.error('Auto join trip failed', e);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,52 +76,71 @@ export default function LoginPage() {
           options: {
             data: {
               display_name: displayName.trim() || email.split('@')[0],
+              avatar_id: 'cat_pink',
             },
           },
         });
 
-        if (error) throw error;
-
-        // ถ้ามี Session เข้าใช้งานได้ทันที
-        if (data.session) {
-          router.push('/');
-          router.refresh();
-          return;
+        if (error) {
+          if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists')) {
+            throw new Error('ALREADY_REGISTERED');
+          }
+          throw error;
         }
 
-        // กรณี Supabase ยังไม่ให้ session ให้ลองสั่ง sign-in ให้อัตโนมัติ
-        const { error: signInErr } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: password,
-        });
+        // 2. ล็อกอินให้อัตโนมัติทันที
+        let session = data.session;
+        if (!session) {
+          const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password: password,
+          });
+          if (signInErr) {
+            setSuccessMsg('สมัครสมาชิกสำเร็จแล้ว! กำลังนำท่านเข้าสู่ระบบ...');
+            setIsRegister(false);
+            setLoading(false);
+            return;
+          }
+          session = signInData.session;
+        }
 
-        if (signInErr) {
-          setSuccessMsg('สมัครสมาชิกสำเร็จ! แต่ต้องไปปิด "Confirm email" ใน Supabase จึงจะล็อกอินได้ทันที');
-        } else {
-          router.push('/');
+        if (session?.user) {
+          await autoJoinTripIfInvited(session.user.id);
+          router.push(returnUrl);
           router.refresh();
         }
       } else {
         // เข้าสู่ระบบ
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password: password,
         });
 
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+            throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
           } else if (error.message.includes('Email not confirmed')) {
-            throw new Error('กรุณาไปปิด "Confirm email" ใน Supabase Dashboard > Authentication > Providers > Email');
+            throw new Error('กรุณายืนยันอีเมล หรือไปปิด Confirm Email ใน Supabase');
           }
           throw error;
         }
 
-        router.push('/');
+        if (data.session?.user) {
+          await autoJoinTripIfInvited(data.session.user.id);
+        }
+
+        router.push(returnUrl);
         router.refresh();
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'เกิดข้อผิดพลาดในการดำเนินการ');
+      if (err.message === 'ALREADY_REGISTERED') {
+        setErrorMsg('อีเมลนี้เคยสมัครสมาชิกไว้แล้ว กรุณาเข้าสู่ระบบ');
+        setTimeout(() => {
+          setIsRegister(false);
+        }, 1500);
+      } else {
+        setErrorMsg(err.message || 'เกิดข้อผิดพลาดในการดำเนินการ');
+      }
     } finally {
       setLoading(false);
     }
@@ -115,65 +166,92 @@ export default function LoginPage() {
     }
   };
 
+  const isInviteFlow = returnUrl.startsWith('/trips/');
+
   return (
     <div className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden bg-[#f8f7fc] dark:bg-[#08050e] text-[#0f172a] dark:text-[#f8fafc] transition-colors duration-300">
       {/* Background Neon Orbs */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-600/20 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-gradient-to-tr from-purple-600/20 to-pink-500/20 blur-3xl pointer-events-none" />
+      <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-pink-500/15 dark:bg-pink-500/20 blur-3xl pointer-events-none animate-float-slow" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-purple-600/15 dark:bg-purple-600/20 blur-3xl pointer-events-none animate-float-reverse" />
 
-      {/* Quick Theme Toggle Button */}
-      <div className="absolute top-6 right-6 z-20">
-        <button
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="p-3 rounded-2xl bg-white dark:bg-[#120c1e] border border-slate-200 dark:border-purple-800 text-slate-700 dark:text-purple-200 hover:border-pink-500 transition-all cursor-pointer shadow-sm hover:scale-105"
-          title="สลับโหมด มืด / สว่าง"
-        >
-          {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-600" />}
-        </button>
-      </div>
+      {/* Dark/Light mode toggle */}
+      <button
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        className="absolute top-5 right-5 p-3 rounded-2xl border border-slate-200 dark:border-purple-800/80 bg-white/80 dark:bg-[#130d22]/80 shadow-md hover:scale-105 transition-all duration-300 cursor-pointer"
+        title="สลับธีม"
+      >
+        {theme === 'dark' ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-purple-600" />}
+      </button>
 
-      <div className="relative z-10 w-full max-w-md rounded-3xl border border-slate-200 dark:border-purple-800/50 bg-white dark:bg-[#120c1e] p-8 shadow-2xl backdrop-blur-xl transition-all glow-pink-purple">
+      <div className="w-full max-w-md rounded-3xl border border-slate-200/80 dark:border-purple-800/50 bg-white/95 dark:bg-[#130d22]/95 backdrop-blur-2xl p-7 sm:p-9 shadow-2xl card-elevation z-10 space-y-6">
         
-        {/* Logo & Header */}
-        <div className="flex flex-col items-center mb-7 text-center">
-          <div className="relative p-3.5 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 text-white shadow-lg shadow-pink-500/30 mb-3.5 group">
-            <Compass className="h-8 w-8 transition-transform duration-300 group-hover:rotate-45" />
-            <Sparkles className="h-4 w-4 absolute -top-1 -right-1 text-pink-300 animate-pulse" />
+        {/* Logo and App Title */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex p-3.5 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white shadow-lg shadow-pink-500/30 animate-float-slow">
+            <Compass className="h-8 w-8" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-300 bg-clip-text text-transparent">
-            {isRegister ? 'สร้างบัญชีผู้ใช้ใหม่' : 'เข้าสู่ระบบ Travel Tracker'}
+          <h1 className="text-2xl font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+            {isRegister ? 'สร้างบัญชีผู้ใช้ใหม่' : 'ยินดีต้อนรับสู่ Travel Tracker'}
           </h1>
-          <p className="text-xs text-slate-600 dark:text-purple-300/70 mt-1 font-medium">
-            {isRegister ? 'เริ่มต้นวางแผนทริป จัดการงบ และสแกนใบเสร็จด้วย AI' : 'ยินดีต้อนรับกลับสู่ระบบจัดการทริปและรายจ่ายของคุณ'}
+          <p className="text-xs text-slate-500 dark:text-purple-300/70 font-medium">
+            {isRegister ? 'เริ่มต้นวางแผนทริป จัดการงบ และสแกนใบเสร็จด้วย AI' : 'เข้าสู่ระบบเพื่อจัดการแผนเที่ยวและเคลียร์บิลกับเพื่อน'}
           </p>
         </div>
 
-        {/* แจ้งเตือนข้อผิดพลาด / ความสำเร็จ */}
-        {errorMsg && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-semibold border border-rose-200 dark:border-rose-900/60 flex items-center gap-2">
-            <span>⚠️</span> <span>{errorMsg}</span>
-          </div>
-        )}
-        {successMsg && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200 dark:border-emerald-900/60 flex items-center gap-2">
-            <span>✅</span> <span>{successMsg}</span>
+        {/* Invite Flow Banner */}
+        {isInviteFlow && (
+          <div className="p-3.5 rounded-2xl bg-pink-50/80 dark:bg-purple-950/40 border border-pink-200 dark:border-pink-900/60 text-center space-y-1 animate-in fade-in">
+            <span className="text-xs font-black text-pink-600 dark:text-pink-400 flex items-center justify-center gap-1.5">
+              <Users className="h-4 w-4" /> คุณได้รับคำเชิญเข้าร่วมทริป! ✈️
+            </span>
+            <p className="text-[11px] text-slate-600 dark:text-purple-300 font-medium">
+              {isRegister ? 'สมัครสมาชิกเสร็จแล้ว ระบบจะพาคุณเข้าสู่ทริปทันที' : 'เข้าสู่ระบบเพื่อเริ่มวางแผนและบันทึกค่าใช้จ่ายร่วมกัน'}
+            </p>
           </div>
         )}
 
-        {/* ฟอร์มเข้าสู่ระบบ / สมัครสมาชิก */}
+        {/* Alerts */}
+        {errorMsg && (
+          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/80 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+              <span>{errorMsg}</span>
+            </div>
+            {errorMsg.includes('เคยสมัคร') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegister(false);
+                  setErrorMsg('');
+                }}
+                className="px-2.5 py-1 rounded-lg bg-pink-600 text-white text-[10px] font-black shrink-0 hover:bg-pink-700 cursor-pointer"
+              >
+                เข้าสู่ระบบเลย
+              </button>
+            )}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
+        {/* Form */}
         <form onSubmit={handleAuth} className="space-y-4">
           {isRegister && (
-            <div>
-              <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">
+            <div className="space-y-1.5 animate-in fade-in duration-200">
+              <label className="block text-xs font-bold text-slate-700 dark:text-purple-200">
                 ชื่อที่ใช้แสดง (Display Name)
               </label>
-              <div className="relative flex items-center">
-                <User className="absolute left-3.5 h-4 w-4 text-slate-400 dark:text-purple-400 pointer-events-none" />
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-purple-400" />
                 <input
                   type="text"
-                  required
-                  placeholder="เช่น Somchai Travel"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-sm outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-purple-600"
+                  placeholder="เช่น Popcornz, Alex"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-purple-800/70 bg-slate-50/70 dark:bg-[#1a1228]/70 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 dark:focus:border-pink-500 transition-all font-medium"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                 />
@@ -181,54 +259,52 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div>
-            <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-purple-200">อีเมล</label>
-            <div className="relative flex items-center">
-              <Mail className="absolute left-3.5 h-4 w-4 text-slate-400 dark:text-purple-400 pointer-events-none" />
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-700 dark:text-purple-200">
+              อีเมล
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-purple-400" />
               <input
                 type="email"
                 required
                 placeholder="name@example.com"
-                className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-sm outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-purple-600"
+                className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-purple-800/70 bg-slate-50/70 dark:bg-[#1a1228]/70 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 dark:focus:border-pink-500 transition-all font-medium"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="block text-xs font-bold text-slate-800 dark:text-purple-200">รหัสผ่าน</label>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <label className="block text-xs font-bold text-slate-700 dark:text-purple-200">
+                รหัสผ่าน
+              </label>
               {!isRegister && (
                 <button
                   type="button"
                   onClick={() => setShowForgotModal(true)}
-                  className="text-[11px] font-bold text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 hover:underline cursor-pointer"
+                  className="text-[11px] font-bold text-pink-600 dark:text-pink-400 hover:underline cursor-pointer"
                 >
                   ลืมรหัสผ่าน?
                 </button>
               )}
             </div>
-
-            {/* ช่องกรอก Password พร้อมปุ่ม Show/Hide */}
-            <div className="relative flex items-center">
-              <Lock className="absolute left-3.5 h-4 w-4 text-slate-400 dark:text-purple-400 pointer-events-none" />
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-purple-400" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
-                placeholder="อย่างน้อย 6 ตัวอักษร"
-                className="w-full pl-10 pr-12 py-3 rounded-2xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-sm outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-purple-600"
+                placeholder="••••••••"
+                className="w-full pl-10 pr-10 py-3 rounded-2xl border border-slate-200 dark:border-purple-800/70 bg-slate-50/70 dark:bg-[#1a1228]/70 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 dark:focus:border-pink-500 transition-all font-medium"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
-                tabIndex={-1}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 p-2 text-slate-400 hover:text-pink-600 dark:hover:text-pink-400 cursor-pointer z-20 rounded-xl hover:bg-slate-100 dark:hover:bg-purple-900/40 transition-colors flex items-center justify-center"
-                title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
-                aria-label={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-purple-300 cursor-pointer"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -238,100 +314,103 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 mt-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:via-purple-700 hover:to-indigo-700 font-bold text-sm text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white text-xs font-black shadow-lg shadow-pink-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
             {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> กำลังดำเนินการ...
-              </>
-            ) : isRegister ? (
-              <>
-                สมัครสมาชิก <ArrowRight className="h-4 w-4" />
-              </>
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                เข้าสู่ระบบ <ArrowRight className="h-4 w-4" />
+                <span>{isRegister ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ'}</span>
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
         </form>
 
-        {/* Toggle เข้าสู่ระบบ / สมัครสมาชิก */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-slate-600 dark:text-purple-300/70 font-medium">
-            {isRegister ? 'มีบัญชีผู้ใช้อยู่แล้ว?' : 'ยังไม่มีบัญชีผู้ใช้?'}{' '}
-            <button
-              type="button"
-              onClick={() => {
-                setIsRegister(!isRegister);
-                setErrorMsg('');
-                setSuccessMsg('');
-              }}
-              className="font-bold text-pink-600 dark:text-pink-400 hover:underline cursor-pointer ml-1"
-            >
-              {isRegister ? 'เข้าสู่ระบบที่นี่' : 'สมัครสมาชิกฟรี'}
-            </button>
-          </p>
+        {/* Toggle between Login and Register */}
+        <div className="text-center pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setErrorMsg('');
+              setSuccessMsg('');
+            }}
+            className="text-xs text-slate-600 dark:text-purple-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-medium cursor-pointer"
+          >
+            {isRegister ? (
+              <span>มีบัญชีผู้ใช้อยู่แล้ว? <b className="text-pink-600 dark:text-pink-400 underline">เข้าสู่ระบบที่นี่</b></span>
+            ) : (
+              <span>ยังไม่มีบัญชีผู้ใช้? <b className="text-pink-600 dark:text-pink-400 underline">สมัครสมาชิกใหม่</b></span>
+            )}
+          </button>
         </div>
 
       </div>
 
       {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#120c1e] p-6 shadow-2xl border border-slate-200 dark:border-purple-800/60 glow-purple">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-xl bg-pink-100 dark:bg-pink-950 text-pink-500">
-                <KeyRound className="h-5 w-5" />
-              </div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">รีเซ็ตรหัสผ่าน</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#130d22] p-6 shadow-2xl border border-slate-200 dark:border-purple-800/70 space-y-4">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+              <KeyRound className="h-5 w-5 text-pink-500" />
+              <h3 className="font-black text-sm">รีเซ็ตรหัสผ่าน</h3>
             </div>
-            <p className="text-xs text-slate-600 dark:text-purple-300/70 mb-4 font-medium">
+            <p className="text-xs text-slate-500 dark:text-purple-300/70 font-medium">
               กรอกอีเมลของคุณเพื่อรับลิงก์สำหรับตั้งรหัสผ่านใหม่
             </p>
 
             {forgotMsg && (
-              <div className="mb-4 p-3 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 text-xs font-semibold border border-purple-200 dark:border-purple-900/60">
+              <div className="p-3 rounded-xl bg-pink-50 dark:bg-purple-950/60 border border-pink-200 dark:border-purple-900 text-xs font-bold text-pink-700 dark:text-pink-300">
                 {forgotMsg}
               </div>
             )}
 
             <form onSubmit={handleForgotPassword} className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">อีเมลที่ลงทะเบียน</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
+              <input
+                type="email"
+                required
+                placeholder="name@example.com"
+                className="w-full p-3 rounded-xl border border-slate-200 dark:border-purple-800 bg-slate-50 dark:bg-[#1c1328] text-xs outline-none focus:border-pink-500 text-slate-900 dark:text-white font-medium"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+              />
+              <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     setShowForgotModal(false);
                     setForgotMsg('');
                   }}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 cursor-pointer"
                 >
                   ปิด
                 </button>
                 <button
                   type="submit"
                   disabled={forgotLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-50"
                 >
-                  {forgotLoading ? 'กำลังส่ง...' : 'ส่งลิงก์'}
+                  {forgotLoading ? 'กำลังส่ง...' : 'ส่งอีเมลรีเซ็ต'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f7fc] dark:bg-[#08050e]">
+        <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
