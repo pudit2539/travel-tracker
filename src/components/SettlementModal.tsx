@@ -16,6 +16,7 @@ interface SettlementModalProps {
   expenses: any[];
   members: any[];
   currentUser: any;
+  userDisplayName?: string;
   currency: string;
 }
 
@@ -25,6 +26,7 @@ export default function SettlementModal({
   expenses,
   members,
   currentUser,
+  userDisplayName,
   currency = 'JPY',
 }: SettlementModalProps) {
   const [fxRate, setFxRate] = useState<number>(() => getCustomJpyToThbRate());
@@ -35,40 +37,53 @@ export default function SettlementModal({
   const membersList = useMemo(() => {
     const list: { name: string; avatar: string; id?: string }[] = [];
     const seenNames = new Set<string>();
+    const seenIds = new Set<string>();
 
     // 1. Add current user / owner
-    const myName = currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
+    const myName = userDisplayName || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
     const myAvatar = currentUser?.user_metadata?.avatar_id || 'cat_pink';
     list.push({ name: myName, avatar: myAvatar, id: currentUser?.id });
-    seenNames.add(myName.toLowerCase());
+    seenNames.add(myName.toLowerCase().trim());
+    if (currentUser?.id) seenIds.add(currentUser.id.toLowerCase());
+    if (currentUser?.email) seenNames.add(currentUser.email.toLowerCase().trim());
 
     // 2. Add members
     members.forEach((m) => {
-      const name = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
-      if (!seenNames.has(name.toLowerCase())) {
+      const name = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก').trim();
+      const mUserId = m.user_id?.toLowerCase();
+      const isAlreadyIn = (mUserId && seenIds.has(mUserId)) || seenNames.has(name.toLowerCase());
+
+      if (!isAlreadyIn) {
         list.push({
           name,
           avatar: m.profiles?.avatar_id || 'cat_purple',
           id: m.user_id,
         });
         seenNames.add(name.toLowerCase());
+        if (m.user_id) seenIds.add(m.user_id.toLowerCase());
+        if (m.profiles?.email) seenNames.add(m.profiles.email.toLowerCase().trim());
       }
     });
 
     // 3. Add any payers recorded in expenses who might not be in members table
     expenses.forEach((e) => {
-      if (e.payer_name && !seenNames.has(e.payer_name.toLowerCase())) {
+      const pName = (e.payer_name || '').trim();
+      const pId = e.payer_id?.toLowerCase();
+      const isAlreadyIn = (pId && seenIds.has(pId)) || (pName && seenNames.has(pName.toLowerCase()));
+
+      if (pName && !isAlreadyIn) {
         list.push({
-          name: e.payer_name,
+          name: pName,
           avatar: e.payer_avatar || 'cat_blue',
           id: e.payer_id,
         });
-        seenNames.add(e.payer_name.toLowerCase());
+        seenNames.add(pName.toLowerCase());
+        if (e.payer_id) seenIds.add(e.payer_id.toLowerCase());
       }
     });
 
     return list;
-  }, [members, currentUser, expenses]);
+  }, [members, currentUser, userDisplayName, expenses]);
 
   // Calculate settlement
   const settlement = useMemo(() => {

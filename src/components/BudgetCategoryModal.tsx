@@ -1,7 +1,7 @@
 // src/components/BudgetCategoryModal.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   X, DollarSign, Plus, Trash2, Check, Sparkles, 
   Coins, AlertCircle, CheckCircle2, PieChart, Sliders, 
@@ -69,17 +69,40 @@ export default function BudgetCategoryModal({
   const [newCatIcon, setNewCatIcon] = useState('🎢');
   const [showAddCatForm, setShowAddCatForm] = useState(false);
 
-  // List of all members (Owner + Trip Members)
-  const allMembersList = [
-    { key: 'me', name: userDisplayName + ' (ฉัน)', email: currentUser?.email, avatar: 'cat_pink', isMe: true },
-    ...members.map(m => ({
-      key: m.user_id || m.id,
-      name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
-      email: m.profiles?.email,
-      avatar: m.profiles?.avatar_id || 'cat_yellow',
-      isMe: false,
-    }))
-  ];
+  // List of all members (Owner + Trip Members) with strict deduplication
+  const allMembersList = useMemo(() => {
+    const myId = currentUser?.id?.toLowerCase();
+    const myName = userDisplayName?.trim().toLowerCase();
+    const myEmail = currentUser?.email?.trim().toLowerCase();
+    const seenKeys = new Set<string>();
+
+    const otherMems = members.filter((m) => {
+      const mUserId = m.user_id?.toLowerCase();
+      const mName = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || '').trim().toLowerCase();
+      const mEmail = m.profiles?.email?.trim().toLowerCase();
+
+      const isMe = (myId && mUserId === myId) || 
+                   (myName && mName === myName) || 
+                   (myEmail && mEmail === myEmail);
+      if (isMe) return false;
+
+      const key = m.user_id || mName || m.id;
+      if (seenKeys.has(key)) return false;
+      seenKeys.add(key);
+      return true;
+    });
+
+    return [
+      { key: 'me', name: userDisplayName + ' (ฉัน)', email: currentUser?.email, avatar: 'cat_pink', isMe: true },
+      ...otherMems.map(m => ({
+        key: m.user_id || m.id,
+        name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
+        email: m.profiles?.email,
+        avatar: m.profiles?.avatar_id || 'cat_yellow',
+        isMe: false,
+      }))
+    ];
+  }, [members, currentUser, userDisplayName]);
 
   useEffect(() => {
     if (isOpen && trip) {

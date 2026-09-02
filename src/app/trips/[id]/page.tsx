@@ -250,15 +250,24 @@ export default function TripDetailPage() {
         .order('sort_order', { ascending: true });
       if (planData) setItinerary(planData);
 
-      // 3. ดึงรายการค่าใช้จ่าย
+      // 3. ดึงรายการค่าใช้จ่าย (พร้อมกำจัดข้อมูลซ้ำ)
       const { data: expData } = await supabase
         .from('expenses')
         .select('*')
         .eq('trip_id', tripId)
         .order('spent_at', { ascending: false });
-      if (expData) setExpenses(expData);
+      if (expData) {
+        const seenExpIds = new Set<string>();
+        const uniqueExp = expData.filter((e) => {
+          if (!e.id) return true;
+          if (seenExpIds.has(e.id)) return false;
+          seenExpIds.add(e.id);
+          return true;
+        });
+        setExpenses(uniqueExp);
+      }
 
-      // 4. ดึงรายชื่อสมาชิกทริป
+      // 4. ดึงรายชื่อสมาชิกทริป (พร้อมกำจัดข้อมูลซ้ำ)
       try {
         const { data: memberData, error: memErr } = await supabase
           .from('trip_members')
@@ -266,13 +275,29 @@ export default function TripDetailPage() {
           .eq('trip_id', tripId);
         
         if (memberData && !memErr) {
-          setMembers(memberData);
+          const seenMemKeys = new Set<string>();
+          const uniqueMembers = memberData.filter((m) => {
+            const k = m.user_id || m.id;
+            if (seenMemKeys.has(k)) return false;
+            seenMemKeys.add(k);
+            return true;
+          });
+          setMembers(uniqueMembers);
         } else {
           const { data: simpleMembers } = await supabase
             .from('trip_members')
             .select('*')
             .eq('trip_id', tripId);
-          if (simpleMembers) setMembers(simpleMembers);
+          if (simpleMembers) {
+            const seenMemKeys = new Set<string>();
+            const uniqueSimple = simpleMembers.filter((m) => {
+              const k = m.user_id || m.id;
+              if (seenMemKeys.has(k)) return false;
+              seenMemKeys.add(k);
+              return true;
+            });
+            setMembers(uniqueSimple);
+          }
         }
       } catch (memE) {
         console.warn('Trip members fetch warn:', memE);
@@ -844,26 +869,92 @@ export default function TripDetailPage() {
     }
   }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members]);
 
-  // สมาชิกคนอื่นๆ (กรองตัวฉันเองออกเพื่อไม่ให้มีปุ่มซ้ำ)
+  // สมาชิกคนอื่นๆ (กรองตัวฉันเองออกอย่างเข้มงวด และตัดชื่อซ้ำ)
   const otherMembers = useMemo(() => {
+    const myId = currentUser?.id?.toLowerCase();
+    const myName = userDisplayName?.trim().toLowerCase();
+    const myEmail = currentUser?.email?.trim().toLowerCase();
+    const seen = new Set<string>();
+
     return members.filter((m) => {
-      const isMe = (currentUser?.id && m.user_id === currentUser.id) ||
-                   (m.profiles?.display_name && userDisplayName && m.profiles.display_name.trim().toLowerCase() === userDisplayName.trim().toLowerCase()) ||
-                   (m.profiles?.email && currentUser?.email && m.profiles.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase());
-      return !isMe;
+      const mUserId = m.user_id?.toLowerCase();
+      const mName = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || '').trim().toLowerCase();
+      const mEmail = m.profiles?.email?.trim().toLowerCase();
+
+      const isMe = (myId && mUserId === myId) ||
+                   (myName && mName === myName) ||
+                   (myEmail && mEmail === myEmail);
+      if (isMe) return false;
+
+      const uniqueKey = mUserId || mName || m.id;
+      if (seen.has(uniqueKey)) return false;
+      seen.add(uniqueKey);
+
+      return true;
     });
   }, [members, currentUser, userDisplayName]);
 
-  // สรุปยอดจ่ายแยกตามรายคน
+  // รายชื่อผู้จ่ายคนอื่นๆ ทั้งหมด (สำหรับแท็บตัวกรองรายจ่าย กรองตัวฉันเองออกอย่างสมบูรณ์)
+  const otherPayers = useMemo(() => {
+    const myId = currentUser?.id?.toLowerCase();
+    const myName = userDisplayName?.trim().toLowerCase();
+    const myEmail = currentUser?.email?.trim().toLowerCase();
+
+    const map = new Map<string, { key: string; name: string; avatar?: string }>();
+
+    // 1. จากตารางสมาชิก (Members)
+    members.forEach((m) => {
+      const mUserId = m.user_id?.toLowerCase();
+      const mName = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก').trim();
+      const mEmail = m.profiles?.email?.trim().toLowerCase();
+
+      const isMe = (myId && mUserId === myId) || 
+                   (myName && mName.toLowerCase() === myName) || 
+                   (myEmail && mEmail === myEmail);
+      if (isMe) return;
+
+      const norm = mName.toLowerCase();
+      const key = m.user_id || mName;
+      if (!map.has(norm) && !map.has(key)) {
+        const obj = { key, name: mName, avatar: m.profiles?.avatar_id };
+        map.set(norm, obj);
+        map.set(key, obj);
+      }
+    });
+
+    // 2. จากประวัติค่าใช้จ่าย (Expenses)
+    expenses.forEach((e) => {
+      const pName = (e.payer_name || '').trim();
+      if (!pName) return;
+
+      const isMe = (myId && e.payer_id?.toLowerCase() === myId) || 
+                   (myName && pName.toLowerCase() === myName);
+      if (isMe) return;
+
+      const norm = pName.toLowerCase();
+      const pKey = e.payer_id || pName;
+      if (!map.has(norm) && !map.has(pKey)) {
+        const obj = { key: pKey, name: pName, avatar: e.payer_avatar };
+        map.set(norm, obj);
+        map.set(pKey, obj);
+      }
+    });
+
+    return Array.from(new Set(map.values()));
+  }, [members, expenses, currentUser, userDisplayName]);
+
+  // สรุปยอดจ่ายแยกตามรายคน (ตัดชื่อซ้ำ)
   const distinctPayers = useMemo(() => {
+    const myId = currentUser?.id?.toLowerCase();
+    const myName = userDisplayName?.trim().toLowerCase();
     const map = new Map<string, { name: string; avatar?: string; total: number; isMe: boolean; key: string }>();
 
     expenses.forEach((e) => {
-      const isMe = (e.payer_id && e.payer_id === currentUser?.id) ||
-                   (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase());
-      const key = isMe ? 'me' : (e.payer_id || e.payer_name || 'สมาชิก');
+      const isMe = (myId && e.payer_id?.toLowerCase() === myId) ||
+                   (myName && e.payer_name && e.payer_name.trim().toLowerCase() === myName);
+      const key = isMe ? 'me' : ((e.payer_id || e.payer_name || 'สมาชิก').trim());
       const name = isMe ? `${userDisplayName} (ฉัน)` : (e.payer_name || 'สมาชิก');
-      const avatar = isMe ? userProfile?.avatar_id : e.payer_avatar;
+      const avatar = isMe ? (userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id) : e.payer_avatar;
 
       if (!map.has(key)) {
         map.set(key, { name, avatar, total: 0, isMe, key });
@@ -878,12 +969,24 @@ export default function TripDetailPage() {
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => {
       if (expenseCategoryFilter !== 'all' && e.category !== expenseCategoryFilter) return false;
+      
       if (expensePayerFilter !== 'all') {
-        const isMe = (e.payer_id && e.payer_id === currentUser?.id) ||
-                     (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase());
-        if (expensePayerFilter === 'me' && !isMe) return false;
-        if (expensePayerFilter !== 'me' && e.payer_id !== expensePayerFilter && e.payer_name !== expensePayerFilter) return false;
+        const myId = currentUser?.id?.toLowerCase();
+        const myName = userDisplayName?.trim().toLowerCase();
+        const isMe = (myId && e.payer_id?.toLowerCase() === myId) ||
+                     (myName && e.payer_name && e.payer_name.trim().toLowerCase() === myName);
+
+        if (expensePayerFilter === 'me') {
+          if (!isMe) return false;
+        } else {
+          if (isMe) return false;
+          const target = expensePayerFilter.trim().toLowerCase();
+          const matchesId = e.payer_id && e.payer_id.trim().toLowerCase() === target;
+          const matchesName = e.payer_name && e.payer_name.trim().toLowerCase() === target;
+          if (!matchesId && !matchesName) return false;
+        }
       }
+
       if (expenseSearchQuery.trim()) {
         const query = expenseSearchQuery.toLowerCase();
         const titleMatch = (e.title || '').toLowerCase().includes(query);
@@ -1677,24 +1780,23 @@ export default function TripDetailPage() {
                   <span>ของฉัน ({userDisplayName})</span>
                 </button>
 
-                {otherMembers.map((m) => {
-                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
-                  const mCat = getCatAvatar(m.profiles?.avatar_id);
-                  const isSelected = expensePayerFilter === (m.user_id || m.id) || expensePayerFilter === mName;
+                {otherPayers.map((p) => {
+                  const pCat = getCatAvatar(p.avatar);
+                  const isSelected = expensePayerFilter.toLowerCase() === p.key.toLowerCase() || expensePayerFilter.toLowerCase() === p.name.toLowerCase();
 
                   return (
                     <button
-                      key={m.id}
+                      key={p.key}
                       type="button"
-                      onClick={() => setExpensePayerFilter(m.user_id || mName)}
+                      onClick={() => setExpensePayerFilter(p.key)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
                         isSelected
                           ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
                           : 'bg-slate-100 dark:bg-purple-950/60 text-slate-700 dark:text-purple-300'
                       }`}
                     >
-                      <span>{mCat.emoji}</span>
-                      <span>{mName}</span>
+                      <span>{pCat.emoji}</span>
+                      <span>{p.name}</span>
                     </button>
                   );
                 })}
@@ -2126,6 +2228,7 @@ export default function TripDetailPage() {
         expenses={expenses}
         members={members}
         currentUser={currentUser}
+        userDisplayName={userDisplayName}
         currency={trip?.currency || 'JPY'}
       />
 
