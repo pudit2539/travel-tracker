@@ -6,6 +6,7 @@ import {
   MapPin, ExternalLink, Navigation, Compass, 
   Bus, Footprints, Clock, ArrowRight, Sparkles, ChevronRight
 } from 'lucide-react';
+import { extractCleanPlaceName } from '@/components/InteractiveTripMap';
 
 interface RouteVisualizerProps {
   dayLabel: string;
@@ -19,14 +20,24 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
 
   // Build combined Google Maps Multi-Stop directions link
   const generateMultiStopMapsUrl = () => {
-    if (items.length === 1) {
-      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(items[0].main_place)}`;
+    // Filter out international flights & clean places
+    const validPlaces = items
+      .filter(i => !i.main_place?.includes('สุวรรณภูมิ') && !i.main_place?.includes('กรุงเทพ'))
+      .map(i => extractCleanPlaceName(i.main_place, i.city))
+      .filter(name => name.length > 0);
+
+    if (validPlaces.length === 0) return '';
+    if (validPlaces.length === 1) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(validPlaces[0])}`;
     }
-    const origin = encodeURIComponent(items[0].main_place);
-    const destination = encodeURIComponent(items[items.length - 1].main_place);
-    const waypoints = items
+
+    // Cap to 5 stops for transit mode reliability
+    const stopsToRoute = validPlaces.slice(0, 5);
+    const origin = encodeURIComponent(stopsToRoute[0]);
+    const destination = encodeURIComponent(stopsToRoute[stopsToRoute.length - 1]);
+    const waypoints = stopsToRoute
       .slice(1, -1)
-      .map((it) => encodeURIComponent(it.main_place))
+      .map((p) => encodeURIComponent(p))
       .join('|');
 
     let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=transit`;
@@ -37,7 +48,7 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
   };
 
   return (
-    <div className="relative overflow-hidden p-5 rounded-3xl border border-slate-200/80 dark:border-purple-800/60 bg-white/95 dark:bg-[#130d22]/95 backdrop-blur-xl card-elevation transition-all space-y-4">
+    <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-purple-800/60 bg-white/95 dark:bg-[#1a182d]/95 backdrop-blur-xl card-elevation transition-all space-y-4">
       
       {/* Header with Day Label & Multi-Stop Button */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -47,7 +58,7 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
           </div>
           <div>
             <h3 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-              <span>แผนที่เส้นทางประจำวัน: <b className="text-pink-600 dark:text-pink-400">{dayLabel}</b></span>
+              <span>แผนที่เส้นทาง: <b className="text-pink-600 dark:text-pink-400">{dayLabel}</b></span>
               <span className="text-[10px] font-extrabold text-pink-700 dark:text-pink-300 bg-pink-100 dark:bg-pink-950 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-900">
                 {items.length} จุดหมาย
               </span>
@@ -58,69 +69,70 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
           </div>
         </div>
 
-        <a
-          href={generateMultiStopMapsUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-pink-500/25 transition-all cursor-pointer hover:scale-105"
-        >
-          <Compass className="h-4 w-4" />
-          <span>เปิดเส้นทางนำทางรวมทั้งวัน</span>
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
+        {items.length > 0 && (
+          <a
+            href={generateMultiStopMapsUrl()}
+            target="_blank"
+            rel="noreferrer"
+            className="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <Compass className="h-3.5 w-3.5" />
+            <span>เปิดเส้นทางใน Google Maps</span>
+            <ExternalLink className="h-2.5 w-2.5" />
+          </a>
+        )}
       </div>
 
-      {/* Horizontal Flow Line with interactive stop nodes */}
-      <div className="relative pt-2 pb-2 overflow-x-auto custom-scrollbar">
-        <div className="flex items-center min-w-max gap-1 px-1">
-          {items.map((item, idx) => {
-            const isLast = idx === items.length - 1;
-            const isHovered = activeStop === idx;
+      {/* Horizontal Route Stops Carousel */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+        {items.map((item, idx) => {
+          const isFirst = idx === 0;
+          const isLast = idx === items.length - 1;
+          const cleanName = extractCleanPlaceName(item.main_place, item.city);
+          const directMapUrl = (item.main_place_links && item.main_place_links[0]) 
+            ? item.main_place_links[0] 
+            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanName)}`;
 
-            return (
-              <div key={idx} className="flex items-center">
-                
-                {/* Stop Node with Radar Pulse effect */}
-                <div
-                  onMouseEnter={() => setActiveStop(idx)}
-                  onMouseLeave={() => setActiveStop(null)}
-                  className={`relative p-3 rounded-2xl border transition-all duration-300 cursor-pointer flex items-center gap-2.5 max-w-[240px] ${
-                    isHovered
-                      ? 'border-pink-500 bg-pink-50/80 dark:bg-pink-950/70 -translate-y-1 shadow-lg shadow-pink-500/20'
-                      : 'border-slate-200/90 dark:border-purple-900/50 bg-slate-50/70 dark:bg-[#180f28]/80 hover:border-pink-300'
-                  }`}
-                >
-                  <div className={`w-7 h-7 rounded-full text-white text-xs font-black flex items-center justify-center shrink-0 shadow-sm transition-all duration-300 ${
-                    isHovered 
-                      ? 'bg-pink-500 animate-radar-pulse' 
-                      : 'bg-gradient-to-tr from-pink-500 to-purple-600'
-                  }`}>
-                    {idx + 1}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-purple-400 block truncate">
-                      {item.time_slot || item.city || `จุดที่ ${idx + 1}`}
-                    </span>
-                    <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                      {item.main_place}
-                    </h4>
-                  </div>
+          return (
+            <div key={item.id || idx} className="flex items-center gap-2 shrink-0">
+              <a
+                href={directMapUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="group p-3 rounded-2xl border border-slate-200/80 dark:border-purple-900/50 bg-slate-50/70 dark:bg-[#11101d]/60 hover:border-pink-500 hover:bg-pink-50/40 dark:hover:bg-purple-950/40 transition-all cursor-pointer flex items-center gap-2.5 max-w-[200px]"
+                title="เปิดดูใน Google Maps"
+              >
+                <div className={`w-6 h-6 rounded-xl flex items-center justify-center text-[10px] font-black text-white shrink-0 ${
+                  isFirst 
+                    ? 'bg-gradient-to-tr from-emerald-500 to-teal-600' 
+                    : isLast 
+                    ? 'bg-gradient-to-tr from-rose-500 to-pink-600' 
+                    : 'bg-gradient-to-tr from-pink-500 to-purple-600'
+                }`}>
+                  {idx + 1}
                 </div>
 
-                {/* Connecting Arrow with Transport */}
-                {!isLast && (
-                  <div className="flex flex-col items-center px-2 shrink-0">
-                    <div className="flex items-center gap-1 text-[9px] font-bold text-purple-600 dark:text-purple-400 mb-0.5">
-                      <Bus className="h-3.5 w-3.5 text-pink-500 animate-pulse" />
-                    </div>
-                    <div className="w-10 h-0.5 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-pink-600 transition-colors">
+                      {cleanName}
+                    </span>
+                    <ExternalLink className="h-2.5 w-2.5 text-slate-400 shrink-0" />
                   </div>
-                )}
+                  <span className="text-[9px] text-slate-400 dark:text-purple-400 block font-medium truncate">
+                    {item.time_slot || item.city || 'จุดแวะ'}
+                  </span>
+                </div>
+              </a>
 
-              </div>
-            );
-          })}
-        </div>
+              {!isLast && (
+                <div className="flex items-center text-slate-300 dark:text-purple-800">
+                  <ChevronRight className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
     </div>
