@@ -89,7 +89,6 @@ export default function TripDetailPage() {
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState<string>('all');
   const [expensePayerFilter, setExpensePayerFilter] = useState<string>('all');
   const [expenseSearchQuery, setExpenseSearchQuery] = useState<string>('');
-  const [analyticsPayerFilter, setAnalyticsPayerFilter] = useState<string>('all');
 
   // Modals state
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -154,7 +153,7 @@ export default function TripDetailPage() {
     spent_at: new Date().toISOString().split('T')[0],
   });
 
-  // Form states for Activity with dynamic rows
+  // Form states for Activity
   const [activityForm, setActivityForm] = useState({
     date_label: '',
     time_slot: '',
@@ -174,7 +173,6 @@ export default function TripDetailPage() {
   const fetchTripData = useCallback(async () => {
     if (!tripId) return;
     
-    // 1. Load immediate local cache to display content instantaneously
     try {
       const offlineCached = getOfflineTripCache();
       if (offlineCached?.data) {
@@ -198,7 +196,6 @@ export default function TripDetailPage() {
     try {
       setFxRate(getCustomJpyToThbRate());
 
-      // Load Categories & Budgets & Photos
       const cats = getTripCategories(tripId);
       const cBudgets = getCategoryBudgets(tripId);
       const mBudgets = getMemberBudgets(tripId);
@@ -208,13 +205,11 @@ export default function TripDetailPage() {
       setMemberBudgets(mBudgets);
       setPhotosCount(tripPhotos.length);
 
-      // Check if Offline
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         setLoading(false);
         return;
       }
 
-      // 0. ดึง session และโปรไฟล์ปัจจุบันอย่างปลอดภัย
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
@@ -250,24 +245,26 @@ export default function TripDetailPage() {
         .order('sort_order', { ascending: true });
       if (planData) setItinerary(planData);
 
-      // 3. ดึงรายการค่าใช้จ่าย (พร้อมกำจัดข้อมูลซ้ำ)
+      // 3. ดึงรายการค่าใช้จ่าย (พร้อมตัดข้อมูลซ้ำ)
       const { data: expData } = await supabase
         .from('expenses')
         .select('*')
         .eq('trip_id', tripId)
         .order('spent_at', { ascending: false });
+
+      let uniqueExpList: any[] = [];
       if (expData) {
         const seenExpIds = new Set<string>();
-        const uniqueExp = expData.filter((e) => {
+        uniqueExpList = expData.filter((e) => {
           if (!e.id) return true;
           if (seenExpIds.has(e.id)) return false;
           seenExpIds.add(e.id);
           return true;
         });
-        setExpenses(uniqueExp);
+        setExpenses(uniqueExpList);
       }
 
-      // 4. ดึงรายชื่อสมาชิกทริป (พร้อมกำจัดข้อมูลซ้ำ)
+      // 4. ดึงรายชื่อสมาชิกทริป (พร้อมตัดข้อมูลซ้ำ)
       try {
         const { data: memberData, error: memErr } = await supabase
           .from('trip_members')
@@ -307,7 +304,7 @@ export default function TripDetailPage() {
       cacheTripOffline({
         trip: tripData,
         itinerary: planData || [],
-        expenses: expData || [],
+        expenses: uniqueExpList || [],
         categories: cats,
         categoryBudgets: cBudgets,
       });
@@ -389,7 +386,6 @@ export default function TripDetailPage() {
     }
   };
 
-  // เปิด Modal เพิ่มกิจกรรมใหม่
   const handleOpenAddActivity = (afterOrder: number | null = null, defaultDateLabel?: string) => {
     resetActivityForm();
     setEditingActivity(null);
@@ -401,7 +397,6 @@ export default function TripDetailPage() {
     setShowActivityModal(true);
   };
 
-  // บันทึก / แก้ไขกิจกรรม
   const handleSaveActivity = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activityForm.main_place.trim()) return;
@@ -547,7 +542,7 @@ export default function TripDetailPage() {
     });
   };
 
-  // สแกนใบเสร็จด้วย AI OCR & Smart Extractor
+  // สแกนใบเสร็จด้วย AI OCR
   const handleReceiptImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -595,7 +590,7 @@ export default function TripDetailPage() {
     };
   };
 
-  // บันทึกค่าใช้จ่ายพร้อมเก็บรูปใบเสร็จไว้ใน Client IndexedDB Storage
+  // บันทึกค่าใช้จ่าย
   const handleSaveExpense = async () => {
     if (savingExpense) return;
     if (!scannedData.amount || !scannedData.title) {
@@ -730,7 +725,7 @@ export default function TripDetailPage() {
     XLSX.writeFile(wb, `${tripTitle}_export.xlsx`);
   };
 
-  // RBAC permissions
+  // Permissions
   const isOwner = useMemo(() => {
     if (!currentUser) return false;
     if (trip?.created_by && trip.created_by === currentUser.id) return true;
@@ -749,7 +744,6 @@ export default function TripDetailPage() {
   const canAddExpense = currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'viewer';
   const canImportExcel = isOwner;
 
-  // เปลี่ยนสิทธิ์สมาชิก
   const handleUpdateMemberRole = async (memberId: string, newRole: 'editor' | 'viewer') => {
     if (!isOwner) return;
     try {
@@ -1060,7 +1054,6 @@ export default function TripDetailPage() {
                   {(trip?.name || trip?.title) || 'รายละเอียดทริป'}
                 </h1>
                 
-                {/* Online / Offline Status Badge */}
                 <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 ${
                   isOnline 
                     ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900' 
@@ -1081,10 +1074,8 @@ export default function TripDetailPage() {
 
           {/* Right Action Icons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Notification Bell */}
             <NotificationBell expenses={expenses} itinerary={itinerary} members={members} tripTitle={trip?.name || trip?.title} />
 
-            {/* Profile Avatar Button */}
             <button
               onClick={() => setShowProfileModal(true)}
               className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 hover:border-pink-500 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
@@ -1102,7 +1093,6 @@ export default function TripDetailPage() {
               </span>
             </button>
 
-            {/* Share button */}
             <button
               onClick={() => setShowShareModal(true)}
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 text-xs font-bold hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer"
@@ -1112,7 +1102,6 @@ export default function TripDetailPage() {
               <span className="hidden sm:inline">แชร์</span>
             </button>
 
-            {/* Dark/Light Switcher */}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer"
@@ -1121,7 +1110,6 @@ export default function TripDetailPage() {
               {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-600" />}
             </button>
 
-            {/* Quick Logout Button */}
             {currentUser && (
               <button
                 onClick={async () => {
@@ -1357,7 +1345,6 @@ export default function TripDetailPage() {
               </div>
             )}
 
-            {/* Two Primary Action Buttons */}
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5">
               <button
                 onClick={() => {
@@ -1457,9 +1444,7 @@ export default function TripDetailPage() {
             
             {/* Header Toolbar */}
             <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
-              {/* Day filter pills & View Switcher (List vs Map) */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full custom-scrollbar">
-                {/* View Switcher Pill */}
                 <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-200 dark:bg-[#11101d] border border-slate-300 dark:border-purple-900/60 shrink-0">
                   <button
                     onClick={() => setItineraryViewMode('list')}
@@ -1514,7 +1499,6 @@ export default function TripDetailPage() {
                 )}
               </div>
 
-              {/* Action buttons */}
               <div className="flex items-center gap-2 ml-auto">
                 <button
                   onClick={() => setShowPrintableModal(true)}
@@ -1554,11 +1538,9 @@ export default function TripDetailPage() {
               </div>
             </div>
 
-            {/* Map Mode vs List Mode */}
             {itineraryViewMode === 'map' ? (
               <InteractiveTripMap itinerary={itinerary} selectedDay={selectedDayFilter} />
             ) : (
-              /* List of Itinerary Activities */
               filteredItinerary.length === 0 ? (
                 <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-purple-900/50 rounded-3xl p-6 bg-white/60 dark:bg-[#1a182d]/60">
                   <Navigation className="h-10 w-10 text-pink-500 mx-auto mb-2 animate-float-slow" />
@@ -1595,7 +1577,6 @@ export default function TripDetailPage() {
                         className="group p-4 rounded-3xl border border-slate-200/90 dark:border-purple-900/40 bg-white/95 dark:bg-[#1a182d]/95 card-elevation hover:border-pink-500/50 transition-all duration-300 space-y-2.5"
                       >
                         <div className="flex justify-between items-center gap-2">
-                          {/* Day & Time & City Badges with fixed nowrap */}
                           <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800/80 whitespace-nowrap shrink-0">
                               {item.date_label || `Day ${idx + 1}`}
@@ -1650,7 +1631,6 @@ export default function TripDetailPage() {
                         </div>
 
                         <div className="space-y-2">
-                          {/* Main Place as Clickable Google Maps Header */}
                           <div>
                             <a
                               href={mainPlaceMapsUrl}
@@ -1667,7 +1647,6 @@ export default function TripDetailPage() {
                             </a>
                           </div>
 
-                          {/* Food Recommendations with Clickable Google Maps Link */}
                           {item.food_recommendation && (
                             <div className="text-xs text-slate-700 dark:text-purple-200 flex items-start gap-2 pt-0.5">
                               <Utensils className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
@@ -1690,7 +1669,6 @@ export default function TripDetailPage() {
                             </div>
                           )}
 
-                          {/* Transport info */}
                           {item.transport_info && (
                             <div className="text-xs text-slate-600 dark:text-purple-300 flex items-center gap-1.5 font-medium">
                               <Bus className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
@@ -1698,7 +1676,6 @@ export default function TripDetailPage() {
                             </div>
                           )}
 
-                          {/* Backup Plan (Plan B) */}
                           {item.backup_plan && (
                             <div className="mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-purple-900/40">
                               <button
@@ -2084,7 +2061,6 @@ export default function TripDetailPage() {
                         </div>
                       </div>
 
-                      {/* Role Switcher for Owner */}
                       <div className="flex items-center gap-2">
                         {isOwner && !isTripOwner ? (
                           <div className="flex items-center gap-1.5">
@@ -2318,7 +2294,6 @@ export default function TripDetailPage() {
             <div className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               <div>
                 <label className="relative overflow-hidden flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-pink-400/80 dark:border-pink-600/80 rounded-2xl cursor-pointer bg-pink-50/40 dark:bg-[#11101d]/60 hover:opacity-90 transition-opacity">
-                  {/* Laser Scan Beam when scanning */}
                   {scanning && <div className="animate-scan-laser z-20" />}
 
                   {scanning ? (
@@ -2344,7 +2319,6 @@ export default function TripDetailPage() {
                 </label>
               </div>
 
-              {/* OCR Success Banner */}
               {ocrSuccessToast && (
                 <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
@@ -2656,7 +2630,6 @@ export default function TripDetailPage() {
             </div>
 
             <div className="space-y-3.5">
-              {/* 1. Direct Link */}
               <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/50 bg-slate-50/60 dark:bg-[#11101d]/60 space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -2678,7 +2651,6 @@ export default function TripDetailPage() {
                 </button>
               </div>
 
-              {/* 2. Register / Login & Auto-Join Link */}
               <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/50 bg-slate-50/60 dark:bg-[#11101d]/60 space-y-2">
                 <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   👥 ลิงก์เชิญเพื่อนใหม่ (สมัครเสร็จแล้วเข้าทริปทันที)
@@ -2695,7 +2667,6 @@ export default function TripDetailPage() {
                 </button>
               </div>
 
-              {/* 3. Trip ID Code */}
               <div>
                 <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">รหัสเชิญประจำทริป (Trip ID)</label>
                 <div className="flex gap-2">
