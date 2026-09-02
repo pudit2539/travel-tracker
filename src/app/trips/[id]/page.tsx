@@ -1690,7 +1690,6 @@ export default function TripDetailPage() {
                                   </div>
                                   <div className="space-y-1.5">
                                     {item.backup_plan.split('\n').filter((line: string) => line.trim().length > 0).map((line: string, lineIdx: number) => {
-                                      // Extract clean place or restaurant name
                                       let cleanName = line.replace(/^(ร้านอาหารสำรอง|สถานที่สำรอง|จุดเที่ยวสำรอง|แผนสำรอง|\d+[\).:-]|\*|•)\s*/i, '').trim();
                                       if (cleanName.includes(':')) {
                                         cleanName = cleanName.split(':')[1].trim();
