@@ -1,7 +1,7 @@
 // src/components/NotificationBell.tsx
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   Bell, Check, CheckCheck, Trash2, X, Sparkles, 
   Receipt, CloudSun, MapPin, Calculator, AlertCircle, 
@@ -28,6 +28,7 @@ interface NotificationBellProps {
 
 const READ_NOTIFS_KEY = 'travel_tracker_read_notifs_v2';
 const CLEARED_NOTIFS_KEY = 'travel_tracker_cleared_notifs_v2';
+const EMPTY_ARRAY: any[] = [];
 
 function getStoredIds(key: string): Set<string> {
   if (typeof window === 'undefined') return new Set();
@@ -51,24 +52,29 @@ function saveStoredIds(key: string, set: Set<string>) {
 }
 
 export default function NotificationBell({ 
-  expenses = [], 
-  itinerary = [], 
-  members = [], 
+  expenses = EMPTY_ARRAY, 
+  itinerary = EMPTY_ARRAY, 
+  members = EMPTY_ARRAY, 
   tripTitle 
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'member' | 'expense' | 'weather' | 'itinerary'>('all');
+  const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
+  const [clearedIds, setClearedIds] = useState<Set<string>>(() => new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Generate dynamic contextual notifications with member join alerts and timestamps
+  // Initialize stored IDs safely on client mount
   useEffect(() => {
-    const readIds = getStoredIds(READ_NOTIFS_KEY);
-    const clearedIds = getStoredIds(CLEARED_NOTIFS_KEY);
+    setReadIds(getStoredIds(READ_NOTIFS_KEY));
+    setClearedIds(getStoredIds(CLEARED_NOTIFS_KEY));
+  }, []);
+
+  // Compute notifications purely via useMemo without triggering setState in useEffect
+  const notifications = useMemo(() => {
     const list: NotificationItem[] = [];
 
-    // 1. Member Join Notifications (แจ้งเตือนเมื่อมีคนเข้าร่วมกลุ่ม)
-    if (members.length > 0) {
+    // 1. Member Join Notifications
+    if (members && members.length > 0) {
       members.forEach((m, idx) => {
         const memberId = `notif-member-${m.user_id || m.id || idx}`;
         if (!clearedIds.has(memberId)) {
@@ -88,8 +94,8 @@ export default function NotificationBell({
       });
     }
 
-    // 2. Recent Expenses (แจ้งเตือนการบันทึกค่าใช้จ่ายล่าสุด)
-    if (expenses.length > 0) {
+    // 2. Recent Expenses
+    if (expenses && expenses.length > 0) {
       expenses.slice(0, 5).forEach((exp, idx) => {
         const expId = `notif-exp-${exp.id || idx}`;
         if (!clearedIds.has(expId)) {
@@ -108,7 +114,7 @@ export default function NotificationBell({
     }
 
     // 3. Bill Settlement ready
-    if (expenses.length >= 2) {
+    if (expenses && expenses.length >= 2) {
       const settleId = 'notif-settle';
       if (!clearedIds.has(settleId)) {
         list.push({
@@ -138,7 +144,7 @@ export default function NotificationBell({
     }
 
     // 5. Itinerary Day 1 reminder
-    if (itinerary.length > 0) {
+    if (itinerary && itinerary.length > 0) {
       const firstItem = itinerary[0];
       const planId = 'notif-plan-start';
       if (!clearedIds.has(planId)) {
@@ -154,10 +160,10 @@ export default function NotificationBell({
       }
     }
 
-    // Sort strictly by timestamp descending (Latest on Top)
+    // Sort strictly by timestamp descending
     list.sort((a, b) => b.timestamp - a.timestamp);
-    setNotifications(list);
-  }, [expenses, itinerary, members]);
+    return list;
+  }, [expenses, itinerary, members, readIds, clearedIds]);
 
   // Close when clicking outside
   useEffect(() => {
@@ -172,7 +178,7 @@ export default function NotificationBell({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
   const filteredNotifications = useMemo(() => {
     if (activeFilter === 'all') return notifications;
@@ -185,31 +191,32 @@ export default function NotificationBell({
     });
   }, [notifications, activeFilter]);
 
-  const markAllAsRead = () => {
-    const readIds = getStoredIds(READ_NOTIFS_KEY);
-    notifications.forEach((n) => readIds.add(n.id));
-    saveStoredIds(READ_NOTIFS_KEY, readIds);
+  const markAllAsRead = useCallback(() => {
+    setReadIds((prev) => {
+      const updated = new Set(prev);
+      notifications.forEach((n) => updated.add(n.id));
+      saveStoredIds(READ_NOTIFS_KEY, updated);
+      return updated;
+    });
+  }, [notifications]);
 
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  const clearAllNotifications = useCallback(() => {
+    setClearedIds((prev) => {
+      const updated = new Set(prev);
+      notifications.forEach((n) => updated.add(n.id));
+      saveStoredIds(CLEARED_NOTIFS_KEY, updated);
+      return updated;
+    });
+  }, [notifications]);
 
-  const clearAllNotifications = () => {
-    const clearedIds = getStoredIds(CLEARED_NOTIFS_KEY);
-    notifications.forEach((n) => clearedIds.add(n.id));
-    saveStoredIds(CLEARED_NOTIFS_KEY, clearedIds);
-
-    setNotifications([]);
-  };
-
-  const markSingleAsRead = (id: string) => {
-    const readIds = getStoredIds(READ_NOTIFS_KEY);
-    readIds.add(id);
-    saveStoredIds(READ_NOTIFS_KEY, readIds);
-
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
+  const markSingleAsRead = useCallback((id: string) => {
+    setReadIds((prev) => {
+      const updated = new Set(prev);
+      updated.add(id);
+      saveStoredIds(READ_NOTIFS_KEY, updated);
+      return updated;
+    });
+  }, []);
 
   const getIcon = (type: NotificationItem['type']) => {
     switch (type) {
@@ -218,91 +225,95 @@ export default function NotificationBell({
       case 'expense':
         return <Receipt className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
       case 'weather':
-        return <CloudSun className="h-4 w-4 text-amber-600 dark:text-amber-400" />;
+        return <CloudSun className="h-4 w-4 text-amber-500" />;
+      case 'itinerary':
+        return <MapPin className="h-4 w-4 text-indigo-500" />;
       case 'settlement':
         return <Calculator className="h-4 w-4 text-purple-600 dark:text-purple-400" />;
-      case 'itinerary':
-        return <MapPin className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />;
       default:
-        return <Sparkles className="h-4 w-4 text-pink-600 dark:text-pink-400" />;
+        return <Sparkles className="h-4 w-4 text-pink-500" />;
     }
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bell Trigger Button */}
+      {/* Bell Button */}
       <button
-        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 shadow-2xs hover:scale-105 transition-all cursor-pointer group"
+        className="relative p-2 sm:p-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer"
         title="การแจ้งเตือน"
       >
-        <Bell className="h-4 w-4 group-hover:rotate-12 transition-transform" />
+        <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+        
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-600 text-white text-[10px] font-black flex items-center justify-center shadow-md shadow-pink-500/40 animate-pulse">
-            {unreadCount}
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-1 text-[9px] font-black text-white shadow-md animate-pulse">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
-      {/* Notification Drawer Popover */}
+      {/* Popover / Dropdown Drawer */}
       {isOpen && (
-        <>
-          {/* Mobile backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden animate-in fade-in duration-150"
-            onClick={() => setIsOpen(false)}
-          />
-
-          <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-lg sm:max-w-none rounded-3xl bg-white dark:bg-[#120c1e] shadow-2xl border border-slate-200 dark:border-purple-800/80 glow-pink z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-            
-            {/* Header */}
-            <div className="p-4 pb-2.5 flex items-center justify-between border-b border-slate-100 dark:border-purple-900/40 bg-slate-50/50 dark:bg-purple-950/20">
+        <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 z-50 w-auto sm:w-96 rounded-3xl bg-white/95 dark:bg-[#1a182d]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-purple-800/60 shadow-2xl glow-pink-purple overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          
+          {/* Header */}
+          <div className="p-4 pb-3 border-b border-slate-100 dark:border-purple-900/40 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-pink-100 dark:bg-pink-950 text-pink-600 dark:text-pink-400">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-xs">
                 <Bell className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-xs font-black text-slate-900 dark:text-white">การแจ้งเตือนทริป</h3>
-                <span className="text-[10px] text-slate-500 dark:text-purple-300 font-medium">
-                  {unreadCount > 0 ? `มี ${unreadCount} รายการใหม่` : 'อ่านครบทั้งหมดแล้ว'}
-                </span>
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span>การแจ้งเตือน</span>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-100 dark:bg-pink-950 px-1.5 py-0.2 rounded-full">
+                      {unreadCount} ใหม่
+                    </span>
+                  )}
+                </h3>
+                <p className="text-[10px] text-slate-500 dark:text-purple-300/70 font-medium">
+                  {tripTitle ? `ทริป: ${tripTitle}` : 'ความเคลื่อนไหวล่าสุด'}
+                </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
               {unreadCount > 0 && (
                 <button
-                  type="button"
                   onClick={markAllAsRead}
-                  className="px-2 py-1 rounded-lg text-[10px] font-bold text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/50 flex items-center gap-1 transition-colors cursor-pointer"
+                  className="p-1.5 text-[10px] font-bold text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-purple-950/50 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
                   title="อ่านทั้งหมด"
                 >
-                  <CheckCheck className="h-3 w-3" />
-                  <span>อ่านทั้งหมด</span>
+                  <CheckCheck className="h-3.5 w-3.5" />
+                  <span className="hidden xs:inline">อ่านหมด</span>
                 </button>
               )}
               {notifications.length > 0 && (
                 <button
-                  type="button"
                   onClick={clearAllNotifications}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                  title="ล้างการแจ้งเตือนทั้งหมด"
+                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
+                  title="ล้างทั้งหมด"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 rounded-xl transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
           {/* Filter Pills */}
-          <div className="px-3 py-2 border-b border-slate-100 dark:border-purple-900/40 flex items-center gap-1 overflow-x-auto bg-white dark:bg-[#120c1e]">
+          <div className="flex items-center gap-1 px-4 py-2 bg-slate-50/50 dark:bg-[#11101d]/50 border-b border-slate-100 dark:border-purple-900/30 overflow-x-auto custom-scrollbar">
             <button
               onClick={() => setActiveFilter('all')}
               className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                 activeFilter === 'all'
-                  ? 'bg-pink-500 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-purple-950/60 text-slate-600 dark:text-purple-300 hover:bg-slate-200'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-950'
               }`}
             >
               ทั้งหมด ({notifications.length})
@@ -311,8 +322,8 @@ export default function NotificationBell({
               onClick={() => setActiveFilter('member')}
               className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                 activeFilter === 'member'
-                  ? 'bg-pink-500 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-purple-950/60 text-slate-600 dark:text-purple-300 hover:bg-slate-200'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-950'
               }`}
             >
               👥 สมาชิก
@@ -321,81 +332,76 @@ export default function NotificationBell({
               onClick={() => setActiveFilter('expense')}
               className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                 activeFilter === 'expense'
-                  ? 'bg-pink-500 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-purple-950/60 text-slate-600 dark:text-purple-300 hover:bg-slate-200'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-950'
               }`}
             >
-              💰 รายจ่าย
-            </button>
-            <button
-              onClick={() => setActiveFilter('weather')}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
-                activeFilter === 'weather'
-                  ? 'bg-pink-500 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-purple-950/60 text-slate-600 dark:text-purple-300 hover:bg-slate-200'
-              }`}
-            >
-              🌤️ อากาศ
+              🧾 รายจ่าย
             </button>
             <button
               onClick={() => setActiveFilter('itinerary')}
               className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                 activeFilter === 'itinerary'
-                  ? 'bg-pink-500 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-purple-950/60 text-slate-600 dark:text-purple-300 hover:bg-slate-200'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-950'
               }`}
             >
               🗺️ แผนเที่ยว
             </button>
           </div>
 
-          {/* List (Sorted newest first) */}
-          <div className="max-h-80 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-purple-900/30">
+          {/* Notifications List */}
+          <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-purple-900/30">
             {filteredNotifications.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-400 dark:text-purple-400">
-                ไม่มีการแจ้งเตือนในหมวดหมู่นี้
+              <div className="p-8 text-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-pink-50 dark:bg-purple-950/60 flex items-center justify-center text-pink-500 mx-auto">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <p className="text-xs font-bold text-slate-800 dark:text-white">ไม่มีการแจ้งเตือนใหม่</p>
+                <p className="text-[10px] text-slate-400 dark:text-purple-300">
+                  ระบบจะแจ้งเตือนเมื่อมีเพื่อนเข้ากลุ่ม, บันทึกค่าใช้จ่าย, หรืออัปเดตแผนเที่ยว
+                </p>
               </div>
             ) : (
-              filteredNotifications.map((item) => (
+              filteredNotifications.map((notif) => (
                 <div
-                  key={item.id}
-                  onClick={() => markSingleAsRead(item.id)}
-                  className={`p-3.5 flex items-start gap-3 hover:bg-pink-50/40 dark:hover:bg-purple-950/30 transition-colors cursor-pointer ${
-                    !item.read ? 'bg-pink-50/20 dark:bg-purple-950/15' : ''
+                  key={notif.id}
+                  onClick={() => markSingleAsRead(notif.id)}
+                  className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer group ${
+                    !notif.read
+                      ? 'bg-pink-50/40 dark:bg-purple-950/40 hover:bg-pink-50/70 dark:hover:bg-purple-950/60'
+                      : 'hover:bg-slate-50 dark:hover:bg-[#11101d]/40'
                   }`}
                 >
-                  <div className={`p-2 rounded-xl bg-slate-100 dark:bg-purple-950/60 shrink-0 mt-0.5 shadow-2xs`}>
-                    {getIcon(item.type)}
+                  <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#11101d] border border-slate-200/80 dark:border-purple-900/60 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-110 transition-transform">
+                    {getIcon(notif.type)}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <h4 className={`text-xs ${!item.read ? 'font-black text-pink-600 dark:text-pink-400' : 'font-bold text-slate-900 dark:text-white'} truncate`}>
-                        {item.title}
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                        {notif.title}
                       </h4>
-                      <span className="text-[10px] text-slate-400 shrink-0 font-medium">
-                        {item.time}
+                      <span className="text-[9px] font-semibold text-slate-400 shrink-0 flex items-center gap-0.5">
+                        <Clock className="h-2.5 w-2.5" />
+                        {notif.time}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-600 dark:text-purple-300/80 leading-relaxed line-clamp-2 mt-0.5 font-medium">
-                      {item.message}
+
+                    <p className="text-[11px] text-slate-600 dark:text-purple-200 mt-0.5 leading-snug line-clamp-2">
+                      {notif.message}
                     </p>
                   </div>
 
-                  {!item.read && (
-                    <div className="w-2 h-2 rounded-full bg-pink-500 shrink-0 mt-1.5 shadow-xs animate-pulse" />
+                  {!notif.read && (
+                    <div className="w-2 h-2 rounded-full bg-pink-500 shrink-0 mt-1.5 animate-pulse" />
                   )}
                 </div>
               ))
             )}
           </div>
 
-          {/* Footer */}
-          <div className="p-2.5 text-center bg-slate-50 dark:bg-purple-950/30 border-t border-slate-100 dark:border-purple-900/40 text-[10px] text-slate-400 dark:text-purple-400 font-medium">
-            Travel Tracker Smart Hub • จัดลำดับล่าสุดอยู่บนเสมอ
-          </div>
         </div>
-      </>
       )}
     </div>
   );
