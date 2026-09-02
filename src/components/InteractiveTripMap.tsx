@@ -251,25 +251,40 @@ export default function InteractiveTripMap({
             )}
 
             {activeStop.backup_plan && (
-              <div className="p-3 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/40 space-y-1">
+              <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/40 space-y-2">
                 <div className="flex items-center gap-1.5 font-bold text-purple-700 dark:text-purple-300">
                   <Sparkles className="h-3.5 w-3.5 text-pink-500" />
                   <span>แผนสำรอง (Plan B):</span>
                 </div>
-                <p className="text-slate-600 dark:text-purple-300 whitespace-pre-line leading-relaxed">
-                  {activeStop.backup_plan}
-                </p>
-                {activeStop.backup_links && activeStop.backup_links[0] && (
-                  <a
-                    href={activeStop.backup_links[0]}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline pt-1"
-                  >
-                    <span>เปิดแผนที่ Plan B 📍</span>
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
-                )}
+                <div className="space-y-1.5">
+                  {activeStop.backup_plan.split('\n').filter((line: string) => line.trim().length > 0).map((line: string, lineIdx: number) => {
+                    let cleanName = line.replace(/^(ร้านอาหารสำรอง|สถานที่สำรอง|จุดเที่ยวสำรอง|แผนสำรอง|\d+[\).:-]|\*|•)\s*/i, '').trim();
+                    if (cleanName.includes(':')) {
+                      cleanName = cleanName.split(':')[1].trim();
+                    }
+                    const lineMapsUrl = (activeStop.backup_links && activeStop.backup_links[lineIdx])
+                      ? activeStop.backup_links[lineIdx]
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanName + ' ' + (activeStop.city || 'Japan'))}`;
+
+                    return (
+                      <div key={lineIdx} className="p-2 rounded-xl bg-white dark:bg-[#11101d] border border-purple-100 dark:border-purple-900/50 flex items-center justify-between gap-2 shadow-2xs">
+                        <span className="font-medium text-slate-800 dark:text-purple-200 leading-snug">
+                          {line}
+                        </span>
+                        <a
+                          href={lineMapsUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 hover:bg-pink-500 hover:text-white transition-all shrink-0 cursor-pointer"
+                          title="เปิด Google Maps สำหรับรายการนี้"
+                        >
+                          <span>แผนที่ 📍</span>
+                          <ExternalLink className="h-2.5 w-2.5" />
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

@@ -1684,19 +1684,41 @@ export default function TripDetailPage() {
                                 {isPlanBOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                               </button>
                               {isPlanBOpen && (
-                                <div className="p-2.5 mt-1.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 text-xs text-slate-700 dark:text-purple-200 space-y-1">
-                                  <p className="whitespace-pre-line font-medium leading-relaxed">{item.backup_plan}</p>
-                                  {item.backup_links && item.backup_links[0] && (
-                                    <a
-                                      href={item.backup_links[0]}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-600 dark:text-purple-300 hover:underline pt-1"
-                                    >
-                                      <span>แผนที่ Plan B</span>
-                                      <ExternalLink className="h-2.5 w-2.5" />
-                                    </a>
-                                  )}
+                                <div className="p-3 mt-2 rounded-2xl bg-purple-50/80 dark:bg-purple-950/40 text-xs text-slate-700 dark:text-purple-200 space-y-2 border border-purple-200/60 dark:border-purple-900/40">
+                                  <div className="font-bold text-[11px] text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                                    <span>🛡️ รายการสถานที่ & ร้านอาหารสำรอง (แตะเพื่อเปิดพิกัด):</span>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    {item.backup_plan.split('\n').filter((line: string) => line.trim().length > 0).map((line: string, lineIdx: number) => {
+                                      // Extract clean place or restaurant name
+                                      let cleanName = line.replace(/^(ร้านอาหารสำรอง|สถานที่สำรอง|จุดเที่ยวสำรอง|แผนสำรอง|\d+[\).:-]|\*|•)\s*/i, '').trim();
+                                      if (cleanName.includes(':')) {
+                                        cleanName = cleanName.split(':')[1].trim();
+                                      }
+                                      
+                                      const lineMapsUrl = (item.backup_links && item.backup_links[lineIdx])
+                                        ? item.backup_links[lineIdx]
+                                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanName + ' ' + (item.city || 'Japan'))}`;
+
+                                      return (
+                                        <div key={lineIdx} className="p-2.5 rounded-xl bg-white/95 dark:bg-[#11101d] border border-purple-100 dark:border-purple-900/50 flex items-center justify-between gap-2 shadow-2xs hover:border-pink-300 transition-all">
+                                          <span className="font-medium text-slate-800 dark:text-purple-100 leading-snug">
+                                            {line}
+                                          </span>
+                                          <a
+                                            href={lineMapsUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 hover:bg-pink-500 hover:text-white dark:hover:bg-pink-600 transition-all shrink-0 cursor-pointer shadow-2xs"
+                                            title="เปิด Google Maps สำหรับรายการนี้"
+                                          >
+                                            <span>แผนที่ 📍</span>
+                                            <ExternalLink className="h-2.5 w-2.5" />
+                                          </a>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               )}
                             </div>
