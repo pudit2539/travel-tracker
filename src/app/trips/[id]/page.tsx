@@ -20,6 +20,7 @@ import VersionRollbackModal from '@/components/VersionRollbackModal';
 import QuickCurrencyCalculator from '@/components/QuickCurrencyCalculator';
 import PackingChecklistModal from '@/components/PackingChecklistModal';
 import InteractiveTripMap from '@/components/InteractiveTripMap';
+import TravelHubModal from '@/components/TravelHubModal';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
@@ -100,6 +101,7 @@ export default function TripDetailPage() {
   const [showRollbackModal, setShowRollbackModal] = useState(false);
   const [showPackingModal, setShowPackingModal] = useState(false);
   const [showCurrencyCalculator, setShowCurrencyCalculator] = useState(false);
+  const [showTravelHubModal, setShowTravelHubModal] = useState(false);
 
   const [showScanModal, setShowScanModal] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -1183,26 +1185,21 @@ export default function TripDetailPage() {
 
             <div className="flex items-center gap-1.5">
               <button
+                type="button"
+                onClick={() => setShowTravelHubModal(true)}
+                className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 px-3 py-1.5 rounded-xl shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer glow-pink-purple"
+              >
+                <span>🧰 Travel Hub (5-in-1)</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setShowBudgetCategoryModal(true)}
-                className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#11101d] px-2.5 py-1 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#11101d] px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
               >
                 <Sliders className="h-3 w-3 text-pink-500" /> 
-                <span>ตั้งงบ & หมวด</span>
-              </button>
-
-              <button
-                onClick={() => setShowPackingModal(true)}
-                className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#11101d] px-2.5 py-1 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-              >
-                <Luggage className="h-3 w-3 text-purple-500" />
-                <span>🧳 จัดกระเป๋า</span>
-              </button>
-
-              <button
-                onClick={() => setShowScrapbookModal(true)}
-                className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#11101d] px-2.5 py-1 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-              >
-                <span>📸 สมุดภาพ ({photosCount})</span>
+                <span>งบ & หมวด</span>
               </button>
             </div>
           </div>
@@ -2195,6 +2192,20 @@ export default function TripDetailPage() {
         onClose={() => setShowProfileModal(false)}
         user={currentUser}
         onProfileUpdated={(updated) => setUserProfile((prev: any) => ({ ...prev, ...updated }))}
+      />
+
+      {/* Travel Command Center Hub Modal (5-in-1) */}
+      <TravelHubModal
+        isOpen={showTravelHubModal}
+        onClose={() => setShowTravelHubModal(false)}
+        trip={trip}
+        expenses={expenses}
+        itinerary={itinerary}
+        members={members}
+        userDisplayName={userDisplayName}
+        fxRate={fxRate}
+        onOpenScrapbook={() => setShowScrapbookModal(true)}
+        onOpenPacking={() => setShowPackingModal(true)}
       />
 
       {/* 4. Settlement Modal */}
