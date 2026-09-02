@@ -31,6 +31,11 @@ import {
 } from '@/lib/categories';
 import { getTripPhotos } from '@/lib/photos';
 import { 
+  saveLocalReceiptPhoto, 
+  getLocalReceiptPhoto, 
+  deleteLocalReceiptPhoto 
+} from '@/lib/localReceipts';
+import { 
   Camera, Upload, MapPin, Utensils, ShieldAlert, 
   Plus, Download, Moon, Sun, ExternalLink, ChevronDown, 
   ChevronUp, ArrowLeft, Trash2, Clock, Bus, Loader2, 
@@ -38,13 +43,15 @@ import {
   Copy, Check, Image as ImageIcon, X, AlertCircle, 
   CheckCircle2, DollarSign, Calendar, ArrowUp, ArrowDown,
   PlusCircle, User, Wallet, Filter, Calculator, Navigation, 
-  Bot, Sliders, AlertTriangle, FileText, History, Wifi, WifiOff, LogOut
+  Bot, Sliders, AlertTriangle, FileText, History, Wifi, WifiOff, 
+  LogOut, ChevronRight, Eye, ShieldCheck, HardDriveDownload, Receipt
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function TripDetailPage() {
   const params = useParams();
-  const tripId = params?.id as string;
+  const rawId = params?.id;
+  const tripId = Array.isArray(rawId) ? rawId[0] : (typeof rawId === 'string' ? decodeURIComponent(rawId) : '');
   const { theme, setTheme } = useTheme();
 
   // Offline Hook
@@ -67,6 +74,7 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [reordering, setReordering] = useState(false);
   const [fxRate, setFxRate] = useState<number>(0.235);
+  const [showWeatherSection, setShowWeatherSection] = useState(true);
 
   // Filter states
   const [selectedDayFilter, setSelectedDayFilter] = useState<string>('all');
@@ -86,10 +94,14 @@ export default function TripDetailPage() {
 
   const [showScanModal, setShowScanModal] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [savingExpense, setSavingExpense] = useState(false);
+  const [ocrSuccessToast, setOcrSuccessToast] = useState<string | null>(null);
+
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedAuthLink, setCopiedAuthLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -316,147 +328,147 @@ export default function TripDetailPage() {
     if (targetIndex < 0 || targetIndex >= itinerary.length) return;
 
     setReordering(true);
-    const newItinerary = [...itinerary];
-    const [movedItem] = newItinerary.splice(currentIndex, 1);
-    newItinerary.splice(targetIndex, 0, movedItem);
+    const updated = [...itinerary];
+    const temp = updated[currentIndex];
+    updated[currentIndex] = updated[targetIndex];
+    updated[targetIndex] = temp;
 
-    const updatedWithOrder = newItinerary.map((item, idx) => ({
-      ...item,
-      sort_order: idx,
-    }));
-
-    setItinerary(updatedWithOrder);
+    // Optimistic UI update
+    setItinerary(updated);
 
     try {
-      const updates = updatedWithOrder.map((item) => ({
-        id: item.id,
-        trip_id: tripId,
-        sort_order: item.sort_order,
-      }));
-
-      await supabase.from('itinerary_items').upsert(updates);
+      await Promise.all([
+        supabase
+          .from('itinerary_items')
+          .update({ sort_order: targetIndex })
+          .eq('id', updated[targetIndex].id),
+        supabase
+          .from('itinerary_items')
+          .update({ sort_order: currentIndex })
+          .eq('id', updated[currentIndex].id),
+      ]);
     } catch (err) {
-      console.error('Reorder fail:', err);
+      console.error('Failed to reorder activity:', err);
+      fetchTripData();
     } finally {
       setReordering(false);
     }
   };
 
-  // บันทึก / แก้ไขกิจกรรม
-  const handleSaveActivity = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activityForm.main_place.trim()) {
-      alert('กรุณากรอกชื่อสถานที่หลัก');
-      return;
-    }
-
-    setSavingActivity(true);
-
-    const cleanPlaceLinks = activityForm.main_place_links
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-
-    const cleanFoodTexts = activityForm.food_recommendations
-      .map((f) => f.name.trim())
-      .filter((n) => n.length > 0)
-      .join('\n');
-
-    const cleanFoodLinks = activityForm.food_recommendations
-      .map((f) => f.link.trim())
-      .filter((l) => l.length > 0);
-
-    const cleanBackupTexts = activityForm.backup_plans
-      .map((b) => b.text.trim())
-      .filter((t) => t.length > 0)
-      .join('\n\n');
-
-    const cleanBackupLinks = activityForm.backup_plans
-      .map((b) => b.link.trim())
-      .filter((l) => l.length > 0);
-
-    const payload = {
-      trip_id: tripId,
-      date_label: activityForm.date_label.trim(),
-      time_slot: activityForm.time_slot.trim(),
-      city: activityForm.city.trim(),
-      main_place: activityForm.main_place.trim(),
-      main_place_links: cleanPlaceLinks,
-      food_recommendation: cleanFoodTexts,
-      food_links: cleanFoodLinks,
-      backup_plan: cleanBackupTexts,
-      backup_links: cleanBackupLinks,
-      transport_info: activityForm.transport_info.trim(),
-    };
-
-    if (editingActivity) {
-      const { error } = await supabase
-        .from('itinerary_items')
-        .update(payload)
-        .eq('id', editingActivity.id);
-      if (!error) {
-        setShowActivityModal(false);
-        setEditingActivity(null);
-        fetchTripData();
-      } else {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-      }
-    } else {
-      let insertOrder = itinerary.length;
-      if (activityForm.insert_after_order !== null) {
-        insertOrder = activityForm.insert_after_order + 1;
-        const updates = itinerary
-          .filter((item) => item.sort_order >= insertOrder)
-          .map((item) => ({
-            id: item.id,
-            trip_id: tripId,
-            sort_order: item.sort_order + 1,
-          }));
-        if (updates.length > 0) {
-          await supabase.from('itinerary_items').upsert(updates);
-        }
-      }
-
-      const { error } = await supabase
-        .from('itinerary_items')
-        .insert([{ ...payload, sort_order: insertOrder }]);
-      if (!error) {
-        setShowActivityModal(false);
-        resetActivityForm();
-        fetchTripData();
-      } else {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-      }
-    }
-    setSavingActivity(false);
-  };
-
-  const openAddActivityModal = (prefillDate?: string, prefillCity?: string, insertAfterIndex?: number) => {
+  // เปิด Modal เพิ่มกิจกรรมใหม่
+  const handleOpenAddActivity = (afterOrder: number | null = null, defaultDateLabel?: string) => {
     resetActivityForm();
-    if (prefillDate) {
-      setActivityForm((prev) => ({
-        ...prev,
-        date_label: prefillDate,
-        city: prefillCity || '',
-        insert_after_order: insertAfterIndex !== undefined ? insertAfterIndex : null,
-      }));
-    }
     setEditingActivity(null);
+    setActivityForm((prev) => ({
+      ...prev,
+      insert_after_order: afterOrder,
+      date_label: defaultDateLabel || prev.date_label,
+    }));
     setShowActivityModal(true);
   };
 
-  const openEditActivityModal = (item: any) => {
-    setEditingActivity(item);
-    
-    const placeLinks = item.main_place_links?.length > 0 ? item.main_place_links : [''];
+  // บันทึก / แก้ไขกิจกรรม
+  const handleSaveActivity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activityForm.main_place.trim()) return;
 
-    const foodLines = (item.food_recommendation || '').split('\n').filter((l: string) => l.trim().length > 0);
-    const foodLinks = item.food_links || [];
-    let foodItems = foodLines.map((name: string, i: number) => ({
-      name,
-      link: foodLinks[i] || '',
-    }));
+    setSavingActivity(true);
+
+    const placeLinksFiltered = activityForm.main_place_links.filter((l) => l.trim().length > 0);
+    const foodFormatted = activityForm.food_recommendations
+      .filter((f) => f.name.trim().length > 0)
+      .map((f) => f.name.trim())
+      .join(', ');
+    const foodLinksFiltered = activityForm.food_recommendations
+      .map((f) => f.link.trim())
+      .filter((l) => l.length > 0);
+
+    const backupFormatted = activityForm.backup_plans
+      .filter((b) => b.text.trim().length > 0)
+      .map((b) => b.text.trim())
+      .join('\n\n');
+    const backupLinksFiltered = activityForm.backup_plans
+      .map((b) => b.link.trim())
+      .filter((l) => l.length > 0);
+
+    try {
+      if (editingActivity) {
+        // แก้ไข
+        const { error } = await supabase
+          .from('itinerary_items')
+          .update({
+            date_label: activityForm.date_label,
+            time_slot: activityForm.time_slot,
+            city: activityForm.city,
+            main_place: activityForm.main_place,
+            main_place_links: placeLinksFiltered,
+            food_recommendation: foodFormatted,
+            food_links: foodLinksFiltered,
+            transport_info: activityForm.transport_info,
+            backup_plan: backupFormatted,
+            backup_links: backupLinksFiltered,
+          })
+          .eq('id', editingActivity.id);
+
+        if (!error) {
+          setShowActivityModal(false);
+          fetchTripData();
+        } else {
+          alert('เกิดข้อผิดพลาดในการแก้ไข: ' + error.message);
+        }
+      } else {
+        // เพิ่มใหม่
+        let nextOrder = itinerary.length;
+        if (activityForm.insert_after_order !== null) {
+          nextOrder = activityForm.insert_after_order + 1;
+        }
+
+        const { error } = await supabase.from('itinerary_items').insert([
+          {
+            trip_id: tripId,
+            date_label: activityForm.date_label,
+            time_slot: activityForm.time_slot,
+            city: activityForm.city,
+            main_place: activityForm.main_place,
+            main_place_links: placeLinksFiltered,
+            food_recommendation: foodFormatted,
+            food_links: foodLinksFiltered,
+            transport_info: activityForm.transport_info,
+            backup_plan: backupFormatted,
+            backup_links: backupLinksFiltered,
+            sort_order: nextOrder,
+          },
+        ]);
+
+        if (!error) {
+          setShowActivityModal(false);
+          fetchTripData();
+        } else {
+          alert('เกิดข้อผิดพลาดในการเพิ่มกิจกรรม: ' + error.message);
+        }
+      }
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    } finally {
+      setSavingActivity(false);
+    }
+  };
+
+  const handleOpenEditActivity = (item: any) => {
+    setEditingActivity(item);
+
+    let placeLinks = item.main_place_links || [];
+    if (placeLinks.length === 0) placeLinks = [''];
+
+    let foodItems = (item.food_recommendation || '')
+      .split(',')
+      .map((name: string, i: number) => ({
+        name: name.trim(),
+        link: item.food_links?.[i] || '',
+      }))
+      .filter((f: any) => f.name.length > 0);
     if (foodItems.length === 0) {
-      foodItems = [{ name: item.food_recommendation || '', link: foodLinks[0] || '' }];
+      foodItems = [{ name: item.food_recommendation || '', link: item.food_links?.[0] || '' }];
     }
 
     const backupLines = (item.backup_plan || '').split('\n\n').filter((l: string) => l.trim().length > 0);
@@ -502,9 +514,6 @@ export default function TripDetailPage() {
       insert_after_order: null,
     });
   };
-
-  const [savingExpense, setSavingExpense] = useState(false);
-  const [ocrSuccessToast, setOcrSuccessToast] = useState<string | null>(null);
 
   // สแกนใบเสร็จด้วย AI OCR & Smart Extractor
   const handleReceiptImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -554,7 +563,7 @@ export default function TripDetailPage() {
     };
   };
 
-  // บันทึกค่าใช้จ่ายพร้อมระบุ Payer ป้องกันบันทึกซ้ำ (Debounce/Lock)
+  // บันทึกค่าใช้จ่ายพร้อมเก็บรูปใบเสร็จไว้ใน Client IndexedDB Storage (ไม่ทำให้ DB ล้น)
   const handleSaveExpense = async () => {
     if (savingExpense) return;
     if (!scannedData.amount || !scannedData.title) {
@@ -567,6 +576,18 @@ export default function TripDetailPage() {
       const payerName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'สมาชิก';
       const payerAvatar = userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id || 'cat_pink';
 
+      // Generate local receipt key if photo attached
+      let receiptStorageRef = null;
+      if (scannedData.receipt_url) {
+        const localReceiptKey = `receipt_${tripId}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        try {
+          await saveLocalReceiptPhoto(localReceiptKey, scannedData.receipt_url);
+          receiptStorageRef = localReceiptKey;
+        } catch {
+          receiptStorageRef = 'local';
+        }
+      }
+
       const { error } = await supabase.from('expenses').insert([
         {
           trip_id: tripId,
@@ -574,7 +595,7 @@ export default function TripDetailPage() {
           amount: Number(scannedData.amount),
           currency: scannedData.currency,
           category: scannedData.category,
-          receipt_url: scannedData.receipt_url || null,
+          receipt_url: receiptStorageRef,
           spent_at: scannedData.spent_at,
           payer_id: currentUser?.id || null,
           payer_name: payerName,
@@ -604,13 +625,41 @@ export default function TripDetailPage() {
     }
   };
 
-  const handleDeleteExpense = async (id: string) => {
+  // เปิดดูรูปใบเสร็จ (ดึงจาก IndexedDB ของโทรศัพท์ / แคชเครื่อง)
+  const handleOpenReceiptPreview = async (exp: any) => {
+    if (!exp.receipt_url) return;
+    setPreviewLoading(true);
+    try {
+      if (exp.receipt_url.startsWith('data:image') || exp.receipt_url.startsWith('http')) {
+        setPreviewImage(exp.receipt_url);
+      } else {
+        // Load from phone IndexedDB
+        const localData = await getLocalReceiptPhoto(exp.receipt_url);
+        if (localData) {
+          setPreviewImage(localData);
+        } else {
+          // Fallback
+          setPreviewImage(null);
+          alert('รูปใบเสร็จถูกบันทึกไว้ในอุปกรณ์ต้นทางที่ถ่ายรูป ไม่พบในอุปกรณ์นี้');
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load local receipt', e);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string, receiptRef?: string) => {
     if (!confirm('ต้องการลบรายการค่าใช้จ่ายนี้ใช่หรือไม่?')) return;
+    if (receiptRef) {
+      try {
+        await deleteLocalReceiptPhoto(receiptRef);
+      } catch {}
+    }
     const { error } = await supabase.from('expenses').delete().eq('id', id);
     if (!error) fetchTripData();
   };
-
-
 
   // ส่งออก Excel
   const exportToExcel = () => {
@@ -647,129 +696,30 @@ export default function TripDetailPage() {
     const planSheet = XLSX.utils.json_to_sheet(planRows);
     XLSX.utils.book_append_sheet(wb, planSheet, 'Itinerary');
 
-    XLSX.writeFile(wb, `${((trip?.name || trip?.title)) || 'Trip'}_Export.xlsx`);
+    const tripTitle = (trip?.name || trip?.title || 'trip').replace(/[/\\?%*:|"<>]/g, '-');
+    XLSX.writeFile(wb, `${tripTitle}_export.xlsx`);
   };
 
-  // คำนวณสรุปงบประมาณ
-  const totalSpent = useMemo(() => {
-    return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-  }, [expenses]);
-
-  const userDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
-  const userCat = getCatAvatar(userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id);
-
-  // Dynamic Hero Card Data (All vs Me vs Specific Friend with Relations)
-  const heroDisplayData = useMemo(() => {
-    const totalTripBudget = Number(trip?.total_budget ?? trip?.budget ?? 0);
-
-    // 1. View: รวมทุกคน (All Members)
-    if (heroBudgetView === 'all') {
-      const targetBudget = totalTripBudget;
-      const spent = totalSpent;
-      const progress = targetBudget > 0 ? Math.min(Math.round((spent / targetBudget) * 100), 100) : 0;
-      const isOver = targetBudget > 0 && spent > targetBudget;
-      const remaining = targetBudget > spent ? targetBudget - spent : 0;
-      const overAmount = spent > targetBudget ? spent - targetBudget : 0;
-
-      return {
-        viewType: 'all',
-        title: 'ยอดค่าใช้จ่ายรวมทุกคน (Total Spent)',
-        budgetLabel: 'งบประมาณรวมทริป',
-        spent,
-        targetBudget,
-        totalTripBudget,
-        progress,
-        isOver,
-        remaining,
-        overAmount,
-        diff: spent - targetBudget,
-        shareOfTotal: 100,
-      };
-    }
-
-    // 2. View: ของฉัน (My Expenses & Personal Budget)
-    if (heroBudgetView === 'me') {
-      const mySpent = expenses
-        .filter((e) => (e.payer_id && e.payer_id === currentUser?.id) || (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase()))
-        .reduce((a, b) => a + Number(b.amount || 0), 0);
-
-      const targetBudget = memberBudgets['me'] || 0;
-      const progress = targetBudget > 0 ? Math.min(Math.round((mySpent / targetBudget) * 100), 100) : 0;
-      const isOver = targetBudget > 0 && mySpent > targetBudget;
-      const remaining = targetBudget > mySpent ? targetBudget - mySpent : 0;
-      const overAmount = mySpent > targetBudget ? mySpent - targetBudget : 0;
-      const shareOfTotal = totalTripBudget > 0 ? (mySpent / totalTripBudget) * 100 : 0;
-
-      return {
-        viewType: 'me',
-        title: `ยอดค่าใช้จ่ายของฉัน (${userDisplayName})`,
-        budgetLabel: 'งบส่วนตัวของฉัน',
-        spent: mySpent,
-        targetBudget,
-        totalTripBudget,
-        progress,
-        isOver,
-        remaining,
-        overAmount,
-        diff: mySpent - targetBudget,
-        shareOfTotal,
-      };
-    }
-
-    // 3. View: เฉพาะเพื่อนรายคน
-    const targetMember = members.find((m) => (m.user_id || m.id) === heroBudgetView || m.profiles?.display_name === heroBudgetView);
-    const targetName = targetMember?.profiles?.display_name || targetMember?.profiles?.email?.split('@')[0] || 'เพื่อนในกลุ่ม';
-    const targetKey = targetMember?.user_id || targetMember?.id || heroBudgetView;
-
-    const memberSpent = expenses
-      .filter((e) => e.payer_id === targetKey || (e.payer_name && e.payer_name.toLowerCase() === targetName.toLowerCase()))
-      .reduce((a, b) => a + Number(b.amount || 0), 0);
-
-    const targetBudget = memberBudgets[targetKey] || 0;
-    const progress = targetBudget > 0 ? Math.min(Math.round((memberSpent / targetBudget) * 100), 100) : 0;
-    const isOver = targetBudget > 0 && memberSpent > targetBudget;
-    const remaining = targetBudget > memberSpent ? targetBudget - memberSpent : 0;
-    const overAmount = memberSpent > targetBudget ? memberSpent - targetBudget : 0;
-    const shareOfTotal = totalTripBudget > 0 ? (memberSpent / totalTripBudget) * 100 : 0;
-
-    return {
-      viewType: 'friend',
-      title: `ยอดค่าใช้จ่ายของ ${targetName}`,
-      budgetLabel: `งบส่วนตัวของ ${targetName}`,
-      spent: memberSpent,
-      targetBudget,
-      totalTripBudget,
-      progress,
-      isOver,
-      remaining,
-      overAmount,
-      diff: memberSpent - targetBudget,
-      shareOfTotal,
-    };
-  }, [heroBudgetView, trip, totalSpent, expenses, currentUser, userDisplayName, memberBudgets, members]);
-
-  // RBAC Roles & Permissions
+  // RBAC permissions
   const isOwner = useMemo(() => {
     if (!currentUser) return false;
-    if (trip?.user_id && trip.user_id === currentUser.id) return true;
     if (trip?.created_by && trip.created_by === currentUser.id) return true;
-    const myMember = members.find((m) => m.user_id === currentUser.id);
-    if (myMember?.role === 'owner') return true;
-    if (members.length === 0) return true;
-    return false;
-  }, [currentUser, trip, members]);
+    const currentMember = members.find((m) => m.user_id === currentUser.id);
+    return currentMember?.role === 'owner';
+  }, [trip, currentUser, members]);
 
   const currentUserRole = useMemo(() => {
-    if (isOwner) return 'owner';
     if (!currentUser) return 'guest';
-    const myMember = members.find((m) => m.user_id === currentUser.id);
-    return myMember?.role || 'editor';
-  }, [isOwner, currentUser, members]);
+    if (isOwner) return 'owner';
+    const currentMember = members.find((m) => m.user_id === currentUser.id);
+    return currentMember?.role || 'viewer';
+  }, [currentUser, isOwner, members]);
 
-  const canEditPlan = isOwner || currentUserRole === 'editor';
-  const canAddExpense = isOwner || currentUserRole === 'editor';
-  const canImportExcel = isOwner; // Specific permission: Only Owner can import Excel to prevent plan wiping
+  const canEditPlan = currentUserRole === 'owner' || currentUserRole === 'editor';
+  const canAddExpense = currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'viewer';
+  const canImportExcel = isOwner;
 
+  // เปลี่ยนสิทธิ์สมาชิก
   const handleUpdateMemberRole = async (memberId: string, newRole: 'editor' | 'viewer') => {
     if (!isOwner) return;
     try {
@@ -777,8 +727,11 @@ export default function TripDetailPage() {
         .from('trip_members')
         .update({ role: newRole })
         .eq('id', memberId);
+
       if (!error) {
-        setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m)));
+        setMembers((prev) =>
+          prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
+        );
       } else {
         alert('ไม่สามารถเปลี่ยนสิทธิ์ได้: ' + error.message);
       }
@@ -789,12 +742,14 @@ export default function TripDetailPage() {
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
     if (!isOwner) return;
-    if (!confirm(`ต้องการลบคุณ ${memberName} ออกจากทริปนี้ใช่หรือไม่?`)) return;
+    if (!confirm(`คุณต้องการลบ "${memberName}" ออกจากทริปใช่หรือไม่?`)) return;
+
     try {
       const { error } = await supabase
         .from('trip_members')
         .delete()
         .eq('id', memberId);
+
       if (!error) {
         setMembers((prev) => prev.filter((m) => m.id !== memberId));
       } else {
@@ -805,108 +760,132 @@ export default function TripDetailPage() {
     }
   };
 
-  // รายชื่อผู้จ่ายทั้งหมด
+  const userDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'นักเดินทาง';
+  const userCat = getCatAvatar(userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id);
+
+  // คำนวณยอดเงินรวม
+  const totalSpent = useMemo(() => {
+    return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+  }, [expenses]);
+
+  const targetBudget = Number(trip?.total_budget ?? trip?.budget ?? 0);
+
+  // ข้อมูล Hero Budget Display
+  const heroDisplayData = useMemo(() => {
+    if (heroBudgetView === 'all') {
+      const progress = targetBudget > 0 ? Math.min(Math.round((totalSpent / targetBudget) * 100), 100) : 0;
+      const remaining = targetBudget > totalSpent ? targetBudget - totalSpent : 0;
+      const isOver = targetBudget > 0 && totalSpent > targetBudget;
+      const diff = Math.abs(totalSpent - targetBudget);
+
+      return {
+        title: 'ยอดค่าใช้จ่ายรวมทุกคน (Total Spent)',
+        spent: totalSpent,
+        targetBudget: targetBudget,
+        budgetLabel: 'งบประมาณรวมทริป',
+        progress,
+        remaining,
+        isOver,
+        diff,
+        viewName: 'รวมทุกคน',
+      };
+    } else if (heroBudgetView === 'me') {
+      const mySpent = expenses
+        .filter((e) => (e.payer_id && e.payer_id === currentUser?.id) || (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase()))
+        .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+      const myBudget = memberBudgets['me'] || (targetBudget > 0 && members.length > 0 ? Math.round(targetBudget / (members.length + 1)) : 0);
+      const progress = myBudget > 0 ? Math.min(Math.round((mySpent / myBudget) * 100), 100) : 0;
+      const remaining = myBudget > mySpent ? myBudget - mySpent : 0;
+      const isOver = myBudget > 0 && mySpent > myBudget;
+      const diff = Math.abs(mySpent - myBudget);
+
+      return {
+        title: `ยอดค่าใช้จ่ายของฉัน (${userDisplayName})`,
+        spent: mySpent,
+        targetBudget: myBudget,
+        budgetLabel: 'งบส่วนตัวของฉัน',
+        progress,
+        remaining,
+        isOver,
+        diff,
+        viewName: 'ของฉัน',
+      };
+    } else {
+      const targetMember = members.find((m) => m.user_id === heroBudgetView || m.id === heroBudgetView);
+      const mName = targetMember?.profiles?.display_name || targetMember?.profiles?.email?.split('@')[0] || 'สมาชิก';
+      
+      const memberSpent = expenses
+        .filter((e) => (e.payer_id && e.payer_id === targetMember?.user_id) || (e.payer_name && e.payer_name.toLowerCase() === mName.toLowerCase()))
+        .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+      const mBudget = memberBudgets[heroBudgetView] || 0;
+      const progress = mBudget > 0 ? Math.min(Math.round((memberSpent / mBudget) * 100), 100) : 0;
+      const remaining = mBudget > memberSpent ? mBudget - memberSpent : 0;
+      const isOver = mBudget > 0 && memberSpent > mBudget;
+      const diff = Math.abs(memberSpent - mBudget);
+
+      return {
+        title: `ยอดค่าใช้จ่ายของ ${mName}`,
+        spent: memberSpent,
+        targetBudget: mBudget,
+        budgetLabel: `งบเฉพาะบุคคล (${mName})`,
+        progress,
+        remaining,
+        isOver,
+        diff,
+        viewName: mName,
+      };
+    }
+  }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members]);
+
+  // สรุปยอดจ่ายแยกตามรายคน
   const distinctPayers = useMemo(() => {
-    const map = new Map<string, { name: string; avatar: string; count: number; total: number; isMe: boolean }>();
-    
-    const myName = userDisplayName;
-    const myAvatar = userProfile?.avatar_id || 'cat_pink';
-    map.set('me', { name: myName, avatar: myAvatar, count: 0, total: 0, isMe: true });
+    const map = new Map<string, { name: string; avatar?: string; total: number; isMe: boolean; key: string }>();
 
     expenses.forEach((e) => {
-      const isMyExpense = (e.payer_id && e.payer_id === currentUser?.id) || 
-                          (e.payer_name && e.payer_name.toLowerCase() === myName.toLowerCase());
-      
-      const key = isMyExpense ? 'me' : (e.payer_name || 'สมาชิก');
-      const current = map.get(key) || { 
-        name: e.payer_name || 'สมาชิก', 
-        avatar: e.payer_avatar || 'cat_pink', 
-        count: 0, 
-        total: 0, 
-        isMe: isMyExpense 
-      };
+      const isMe = (e.payer_id && e.payer_id === currentUser?.id) ||
+                   (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase());
+      const key = isMe ? 'me' : (e.payer_id || e.payer_name || 'สมาชิก');
+      const name = isMe ? `${userDisplayName} (ฉัน)` : (e.payer_name || 'สมาชิก');
+      const avatar = isMe ? userProfile?.avatar_id : e.payer_avatar;
 
-      current.count += 1;
-      current.total += Number(e.amount || 0);
-      map.set(key, current);
+      if (!map.has(key)) {
+        map.set(key, { name, avatar, total: 0, isMe, key });
+      }
+      map.get(key)!.total += Number(e.amount || 0);
     });
 
-    return Array.from(map.entries()).map(([key, data]) => ({ key, ...data }));
-  }, [expenses, userDisplayName, userProfile, currentUser]);
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }, [expenses, currentUser, userDisplayName, userProfile]);
 
-  // กรองรายจ่าย
+  // Filtered expenses
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => {
-      const matchCat = expenseCategoryFilter === 'all' || e.category === expenseCategoryFilter;
-      
-      let matchPayer = true;
-      if (expensePayerFilter === 'me') {
-        matchPayer = (e.payer_id && e.payer_id === currentUser?.id) || 
+      if (expenseCategoryFilter !== 'all' && e.category !== expenseCategoryFilter) return false;
+      if (expensePayerFilter !== 'all') {
+        const isMe = (e.payer_id && e.payer_id === currentUser?.id) ||
                      (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase());
-      } else if (expensePayerFilter !== 'all') {
-        matchPayer = e.payer_name === expensePayerFilter;
+        if (expensePayerFilter === 'me' && !isMe) return false;
+        if (expensePayerFilter !== 'me' && e.payer_id !== expensePayerFilter && e.payer_name !== expensePayerFilter) return false;
       }
-
-      const matchQuery = expenseSearchQuery.trim() === '' || 
-        (e.title && e.title.toLowerCase().includes(expenseSearchQuery.toLowerCase())) ||
-        (e.payer_name && e.payer_name.toLowerCase().includes(expenseSearchQuery.toLowerCase()));
-
-      return matchCat && matchPayer && matchQuery;
-    });
-  }, [expenses, expenseCategoryFilter, expensePayerFilter, expenseSearchQuery, currentUser, userDisplayName]);
-
-  const filteredExpensesTotal = useMemo(() => {
-    return filteredExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-  }, [filteredExpenses]);
-
-  // สรุปยอดตามหมวดหมู่ (รวม Category Budgets)
-  const categoryAnalytics = useMemo(() => {
-    const spentMap: { [key: string]: number } = {};
-    categories.forEach((cat) => {
-      spentMap[cat.id] = 0;
-    });
-
-    const targetExpenses = expenses.filter((e) => {
-      if (analyticsPayerFilter === 'me') {
-        return (e.payer_id && e.payer_id === currentUser?.id) || 
-               (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase());
-      }
-      if (analyticsPayerFilter !== 'all') {
-        return e.payer_name === analyticsPayerFilter;
+      if (expenseSearchQuery.trim()) {
+        const query = expenseSearchQuery.toLowerCase();
+        const titleMatch = (e.title || '').toLowerCase().includes(query);
+        const payerMatch = (e.payer_name || '').toLowerCase().includes(query);
+        if (!titleMatch && !payerMatch) return false;
       }
       return true;
     });
+  }, [expenses, expenseCategoryFilter, expensePayerFilter, expenseSearchQuery, currentUser, userDisplayName]);
 
-    targetExpenses.forEach((e) => {
-      const catId = e.category || 'other';
-      spentMap[catId] = (spentMap[catId] || 0) + Number(e.amount || 0);
-    });
-
-    return categories.map((cat) => {
-      const spent = spentMap[cat.id] || 0;
-      const budget = categoryBudgets[cat.id] || 0;
-      const percent = budget > 0 ? (spent / budget) * 100 : 0;
-      const isOver = budget > 0 && spent > budget;
-      return {
-        ...cat,
-        spent,
-        budget,
-        percent,
-        isOver,
-        diff: spent - budget,
-      };
-    });
-  }, [categories, expenses, categoryBudgets, analyticsPayerFilter, currentUser, userDisplayName]);
-
-  const analyticsExpensesTotal = useMemo(() => {
-    return categoryAnalytics.reduce((a, b) => a + b.spent, 0);
-  }, [categoryAnalytics]);
-
-  // กรองวันที่สำหรับแท็บแผนเที่ยว
+  // วันทั้งหมดที่มีใน Itinerary
   const availableDays = useMemo(() => {
     const days = new Set<string>();
     itinerary.forEach((item) => {
-      if (item.date_label) days.add(item.date_label.trim());
+      if (item.date_label && item.date_label.trim().length > 0) {
+        days.add(item.date_label.trim());
+      }
     });
     return Array.from(days);
   }, [itinerary]);
@@ -916,7 +895,7 @@ export default function TripDetailPage() {
     return itinerary.filter((item) => item.date_label?.trim() === selectedDayFilter);
   }, [itinerary, selectedDayFilter]);
 
-  if (loading) {
+  if (loading && !trip) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-3">
         <Loader2 className="h-9 w-9 animate-spin text-pink-500" />
@@ -926,41 +905,44 @@ export default function TripDetailPage() {
   }
 
   return (
-    <div className="relative min-h-screen pb-24 bg-grid-pattern transition-colors duration-300">
+    <div className="relative min-h-screen pb-28 md:pb-20 bg-grid-pattern transition-colors duration-300">
       
       {/* Background Floating Glow Orbs */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-pink-500/10 dark:bg-pink-500/15 rounded-full blur-3xl pointer-events-none animate-float-slow" />
-      <div className="absolute top-80 right-10 w-96 h-96 bg-purple-600/10 dark:bg-purple-600/15 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
+      <div className="absolute top-20 left-10 w-80 sm:w-96 h-80 sm:h-96 bg-pink-500/10 dark:bg-pink-500/15 rounded-full blur-3xl pointer-events-none animate-float-slow" />
+      <div className="absolute top-80 right-10 w-80 sm:w-96 h-80 sm:h-96 bg-purple-600/10 dark:bg-purple-600/15 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
       {/* ==================== TOP NAVIGATION ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-900/40 bg-white/85 dark:bg-[#090611]/85 backdrop-blur-xl transition-colors">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <nav className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-900/40 bg-white/90 dark:bg-[#090611]/90 backdrop-blur-xl transition-colors">
+        <div className="max-w-5xl mx-auto px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+          
+          {/* Left: Back & Title */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link
               href="/"
-              className="p-2 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 shadow-2xs transition-all cursor-pointer"
+              className="p-2 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 shadow-2xs transition-all shrink-0 cursor-pointer"
               title="กลับไปหน้าทริปทั้งหมด"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm md:text-base font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent truncate max-w-[140px] sm:max-w-xs md:max-w-md">
+            
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-sm sm:text-base font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-md">
                   {(trip?.name || trip?.title) || 'รายละเอียดทริป'}
                 </h1>
                 
                 {/* Online / Offline Status Badge */}
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-2xs ${
+                <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 ${
                   isOnline 
                     ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900' 
                     : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900'
                 }`}>
-                  {isOnline ? <Wifi className="h-3 w-3 text-emerald-500" /> : <WifiOff className="h-3 w-3 text-amber-500" />}
-                  <span className="hidden sm:inline">{isOnline ? 'ออนไลน์' : 'ออฟไลน์ (แคชเครื่อง)'}</span>
+                  {isOnline ? <Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-500" /> : <WifiOff className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-500" />}
+                  <span className="hidden md:inline">{isOnline ? 'ออนไลน์' : 'ออฟไลน์ (แคชเครื่อง)'}</span>
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-[10px] md:text-xs text-slate-500 dark:text-purple-300/70 font-semibold">
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-purple-300/70 font-semibold truncate">
                 <span>{trip?.currency || 'JPY'}</span>
                 <span>•</span>
                 <span>{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
@@ -968,20 +950,25 @@ export default function TripDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Notification Bell */}
             <NotificationBell expenses={expenses} itinerary={itinerary} members={members} tripTitle={trip?.name || trip?.title} />
 
             {/* Profile Avatar Button */}
             <button
               onClick={() => setShowProfileModal(true)}
-              className="flex items-center gap-1.5 p-1.5 pr-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 hover:border-pink-500 hover:scale-105 shadow-2xs transition-all cursor-pointer group"
+              className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 hover:border-pink-500 hover:scale-105 shadow-2xs transition-all cursor-pointer group"
               title="ตั้งค่าโปรไฟล์"
             >
-              <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-sm group-hover:scale-110 transition-transform`}>
-                {userCat.emoji}
+              <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-sm group-hover:scale-110 transition-transform overflow-hidden`}>
+                {userCat.imgUrl ? (
+                  <img src={userCat.imgUrl} alt={userCat.name} className="w-full h-full object-cover" />
+                ) : (
+                  userCat.emoji
+                )}
               </div>
-              <span className="text-[11px] font-black text-slate-800 dark:text-purple-100 max-w-[80px] truncate hidden sm:inline">
+              <span className="text-[11px] font-black text-slate-800 dark:text-purple-100 max-w-[80px] truncate hidden lg:inline">
                 {userDisplayName}
               </span>
             </button>
@@ -989,16 +976,17 @@ export default function TripDetailPage() {
             {/* Share button */}
             <button
               onClick={() => setShowShareModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-700 dark:text-purple-200 text-xs font-bold hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 shadow-2xs transition-all cursor-pointer"
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-700 dark:text-purple-200 text-xs font-bold hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 shadow-2xs transition-all cursor-pointer"
+              title="แชร์ทริป"
             >
               <Share2 className="h-3.5 w-3.5 text-pink-500" />
-              <span className="hidden sm:inline">แชร์ทริป</span>
+              <span className="hidden sm:inline">แชร์</span>
             </button>
 
             {/* Dark/Light Switcher */}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:rotate-45 shadow-2xs transition-all duration-300 cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:rotate-45 shadow-2xs transition-all duration-300 cursor-pointer"
               title="สลับโหมด มืด/สว่าง"
             >
               {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-600" />}
@@ -1022,7 +1010,7 @@ export default function TripDetailPage() {
                     }
                   }
                 }}
-                className="p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-500 hover:text-rose-600 dark:text-purple-300 dark:hover:text-rose-400 hover:border-rose-400 shadow-2xs transition-all cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#130d22]/90 text-slate-500 hover:text-rose-600 dark:text-purple-300 dark:hover:text-rose-400 hover:border-rose-400 shadow-2xs transition-all cursor-pointer"
                 title="ออกจากระบบ (Sign Out)"
               >
                 <LogOut className="h-4 w-4" />
@@ -1033,258 +1021,296 @@ export default function TripDetailPage() {
       </nav>
 
       {/* ==================== MAIN CONTENT CONTAINER ==================== */}
-      <main className="relative z-10 max-w-5xl mx-auto px-4 pt-6 space-y-6">
+      <main className="relative z-10 max-w-5xl mx-auto px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-4 sm:space-y-6">
 
         {/* Guest Preview & Join Invitation Banner */}
         {!currentUser && (
-          <div className="p-4 rounded-3xl bg-gradient-to-r from-pink-500/15 via-purple-600/15 to-indigo-600/15 border border-pink-300 dark:border-purple-800/80 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md animate-in fade-in">
+          <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-pink-500/15 via-purple-600/15 to-indigo-600/15 border border-pink-300 dark:border-purple-800/80 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md animate-in fade-in">
             <div className="flex items-center gap-3 text-left">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-sm shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-base sm:text-lg shadow-sm shrink-0">
                 👋
               </div>
               <div>
                 <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                   คุณกำลังดูทริปนี้ในฐานะผู้มาเยือน (Guest Preview)
                 </h3>
-                <p className="text-[11px] text-slate-600 dark:text-purple-300/80 font-medium">
-                  เข้าสู่ระบบหรือสมัครสมาชิกใหม่เพื่อบันทึกค่าใช้จ่าย แก้ไขแผนเที่ยว และสแกนบิลด้วย AI
+                <p className="text-[10px] sm:text-[11px] text-slate-600 dark:text-purple-300/80 font-medium">
+                  เข้าสู่ระบบเพื่อร่วมบันทึกค่าใช้จ่าย แก้ไขแผนเที่ยว และสแกนบิลด้วย AI
                 </p>
               </div>
             </div>
             <Link
               href={`/login?returnUrl=/trips/${tripId}`}
-              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-black shadow-md shadow-pink-500/25 hover:scale-105 transition-all shrink-0 cursor-pointer"
+              className="w-full sm:w-auto text-center px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-black shadow-md shadow-pink-500/25 hover:scale-105 transition-all shrink-0 cursor-pointer"
             >
               เข้าสู่ระบบ / สมัครสมาชิก
             </Link>
           </div>
         )}
 
-        {/* ==================== HERO BUDGET & QUICK ACTION CARD ==================== */}
-        <div className="relative overflow-hidden rounded-3xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/90 dark:bg-[#130d22]/90 backdrop-blur-xl card-elevation p-6 md:p-7">
+        {/* ==================== HERO BUDGET & QUICK ACTION CARD (IPHONE / IPAD OPTIMIZED) ==================== */}
+        <div className="relative overflow-hidden rounded-3xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/95 dark:bg-[#130d22]/95 backdrop-blur-xl card-elevation p-4 sm:p-6 md:p-7 space-y-4">
           <div className="absolute -top-16 -right-16 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl pointer-events-none animate-float-slow" />
           <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            {/* Left: Total Spent & Budget */}
-            <div className="md:col-span-2 space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-900 shadow-2xs">
-                  {trip?.currency || 'JPY'} Workspace
-                </span>
-                <span className="text-[11px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-900 shadow-2xs">
-                  100 JPY = {(fxRate * 100).toFixed(2)} THB
-                </span>
-                
-                {/* Direct Edit Budget Button */}
-                <button
-                  onClick={() => setShowBudgetCategoryModal(true)}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#1c1328] px-2.5 py-0.5 rounded-full border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105"
-                >
-                  <Sliders className="h-3 w-3 text-pink-500" /> ตั้งงบ & หมวดหมู่
-                </button>
-
-                {/* Photo Scrapbook Trigger Button */}
-                <button
-                  onClick={() => setShowScrapbookModal(true)}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#1c1328] px-2.5 py-0.5 rounded-full border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105"
-                >
-                  <span>📸 สมุดภาพ ({photosCount})</span>
-                </button>
-              </div>
-
-              {/* Segmented View Switcher: All vs Me vs Specific Friend */}
-              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/90 dark:bg-[#1c1328]/90 border border-slate-200 dark:border-purple-900/50 rounded-2xl w-fit shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setHeroBudgetView('all')}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    heroBudgetView === 'all'
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                      : 'text-slate-600 dark:text-purple-300 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  👥 รวมทุกคน
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setHeroBudgetView('me')}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    heroBudgetView === 'me'
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                      : 'text-slate-600 dark:text-purple-300 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  👤 ของฉัน ({userDisplayName})
-                </button>
-
-                {members.length > 0 && (
-                  <select
-                    value={heroBudgetView !== 'all' && heroBudgetView !== 'me' ? heroBudgetView : ''}
-                    onChange={(e) => {
-                      if (e.target.value) setHeroBudgetView(e.target.value);
-                    }}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold outline-none cursor-pointer transition-all ${
-                      heroBudgetView !== 'all' && heroBudgetView !== 'me'
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-purple-300 bg-transparent hover:text-slate-900'
-                    }`}
-                  >
-                    <option value="" disabled className="text-slate-900 dark:text-white">เพื่อนในทริป...</option>
-                    {members.map((m) => {
-                      const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
-                      return (
-                        <option key={m.id} value={m.user_id || m.id} className="text-slate-900 dark:text-white">
-                          👤 {mName}
-                        </option>
-                      );
-                    })}
-                  </select>
-                )}
-              </div>
-
-              <div>
-                <div className="text-xs font-bold text-slate-500 dark:text-purple-300/70 flex items-center justify-between">
-                  <span>{heroDisplayData.title}</span>
-                  {heroDisplayData.isOver && (
-                    <span className="text-[11px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
-                      ⚠️ เกินงบ +{heroDisplayData.diff.toLocaleString()} {trip?.currency}
-                    </span>
-                  )}
-                </div>
-                <div className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mt-0.5">
-                  {heroDisplayData.spent.toLocaleString()} <span className="text-lg md:text-xl font-bold text-pink-600 dark:text-pink-400">{trip?.currency || 'JPY'}</span>
-                  <span className="text-sm md:text-base font-bold text-slate-500 dark:text-purple-400 block sm:inline sm:ml-2">
-                    (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
-                  </span>
-                </div>
-              </div>
-
-              {/* Progress Bar with Shimmer */}
-              <div className="space-y-1.5 pt-1">
-                <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-purple-200">
-                  <span>
-                    {heroDisplayData.targetBudget > 0 
-                      ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
-                      : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? `${heroDisplayData.targetBudget.toLocaleString()} ${trip?.currency || 'JPY'}` : 'ไม่ระบุ'}
-                    <button
-                      onClick={() => setShowBudgetCategoryModal(true)}
-                      className="p-1 text-slate-400 hover:text-pink-500 transition-colors cursor-pointer"
-                      title="ตั้งค่าเป้าหมายงบประมาณ"
-                    >
-                      <Edit3 className="h-3 w-3" />
-                    </button>
-                  </span>
-                </div>
-                <div className="w-full bg-slate-200/80 dark:bg-purple-950/80 rounded-full h-3.5 overflow-hidden p-0.5 shadow-inner">
-                  <div 
-                    className={`h-full rounded-full transition-all duration-700 ${
-                      heroDisplayData.isOver
-                        ? 'bg-gradient-to-r from-rose-500 to-red-600' 
-                        : 'shimmer-gradient'
-                    }`}
-                    style={{ width: `${Math.min(heroDisplayData.progress, 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Connected Financial Balance Status Ribbon */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-purple-200/60 dark:border-purple-900/40 text-xs">
-                {heroDisplayData.targetBudget > 0 ? (
-                  heroDisplayData.isOver ? (
-                    <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900 shadow-2xs">
-                      <AlertTriangle className="h-4 w-4 shrink-0" />
-                      <span>ใช้เกินงบไป: <b>+{heroDisplayData.overAmount.toLocaleString()} {trip?.currency}</b> (≈ ฿{Math.round(heroDisplayData.overAmount * fxRate).toLocaleString()})</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900 shadow-2xs">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                      <span>ยอดเงินคงเหลือ: <b>{heroDisplayData.remaining.toLocaleString()} {trip?.currency}</b> (≈ ฿{Math.round(heroDisplayData.remaining * fxRate).toLocaleString()})</span>
-                    </div>
-                  )
-                ) : (
-                  <div className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
-                    💡 กดปุ่ม &quot;ตั้งงบ &amp; หมวดหมู่&quot; เพื่อกำหนดเป้าหมายงบประมาณ
-                  </div>
-                )}
-
-                {heroDisplayData.viewType !== 'all' && heroDisplayData.totalTripBudget > 0 && (
-                  <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-1 rounded-xl border border-purple-200 dark:border-purple-900 shadow-2xs">
-                    🔗 คิดเป็น {heroDisplayData.shareOfTotal.toFixed(1)}% ของงบรวมทริป ({heroDisplayData.totalTripBudget.toLocaleString()} {trip?.currency})
-                  </span>
-                )}
-              </div>
+          {/* Row 1: Badges & Quick Tool Pills */}
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-900 shadow-2xs">
+                {trip?.currency || 'JPY'} Workspace
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-900 shadow-2xs">
+                100 JPY = {(fxRate * 100).toFixed(2)} THB
+              </span>
             </div>
 
-            {/* Right: Action Buttons */}
-            <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5">
+            <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setShowScanModal(true)}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                onClick={() => setShowBudgetCategoryModal(true)}
+                className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#1c1328] px-2.5 py-1 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105"
               >
-                <Camera className="h-4 w-4" />
-                <span>บันทึกรายจ่าย AI OCR</span>
+                <Sliders className="h-3 w-3 text-pink-500" /> 
+                <span>ตั้งงบ & หมวด</span>
+              </button>
+
+              <button
+                onClick={() => setShowScrapbookModal(true)}
+                className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#1c1328] px-2.5 py-1 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105"
+              >
+                <span>📸 สมุดภาพ ({photosCount})</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Row 2: Swipeable Segmented Member Chips */}
+          <div className="relative z-10 flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+            <button
+              type="button"
+              onClick={() => setHeroBudgetView('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                heroBudgetView === 'all'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                  : 'bg-slate-100 dark:bg-[#1c1328] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+              }`}
+            >
+              👥 รวมทุกคน
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setHeroBudgetView('me')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
+                heroBudgetView === 'me'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                  : 'bg-slate-100 dark:bg-[#1c1328] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+              }`}
+            >
+              <span>{userCat.emoji}</span>
+              <span>ของฉัน ({userDisplayName})</span>
+            </button>
+
+            {members.map((m) => {
+              const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
+              const mCat = getCatAvatar(m.profiles?.avatar_id);
+              const mKey = m.user_id || m.id;
+              const isSelected = heroBudgetView === mKey;
+
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setHeroBudgetView(mKey)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                      : 'bg-slate-100 dark:bg-[#1c1328] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+                  }`}
+                >
+                  <span>{mCat.emoji}</span>
+                  <span>{mName}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Row 3: Spent Metric */}
+          <div className="relative z-10 pt-1">
+            <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-purple-300/70 flex items-center justify-between">
+              <span>{heroDisplayData.title}</span>
+              {heroDisplayData.isOver && (
+                <span className="text-[10px] sm:text-[11px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
+                  ⚠️ เกินงบ +{heroDisplayData.diff.toLocaleString()} {trip?.currency}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
+              <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+                {heroDisplayData.spent.toLocaleString()}
+              </span>
+              <span className="text-base sm:text-xl font-bold text-pink-600 dark:text-pink-400">
+                {trip?.currency || 'JPY'}
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-purple-400 ml-1">
+                (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
+              </span>
+            </div>
+          </div>
+
+          {/* Row 4: Progress Bar */}
+          <div className="relative z-10 space-y-1.5">
+            <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-purple-200">
+              <span>
+                {heroDisplayData.targetBudget > 0 
+                  ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
+                  : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
+              </span>
+              <span className="flex items-center gap-1">
+                {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? `${heroDisplayData.targetBudget.toLocaleString()} ${trip?.currency || 'JPY'}` : 'ไม่ระบุ'}
+                <button
+                  onClick={() => setShowBudgetCategoryModal(true)}
+                  className="p-0.5 text-slate-400 hover:text-pink-500 transition-colors cursor-pointer"
+                  title="ตั้งค่าเป้าหมายงบประมาณ"
+                >
+                  <Edit3 className="h-3 w-3" />
+                </button>
+              </span>
+            </div>
+
+            <div className="w-full bg-slate-200/80 dark:bg-[#1e1530] rounded-full h-3 sm:h-3.5 p-0.5 overflow-hidden shadow-inner relative">
+              <div
+                className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
+                  heroDisplayData.isOver
+                    ? 'bg-gradient-to-r from-rose-500 via-pink-600 to-red-600'
+                    : heroDisplayData.progress > 80
+                    ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600'
+                    : 'bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600'
+                }`}
+                style={{ width: `${Math.max(heroDisplayData.progress, 3)}%` }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 5: Remaining Ribbon & Primary Action Buttons */}
+          <div className="relative z-10 pt-1 space-y-3">
+            {heroDisplayData.targetBudget > 0 && (
+              <div className={`p-2.5 sm:p-3 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-2xs ${
+                heroDisplayData.isOver
+                  ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300'
+                  : 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300'
+              }`}>
+                <div className="flex items-center gap-1.5">
+                  {heroDisplayData.isOver ? (
+                    <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  )}
+                  <span>
+                    {heroDisplayData.isOver ? 'ยอดเงินที่ใช้เกินงบประมาณ:' : 'ยอดเงินคงเหลือ:'}
+                  </span>
+                </div>
+                <div className="font-black text-right">
+                  <span>{heroDisplayData.isOver ? heroDisplayData.diff.toLocaleString() : heroDisplayData.remaining.toLocaleString()} {trip?.currency}</span>
+                  <span className="text-[10px] opacity-80 block sm:inline sm:ml-1">
+                    (≈ ฿{Math.round((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining) * fxRate).toLocaleString()})
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Two Primary Action Buttons */}
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5">
+              <button
+                onClick={() => {
+                  setOcrSuccessToast(null);
+                  setShowScanModal(true);
+                }}
+                disabled={!canAddExpense}
+                className="py-3 px-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <Camera className="h-4 w-4 shrink-0" />
+                <span className="truncate">บันทึกรายจ่าย AI OCR</span>
               </button>
 
               <button
                 onClick={() => setShowSettlementModal(true)}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-pink-300 dark:border-pink-800/80 bg-white/95 dark:bg-[#130d22] text-pink-600 dark:text-pink-400 font-black text-xs hover:scale-105 transition-all cursor-pointer shadow-xs"
+                className="py-3 px-3 rounded-2xl bg-white dark:bg-[#1a1228] border border-purple-300 dark:border-purple-800/80 hover:border-pink-500 text-slate-800 dark:text-purple-100 font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
               >
-                <Calculator className="h-4 w-4 text-pink-500" />
-                <span>💸 เคลียร์บิลหารเงิน</span>
+                <Calculator className="h-4 w-4 text-pink-500 shrink-0" />
+                <span className="truncate">เคลียร์บิลหารเงิน</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* ==================== LIVE WEATHER FORECAST WIDGET ==================== */}
-        <WeatherWidget defaultCity={itinerary[0]?.city || 'osaka'} />
+        {/* ==================== COLLAPSIBLE WEATHER & ROUTE WIDGET ==================== */}
+        <div className="rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation overflow-hidden">
+          <div 
+            onClick={() => setShowWeatherSection(!showWeatherSection)}
+            className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-purple-950/20 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">🌤️</span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                พยากรณ์อากาศ & เส้นทางเที่ยวสด
+              </span>
+            </div>
+            <button className="p-1 text-slate-400">
+              {showWeatherSection ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+          </div>
 
-        {/* ==================== WORKSPACE TABS ==================== */}
-        <div className="flex gap-2 p-1.5 rounded-2xl border border-slate-200/80 dark:border-purple-900/40 bg-white/90 dark:bg-[#130d22]/90 backdrop-blur-xl card-elevation overflow-x-auto">
+          {showWeatherSection && (
+            <div className="p-3.5 sm:p-4 pt-0 space-y-4 border-t border-slate-100 dark:border-purple-900/30">
+              <WeatherWidget defaultCity="Osaka" />
+              <RouteVisualizer dayLabel="เส้นทางภาพรวม" items={itinerary} />
+            </div>
+          )}
+        </div>
+
+        {/* ==================== DESKTOP & TABLET TAB NAVIGATION BAR ==================== */}
+        <div className="hidden sm:grid grid-cols-4 gap-2 p-1.5 bg-slate-100/80 dark:bg-[#130d22]/80 border border-slate-200/80 dark:border-purple-900/40 rounded-3xl backdrop-blur-xl">
           <button
             onClick={() => setActiveTab('plan')}
-            className={`px-4 py-2 rounded-2xl font-bold text-xs md:text-sm transition-all cursor-pointer ${
+            className={`py-2.5 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'plan' 
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-purple-950/40'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.01]' 
+                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            🗺️ แผนการเดินทาง ({itinerary.length})
+            <span>🗺️ แผนการเดินทาง ({itinerary.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('expenses')}
-            className={`px-4 py-2 rounded-2xl font-bold text-xs md:text-sm transition-all cursor-pointer ${
+            className={`py-2.5 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'expenses' 
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-purple-950/40'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.01]' 
+                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            💰 รายจ่าย ({expenses.length})
+            <span>💰 รายจ่าย ({expenses.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`px-4 py-2 rounded-2xl font-bold text-xs md:text-sm transition-all cursor-pointer ${
+            className={`py-2.5 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'analytics' 
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-purple-950/40'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.01]' 
+                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            📊 สถิติ & จัดการงบหมวดหมู่
+            <span>📊 สถิติ & งบหมวด</span>
           </button>
           <button
             onClick={() => setActiveTab('members')}
-            className={`px-4 py-2 rounded-2xl font-bold text-xs md:text-sm transition-all cursor-pointer ${
+            className={`py-2.5 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'members' 
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-purple-950/40'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.01]' 
+                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            👥 สมาชิก & ลิงก์แชร์
+            <span>👥 สมาชิก ({members.length})</span>
           </button>
         </div>
 
@@ -1293,15 +1319,15 @@ export default function TripDetailPage() {
           <div className="space-y-4">
             
             {/* Header Toolbar */}
-            <div className="flex flex-wrap justify-between items-center gap-3 mb-2">
+            <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
               {/* Day filter pills */}
               {availableDays.length > 0 && (
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full custom-scrollbar">
                   <button
                     onClick={() => setSelectedDayFilter('all')}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                       selectedDayFilter === 'all'
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm scale-105'
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
                         : 'bg-slate-100 dark:bg-purple-950/70 text-slate-800 dark:text-purple-200 border border-slate-300/80 dark:border-purple-900/50 hover:bg-slate-200'
                     }`}
                   >
@@ -1311,9 +1337,9 @@ export default function TripDetailPage() {
                     <button
                       key={day}
                       onClick={() => setSelectedDayFilter(day)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                         selectedDayFilter === day
-                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm scale-105'
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
                           : 'bg-slate-100 dark:bg-purple-950/70 text-slate-800 dark:text-purple-200 border border-slate-300/80 dark:border-purple-900/50 hover:bg-slate-200'
                       }`}
                     >
@@ -1323,125 +1349,117 @@ export default function TripDetailPage() {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2 ml-auto">
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 ml-auto">
                 <button
                   onClick={() => setShowPrintableModal(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/95 dark:bg-[#130d22]/95 text-slate-800 dark:text-purple-200 border border-slate-300 dark:border-purple-800 rounded-xl text-xs font-bold hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 shadow-2xs transition-all cursor-pointer"
-                  title="ส่งออกเอกสาร PDF หรือพิมพ์ A4"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-purple-800 bg-white/90 dark:bg-[#130d22]/90 text-xs font-bold text-slate-700 dark:text-purple-200 hover:border-pink-500 transition-all cursor-pointer shadow-2xs"
+                  title="พิมพ์ / เซฟเป็น PDF"
                 >
-                  <FileText className="h-4 w-4 text-pink-500" />
-                  <span>พิมพ์ / PDF</span>
+                  <FileText className="h-3.5 w-3.5 text-pink-500" />
+                  <span className="hidden sm:inline">พิมพ์ PDF</span>
                 </button>
 
+                {canImportExcel && (
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-950/40 text-purple-700 dark:text-purple-200 text-xs font-bold hover:border-pink-500 cursor-pointer transition-all shadow-2xs">
+                    <Upload className="h-3.5 w-3.5 text-purple-500" />
+                    <span className="hidden sm:inline">Import Excel</span>
+                    <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
+                  </label>
+                )}
+
                 <button
-                  onClick={() => setShowAIAssistantModal(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/95 dark:bg-[#130d22]/95 text-slate-800 dark:text-purple-200 border border-slate-300 dark:border-purple-800 rounded-xl text-xs font-bold hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 shadow-2xs transition-all cursor-pointer"
+                  onClick={exportToExcel}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-purple-800 bg-white/90 dark:bg-[#130d22]/90 text-xs font-bold text-slate-700 dark:text-purple-200 hover:border-pink-500 transition-all cursor-pointer shadow-2xs"
+                  title="ดาวน์โหลดไฟล์ Excel"
                 >
-                  <Bot className="h-4 w-4 text-pink-500 animate-pulse" />
-                  <span>AI Co-Pilot</span>
+                  <Download className="h-3.5 w-3.5 text-emerald-500" />
+                  <span className="hidden sm:inline">Export Excel</span>
                 </button>
 
                 {canEditPlan && (
                   <button
-                    onClick={() => openAddActivityModal(selectedDayFilter !== 'all' ? selectedDayFilter : undefined)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-xl text-xs font-bold shadow-md shadow-pink-500/20 hover:scale-105 transition-all cursor-pointer"
+                    onClick={() => handleOpenAddActivity(null, selectedDayFilter !== 'all' ? selectedDayFilter : undefined)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
-                    <Plus className="h-4 w-4" /> เพิ่มกิจกรรม
+                    <Plus className="h-4 w-4" />
+                    <span>เพิ่มกิจกรรม</span>
                   </button>
-                )}
-
-                {canImportExcel && (
-                  <label className="flex items-center gap-1.5 px-3.5 py-1.5 border border-slate-300 dark:border-purple-800 bg-white/90 dark:bg-[#130d22]/90 rounded-xl text-xs font-bold text-slate-800 dark:text-purple-200 hover:border-pink-500 hover:scale-105 shadow-2xs cursor-pointer transition-all" title="เฉพาะผู้สร้างทริป (Owner)">
-                    <Upload className="h-4 w-4 text-pink-500" />
-                    <span>Import Excel</span>
-                    <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
-                  </label>
                 )}
               </div>
             </div>
 
-            {/* Route Visualizer for selected day */}
-            {selectedDayFilter !== 'all' && (
-              <RouteVisualizer dayLabel={selectedDayFilter} items={filteredItinerary} />
-            )}
-
-            {/* Itinerary Cards */}
+            {/* List of Itinerary Activities */}
             {filteredItinerary.length === 0 ? (
-              <div className="text-center py-16 border-2 border-dashed border-slate-300 dark:border-purple-900/50 rounded-3xl p-6 bg-white/60 dark:bg-[#130d22]/60 shadow-sm">
-                <MapPin className="h-10 w-10 text-pink-500 mx-auto mb-2 animate-float-slow" />
-                <h3 className="font-black text-base text-slate-900 dark:text-white mb-1">ยังไม่มีแผนการเดินทาง</h3>
-                <p className="text-xs text-slate-600 dark:text-purple-300/70 mb-4 max-w-sm mx-auto font-medium">
-                  กดปุ่ม "Import Excel" เพื่อนำเข้าแผนเที่ยวจากไฟล์ หรือคลิก "เพิ่มกิจกรรม" เพื่อเริ่มสร้างแผน
+              <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-purple-900/50 rounded-3xl p-6 bg-white/60 dark:bg-[#130d22]/60">
+                <Navigation className="h-10 w-10 text-pink-500 mx-auto mb-2 animate-float-slow" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีกิจกรรมในแผนเที่ยวนี้</h3>
+                <p className="text-xs text-slate-500 dark:text-purple-400 mt-1 mb-4">
+                  กดปุ่มเพิ่มกิจกรรม หรือนำเข้าจากไฟล์ Excel ได้ทันที
                 </p>
-                <button
-                  onClick={() => openAddActivityModal()}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/20 hover:scale-105 transition-all"
-                >
-                  <Plus className="h-4 w-4" /> เพิ่มกิจกรรมแรก
-                </button>
+                {canEditPlan && (
+                  <button
+                    onClick={() => handleOpenAddActivity()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md hover:scale-105 transition-all"
+                  >
+                    <Plus className="h-4 w-4" /> เพิ่มกิจกรรมแรก
+                  </button>
+                )}
               </div>
             ) : (
-              filteredItinerary.map((item, idx) => {
-                const globalIndex = itinerary.findIndex((it) => it.id === item.id);
-                return (
-                  <div key={item.id || idx} className="space-y-2">
-                    <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation hover:border-pink-500/60 dark:hover:border-pink-500/60 transition-all duration-300 group">
-                      
-                      {/* Row Top Header: Badges & Controls */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {item.date_label && (
-                            <span className="px-3 py-1 rounded-xl bg-pink-100 text-pink-700 dark:bg-pink-950/80 dark:text-pink-300 text-xs font-black border border-pink-300/80 dark:border-pink-900 shadow-2xs">
-                              {item.date_label}
-                            </span>
-                          )}
+              <div className="space-y-3">
+                {filteredItinerary.map((item, idx) => {
+                  const isPlanBOpen = expandedPlanB[item.id] || false;
+                  return (
+                    <div
+                      key={item.id || idx}
+                      className="group p-4 rounded-3xl border border-slate-200/90 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation hover:border-pink-500/50 transition-all duration-300"
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-900">
+                            {item.date_label || `Day ${idx + 1}`}
+                          </span>
                           {item.time_slot && (
-                            <span className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-purple-300 bg-slate-100 dark:bg-purple-950/60 border border-slate-200 dark:border-purple-900/40 px-2.5 py-1 rounded-xl shadow-2xs">
-                              <Clock className="h-3 w-3 text-purple-600 dark:text-purple-400" /> {item.time_slot}
+                            <span className="flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-purple-300">
+                              <Clock className="h-3 w-3 text-pink-500" /> {item.time_slot}
                             </span>
                           )}
                           {item.city && (
-                            <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 px-2.5 py-1 rounded-xl border border-indigo-200 dark:border-indigo-900/40 shadow-2xs">
-                              {item.city}
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-purple-400">
+                              📍 {item.city}
                             </span>
                           )}
                         </div>
 
-                        {/* Row Controls */}
                         {canEditPlan && (
-                          <div className="flex items-center gap-1 bg-slate-100 dark:bg-purple-950/60 p-1 rounded-xl border border-slate-200 dark:border-purple-900/40 shadow-2xs">
+                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                             <button
-                              onClick={() => handleMoveActivity(globalIndex, 'up')}
-                              disabled={globalIndex === 0 || reordering}
-                              className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900 disabled:opacity-30 transition-all cursor-pointer hover:scale-110"
-                              title="ย้ายขึ้น (Move Up)"
+                              onClick={() => handleMoveActivity(idx, 'up')}
+                              disabled={idx === 0 || reordering}
+                              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-purple-900/50 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                              title="เลื่อนขึ้น"
                             >
                               <ArrowUp className="h-3.5 w-3.5" />
                             </button>
-
                             <button
-                              onClick={() => handleMoveActivity(globalIndex, 'down')}
-                              disabled={globalIndex === itinerary.length - 1 || reordering}
-                              className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900 disabled:opacity-30 transition-all cursor-pointer hover:scale-110"
-                              title="ย้ายลง (Move Down)"
+                              onClick={() => handleMoveActivity(idx, 'down')}
+                              disabled={idx === itinerary.length - 1 || reordering}
+                              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-purple-900/50 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                              title="เลื่อนลง"
                             >
                               <ArrowDown className="h-3.5 w-3.5" />
                             </button>
-
-                            <div className="w-[1px] h-3 bg-slate-300 dark:bg-purple-800 mx-0.5" />
-
                             <button
-                              onClick={() => openEditActivityModal(item)}
-                              className="p-1 rounded-lg text-slate-700 dark:text-purple-300 hover:bg-pink-100 dark:hover:bg-pink-950 hover:text-pink-600 transition-all cursor-pointer hover:scale-110"
+                              onClick={() => handleOpenEditActivity(item)}
+                              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-purple-900/50 text-slate-400 hover:text-purple-600 transition-colors cursor-pointer"
                               title="แก้ไขกิจกรรม"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
-
                             <button
                               onClick={() => handleDeleteActivity(item.id)}
-                              className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950 transition-all cursor-pointer hover:scale-110"
+                              className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                               title="ลบกิจกรรม"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -1450,196 +1468,150 @@ export default function TripDetailPage() {
                         )}
                       </div>
 
-                      {/* Main Place Content */}
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 p-2 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white shrink-0 shadow-sm shadow-pink-500/20 group-hover:scale-105 transition-transform">
-                          <MapPin className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm md:text-base font-black text-slate-900 dark:text-white leading-snug">
+                      <div className="mt-2 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-black text-slate-900 dark:text-white">
                             {item.main_place}
                           </h4>
-
                           {item.main_place_links && item.main_place_links.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {item.main_place_links.map((link: string, lIdx: number) => (
-                                <a
-                                  key={lIdx}
-                                  href={link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-3 py-1 bg-pink-50 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 rounded-full text-xs font-bold hover:underline hover:scale-105 border border-pink-200 dark:border-pink-900 shadow-2xs transition-all"
-                                >
-                                  <ExternalLink className="h-3 w-3" /> เปิด Google Maps {item.main_place_links.length > 1 ? `(${lIdx + 1})` : ''}
-                                </a>
-                              ))}
-                            </div>
+                            item.main_place_links.map((link: string, lIdx: number) => (
+                              <a
+                                key={lIdx}
+                                href={link}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-pink-600 hover:text-pink-700 text-[10px] font-bold inline-flex items-center gap-0.5 hover:underline"
+                              >
+                                <span>แผนที่ {lIdx > 0 ? lIdx + 1 : ''}</span>
+                                <ExternalLink className="h-2.5 w-2.5" />
+                              </a>
+                            ))
                           )}
                         </div>
-                      </div>
 
-                      {/* Food Recommendation */}
-                      {item.food_recommendation && item.food_recommendation !== '-' && (
-                        <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-purple-900/40 flex items-start gap-2.5 text-xs text-slate-800 dark:text-purple-200">
-                          <Utensils className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <span className="font-bold text-amber-700 dark:text-amber-400">ร้านแนะนำ: </span>
-                            <span className="whitespace-pre-line font-medium">{item.food_recommendation}</span>
-                            {item.food_links?.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mt-1.5">
-                                {item.food_links.map((link: string, lIdx: number) => (
-                                  <a
-                                    key={lIdx}
-                                    href={link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
-                                  >
-                                    <ExternalLink className="h-3 w-3" /> พิกัดร้าน {item.food_links.length > 1 ? `(${lIdx + 1})` : ''}
-                                  </a>
-                                ))}
+                        {item.food_recommendation && (
+                          <div className="text-xs text-slate-600 dark:text-purple-300 flex items-center gap-1.5 font-medium">
+                            <Utensils className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                            <span>ร้านอาหารแนะนำ: {item.food_recommendation}</span>
+                          </div>
+                        )}
+
+                        {item.transport_info && (
+                          <div className="text-xs text-slate-600 dark:text-purple-300 flex items-center gap-1.5 font-medium">
+                            <Bus className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                            <span>การเดินทาง: {item.transport_info}</span>
+                          </div>
+                        )}
+
+                        {item.backup_plan && (
+                          <div className="mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-purple-900/40">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedPlanB({ ...expandedPlanB, [item.id]: !isPlanBOpen })}
+                              className="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5 hover:underline cursor-pointer"
+                            >
+                              <span>🛡️ แผนสำรอง (Plan B)</span>
+                              {isPlanBOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                            </button>
+                            {isPlanBOpen && (
+                              <div className="p-2.5 mt-1 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 text-xs text-slate-700 dark:text-purple-200 space-y-1">
+                                <p className="whitespace-pre-line font-medium">{item.backup_plan}</p>
                               </div>
                             )}
                           </div>
-                        </div>
-                      )}
-
-                      {/* Transport info */}
-                      {item.transport_info && (
-                        <div className="mt-2.5 flex items-start gap-2 text-xs text-slate-700 dark:text-purple-300/80 font-medium">
-                          <Bus className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
-                          <span><b>การเดินทาง:</b> {item.transport_info}</span>
-                        </div>
-                      )}
-
-                      {/* Plan B Accordion */}
-                      {item.backup_plan && (
-                        <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-purple-900/40">
-                          <button
-                            onClick={() =>
-                              setExpandedPlanB((prev) => ({ ...prev, [idx]: !prev[idx] }))
-                            }
-                            className="flex items-center justify-between w-full text-xs font-bold text-purple-700 dark:text-purple-300 hover:opacity-80 transition-opacity cursor-pointer"
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <ShieldAlert className="h-4 w-4 text-pink-500" /> แผนสำรอง & ร้านเผื่อเลือก (Plan B)
-                            </span>
-                            {expandedPlanB[idx] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </button>
-
-                          {expandedPlanB[idx] && (
-                            <div className="mt-2 text-xs text-slate-800 dark:text-purple-200 bg-slate-50 dark:bg-purple-950/40 p-3.5 rounded-2xl whitespace-pre-line border border-slate-200 dark:border-purple-900/40 font-medium">
-                              {item.backup_plan}
-                              {item.backup_links?.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2.5">
-                                  {item.backup_links.map((link: string, lIdx: number) => (
-                                    <a
-                                      key={lIdx}
-                                      href={link}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-pink-600 dark:text-pink-300 underline font-bold inline-flex items-center gap-1"
-                                    >
-                                      <ExternalLink className="h-3 w-3" /> พิกัด Plan B {item.backup_links.length > 1 ? `(${lIdx + 1})` : ''}
-                                    </a>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Quick Add Row Button Below */}
-                    {canEditPlan && (
-                      <div className="flex justify-center my-1">
-                        <button
-                          onClick={() => openAddActivityModal(item.date_label, item.city, item.sort_order)}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-purple-300 bg-white/90 dark:bg-[#130d22]/90 px-3.5 py-1 rounded-full border border-slate-300 dark:border-purple-800 shadow-2xs hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 transition-all cursor-pointer"
-                        >
-                          <PlusCircle className="h-3 w-3 text-pink-500" /> แทรกกิจกรรมต่อจากนี้
-                        </button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
 
-        {/* ==================== TAB 2: รายจ่าย & AI OCR ==================== */}
+        {/* ==================== TAB 2: รายจ่าย (EXPENSES) ==================== */}
         {activeTab === 'expenses' && (
           <div className="space-y-4">
             
-            {/* Payer Quick-Filter Pill Bar */}
-            <div className="p-4 rounded-3xl border border-slate-200/80 dark:border-purple-800/50 bg-white/95 dark:bg-[#130d22]/95 backdrop-blur-xl card-elevation space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 dark:text-purple-100 flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-pink-500" /> กรองดูรายจ่ายตามผู้จ่าย:
-                </span>
-                <span className="text-[11px] font-extrabold text-pink-600 dark:text-pink-400">
-                  ยอดรวมที่เลือก: {filteredExpensesTotal.toLocaleString()} {trip?.currency || 'JPY'} (≈ ฿{Math.round(filteredExpensesTotal * fxRate).toLocaleString()})
-                </span>
+            {/* Horizontal Filter Row */}
+            <div className="p-3.5 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Filter className="h-3.5 w-3.5 text-pink-500" />
+                  <span>กรองดูรายจ่ายตามผู้จ่าย:</span>
+                </div>
+                <div className="text-xs font-bold text-pink-600 dark:text-pink-400">
+                  ยอดรวมที่เลือก: {filteredExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0).toLocaleString()} {trip?.currency || 'JPY'}
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {/* Swipeable Payer Filter Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
                 <button
+                  type="button"
                   onClick={() => setExpensePayerFilter('all')}
-                  className={`px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                     expensePayerFilter === 'all'
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/20 scale-105'
-                      : 'bg-slate-100 dark:bg-purple-950/70 text-slate-800 dark:text-purple-200 border border-slate-300/80 dark:border-purple-900/50 hover:bg-slate-200'
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                      : 'bg-slate-100 dark:bg-purple-950/60 text-slate-700 dark:text-purple-300'
                   }`}
                 >
-                  <span>👥 ทุกคน</span>
-                  <span className="text-[10px] opacity-80">({expenses.length})</span>
+                  👥 ทุกคน ({expenses.length})
                 </button>
 
-                {distinctPayers.map((p) => {
-                  const isSelected = expensePayerFilter === (p.isMe ? 'me' : p.name);
-                  const pCat = getCatAvatar(p.avatar);
+                <button
+                  type="button"
+                  onClick={() => setExpensePayerFilter('me')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
+                    expensePayerFilter === 'me'
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                      : 'bg-slate-100 dark:bg-purple-950/60 text-slate-700 dark:text-purple-300'
+                  }`}
+                >
+                  <span>{userCat.emoji}</span>
+                  <span>ของฉัน ({userDisplayName})</span>
+                </button>
+
+                {members.map((m) => {
+                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
+                  const mCat = getCatAvatar(m.profiles?.avatar_id);
+                  const isSelected = expensePayerFilter === (m.user_id || m.id) || expensePayerFilter === mName;
 
                   return (
                     <button
-                      key={p.key}
-                      onClick={() => setExpensePayerFilter(p.isMe ? 'me' : p.name)}
-                      className={`px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                      key={m.id}
+                      type="button"
+                      onClick={() => setExpensePayerFilter(m.user_id || mName)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
                         isSelected
-                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/20 scale-105'
-                          : 'bg-slate-100 dark:bg-purple-950/70 text-slate-800 dark:text-purple-200 border border-slate-300/80 dark:border-purple-900/50 hover:bg-slate-200'
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                          : 'bg-slate-100 dark:bg-purple-950/60 text-slate-700 dark:text-purple-300'
                       }`}
                     >
-                      <span className="text-sm">{pCat.emoji}</span>
-                      <span>{p.isMe ? `ของฉัน (${p.name})` : p.name}</span>
-                      <span className="text-[10px] opacity-80 font-mono">
-                        {p.total.toLocaleString()} {trip?.currency || 'JPY'}
-                      </span>
+                      <span>{mCat.emoji}</span>
+                      <span>{mName}</span>
                     </button>
                   );
                 })}
               </div>
-            </div>
 
-            {/* Expense Toolbar */}
-            <div className="flex flex-wrap justify-between items-center gap-3">
-              <div className="flex flex-wrap items-center gap-2 flex-1">
-                <div className="relative w-full sm:w-48">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-purple-400" />
+              {/* Search & Category Filter */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                   <input
                     type="text"
                     placeholder="ค้นหารายการ, ร้านค้า..."
-                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-white/90 dark:bg-[#130d22]/90 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 shadow-2xs font-medium"
+                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                     value={expenseSearchQuery}
                     onChange={(e) => setExpenseSearchQuery(e.target.value)}
                   />
                 </div>
 
                 <select
-                  className="px-3 py-2 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-white/90 dark:bg-[#130d22]/90 text-xs outline-none focus:border-pink-500 text-slate-800 dark:text-purple-200 font-bold shadow-2xs"
                   value={expenseCategoryFilter}
                   onChange={(e) => setExpenseCategoryFilter(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold cursor-pointer"
                 >
                   <option value="all">ทุกหมวดหมู่ ({categories.length})</option>
                   {categories.map((cat) => (
@@ -1649,54 +1621,25 @@ export default function TripDetailPage() {
                   ))}
                 </select>
               </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowBudgetCategoryModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800 rounded-xl text-xs font-bold hover:bg-purple-100 hover:scale-105 transition-all cursor-pointer shadow-2xs"
-                >
-                  <Sliders className="h-4 w-4 text-purple-500" /> ตั้งงบ & หมวด
-                </button>
-
-                <button
-                  onClick={() => setShowSettlementModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-pink-50 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-300 dark:border-pink-800 rounded-xl text-xs font-black hover:bg-pink-100 hover:scale-105 transition-all cursor-pointer shadow-2xs"
-                >
-                  <Calculator className="h-4 w-4 text-pink-500" /> เคลียร์บิล
-                </button>
-
-                <button
-                  onClick={() => setShowScanModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-pink-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                >
-                  <Camera className="h-4 w-4" /> บันทึกรายจ่าย / AI OCR
-                </button>
-                
-                <button
-                  onClick={exportToExcel}
-                  className="flex items-center gap-1.5 px-3 py-2 border border-slate-300 dark:border-purple-800 bg-white/90 dark:bg-[#130d22]/90 rounded-xl text-xs font-bold text-slate-800 dark:text-purple-200 hover:border-pink-500 hover:scale-105 shadow-2xs transition-all cursor-pointer"
-                >
-                  <Download className="h-4 w-4 text-pink-500" /> Export
-                </button>
-              </div>
             </div>
 
-            {/* Expense List */}
+            {/* List of Expenses */}
             {filteredExpenses.length === 0 ? (
-              <div className="text-center py-16 border-2 border-dashed border-slate-300 dark:border-purple-900/50 rounded-3xl p-6 bg-white/60 dark:bg-[#130d22]/60 shadow-sm">
-                <Camera className="h-10 w-10 text-pink-500 mx-auto mb-2 animate-float-slow" />
-                <h3 className="font-black text-base text-slate-900 dark:text-white mb-1">ไม่พบรายการค่าใช้จ่าย</h3>
-                <p className="text-xs text-slate-600 dark:text-purple-300/70 mb-4 font-medium">
-                  {expensePayerFilter !== 'all' || expenseCategoryFilter !== 'all' || expenseSearchQuery
-                    ? 'ไม่พบรายการที่ตรงกับเงื่อนไขการค้นหา/ฟิลเตอร์ที่เลือก'
-                    : 'กดปุ่มบันทึกรายจ่าย เพื่อถ่ายรูปใบเสร็จให้ Claude AI ดึงข้อมูลให้อัตโนมัติ หรือกรอกข้อมูลด้วยตนเอง'}
+              <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-purple-900/50 rounded-3xl p-6 bg-white/60 dark:bg-[#130d22]/60">
+                <Receipt className="h-10 w-10 text-pink-500 mx-auto mb-2 animate-float-slow" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่าย</h3>
+                <p className="text-xs text-slate-500 dark:text-purple-400 mt-1 mb-4">
+                  กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกนและกรอกยอดให้อัตโนมัติ
                 </p>
-                {expensePayerFilter !== 'all' && (
+                {canAddExpense && (
                   <button
-                    onClick={() => { setExpensePayerFilter('all'); setExpenseCategoryFilter('all'); }}
-                    className="px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-purple-950 text-slate-800 dark:text-purple-300 text-xs font-bold hover:bg-slate-200 cursor-pointer"
+                    onClick={() => {
+                      setOcrSuccessToast(null);
+                      setShowScanModal(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md hover:scale-105 transition-all"
                   >
-                    ล้างการกรอง (แสดงทุกคน)
+                    <Camera className="h-4 w-4" /> บันทึกรายจ่ายแรก
                   </button>
                 )}
               </div>
@@ -1709,32 +1652,32 @@ export default function TripDetailPage() {
                                       (exp.payer_name && exp.payer_name.toLowerCase() === userDisplayName.toLowerCase());
 
                   return (
-                    <div key={idx} className="p-4 flex justify-between items-center hover:bg-pink-50/30 dark:hover:bg-purple-950/30 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="text-xl p-2.5 rounded-2xl bg-gradient-to-tr from-purple-50 to-pink-50 dark:from-purple-950/70 dark:to-pink-950/60 border border-purple-200/60 dark:border-purple-900/60 shadow-2xs">
+                    <div key={exp.id || idx} className="p-3.5 sm:p-4 flex justify-between items-center hover:bg-pink-50/30 dark:hover:bg-purple-950/30 transition-all duration-200 gap-2">
+                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                        <div className="text-lg sm:text-xl p-2 sm:p-2.5 rounded-2xl bg-gradient-to-tr from-purple-50 to-pink-50 dark:from-purple-950/70 dark:to-pink-950/60 border border-purple-200/60 dark:border-purple-900/60 shadow-2xs shrink-0">
                           {catMeta.icon}
                         </div>
-                        <div>
-                          <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            <span>{exp.title}</span>
+                        <div className="min-w-0">
+                          <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                            <span className="truncate">{exp.title}</span>
                             {exp.receipt_url && (
                               <button
-                                onClick={() => setPreviewImage(exp.receipt_url)}
-                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200 dark:border-pink-900 hover:scale-105 transition-transform cursor-pointer"
+                                onClick={() => handleOpenReceiptPreview(exp)}
+                                className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200 dark:border-pink-900 hover:scale-105 transition-transform cursor-pointer shrink-0"
                                 title="ดูรูปใบเสร็จ"
                               >
                                 <ImageIcon className="h-3 w-3" /> ใบเสร็จ
                               </button>
                             )}
                           </div>
-                          <div className="text-xs text-slate-500 dark:text-purple-300/70 flex flex-wrap items-center gap-2 mt-0.5 font-medium">
-                            <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                          <div className="text-[10px] sm:text-xs text-slate-500 dark:text-purple-300/70 flex flex-wrap items-center gap-1.5 mt-0.5 font-medium">
+                            <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold px-2 py-0.2 rounded-full border ${
                               isMyExpense
                                 ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/80 dark:text-pink-300 border-pink-300 dark:border-pink-800'
                                 : 'bg-slate-100 text-slate-700 dark:bg-purple-950 dark:text-purple-300 border-slate-300 dark:border-purple-900/60'
                             }`}>
                               <span>{payerCat.emoji}</span>
-                              <span>{exp.payer_name || 'สมาชิก'} {isMyExpense ? '(ฉัน)' : ''}</span>
+                              <span className="truncate max-w-[80px] sm:max-w-none">{exp.payer_name || 'สมาชิก'} {isMyExpense ? '(ฉัน)' : ''}</span>
                             </span>
 
                             <span>•</span>
@@ -1745,20 +1688,22 @@ export default function TripDetailPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="font-black text-base text-slate-900 dark:text-white text-right">
-                          <div>{Number(exp.amount).toLocaleString()} <span className="text-xs text-slate-400 dark:text-purple-400">{exp.currency}</span></div>
-                          <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400 block">
+                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white text-right">
+                          <div>{Number(exp.amount).toLocaleString()} <span className="text-[10px] sm:text-xs text-slate-400 dark:text-purple-400">{exp.currency}</span></div>
+                          <span className="text-[9px] sm:text-[10px] font-bold text-pink-600 dark:text-pink-400 block">
                             ≈ ฿{Math.round(Number(exp.amount) * fxRate).toLocaleString()}
                           </span>
                         </div>
-                        <button
-                          onClick={() => handleDeleteExpense(exp.id)}
-                          className="text-slate-400 hover:text-rose-600 p-1.5 transition-colors cursor-pointer hover:scale-110"
-                          title="ลบรายการ"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {canAddExpense && (
+                          <button
+                            onClick={() => handleDeleteExpense(exp.id, exp.receipt_url)}
+                            className="text-slate-400 hover:text-rose-600 p-1.5 transition-colors cursor-pointer hover:scale-110"
+                            title="ลบรายการ"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -1770,13 +1715,14 @@ export default function TripDetailPage() {
 
         {/* ==================== TAB 3: สถิติ & จัดการงบหมวดหมู่ (ANALYTICS) ==================== */}
         {activeTab === 'analytics' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             
             {/* สรุปยอดจ่ายแยกตามรายคน */}
-            <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-pink-500" /> สรุปยอดจ่ายแยกตามรายคน (Who Paid How Much)
+            <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-pink-500" /> 
+                  <span>สรุปยอดจ่ายแยกตามรายคน (Who Paid)</span>
                 </h2>
                 <button
                   onClick={() => setShowSettlementModal(true)}
@@ -1786,7 +1732,7 @@ export default function TripDetailPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {distinctPayers.map((p) => {
                   const pCat = getCatAvatar(p.avatar);
                   const sharePercent = totalSpent > 0 ? (p.total / totalSpent) * 100 : 0;
@@ -1798,178 +1744,30 @@ export default function TripDetailPage() {
                   const pOver = pBudget > 0 && p.total > pBudget ? p.total - pBudget : 0;
 
                   return (
-                    <div
-                      key={p.key}
-                      className={`p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.01] ${
-                        p.isMe
-                          ? 'border-pink-300 dark:border-pink-900/60 bg-pink-50/40 dark:bg-pink-950/20'
-                          : 'border-slate-200 dark:border-purple-900/40 bg-slate-50/60 dark:bg-purple-950/20'
-                      }`}
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${pCat.bgGradient} flex items-center justify-center text-sm shadow-sm`}>
-                            {pCat.emoji}
-                          </div>
-                          <div>
-                            <span className="font-black text-xs text-slate-900 dark:text-white flex items-center gap-1">
-                              {p.name} {p.isMe ? <span className="text-[10px] text-pink-600 font-bold">(ฉัน)</span> : ''}
-                            </span>
-                            <span className="text-[10px] text-slate-500 dark:text-purple-400 font-medium block">
-                              {p.count} รายการที่จ่าย
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="text-sm font-black text-slate-900 dark:text-white">
-                            {p.total.toLocaleString()} <span className="text-[10px] text-slate-400 dark:text-purple-400">{trip?.currency || 'JPY'}</span>
-                          </div>
-                          <span className="text-[10px] font-extrabold text-pink-600 dark:text-pink-400">
-                            ≈ ฿{Math.round(p.total * fxRate).toLocaleString()} ({sharePercent.toFixed(1)}%)
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Personal Budget Target & Balance Bar */}
-                      <div className="pt-2 border-t border-slate-200/60 dark:border-purple-900/30 flex justify-between items-center text-[10px] font-bold">
-                        <span className="text-slate-600 dark:text-purple-300">
-                          เป้างบส่วนตัว: {pBudget > 0 ? `${pBudget.toLocaleString()} ${trip?.currency}` : 'ไม่ระบุ'}
-                        </span>
-                        {pBudget > 0 && (
-                          pOver > 0 ? (
-                            <span className="text-rose-600 dark:text-rose-400 font-black">
-                              ⚠️ เกินงบ +{pOver.toLocaleString()} {trip?.currency}
-                            </span>
-                          ) : (
-                            <span className="text-emerald-600 dark:text-emerald-400 font-black">
-                              🟢 คงเหลือ {pRemaining.toLocaleString()} {trip?.currency}
-                            </span>
-                          )
-                        )}
-                      </div>
-
-                      <div className="w-full bg-slate-200 dark:bg-purple-950 rounded-full h-2 overflow-hidden mt-1.5 shadow-inner">
-                        <div
-                          className={`h-full rounded-full transition-all duration-700 ${
-                            pOver > 0 
-                              ? 'bg-gradient-to-r from-rose-500 to-red-600' 
-                              : 'bg-gradient-to-r from-pink-500 to-purple-600'
-                          }`}
-                          style={{ width: `${pBudget > 0 ? Math.min(Math.round((p.total / pBudget) * 100), 100) : sharePercent}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* การจัดสรรงบประมาณ & สัดส่วนตามหมวดหมู่ (Category Budgets) */}
-            <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation space-y-4">
-              <div className="flex flex-wrap justify-between items-center gap-3">
-                <div>
-                  <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                    <PieChart className="h-5 w-5 text-pink-500" /> งบประมาณ & ค่าใช้จ่ายแยกตามหมวดหมู่
-                  </h2>
-                  <span className="text-xs text-slate-500 dark:text-purple-400">
-                    เปรียบเทียบยอดใช้จริงกับเป้าหมายงบประมาณที่ตั้งไว้ในแต่ละหมวด
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowBudgetCategoryModal(true)}
-                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-sm hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Sliders className="h-3.5 w-3.5" /> ตั้งงบ / เพิ่มหมวดหมู่
-                  </button>
-
-                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-purple-950/60 p-1 rounded-xl border border-slate-200 dark:border-purple-900/40">
-                    <button
-                      onClick={() => setAnalyticsPayerFilter('all')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        analyticsPayerFilter === 'all'
-                          ? 'bg-pink-500 text-white shadow-sm'
-                          : 'text-slate-700 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900'
-                      }`}
-                    >
-                      รวมทุกคน
-                    </button>
-                    <button
-                      onClick={() => setAnalyticsPayerFilter('me')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        analyticsPayerFilter === 'me'
-                          ? 'bg-pink-500 text-white shadow-sm'
-                          : 'text-slate-700 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900'
-                      }`}
-                    >
-                      เฉพาะของฉัน
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {categoryAnalytics.map((item) => {
-                  const shareOfTotal = analyticsExpensesTotal > 0 ? (item.spent / analyticsExpensesTotal) * 100 : 0;
-
-                  return (
-                    <div
-                      key={item.id}
-                      className={`p-4 rounded-2xl border transition-all duration-300 ${
-                        item.isOver
-                          ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20'
-                          : 'border-slate-200 dark:border-purple-900/40 bg-slate-50/50 dark:bg-purple-950/20'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
+                    <div key={p.key} className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-purple-950/30 border border-slate-200/70 dark:border-purple-900/40 space-y-2">
+                      <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <span className="text-xl p-1.5 rounded-xl bg-white dark:bg-[#1c1328] shadow-2xs">
-                            {item.icon}
-                          </span>
-                          <div>
-                            <span className="font-black text-xs text-slate-900 dark:text-white block">
-                              {item.label}
-                            </span>
-                            {item.budget > 0 ? (
-                              <span className={`text-[10px] font-bold ${item.isOver ? 'text-rose-600' : 'text-slate-500 dark:text-purple-400'}`}>
-                                {item.isOver 
-                                  ? `⚠️ เกินงบ +${item.diff.toLocaleString()} ${trip?.currency}` 
-                                  : `เป้างบ: ${item.budget.toLocaleString()} ${trip?.currency}`}
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 dark:text-purple-400">ยังไม่ตั้งงบเฉพาะหมวด</span>
-                            )}
-                          </div>
+                          <span className="text-lg">{pCat.emoji}</span>
+                          <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">{p.name}</span>
                         </div>
-
                         <div className="text-right">
-                          <div className="text-xs font-black text-slate-900 dark:text-white">
-                            {item.spent.toLocaleString()} <span className="text-[10px] text-slate-400 dark:text-purple-400">{trip?.currency || 'JPY'}</span>
-                          </div>
-                          <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400">
-                            {shareOfTotal.toFixed(1)}% ของทั้งหมด
+                          <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white">
+                            {p.total.toLocaleString()} {trip?.currency || 'JPY'}
+                          </span>
+                          <span className="text-[10px] text-pink-600 dark:text-pink-400 block font-bold">
+                            ({sharePercent.toFixed(1)}% ของทริป)
                           </span>
                         </div>
                       </div>
 
-                      {/* Progress bar */}
-                      <div className="w-full bg-slate-200 dark:bg-purple-950 rounded-full h-2.5 overflow-hidden shadow-inner mt-1">
-                        <div
-                          className={`h-full rounded-full transition-all duration-700 ${
-                            item.isOver
-                              ? 'bg-gradient-to-r from-rose-500 to-red-600'
-                              : 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500'
-                          }`}
-                          style={{ width: `${Math.min(item.budget > 0 ? item.percent : shareOfTotal, 100)}%` }}
-                        />
-                      </div>
-
-                      {item.budget > 0 && (
-                        <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-purple-400 mt-1">
-                          <span>ใช้ไป {item.percent.toFixed(1)}% ของงบหมวดนี้</span>
-                          <span>คงเหลือ {(item.budget - item.spent).toLocaleString()} {trip?.currency}</span>
+                      {pBudget > 0 && (
+                        <div className="text-[10px] font-bold text-slate-500 dark:text-purple-300 flex justify-between border-t border-slate-200/60 dark:border-purple-900/30 pt-1.5">
+                          <span>งบตั้งไว้: {pBudget.toLocaleString()} {trip?.currency}</span>
+                          {pOver > 0 ? (
+                            <span className="text-rose-600 font-bold">เกินงบ +{pOver.toLocaleString()}</span>
+                          ) : (
+                            <span className="text-emerald-600 font-bold">เหลือ {pRemaining.toLocaleString()}</span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1978,121 +1776,130 @@ export default function TripDetailPage() {
               </div>
             </div>
 
+            {/* หมวดหมู่ค่าใช้จ่าย */}
+            <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
+                  <span>สัดส่วนค่าใช้จ่ายตามหมวดหมู่</span>
+                </h2>
+                <button
+                  onClick={() => setShowBudgetCategoryModal(true)}
+                  className="text-xs font-bold text-pink-600 hover:underline cursor-pointer"
+                >
+                  แก้ไขงบหมวดหมู่
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {categories.map((cat) => {
+                  const spentInCat = expenses
+                    .filter((e) => e.category === cat.id)
+                    .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+                  const catTarget = categoryBudgets[cat.id] || 0;
+                  const catPercent = totalSpent > 0 ? (spentInCat / totalSpent) * 100 : 0;
+
+                  return (
+                    <div key={cat.id} className="space-y-1">
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className="flex items-center gap-1.5 text-slate-800 dark:text-purple-200">
+                          <span>{cat.icon}</span>
+                          <span>{cat.label}</span>
+                        </span>
+                        <div className="text-right">
+                          <span className="text-slate-900 dark:text-white">{spentInCat.toLocaleString()} {trip?.currency}</span>
+                          <span className="text-[10px] text-slate-400 ml-1">({catPercent.toFixed(0)}%)</span>
+                        </div>
+                      </div>
+
+                      <div className="w-full bg-slate-200/80 dark:bg-[#1e1530] rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-pink-500 to-purple-600 rounded-full"
+                          style={{ width: `${Math.min(catPercent, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* ==================== TAB 4: สมาชิกในทริป ==================== */}
+        {/* ==================== TAB 4: สมาชิก & สิทธิ์ (MEMBERS) ==================== */}
         {activeTab === 'members' && (
-          <div className="space-y-6">
-            <div className="p-6 rounded-3xl border border-purple-200 dark:border-purple-800/60 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/90 dark:bg-[#130d22]/90 backdrop-blur-xl card-elevation">
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25">
-                  <Share2 className="h-5 w-5" />
-                </div>
+          <div className="space-y-4">
+            <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation space-y-4">
+              <div className="flex flex-wrap justify-between items-center gap-2">
                 <div>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white">
-                    ชวนเพื่อนเข้าร่วมทริป 👥
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-purple-300/70 font-medium">
-                    แชร์รหัสเชิญหรือลิงก์ทริปนี้เพื่อให้เพื่อนร่วมดูแผนเที่ยวและบันทึกค่าใช้จ่าย
+                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-pink-500" />
+                    <span>สมาชิกในทริปนี้ ({members.length})</span>
+                  </h2>
+                  <p className="text-[11px] text-slate-500 dark:text-purple-300 font-medium mt-0.5">
+                    {isOwner ? '👑 คุณเป็นเจ้าของทริป สามารถกำหนดสิทธิ์ให้เพื่อนแก้ไขหรือดูได้อย่างเดียว' : 'รายชื่อเพื่อนร่วมทริป'}
                   </p>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                <button
-                  onClick={copyTripCode}
-                  className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#120c1e] hover:border-pink-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer"
-                >
-                  <div className="text-left">
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-purple-400 block">รหัสเชิญ (Trip ID)</span>
-                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate max-w-[160px] block">{tripId}</span>
-                  </div>
-                  {copiedCode ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-pink-500" />}
-                </button>
 
                 <button
-                  onClick={copyInviteLink}
-                  className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-[1.02] transition-all cursor-pointer"
+                  onClick={() => setShowShareModal(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/20 hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  <span>{copiedLink ? 'คัดลอกลิงก์เรียบร้อยแล้ว!' : 'คัดลอกลิงก์แชร์ทริป (Share Link)'}</span>
-                  {copiedLink ? <Check className="h-4 w-4 text-white" /> : <Share2 className="h-4 w-4 text-white" />}
+                  <Share2 className="h-3.5 w-3.5" /> ชวนเพื่อนเข้าทริป
                 </button>
               </div>
-            </div>
 
-            <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                <Users className="h-4 w-4 text-pink-500" /> สมาชิกที่เข้าร่วมทริปนี้ ({members.length + 1})
-              </h3>
-              <div className="divide-y divide-slate-100 dark:divide-purple-900/40">
-                <div className="py-3 flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-2xl bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-base shadow-sm`}>
-                      {userCat.emoji}
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>{userDisplayName} (ฉัน)</span>
-                        <span className="text-[10px]">👑</span>
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-purple-400 font-medium">{currentUser?.email}</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 shadow-2xs">
-                    Owner
-                  </span>
-                </div>
-
-                {members.map((m, idx) => {
+              <div className="divide-y divide-slate-100 dark:divide-purple-900/30">
+                {members.map((m) => {
+                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
                   const mCat = getCatAvatar(m.profiles?.avatar_id);
-                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิกกลุ่ม';
-                  const isCurrentMemberRole = m.role || 'editor';
+                  const isCurrent = m.user_id === currentUser?.id;
+                  const isTripOwner = m.role === 'owner' || m.user_id === trip?.created_by;
 
                   return (
-                    <div key={idx} className="py-3.5 flex flex-wrap justify-between items-center gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-9 h-9 rounded-2xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-base shadow-sm shrink-0`}>
+                    <div key={m.id} className="py-3 flex justify-between items-center gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-base shadow-2xs`}>
                           {mCat.emoji}
                         </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                            {mName}
+                        <div>
+                          <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>{mName}</span>
+                            {isCurrent && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300">
+                                ฉัน
+                              </span>
+                            )}
                           </div>
-                          <div className="text-[11px] text-slate-500 dark:text-purple-400 font-medium truncate">
-                            {m.profiles?.email || 'สมาชิกในทริป'}
-                          </div>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {isTripOwner ? '👑 เจ้าของทริป' : m.role === 'editor' ? '✏️ สิทธิ์แก้ไขแผนและรายจ่าย' : '👁️ สิทธิ์เปิดดูอย่างเดียว'}
+                          </span>
                         </div>
                       </div>
 
+                      {/* Role Switcher for Owner */}
                       <div className="flex items-center gap-2">
-                        {isOwner ? (
-                          <div className="flex items-center gap-2">
+                        {isOwner && !isTripOwner ? (
+                          <div className="flex items-center gap-1.5">
                             <select
-                              value={isCurrentMemberRole}
-                              onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as 'editor' | 'viewer')}
-                              className="px-2.5 py-1 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1c1328] text-xs font-bold text-slate-800 dark:text-purple-200 outline-none focus:border-pink-500 cursor-pointer shadow-2xs"
+                              value={m.role}
+                              onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as any)}
+                              className="px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-300 dark:border-purple-800 bg-slate-50 dark:bg-[#1c1328] text-slate-900 dark:text-white outline-none cursor-pointer"
                             >
                               <option value="editor">✏️ ผู้แก้ไข (Editor)</option>
                               <option value="viewer">👁️ ผู้เข้าชม (Viewer)</option>
                             </select>
-
                             <button
-                              type="button"
                               onClick={() => handleRemoveMember(m.id, mName)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
-                              title="ลบสมาชิกออกจากทริป"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
+                              title="ลบสมาชิก"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         ) : (
-                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs ${
-                            isCurrentMemberRole === 'editor'
-                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
-                              : 'bg-slate-100 text-slate-700 dark:bg-purple-950 dark:text-purple-300'
-                          }`}>
-                            {isCurrentMemberRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
+                          <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                            {isTripOwner ? 'Owner' : m.role === 'editor' ? 'Editor' : 'Viewer'}
                           </span>
                         )}
                       </div>
@@ -2100,62 +1907,71 @@ export default function TripDetailPage() {
                   );
                 })}
               </div>
-
-              {/* Role Permissions Guide */}
-              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-purple-900/40 space-y-2">
-                <span className="text-[11px] font-black text-slate-700 dark:text-purple-200 block">
-                  🛡️ ขอบเขตสิทธิ์การใช้งาน (Role Permissions):
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px]">
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-900/40 space-y-1">
-                    <b className="text-pink-600 dark:text-pink-400 block">👑 Owner (ผู้สร้างทริป)</b>
-                    <span className="text-slate-500 dark:text-purple-400">จัดการงบรวม, เปลี่ยนสิทธิ์สมาชิก, Import Excel, และแก้ไขทุกส่วน</span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-900/40 space-y-1">
-                    <b className="text-purple-600 dark:text-purple-400 block">✏️ Editor (สมาชิกแก้ไขได้)</b>
-                    <span className="text-slate-500 dark:text-purple-400">เพิ่ม/แก้กิจกรรม, บันทึกรายจ่าย AI OCR, และลงรูปภาพ (ไม่สามารถ Import Excel ทับได้)</span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-900/40 space-y-1">
-                    <b className="text-indigo-600 dark:text-indigo-400 block">👁️ Viewer / Guest</b>
-                    <span className="text-slate-500 dark:text-purple-400">เปิดดูแผนเที่ยว, เช็คสภาพอากาศ, พิมพ์ PDF, และดูสถิติ (ดูอย่างเดียว แก้ไขไม่ได้)</span>
-                  </div>
-                </div>
-              </div>
             </div>
-
-            {/* Disaster Recovery & Version Rollback Card */}
-            <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
-                  <History className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                    ความปลอดภัยข้อมูล & กู้คืนเวอร์ชัน (Disaster Recovery)
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-purple-400 font-medium">
-                    สร้างจุดบันทึกเวอร์ชัน (Snapshot), ถอยกลับเวอร์ชันเดิมเมื่อเจอบัค หรือสำรองไฟล์ JSON
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowRollbackModal(true)}
-                className="px-4 py-2.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-50/70 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0 hover:scale-105"
-              >
-                <History className="h-4 w-4" />
-                <span>จัดการเวอร์ชัน & สำรองข้อมูล</span>
-              </button>
-            </div>
-
           </div>
         )}
 
       </main>
 
+      {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
+      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden p-3 bg-white/85 dark:bg-[#090611]/85 backdrop-blur-2xl border-t border-slate-200/80 dark:border-purple-900/50 shadow-2xl">
+        <div className="grid grid-cols-4 gap-1 max-w-md mx-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('plan')}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+              activeTab === 'plan'
+                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black'
+                : 'text-slate-500 dark:text-purple-400 font-semibold'
+            }`}
+          >
+            <MapPin className="h-4 w-4 mb-0.5" />
+            <span className="text-[10px]">แผนเที่ยว ({itinerary.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('expenses')}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+              activeTab === 'expenses'
+                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black'
+                : 'text-slate-500 dark:text-purple-400 font-semibold'
+            }`}
+          >
+            <DollarSign className="h-4 w-4 mb-0.5" />
+            <span className="text-[10px]">รายจ่าย ({expenses.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('analytics')}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+              activeTab === 'analytics'
+                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black'
+                : 'text-slate-500 dark:text-purple-400 font-semibold'
+            }`}
+          >
+            <PieChart className="h-4 w-4 mb-0.5" />
+            <span className="text-[10px]">สถิติ & งบ</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('members')}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+              activeTab === 'members'
+                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black'
+                : 'text-slate-500 dark:text-purple-400 font-semibold'
+            }`}
+          >
+            <Users className="h-4 w-4 mb-0.5" />
+            <span className="text-[10px]">สมาชิก ({members.length})</span>
+          </button>
+        </div>
+      </div>
+
       {/* ==================== MODALS ==================== */}
-      
+
       {/* 1. Profile Modal */}
       <ProfileModal
         isOpen={showProfileModal}
@@ -2216,7 +2032,7 @@ export default function TripDetailPage() {
         tripName={trip?.name || trip?.title}
       />
 
-      {/* 7. Version Rollback & Disaster Recovery Modal */}
+      {/* 7. Version Rollback Modal */}
       <VersionRollbackModal
         isOpen={showRollbackModal}
         onClose={() => setShowRollbackModal(false)}
@@ -2230,10 +2046,10 @@ export default function TripDetailPage() {
         onRestored={fetchTripData}
       />
 
-      {/* 8. Scan / Add Expense Modal (with Sci-Fi Laser Scan Beam!) */}
+      {/* 8. Scan / Add Expense Modal (with Client Storage & OCR) */}
       {showScanModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[88vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             
             <div className="p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
               <div className="flex items-center gap-2">
@@ -2260,24 +2076,24 @@ export default function TripDetailPage() {
             <div className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               <div>
                 <label className="relative overflow-hidden flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-pink-400/80 dark:border-pink-600/80 rounded-2xl cursor-pointer bg-pink-50/40 dark:bg-pink-950/20 hover:opacity-90 transition-opacity">
-                  {/* Sci-Fi Laser Scan Beam when scanning */}
+                  {/* Laser Scan Beam when scanning */}
                   {scanning && <div className="animate-scan-laser z-20" />}
 
                   {scanning ? (
                     <div className="flex flex-col items-center gap-1.5 text-pink-600 dark:text-pink-400 z-10">
                       <Loader2 className="h-7 w-7 animate-spin text-purple-600 dark:text-purple-400" />
-                      <span className="text-xs font-black tracking-wide">⚡ Claude AI กำลังวิเคราะห์ใบเสร็จ...</span>
+                      <span className="text-xs font-black tracking-wide">⚡ AI กำลังวิเคราะห์ใบเสร็จ...</span>
                     </div>
                   ) : scannedData.receipt_url ? (
                     <div className="flex items-center gap-3 p-2 text-xs font-bold text-pink-600 dark:text-pink-400">
                       <CheckCircle2 className="h-5 w-5" />
-                      <span>แนบรูปใบเสร็จเรียบร้อยแล้ว (คลิกเพื่อเปลี่ยนรูป)</span>
+                      <span>แนบรูปใบเสร็จแล้ว (บันทึกลงโทรศัพท์อัตโนมัติ)</span>
                     </div>
                   ) : (
                     <>
                       <Camera className="h-8 w-8 text-pink-500 mb-1 animate-float-slow" />
                       <span className="text-xs font-black text-pink-600 dark:text-pink-400">
-                        ถ่ายรูปใบเสร็จ หรือเลือกจากคลังรูปภาพ
+                        ถ่ายรูปใบเสร็จ หรือเลือกจากโทรศัพท์
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-purple-400 mt-0.5 font-medium">AI สกัดยอดเงินและร้านค้าให้อัตโนมัติ</span>
                     </>
@@ -2395,17 +2211,14 @@ export default function TripDetailPage() {
 
       {/* 9. Activity Modal */}
       {showActivityModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-purple max-h-[88vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-purple max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             
             <div className="p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
               <div>
                 <h2 className="text-base font-black text-slate-900 dark:text-white">
                   {editingActivity ? 'แก้ไขกิจกรรม ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยว 🗺️'}
                 </h2>
-                <p className="text-[11px] text-slate-600 dark:text-purple-300/70 font-medium">
-                  รองรับการเพิ่มหลายสถานที่ ลิงก์แผนที่หลายจุด และร้านสำรอง (Plan B)
-                </p>
               </div>
               <button
                 onClick={() => setShowActivityModal(false)}
@@ -2415,72 +2228,63 @@ export default function TripDetailPage() {
               </button>
             </div>
 
-            <form id="activity-form" onSubmit={handleSaveActivity} className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-4">
-              <div className="grid grid-cols-3 gap-2">
+            <form id="activity-form" onSubmit={handleSaveActivity} className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-purple-200">วันที่ / Day</label>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">วัน / Day (เช่น 04-Dec)</label>
                   <input
                     type="text"
-                    placeholder="เช่น 7 ธ.ค., Day 1"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    required
+                    placeholder="Day 1 (04-Dec)"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                     value={activityForm.date_label}
                     onChange={(e) => setActivityForm({ ...activityForm, date_label: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-purple-200">เวลา / ช่วงเวลา</label>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">เวลา (เช่น 09:00 - 12:00)</label>
                   <input
                     type="text"
-                    placeholder="เช่น 09:00 น."
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    placeholder="09:00 - 12:00"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                     value={activityForm.time_slot}
                     onChange={(e) => setActivityForm({ ...activityForm, time_slot: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-purple-200">ย่าน / เมือง</label>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">เมือง / ย่าน</label>
                   <input
                     type="text"
-                    placeholder="เช่น Osaka (Namba)"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    placeholder="Osaka / Namba"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                     value={activityForm.city}
                     onChange={(e) => setActivityForm({ ...activityForm, city: e.target.value })}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">สถานที่หลัก *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="เช่น Universal Studios Japan"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    value={activityForm.main_place}
+                    onChange={(e) => setActivityForm({ ...activityForm, main_place: e.target.value })}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-purple-200">สถานที่หลัก *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="เช่น เดินย่านโดทอนโบริ ชอปปิงร้านรองเท้า และถ่ายรูปคู่ป้าย Glico Sign"
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
-                  value={activityForm.main_place}
-                  onChange={(e) => setActivityForm({ ...activityForm, main_place: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="block text-[11px] font-bold text-slate-800 dark:text-purple-200">ลิงก์ Google Maps สถานที่หลัก</label>
-                  <button
-                    type="button"
-                    onClick={() => setActivityForm({
-                      ...activityForm,
-                      main_place_links: [...activityForm.main_place_links, ''],
-                    })}
-                    className="text-[10px] font-bold text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="h-3 w-3" /> เพิ่มลิงก์แผนที่อีกแถว
-                  </button>
-                </div>
+                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">ลิงก์ Google Maps ของสถานที่หลัก</label>
                 {activityForm.main_place_links.map((link, lIdx) => (
-                  <div key={lIdx} className="flex gap-2 items-center">
+                  <div key={lIdx} className="flex gap-2 mb-2">
                     <input
                       type="url"
-                      placeholder={`https://maps.google.com/?q=... (แถว ${lIdx + 1})`}
-                      className="flex-1 p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                      placeholder="https://maps.app.goo.gl/..."
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                       value={link}
                       onChange={(e) => {
                         const updated = [...activityForm.main_place_links];
@@ -2495,145 +2299,25 @@ export default function TripDetailPage() {
                           const updated = activityForm.main_place_links.filter((_, i) => i !== lIdx);
                           setActivityForm({ ...activityForm, main_place_links: updated });
                         }}
-                        className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
-                        title="ลบแถวลิงก์นี้"
+                        className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                        title="ลบลิงก์"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     )}
                   </div>
                 ))}
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/90 dark:border-amber-900/40 space-y-2.5">
-                <div className="flex justify-between items-center">
-                  <div className="text-xs font-black text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                    <Utensils className="h-3.5 w-3.5" /> ร้านอาหาร / คาเฟ่แนะนำ
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActivityForm({
-                      ...activityForm,
-                      food_recommendations: [...activityForm.food_recommendations, { name: '', link: '' }],
-                    })}
-                    className="text-[10px] font-bold text-amber-800 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="h-3 w-3" /> เพิ่มแถวร้านอาหาร
-                  </button>
-                </div>
-
-                {activityForm.food_recommendations.map((food, fIdx) => (
-                  <div key={fIdx} className="space-y-1.5 p-2.5 rounded-xl bg-white dark:bg-[#130d22] border border-amber-200/70 dark:border-amber-900/40 shadow-xs">
-                    <div className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        placeholder="ชื่อร้านอาหาร เช่น Chibo Okonomiyaki"
-                        className="flex-1 p-2 rounded-lg border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/80 text-slate-900 dark:text-white text-xs outline-none focus:border-amber-500 font-bold"
-                        value={food.name}
-                        onChange={(e) => {
-                          const updated = [...activityForm.food_recommendations];
-                          updated[fIdx].name = e.target.value;
-                          setActivityForm({ ...activityForm, food_recommendations: updated });
-                        }}
-                      />
-                      {activityForm.food_recommendations.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated = activityForm.food_recommendations.filter((_, i) => i !== fIdx);
-                            setActivityForm({ ...activityForm, food_recommendations: updated });
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer"
-                          title="ลบแถวร้านอาหารนี้"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    <input
-                      type="url"
-                      placeholder="ลิงก์ Google Maps ร้านอาหาร (ถ้ามี)"
-                      className="w-full p-2 rounded-lg border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/80 text-slate-900 dark:text-white text-xs outline-none focus:border-amber-500 font-medium"
-                      value={food.link}
-                      onChange={(e) => {
-                        const updated = [...activityForm.food_recommendations];
-                        updated[fIdx].link = e.target.value;
-                        setActivityForm({ ...activityForm, food_recommendations: updated });
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-
               <div>
-                <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-purple-200">การเดินทาง & ตั๋วแนะนำ</label>
+                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">การเดินทาง (Transport Info)</label>
                 <input
                   type="text"
-                  placeholder="เช่น เดินเท้าจากที่พัก | ฟรี หรือ Osaka Metro (190 เยน)"
+                  placeholder="เช่น นั่งสาย Midosuji Line ลงสถานี Namba ทางออก 14"
                   className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                   value={activityForm.transport_info}
                   onChange={(e) => setActivityForm({ ...activityForm, transport_info: e.target.value })}
                 />
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-900/40 space-y-2.5">
-                <div className="flex justify-between items-center">
-                  <div className="text-xs font-black text-pink-700 dark:text-pink-400 flex items-center gap-1.5">
-                    <ShieldAlert className="h-3.5 w-3.5" /> แผนสำรอง & ร้านเผื่อเลือก (Plan B)
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActivityForm({
-                      ...activityForm,
-                      backup_plans: [...activityForm.backup_plans, { text: '', link: '' }],
-                    })}
-                    className="text-[10px] font-bold text-pink-700 dark:text-pink-400 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="h-3 w-3" /> เพิ่มแถว Plan B
-                  </button>
-                </div>
-
-                {activityForm.backup_plans.map((b, bIdx) => (
-                  <div key={bIdx} className="space-y-1.5 p-2.5 rounded-xl bg-white dark:bg-[#130d22] border border-slate-200 dark:border-purple-900/40 shadow-xs">
-                    <div className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        placeholder="รายละเอียด Plan B เช่น ร้านอาหารสำรอง 1: Mizuno Okonomiyaki"
-                        className="flex-1 p-2 rounded-lg border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/80 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
-                        value={b.text}
-                        onChange={(e) => {
-                          const updated = [...activityForm.backup_plans];
-                          updated[bIdx].text = e.target.value;
-                          setActivityForm({ ...activityForm, backup_plans: updated });
-                        }}
-                      />
-                      {activityForm.backup_plans.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated = activityForm.backup_plans.filter((_, i) => i !== bIdx);
-                            setActivityForm({ ...activityForm, backup_plans: updated });
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer"
-                          title="ลบแถว Plan B นี้"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    <input
-                      type="url"
-                      placeholder="ลิงก์ Google Maps ของ Plan B (ถ้ามี)"
-                      className="w-full p-2 rounded-lg border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/80 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
-                      value={b.link}
-                      onChange={(e) => {
-                        const updated = [...activityForm.backup_plans];
-                        updated[bIdx].link = e.target.value;
-                        setActivityForm({ ...activityForm, backup_plans: updated });
-                      }}
-                    />
-                  </div>
-                ))}
               </div>
 
             </form>
@@ -2660,26 +2344,46 @@ export default function TripDetailPage() {
         </div>
       )}
 
-      {/* 10. Preview Receipt Image */}
+      {/* 10. Preview Receipt Image (High-Res Client Modal with Download Option) */}
       {previewImage && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200"
           onClick={() => setPreviewImage(null)}
         >
-          <div className="relative max-w-lg w-full bg-white dark:bg-[#130d22] p-4 rounded-3xl border border-slate-200 dark:border-purple-800/60 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-3">
+          <div className="relative max-w-lg w-full bg-white dark:bg-[#130d22] p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-purple-800/60 shadow-2xl space-y-3 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-purple-900/40">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ImageIcon className="h-4 w-4 text-pink-500" /> รูปภาพใบเสร็จ
+                <ImageIcon className="h-4 w-4 text-pink-500" /> 
+                <span>รูปภาพใบเสร็จ (บันทึกในโทรศัพท์)</span>
               </h3>
               <button
                 onClick={() => setPreviewImage(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer"
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="rounded-2xl overflow-hidden bg-black/5 flex items-center justify-center max-h-[70vh]">
-              <img src={previewImage} alt="Receipt Preview" className="max-h-[68vh] object-contain rounded-xl" />
+
+            <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[68vh]">
+              <img src={previewImage} alt="Receipt Preview" className="max-h-[65vh] w-auto object-contain rounded-xl shadow-md" />
+            </div>
+
+            <div className="pt-2 flex gap-2">
+              <a
+                href={previewImage}
+                download="travel_receipt.jpg"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-pink-500/20 hover:scale-[1.01] transition-all cursor-pointer"
+              >
+                <HardDriveDownload className="h-4 w-4" />
+                <span>ดาวน์โหลด / บันทึกลงโทรศัพท์</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+              >
+                ปิด
+              </button>
             </div>
           </div>
         </div>
