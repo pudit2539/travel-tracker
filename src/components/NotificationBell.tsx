@@ -247,10 +247,17 @@ export default function NotificationBell({
 
       {/* Notification Drawer Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-3xl bg-white dark:bg-[#120c1e] shadow-2xl border border-slate-200 dark:border-purple-800/80 glow-pink z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-          
-          {/* Header */}
-          <div className="p-4 pb-2.5 flex items-center justify-between border-b border-slate-100 dark:border-purple-900/40 bg-slate-50/50 dark:bg-purple-950/20">
+        <>
+          {/* Mobile backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden animate-in fade-in duration-150"
+            onClick={() => setIsOpen(false)}
+          />
+
+          <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-lg sm:max-w-none rounded-3xl bg-white dark:bg-[#120c1e] shadow-2xl border border-slate-200 dark:border-purple-800/80 glow-pink z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+            
+            {/* Header */}
+            <div className="p-4 pb-2.5 flex items-center justify-between border-b border-slate-100 dark:border-purple-900/40 bg-slate-50/50 dark:bg-purple-950/20">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-pink-100 dark:bg-pink-950 text-pink-600 dark:text-pink-400">
                 <Bell className="h-4 w-4" />
@@ -387,8 +394,8 @@ export default function NotificationBell({
           <div className="p-2.5 text-center bg-slate-50 dark:bg-purple-950/30 border-t border-slate-100 dark:border-purple-900/40 text-[10px] text-slate-400 dark:text-purple-400 font-medium">
             Travel Tracker Smart Hub • จัดลำดับล่าสุดอยู่บนเสมอ
           </div>
-
         </div>
+      </>
       )}
     </div>
   );
