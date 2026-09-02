@@ -8,19 +8,20 @@ import { supabase } from '@/lib/supabase';
 import { parseTripExcel } from '@/lib/excelParser';
 import { useTheme } from '@/components/ThemeProvider';
 import dynamic from 'next/dynamic';
+import NotificationBell from '@/components/NotificationBell';
 import WeatherWidget from '@/components/WeatherWidget';
 import RouteVisualizer from '@/components/RouteVisualizer';
 import InteractiveTripMap from '@/components/InteractiveTripMap';
-
-// Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
-const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
-const SettlementModal = dynamic(() => import('@/components/SettlementModal'), { ssr: false });
-const AIAssistantModal = dynamic(() => import('@/components/AIAssistantModal'), { ssr: false });
-const BudgetCategoryModal = dynamic(() => import('@/components/BudgetCategoryModal'), { ssr: false });
-const PrintableItineraryModal = dynamic(() => import('@/components/PrintableItineraryModal'), { ssr: false });
-const PhotoScrapbookModal = dynamic(() => import('@/components/PhotoScrapbookModal'), { ssr: false });
-const VersionRollbackModal = dynamic(() => import('@/components/VersionRollbackModal'), { ssr: false });
-const QuickCurrencyCalculator = dynamic(() => import('@/components/QuickCurrencyCalculator'), { ssr: false });
+import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
+import { getCatAvatar } from '@/lib/avatars';
+import { getCustomJpyToThbRate, formatCurrencyWithThb } from '@/lib/currency';
+import { triggerConfetti } from '@/lib/confetti';
+import { 
+  CategoryItem, 
+  CategoryBudgetMap, 
+  MemberBudgetMap, 
   getTripCategories, 
   getCategoryBudgets, 
   getMemberBudgets, 
@@ -32,6 +33,18 @@ import {
   getLocalReceiptPhoto, 
   deleteLocalReceiptPhoto 
 } from '@/lib/localReceipts';
+
+// Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
+const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
+const SettlementModal = dynamic(() => import('@/components/SettlementModal'), { ssr: false });
+const AIAssistantModal = dynamic(() => import('@/components/AIAssistantModal'), { ssr: false });
+const BudgetCategoryModal = dynamic(() => import('@/components/BudgetCategoryModal'), { ssr: false });
+const PrintableItineraryModal = dynamic(() => import('@/components/PrintableItineraryModal'), { ssr: false });
+const PhotoScrapbookModal = dynamic(() => import('@/components/PhotoScrapbookModal'), { ssr: false });
+const VersionRollbackModal = dynamic(() => import('@/components/VersionRollbackModal'), { ssr: false });
+const QuickCurrencyCalculator = dynamic(() => import('@/components/QuickCurrencyCalculator'), { ssr: false });
+const PackingChecklistModal = dynamic(() => import('@/components/PackingChecklistModal'), { ssr: false });
+const TravelHubModal = dynamic(() => import('@/components/TravelHubModal'), { ssr: false });
 import { 
   Camera, Upload, MapPin, Utensils, ShieldAlert, 
   Plus, Download, Moon, Sun, ExternalLink, ChevronDown, 
@@ -233,6 +246,18 @@ export default function TripDetailPage() {
       if (tripData) {
         setTrip(tripData);
         setScannedData((prev: any) => ({ ...prev, currency: tripData.currency || 'JPY' }));
+      }
+
+      if (planData) setItinerary(planData);
+
+      let uniqueExpList: any[] = [];
+      if (expData) {
+        const seenExpIds = new Set<string>();
+        uniqueExpList = expData.filter((e) => {
+          if (!e.id) return true;
+          if (seenExpIds.has(e.id)) return false;
+          seenExpIds.add(e.id);
+          return true;
         });
         setExpenses(uniqueExpList);
       }
