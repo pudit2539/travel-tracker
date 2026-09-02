@@ -72,23 +72,23 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
         </button>
       </div>
 
-      {/* Main weather info with floating animation */}
+      {/* Main weather info */}
       {weather && (
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-          <div className="flex items-center gap-3.5">
-            <div className="text-3xl p-2.5 rounded-2xl bg-gradient-to-tr from-pink-50 to-purple-50 dark:from-purple-950/80 dark:to-pink-950/60 border border-purple-200/60 dark:border-purple-900/60 shadow-sm animate-float-slow">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-2xl sm:text-3xl rounded-2xl bg-gradient-to-tr from-pink-50 to-purple-50 dark:from-purple-950/80 dark:to-pink-950/60 border border-purple-200/60 dark:border-purple-900/60 shadow-sm">
               {weather.weatherEmoji}
             </div>
-            <div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                   {weather.temperature}°C
                 </span>
-                <span className="text-xs font-bold text-slate-700 dark:text-purple-200">
+                <span className="text-xs font-bold text-slate-700 dark:text-purple-200 truncate">
                   {weather.weatherText}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-purple-400 font-semibold">
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 dark:text-purple-400 font-semibold truncate mt-0.5">
                 <span>ต่ำสุด {weather.tempMin}°C</span>
                 <span>•</span>
                 <span>สูงสุด {weather.tempMax}°C</span>
@@ -97,9 +97,9 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
           </div>
 
           {/* Rain chance pill */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-900 text-xs font-bold shadow-2xs hover:scale-105 transition-transform">
-              <Droplets className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400 animate-bounce" />
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-900 text-xs font-bold shadow-2xs">
+              <Droplets className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
               <span>โอกาสฝนตก {weather.precipitationProb}%</span>
             </div>
           </div>

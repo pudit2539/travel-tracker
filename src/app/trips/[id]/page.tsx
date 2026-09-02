@@ -18,6 +18,8 @@ import PrintableItineraryModal from '@/components/PrintableItineraryModal';
 import PhotoScrapbookModal from '@/components/PhotoScrapbookModal';
 import VersionRollbackModal from '@/components/VersionRollbackModal';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
 import { getCustomJpyToThbRate, formatCurrencyWithThb } from '@/lib/currency';
 import { 
@@ -895,6 +897,10 @@ export default function TripDetailPage() {
     return itinerary.filter((item) => item.date_label?.trim() === selectedDayFilter);
   }, [itinerary, selectedDayFilter]);
 
+  const { pullDistance, isRefreshing, isReadyToRefresh } = usePullToRefresh({
+    onRefresh: fetchTripData,
+  });
+
   if (loading && !trip) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-3">
@@ -906,6 +912,13 @@ export default function TripDetailPage() {
 
   return (
     <div className="relative min-h-screen pb-28 md:pb-20 bg-grid-pattern transition-colors duration-300">
+      
+      {/* iOS/iPad Touch Pull-to-Refresh Indicator */}
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        isReadyToRefresh={isReadyToRefresh}
+      />
       
       {/* Background Floating Glow Orbs */}
       <div className="absolute top-20 left-10 w-80 sm:w-96 h-80 sm:h-96 bg-pink-500/10 dark:bg-pink-500/15 rounded-full blur-3xl pointer-events-none animate-float-slow" />

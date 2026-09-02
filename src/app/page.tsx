@@ -15,6 +15,8 @@ import {
 import { useTheme } from '@/components/ThemeProvider';
 import ProfileModal from '@/components/ProfileModal';
 import NotificationBell from '@/components/NotificationBell';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb } from '@/lib/currency';
 
@@ -362,8 +364,19 @@ export default function HomePage() {
     }
   };
 
+  const { pullDistance, isRefreshing, isReadyToRefresh } = usePullToRefresh({
+    onRefresh: checkUserAndFetchTrips,
+  });
+
   return (
     <div className="relative min-h-screen pb-20 bg-grid-pattern transition-colors duration-300">
+      
+      {/* iOS/iPad Touch Pull-to-Refresh Indicator */}
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        isReadyToRefresh={isReadyToRefresh}
+      />
       
       {/* Background Floating Glow Orbs */}
       <div className="absolute top-10 left-1/4 w-96 h-96 bg-pink-500/10 dark:bg-pink-500/15 rounded-full blur-3xl pointer-events-none animate-float-slow" />
