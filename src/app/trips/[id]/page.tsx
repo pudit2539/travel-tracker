@@ -844,6 +844,16 @@ export default function TripDetailPage() {
     }
   }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members]);
 
+  // สมาชิกคนอื่นๆ (กรองตัวฉันเองออกเพื่อไม่ให้มีปุ่มซ้ำ)
+  const otherMembers = useMemo(() => {
+    return members.filter((m) => {
+      const isMe = (currentUser?.id && m.user_id === currentUser.id) ||
+                   (m.profiles?.display_name && userDisplayName && m.profiles.display_name.trim().toLowerCase() === userDisplayName.trim().toLowerCase()) ||
+                   (m.profiles?.email && currentUser?.email && m.profiles.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase());
+      return !isMe;
+    });
+  }, [members, currentUser, userDisplayName]);
+
   // สรุปยอดจ่ายแยกตามรายคน
   const distinctPayers = useMemo(() => {
     const map = new Map<string, { name: string; avatar?: string; total: number; isMe: boolean; key: string }>();
@@ -1133,7 +1143,7 @@ export default function TripDetailPage() {
               <span>ของฉัน ({userDisplayName})</span>
             </button>
 
-            {members.map((m) => {
+            {otherMembers.map((m) => {
               const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
               const mCat = getCatAvatar(m.profiles?.avatar_id);
               const mKey = m.user_id || m.id;
@@ -1667,7 +1677,7 @@ export default function TripDetailPage() {
                   <span>ของฉัน ({userDisplayName})</span>
                 </button>
 
-                {members.map((m) => {
+                {otherMembers.map((m) => {
                   const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
                   const mCat = getCatAvatar(m.profiles?.avatar_id);
                   const isSelected = expensePayerFilter === (m.user_id || m.id) || expensePayerFilter === mName;
