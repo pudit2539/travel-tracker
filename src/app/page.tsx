@@ -19,6 +19,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb } from '@/lib/currency';
+import { triggerConfetti } from '@/lib/confetti';
 
 export default function HomePage() {
   const router = useRouter();
@@ -171,6 +172,7 @@ export default function HomePage() {
         setShowCreateModal(false);
         resetForm();
         setCreatedTripSuccess(data);
+        triggerConfetti();
 
         // Auto navigate ไปยังหน้าทริป
         setTimeout(() => {
