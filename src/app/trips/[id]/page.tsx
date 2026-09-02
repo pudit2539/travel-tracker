@@ -1404,7 +1404,7 @@ export default function TripDetailPage() {
 
             {/* List of Itinerary Activities */}
             {filteredItinerary.length === 0 ? (
-              <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-purple-900/50 rounded-3xl p-6 bg-white/60 dark:bg-[#130d22]/60">
+              <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-purple-900/50 rounded-3xl p-6 bg-white/60 dark:bg-[#1a182d]/60">
                 <Navigation className="h-10 w-10 text-pink-500 mx-auto mb-2 animate-float-slow" />
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีกิจกรรมในแผนเที่ยวนี้</h3>
                 <p className="text-xs text-slate-500 dark:text-purple-400 mt-1 mb-4">
@@ -1423,30 +1423,42 @@ export default function TripDetailPage() {
               <div className="space-y-3">
                 {filteredItinerary.map((item, idx) => {
                   const isPlanBOpen = expandedPlanB[item.id] || false;
+                  const mainPlaceMapsUrl = (item.main_place_links && item.main_place_links[0])
+                    ? item.main_place_links[0]
+                    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.main_place + ' ' + (item.city || 'Japan'))}`;
+
+                  const foodSearchUrl = (item.food_links && item.food_links[0])
+                    ? item.food_links[0]
+                    : item.food_recommendation
+                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.food_recommendation.split(/[,(]/)[0].trim() + ' ' + (item.city || 'Japan'))}`
+                    : '';
+
                   return (
                     <div
                       key={item.id || idx}
-                      className="group p-4 rounded-3xl border border-slate-200/90 dark:border-purple-900/50 bg-white/95 dark:bg-[#130d22]/95 card-elevation hover:border-pink-500/50 transition-all duration-300"
+                      className="group p-4 rounded-3xl border border-slate-200/90 dark:border-purple-900/40 bg-white/95 dark:bg-[#1a182d]/95 card-elevation hover:border-pink-500/50 transition-all duration-300 space-y-2.5"
                     >
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-900">
+                      <div className="flex justify-between items-center gap-2">
+                        {/* Day & Time & City Badges with fixed nowrap */}
+                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800/80 whitespace-nowrap shrink-0">
                             {item.date_label || `Day ${idx + 1}`}
                           </span>
                           {item.time_slot && (
-                            <span className="flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-purple-300">
-                              <Clock className="h-3 w-3 text-pink-500" /> {item.time_slot}
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-purple-200 whitespace-nowrap shrink-0">
+                              <Clock className="h-3 w-3 text-pink-500 shrink-0" />
+                              <span>{item.time_slot}</span>
                             </span>
                           )}
                           {item.city && (
-                            <span className="text-[10px] font-bold text-slate-500 dark:text-purple-400">
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-purple-400 whitespace-nowrap truncate max-w-[140px] sm:max-w-none">
                               📍 {item.city}
                             </span>
                           )}
                         </div>
 
                         {canEditPlan && (
-                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
                             <button
                               onClick={() => handleMoveActivity(idx, 'up')}
                               disabled={idx === 0 || reordering}
@@ -1481,34 +1493,48 @@ export default function TripDetailPage() {
                         )}
                       </div>
 
-                      <div className="mt-2 space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-black text-slate-900 dark:text-white">
-                            {item.main_place}
-                          </h4>
-                          {item.main_place_links && item.main_place_links.length > 0 && (
-                            item.main_place_links.map((link: string, lIdx: number) => (
-                              <a
-                                key={lIdx}
-                                href={link}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-pink-600 hover:text-pink-700 text-[10px] font-bold inline-flex items-center gap-0.5 hover:underline"
-                              >
-                                <span>แผนที่ {lIdx > 0 ? lIdx + 1 : ''}</span>
-                                <ExternalLink className="h-2.5 w-2.5" />
-                              </a>
-                            ))
-                          )}
+                      <div className="space-y-2">
+                        {/* Main Place as Clickable Google Maps Header */}
+                        <div>
+                          <a
+                            href={mainPlaceMapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm sm:text-base font-black text-slate-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400 inline-flex items-center gap-1.5 transition-colors group/title cursor-pointer"
+                            title="เปิด Google Maps สถานที่หลัก"
+                          >
+                            <span>{item.main_place}</span>
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-900 group-hover/title:scale-105 transition-transform">
+                              <span>แผนที่ 📍</span>
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </span>
+                          </a>
                         </div>
 
+                        {/* Food Recommendations with Clickable Google Maps Link */}
                         {item.food_recommendation && (
-                          <div className="text-xs text-slate-600 dark:text-purple-300 flex items-center gap-1.5 font-medium">
-                            <Utensils className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                            <span>ร้านอาหารแนะนำ: {item.food_recommendation}</span>
+                          <div className="text-xs text-slate-700 dark:text-purple-200 flex items-start gap-2 pt-0.5">
+                            <Utensils className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <span className="font-bold text-slate-900 dark:text-white">ร้านอาหาร / คาเฟ่: </span>
+                              <span>{item.food_recommendation}</span>
+                              {foodSearchUrl && (
+                                <a
+                                  href={foodSearchUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900 hover:scale-105 transition-all ml-1.5 align-middle cursor-pointer"
+                                  title="เปิด Google Maps ร้านอาหาร"
+                                >
+                                  <span>เปิดแผนที่ร้าน 📍</span>
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
+                              )}
+                            </div>
                           </div>
                         )}
 
+                        {/* Transport info */}
                         {item.transport_info && (
                           <div className="text-xs text-slate-600 dark:text-purple-300 flex items-center gap-1.5 font-medium">
                             <Bus className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
@@ -1516,6 +1542,7 @@ export default function TripDetailPage() {
                           </div>
                         )}
 
+                        {/* Backup Plan (Plan B) */}
                         {item.backup_plan && (
                           <div className="mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-purple-900/40">
                             <button
@@ -1527,8 +1554,19 @@ export default function TripDetailPage() {
                               {isPlanBOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                             </button>
                             {isPlanBOpen && (
-                              <div className="p-2.5 mt-1 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 text-xs text-slate-700 dark:text-purple-200 space-y-1">
-                                <p className="whitespace-pre-line font-medium">{item.backup_plan}</p>
+                              <div className="p-2.5 mt-1.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 text-xs text-slate-700 dark:text-purple-200 space-y-1">
+                                <p className="whitespace-pre-line font-medium leading-relaxed">{item.backup_plan}</p>
+                                {item.backup_links && item.backup_links[0] && (
+                                  <a
+                                    href={item.backup_links[0]}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-600 dark:text-purple-300 hover:underline pt-1"
+                                  >
+                                    <span>แผนที่ Plan B</span>
+                                    <ExternalLink className="h-2.5 w-2.5" />
+                                  </a>
+                                )}
                               </div>
                             )}
                           </div>

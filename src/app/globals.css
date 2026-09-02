@@ -15,11 +15,11 @@
 }
 
 .dark {
-  --background: #090611;
+  --background: #11101d;
   --foreground: #f8fafc;
-  --card: #130d22;
+  --card: #1a182d;
   --card-foreground: #f8fafc;
-  --border: #2c1b44;
+  --border: #2e2946;
   --primary-pink: #f472b6;
   --primary-purple: #a855f7;
 }
