@@ -1,7 +1,7 @@
 // src/app/trips/[id]/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useDeferredValue } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +12,8 @@ import NotificationBell from '@/components/NotificationBell';
 import WeatherWidget from '@/components/WeatherWidget';
 import RouteVisualizer from '@/components/RouteVisualizer';
 import InteractiveTripMap from '@/components/InteractiveTripMap';
+import { ExpenseCard } from '@/components/trip-detail/ExpenseCard';
+import { ItineraryStopCard } from '@/components/trip-detail/ItineraryStopCard';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
@@ -33,6 +35,7 @@ import {
   getLocalReceiptPhoto, 
   deleteLocalReceiptPhoto 
 } from '@/lib/localReceipts';
+import { compressReceiptImage } from '@/lib/imageCompressor';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
@@ -93,6 +96,7 @@ export default function TripDetailPage() {
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState<string>('all');
   const [expensePayerFilter, setExpensePayerFilter] = useState<string>('all');
   const [expenseSearchQuery, setExpenseSearchQuery] = useState<string>('');
+  const deferredExpenseSearch = useDeferredValue(expenseSearchQuery);
 
   // Modals state
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -534,52 +538,64 @@ export default function TripDetailPage() {
     });
   };
 
-  // สแกนใบเสร็จด้วย AI OCR
+  // สแกนใบเสร็จด้วย AI OCR พร้อม Client-Side Compression & Auth Token
   const handleReceiptImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setScanning(true);
     setOcrSuccessToast(null);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      const dataUrl = reader.result as string;
-      const base64 = dataUrl.split(',')[1];
-      try {
-        const res = await fetch('/api/scan-receipt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, mimeType: file.type }),
-        });
-        const json = await res.json();
-        if (json.data) {
-          setScannedData((prev: any) => ({
-            ...prev,
-            title: json.data.merchant || prev.title || 'ค่าใช้จ่ายทั่วไป',
-            amount: json.data.amount ? String(json.data.amount) : prev.amount || '1000',
-            category: json.data.category || prev.category || 'food',
-            currency: json.data.currency || trip?.currency || 'JPY',
-            spent_at: json.data.date || prev.spent_at || new Date().toISOString().split('T')[0],
-            receipt_url: dataUrl,
-          }));
-          setOcrSuccessToast(`✨ AI สแกนใบเสร็จสำเร็จ: "${json.data.merchant}" ยอด ${Number(json.data.amount || 0).toLocaleString()} ${json.data.currency || 'JPY'}`);
-          setTimeout(() => setOcrSuccessToast(null), 5000);
-        } else {
-          setScannedData((prev: any) => ({ ...prev, receipt_url: dataUrl }));
-        }
-      } catch (err) {
-        console.warn('OCR scan fallback:', err);
+
+    try {
+      // 1. Client-Side Image Compression (ย่อขนาดรูปทันทีก่อนอัปโหลด ลดจาก 5-15MB เหลือ ~250KB)
+      const compressed = await compressReceiptImage(file, 1200, 0.82);
+
+      // 2. ดึง Session Token สำหรับ Auth Check
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      // 3. ส่งข้อมูลภาพที่บีบอัดแล้วไปยัง API
+      const res = await fetch('/api/scan-receipt', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ imageBase64: compressed.base64, mimeType: compressed.mimeType }),
+      });
+      const json = await res.json();
+      if (json.data) {
+        setScannedData((prev: any) => ({
+          ...prev,
+          title: json.data.merchant || prev.title || 'ค่าใช้จ่ายทั่วไป',
+          amount: json.data.amount ? String(json.data.amount) : prev.amount || '1000',
+          category: json.data.category || prev.category || 'food',
+          currency: json.data.currency || trip?.currency || 'JPY',
+          spent_at: json.data.date || prev.spent_at || new Date().toISOString().split('T')[0],
+          receipt_url: compressed.dataUrl,
+        }));
+        setOcrSuccessToast(`✨ AI สแกนใบเสร็จสำเร็จ: "${json.data.merchant}" ยอด ${Number(json.data.amount || 0).toLocaleString()} ${json.data.currency || 'JPY'}`);
+        setTimeout(() => setOcrSuccessToast(null), 5000);
+      } else {
+        setScannedData((prev: any) => ({ ...prev, receipt_url: compressed.dataUrl }));
+      }
+    } catch (err) {
+      console.warn('OCR scan fallback:', err);
+      // Fallback
+      const reader = new FileReader();
+      reader.onload = () => {
+        const fallbackUrl = reader.result as string;
         setScannedData((prev: any) => ({
           ...prev,
           title: prev.title || 'ค่าใช้จ่ายใบเสร็จ',
           amount: prev.amount || '1000',
-          receipt_url: dataUrl,
+          receipt_url: fallbackUrl,
         }));
-      } finally {
-        setScanning(false);
-      }
-    };
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setScanning(false);
+    }
   };
 
   // บันทึกค่าใช้จ่าย
@@ -973,15 +989,15 @@ export default function TripDetailPage() {
         }
       }
 
-      if (expenseSearchQuery.trim()) {
-        const query = expenseSearchQuery.toLowerCase();
+      if (deferredExpenseSearch.trim()) {
+        const query = deferredExpenseSearch.toLowerCase();
         const titleMatch = (e.title || '').toLowerCase().includes(query);
         const payerMatch = (e.payer_name || '').toLowerCase().includes(query);
         if (!titleMatch && !payerMatch) return false;
       }
       return true;
     });
-  }, [expenses, expenseCategoryFilter, expensePayerFilter, expenseSearchQuery, currentUser, userDisplayName]);
+  }, [expenses, expenseCategoryFilter, expensePayerFilter, deferredExpenseSearch, currentUser, userDisplayName]);
 
   // วันทั้งหมดที่มีใน Itinerary
   const availableDays = useMemo(() => {
@@ -1546,176 +1562,21 @@ export default function TripDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredItinerary.map((item, idx) => {
-                    const isPlanBOpen = expandedPlanB[item.id] || false;
-                    const mainPlaceMapsUrl = (item.main_place_links && item.main_place_links[0])
-                      ? item.main_place_links[0]
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.main_place + ' ' + (item.city || 'Japan'))}`;
-
-                    const foodSearchUrl = (item.food_links && item.food_links[0])
-                      ? item.food_links[0]
-                      : item.food_recommendation
-                      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.food_recommendation.split(/[,(]/)[0].trim() + ' ' + (item.city || 'Japan'))}`
-                      : '';
-
-                    return (
-                      <div
-                        key={item.id || idx}
-                        className="group p-4 rounded-3xl border border-slate-200/90 dark:border-purple-900/40 bg-white/95 dark:bg-[#1a182d]/95 card-elevation hover:border-pink-500/50 transition-all duration-300 space-y-2.5"
-                      >
-                        <div className="flex justify-between items-center gap-2">
-                          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800/80 whitespace-nowrap shrink-0">
-                              {item.date_label || `Day ${idx + 1}`}
-                            </span>
-                            {item.time_slot && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-purple-200 whitespace-nowrap shrink-0">
-                                <Clock className="h-3 w-3 text-pink-500 shrink-0" />
-                                <span>{item.time_slot}</span>
-                              </span>
-                            )}
-                            {item.city && (
-                              <span className="text-[10px] font-bold text-slate-500 dark:text-purple-400 whitespace-nowrap truncate max-w-[140px] sm:max-w-none">
-                                📍 {item.city}
-                              </span>
-                            )}
-                          </div>
-
-                          {canEditPlan && (
-                            <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
-                              <button
-                                onClick={() => handleMoveActivity(idx, 'up')}
-                                disabled={idx === 0 || reordering}
-                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-purple-900/50 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
-                                title="เลื่อนขึ้น"
-                              >
-                                <ArrowUp className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleMoveActivity(idx, 'down')}
-                                disabled={idx === itinerary.length - 1 || reordering}
-                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-purple-900/50 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
-                                title="เลื่อนลง"
-                              >
-                                <ArrowDown className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleOpenEditActivity(item)}
-                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-purple-900/50 text-slate-400 hover:text-purple-600 transition-colors cursor-pointer"
-                                title="แก้ไขกิจกรรม"
-                              >
-                                <Edit3 className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteActivity(item.id)}
-                                className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                                title="ลบกิจกรรม"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <div>
-                            <a
-                              href={mainPlaceMapsUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sm sm:text-base font-black text-slate-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400 inline-flex items-center gap-1.5 transition-colors group/title cursor-pointer"
-                              title="เปิด Google Maps สถานที่หลัก"
-                            >
-                              <span>{item.main_place}</span>
-                              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-900 group-hover/title:scale-105 transition-transform">
-                                <span>แผนที่ 📍</span>
-                                <ExternalLink className="h-2.5 w-2.5" />
-                              </span>
-                            </a>
-                          </div>
-
-                          {item.food_recommendation && (
-                            <div className="text-xs text-slate-700 dark:text-purple-200 flex items-start gap-2 pt-0.5">
-                              <Utensils className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
-                              <div className="flex-1 min-w-0">
-                                <span className="font-bold text-slate-900 dark:text-white">ร้านอาหาร / คาเฟ่: </span>
-                                <span>{item.food_recommendation}</span>
-                                {foodSearchUrl && (
-                                  <a
-                                    href={foodSearchUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900 hover:scale-105 transition-all ml-1.5 align-middle cursor-pointer"
-                                    title="เปิด Google Maps ร้านอาหาร"
-                                  >
-                                    <span>เปิดแผนที่ร้าน 📍</span>
-                                    <ExternalLink className="h-2.5 w-2.5" />
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {item.transport_info && (
-                            <div className="text-xs text-slate-600 dark:text-purple-300 flex items-center gap-1.5 font-medium">
-                              <Bus className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                              <span>การเดินทาง: {item.transport_info}</span>
-                            </div>
-                          )}
-
-                          {item.backup_plan && (
-                            <div className="mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-purple-900/40">
-                              <button
-                                type="button"
-                                onClick={() => setExpandedPlanB({ ...expandedPlanB, [item.id]: !isPlanBOpen })}
-                                className="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5 hover:underline cursor-pointer"
-                              >
-                                <span>🛡️ แผนสำรอง (Plan B)</span>
-                                {isPlanBOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                              </button>
-                              {isPlanBOpen && (
-                                <div className="p-3 mt-2 rounded-2xl bg-purple-50/80 dark:bg-purple-950/40 text-xs text-slate-700 dark:text-purple-200 space-y-2 border border-purple-200/60 dark:border-purple-900/40">
-                                  <div className="font-bold text-[11px] text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-                                    <span>🛡️ รายการสถานที่ & ร้านอาหารสำรอง (แตะเพื่อเปิดพิกัด):</span>
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    {item.backup_plan.split('\n').filter((line: string) => line.trim().length > 0).map((line: string, lineIdx: number) => {
-                                      let cleanName = line.replace(/^(ร้านอาหารสำรอง|สถานที่สำรอง|จุดเที่ยวสำรอง|แผนสำรอง|\d+[\).:-]|\*|•)\s*/i, '').trim();
-                                      if (cleanName.includes(':')) {
-                                        cleanName = cleanName.split(':')[1].trim();
-                                      }
-                                      
-                                      const lineMapsUrl = (item.backup_links && item.backup_links[lineIdx])
-                                        ? item.backup_links[lineIdx]
-                                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanName + ' ' + (item.city || 'Japan'))}`;
-
-                                      return (
-                                        <div key={lineIdx} className="p-2.5 rounded-xl bg-white/95 dark:bg-[#11101d] border border-purple-100 dark:border-purple-900/50 flex items-center justify-between gap-2 shadow-2xs hover:border-pink-300 transition-all">
-                                          <span className="font-medium text-slate-800 dark:text-purple-100 leading-snug">
-                                            {line}
-                                          </span>
-                                          <a
-                                            href={lineMapsUrl}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 hover:bg-pink-500 hover:text-white dark:hover:bg-pink-600 transition-all shrink-0 cursor-pointer shadow-2xs"
-                                            title="เปิด Google Maps สำหรับรายการนี้"
-                                          >
-                                            <span>แผนที่ 📍</span>
-                                            <ExternalLink className="h-2.5 w-2.5" />
-                                          </a>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {filteredItinerary.map((item, idx) => (
+                    <ItineraryStopCard
+                      key={item.id || idx}
+                      item={item}
+                      idx={idx}
+                      totalItems={itinerary.length}
+                      canEditPlan={canEditPlan}
+                      reordering={reordering}
+                      isPlanBOpen={expandedPlanB[item.id] || false}
+                      onTogglePlanB={(id) => setExpandedPlanB((prev) => ({ ...prev, [id]: !prev[id] }))}
+                      onMoveActivity={handleMoveActivity}
+                      onOpenEditActivity={handleOpenEditActivity}
+                      onDeleteActivity={handleDeleteActivity}
+                    />
+                  ))}
                 </div>
               )
             )}
@@ -1837,69 +1698,19 @@ export default function TripDetailPage() {
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-purple-900/40 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 overflow-hidden card-elevation">
-                {filteredExpenses.map((exp, idx) => {
-                  const catMeta = getCategoryMeta(categories, exp.category);
-                  const payerCat = getCatAvatar(exp.payer_avatar);
-                  const isMyExpense = (exp.payer_id && exp.payer_id === currentUser?.id) || 
-                                      (exp.payer_name && exp.payer_name.toLowerCase() === userDisplayName.toLowerCase());
-
-                  return (
-                    <div key={exp.id || idx} className="p-3.5 sm:p-4 flex justify-between items-center hover:bg-pink-50/30 dark:hover:bg-purple-950/30 transition-all duration-200 gap-2">
-                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                        <div className="text-lg sm:text-xl p-2 sm:p-2.5 rounded-2xl bg-gradient-to-tr from-purple-50 to-pink-50 dark:from-purple-950/70 dark:to-pink-950/60 border border-purple-200/60 dark:border-purple-900/60 shadow-2xs shrink-0">
-                          {catMeta.icon}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
-                            <span className="truncate">{exp.title}</span>
-                            {exp.receipt_url && (
-                              <button
-                                onClick={() => handleOpenReceiptPreview(exp)}
-                                className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200 dark:border-pink-900 hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0"
-                                title="ดูรูปใบเสร็จ"
-                              >
-                                <ImageIcon className="h-3 w-3" /> ใบเสร็จ
-                              </button>
-                            )}
-                          </div>
-                          <div className="text-[10px] sm:text-xs text-slate-500 dark:text-purple-300/70 flex flex-wrap items-center gap-1.5 mt-0.5 font-medium">
-                            <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold px-2 py-0.2 rounded-full border ${
-                              isMyExpense
-                                ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/80 dark:text-pink-300 border-pink-300 dark:border-pink-800'
-                                : 'bg-slate-100 text-slate-700 dark:bg-purple-950 dark:text-purple-300 border-slate-300 dark:border-purple-900/60'
-                            }`}>
-                              <span>{payerCat.emoji}</span>
-                              <span className="truncate max-w-[80px] sm:max-w-none">{exp.payer_name || 'สมาชิก'} {isMyExpense ? '(ฉัน)' : ''}</span>
-                            </span>
-
-                            <span>•</span>
-                            <span className="font-semibold text-slate-700 dark:text-purple-200">{catMeta.label}</span>
-                            <span>•</span>
-                            <span>{new Date(exp.spent_at).toLocaleDateString('th-TH')}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                        <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white text-right">
-                          <div>{Number(exp.amount).toLocaleString()} <span className="text-[10px] sm:text-xs text-slate-400 dark:text-purple-400">{exp.currency}</span></div>
-                          <span className="text-[9px] sm:text-[10px] font-bold text-pink-600 dark:text-pink-400 block">
-                            ≈ ฿{Math.round(Number(exp.amount) * fxRate).toLocaleString()}
-                          </span>
-                        </div>
-                        {canAddExpense && (
-                          <button
-                            onClick={() => handleDeleteExpense(exp.id, exp.receipt_url)}
-                            className="text-slate-400 hover:text-rose-600 p-1.5 transition-colors cursor-pointer hover:scale-110 active:scale-95"
-                            title="ลบรายการ"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                {filteredExpenses.map((exp, idx) => (
+                  <ExpenseCard
+                    key={exp.id || idx}
+                    expense={exp}
+                    categories={categories}
+                    currentUserId={currentUser?.id}
+                    userDisplayName={userDisplayName}
+                    fxRate={fxRate}
+                    canAddExpense={canAddExpense}
+                    onOpenReceiptPreview={handleOpenReceiptPreview}
+                    onDeleteExpense={handleDeleteExpense}
+                  />
+                ))}
               </div>
             )}
           </div>

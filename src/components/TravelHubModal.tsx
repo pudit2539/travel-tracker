@@ -1,7 +1,7 @@
 // src/components/TravelHubModal.tsx
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useDeferredValue } from 'react';
 import { 
   X, Sparkles, Languages, MapPin, QrCode, Share2, 
   Download, Volume2, Copy, Check, ExternalLink, 
@@ -113,6 +113,7 @@ export default function TravelHubModal({
   // Phrases State
   const [phraseCategory, setPhraseCategory] = useState<'all' | 'food' | 'shopping' | 'transport' | 'emergency'>('all');
   const [phraseSearch, setPhraseSearch] = useState('');
+  const deferredPhraseSearch = useDeferredValue(phraseSearch);
   const [bigCardPhrase, setBigCardPhrase] = useState<PhraseItem | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [copiedPhraseId, setCopiedPhraseId] = useState<string | null>(null);
@@ -252,13 +253,13 @@ export default function TravelHubModal({
   const filteredPhrases = useMemo(() => {
     return JAPANESE_PHRASES.filter((p) => {
       if (phraseCategory !== 'all' && p.category !== phraseCategory) return false;
-      if (phraseSearch.trim()) {
-        const q = phraseSearch.toLowerCase();
+      if (deferredPhraseSearch.trim()) {
+        const q = deferredPhraseSearch.toLowerCase();
         return p.thai.toLowerCase().includes(q) || p.japanese.includes(q) || p.romaji.toLowerCase().includes(q) || p.context.toLowerCase().includes(q);
       }
       return true;
     });
-  }, [phraseCategory, phraseSearch]);
+  }, [phraseCategory, deferredPhraseSearch]);
 
   const totalSpent = useMemo(() => {
     return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);

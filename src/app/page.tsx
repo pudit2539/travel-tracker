@@ -1,7 +1,7 @@
 // src/app/page.tsx
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -30,6 +30,7 @@ export default function HomePage() {
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [fxRate, setFxRate] = useState<number>(0.235);
   
   // Modals state
@@ -336,12 +337,12 @@ export default function HomePage() {
   };
 
   const filteredTrips = useMemo(() => {
-    if (!searchQuery.trim()) return trips;
+    if (!deferredSearchQuery.trim()) return trips;
     return trips.filter((t) => {
       const name = t.name || t.title || '';
-      return name.toLowerCase().includes(searchQuery.toLowerCase());
+      return name.toLowerCase().includes(deferredSearchQuery.toLowerCase());
     });
-  }, [trips, searchQuery]);
+  }, [trips, deferredSearchQuery]);
 
   const totalCombinedBudget = useMemo(() => {
     return trips.reduce((acc, curr) => acc + Number(curr.total_budget ?? curr.budget ?? 0), 0);

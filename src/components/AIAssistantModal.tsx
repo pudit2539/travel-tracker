@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { 
   Sparkles, X, MapPin, ExternalLink, Loader2, 
   Utensils, Coffee, CloudRain, Compass, Search, Plus
@@ -41,9 +42,15 @@ export default function AIAssistantModal({
     setHasSearched(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch('/api/ai-assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           city: city || 'Osaka',
           query: q,

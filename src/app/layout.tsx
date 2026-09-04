@@ -1,7 +1,19 @@
-// src/app/layout.tsx
+import type { Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import ErrorBoundary from '@/components/ErrorBoundary';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#11101d' },
+  ],
+};
 
 export const metadata = {
   title: 'Travel Tracker & Planner 🐱',
@@ -37,6 +49,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   });
                 });
               }
+              // Prevent unwanted pinch-to-zoom on iOS Safari
+              document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+              }, { passive: false });
             `,
           }}
         />

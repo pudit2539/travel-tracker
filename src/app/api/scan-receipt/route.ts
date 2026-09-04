@@ -1,8 +1,21 @@
 // src/app/api/scan-receipt/route.ts
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
+    // Auth Check: Protect AI vision quotas from unauthorized bots
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.replace(/^Bearer\s+/i, '');
+    if (token) {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) {
+        return NextResponse.json({ success: false, error: 'Unauthorized: Invalid session token' }, { status: 401 });
+      }
+    } else if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Authentication required' }, { status: 401 });
+    }
+
     const { imageBase64, mimeType } = await req.json();
     if (!imageBase64) {
       return NextResponse.json({ success: false, error: 'No image provided' }, { status: 400 });
