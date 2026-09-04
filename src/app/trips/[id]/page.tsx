@@ -1048,7 +1048,7 @@ export default function TripDetailPage() {
       <div className="absolute top-80 right-10 w-80 sm:w-96 h-80 sm:h-96 bg-purple-600/10 dark:bg-purple-600/15 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
       {/* ==================== TOP NAVIGATION & STICKY APP HEADER ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-900/40 bg-white/95 dark:bg-[#11101d]/95 backdrop-blur-2xl transition-colors safe-top-nav">
+      <nav className="sticky top-0 z-40 border-b border-pink-100/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#121524]/95 backdrop-blur-2xl transition-colors safe-top-nav">
         <div className="max-w-5xl mx-auto px-3.5 sm:px-4 pb-2 sm:pb-2.5 space-y-2">
           
           {/* Row 1: Back & Title & Action Icons */}
@@ -1058,7 +1058,7 @@ export default function TripDetailPage() {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <Link
                 href="/"
-                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-2xl border border-pink-100/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#151826]/90 text-slate-700 dark:text-slate-200 hover:border-pink-300 dark:hover:border-slate-700 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
                 title="กลับไปหน้าทริปทั้งหมด"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -1066,7 +1066,7 @@ export default function TripDetailPage() {
               
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="text-sm sm:text-base font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-md">
+                  <h1 className="text-sm sm:text-base font-black bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 dark:from-pink-400 dark:via-rose-400 dark:to-purple-300 bg-clip-text text-transparent truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-md">
                     {(trip?.name || trip?.title) || 'รายละเอียดทริป'}
                   </h1>
                   
@@ -1080,7 +1080,7 @@ export default function TripDetailPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-purple-300/70 font-semibold truncate">
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold truncate">
                   <span>{trip?.currency || 'JPY'}</span>
                   <span>•</span>
                   <span>{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
@@ -1094,7 +1094,7 @@ export default function TripDetailPage() {
 
               <button
                 onClick={() => setShowProfileModal(true)}
-                className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 hover:border-pink-500 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
+                className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-pink-100/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#151826]/90 hover:border-pink-300 dark:hover:border-slate-700 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
                 title="ตั้งค่าโปรไฟล์"
               >
                 <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-sm group-hover:scale-110 transition-transform overflow-hidden`}>
@@ -1104,14 +1104,14 @@ export default function TripDetailPage() {
                     userCat.emoji
                   )}
                 </div>
-                <span className="text-[11px] font-black text-slate-800 dark:text-purple-100 max-w-[80px] truncate hidden lg:inline">
+                <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 max-w-[80px] truncate hidden lg:inline">
                   {userDisplayName}
                 </span>
               </button>
 
               <button
                 onClick={() => setShowShareModal(true)}
-                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 text-xs font-bold hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer"
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-pink-100/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#151826]/90 text-slate-700 dark:text-slate-200 text-xs font-bold hover:border-pink-300 dark:hover:border-slate-700 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer"
                 title="แชร์ทริป"
               >
                 <Share2 className="h-3.5 w-3.5 text-pink-500" />
@@ -1120,7 +1120,7 @@ export default function TripDetailPage() {
 
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-xl border border-pink-100/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#151826]/90 text-slate-700 dark:text-slate-200 hover:border-pink-300 dark:hover:border-slate-700 hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer"
                 title="สลับโหมด มืด/สว่าง"
               >
                 {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-600" />}
@@ -1143,7 +1143,7 @@ export default function TripDetailPage() {
                       }
                     }
                   }}
-                  className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-500 hover:text-rose-600 dark:text-purple-300 dark:hover:text-rose-400 hover:border-rose-400 shadow-2xs transition-all cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-xl border border-pink-100/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#151826]/90 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:border-rose-400 shadow-2xs transition-all cursor-pointer"
                   title="ออกจากระบบ (Sign Out)"
                 >
                   <LogOut className="h-4 w-4" />
@@ -1153,19 +1153,19 @@ export default function TripDetailPage() {
           </div>
 
           {/* Row 2: The 4 Tabs */}
-          <div className="grid grid-cols-4 gap-1 sm:gap-2 p-1 sm:p-1.5 bg-slate-200/80 dark:bg-[#151325]/90 border border-slate-300/80 dark:border-purple-900/50 rounded-2xl sm:rounded-3xl shadow-xs">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 p-1 sm:p-1.5 bg-pink-50/70 dark:bg-[#151826]/90 border border-pink-100/80 dark:border-slate-800/80 rounded-2xl sm:rounded-3xl shadow-xs">
             <button
               type="button"
               onClick={() => handleSwitchTab('plan')}
               className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'plan' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-md shadow-pink-400/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               <span>🗺️</span>
               <span className="truncate">แผนเที่ยว</span>
-              <span className="text-[10px] opacity-80 hidden md:inline">({itinerary.length})</span>
+              <span className="text-[10px] opacity-85 hidden md:inline">({itinerary.length})</span>
             </button>
 
             <button
@@ -1173,13 +1173,13 @@ export default function TripDetailPage() {
               onClick={() => handleSwitchTab('expenses')}
               className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'expenses' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-md shadow-pink-400/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               <span>💰</span>
               <span className="truncate">รายจ่าย</span>
-              <span className="text-[10px] opacity-80 hidden md:inline">({expenses.length})</span>
+              <span className="text-[10px] opacity-85 hidden md:inline">({expenses.length})</span>
             </button>
 
             <button
@@ -1187,8 +1187,8 @@ export default function TripDetailPage() {
               onClick={() => handleSwitchTab('analytics')}
               className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'analytics' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-md shadow-pink-400/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               <span>📊</span>
@@ -1200,13 +1200,13 @@ export default function TripDetailPage() {
               onClick={() => handleSwitchTab('members')}
               className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'members' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-md shadow-pink-400/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               <span>👥</span>
               <span className="truncate">สมาชิก</span>
-              <span className="text-[10px] opacity-80 hidden md:inline">({members.length})</span>
+              <span className="text-[10px] opacity-85 hidden md:inline">({members.length})</span>
             </button>
           </div>
         </div>
@@ -1245,7 +1245,7 @@ export default function TripDetailPage() {
           <div className="space-y-3.5 sm:space-y-4">
             
             {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-[#1a182d]/95 border border-slate-200/80 dark:border-purple-900/50 card-elevation">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-[#151826]/95 border border-pink-100/80 dark:border-slate-800/80 card-elevation">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-900 shadow-2xs">
                   {trip?.currency || 'JPY'} Workspace
@@ -1262,7 +1262,7 @@ export default function TripDetailPage() {
                   className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
                     showWeatherSection 
                       ? 'bg-pink-500 text-white border-pink-500 shadow-xs' 
-                      : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 border-slate-200 dark:border-purple-900/50 hover:border-pink-500'
+                      : 'bg-slate-100 dark:bg-[#1e2235] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-pink-400'
                   }`}
                 >
                   <span>🌤️ เส้นทาง & อากาศ</span>
@@ -1272,7 +1272,7 @@ export default function TripDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowTravelHubModal(true)}
-                  className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 px-3 py-1.5 rounded-xl shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer glow-pink-purple"
+                  className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 px-3 py-1.5 rounded-xl shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer glow-pink-purple"
                 >
                   <span>🧰 Travel Hub</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -1280,34 +1280,89 @@ export default function TripDetailPage() {
               </div>
             </div>
 
-            {/* Quick Budget Glance Pill (Click to jump straight into Expenses Tab) */}
+            {/* Aesthetic 3-Block Pastel Budget Overview Card (Click to jump to Expenses Tab) */}
             <div 
               onClick={() => handleSwitchTab('expenses')}
-              className="p-3 rounded-2xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-r from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/95 dark:bg-[#1a182d]/95 card-elevation flex items-center justify-between cursor-pointer hover:border-pink-400 transition-all group"
+              className="p-3 sm:p-3.5 rounded-3xl border border-pink-100/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#151826]/95 card-elevation space-y-2.5 cursor-pointer hover:border-pink-300 dark:hover:border-slate-700 transition-all group"
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="p-2 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white shadow-xs shrink-0">
-                  <Coins className="h-4 w-4" />
+              {/* Card Header */}
+              <div className="flex items-center justify-between px-0.5">
+                <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-slate-200">
+                  <Coins className="h-4 w-4 text-pink-500" />
+                  <span>สรุปงบประมาณทริป</span>
+                  <span className="text-[10px] font-semibold text-slate-400">({heroDisplayData.title})</span>
                 </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <span>ยอดใช้จ่ายรวม: {heroDisplayData.spent.toLocaleString()} {trip?.currency || 'JPY'}</span>
-                    <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400">
-                      (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
-                    </span>
-                  </div>
-                  <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-purple-300/80 truncate">
-                    {heroDisplayData.targetBudget > 0 
-                      ? (heroDisplayData.isOver 
-                          ? `⚠️ เกินงบ +${heroDisplayData.diff.toLocaleString()} ${trip?.currency}` 
-                          : `คงเหลือ ${heroDisplayData.remaining.toLocaleString()} ${trip?.currency} (${heroDisplayData.progress}% ของงบ)`)
-                      : 'แตะเพื่อบันทึกบิล AI OCR หรือจัดการงบประมาณ'}
-                  </div>
+                <div className="flex items-center gap-1 text-[11px] font-black text-pink-600 dark:text-pink-400 group-hover:translate-x-0.5 transition-transform">
+                  <span>ไปหน้ารายจ่าย</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-xs font-black text-pink-600 dark:text-pink-400 shrink-0 group-hover:translate-x-0.5 transition-transform">
-                <span className="hidden sm:inline">ไปหน้ารายจ่าย</span>
-                <ChevronRight className="h-4 w-4" />
+
+              {/* 3 Pastel Summary Blocks */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                {/* Block 1: Used / จ่ายแล้ว (Soft Rose/Strawberry Pastel) */}
+                <div className="rounded-2xl p-2.5 sm:p-3 bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/50 flex flex-col justify-between">
+                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black text-rose-600 dark:text-rose-300">
+                    <span>💸</span>
+                    <span>ใช้ไปแล้ว</span>
+                  </div>
+                  <div className="mt-1">
+                    <div className="text-sm sm:text-base md:text-lg font-black text-rose-700 dark:text-rose-200 leading-tight">
+                      {heroDisplayData.spent.toLocaleString()}
+                    </div>
+                    <div className="text-[9px] sm:text-[10px] font-semibold text-rose-500/80 dark:text-rose-300/70 truncate">
+                      ≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Block 2: Target / ตั้งเป้า (Soft Mint/Emerald Pastel) */}
+                <div className="rounded-2xl p-2.5 sm:p-3 bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/50 flex flex-col justify-between">
+                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black text-emerald-600 dark:text-emerald-300">
+                    <span>🎯</span>
+                    <span>ตั้งเป้าไว้</span>
+                  </div>
+                  <div className="mt-1">
+                    <div className="text-sm sm:text-base md:text-lg font-black text-emerald-700 dark:text-emerald-200 leading-tight">
+                      {heroDisplayData.targetBudget > 0 ? heroDisplayData.targetBudget.toLocaleString() : '-'}
+                    </div>
+                    <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
+                      {heroDisplayData.targetBudget > 0 ? `≈ ฿${Math.round(heroDisplayData.targetBudget * fxRate).toLocaleString()}` : 'ยังไม่ระบุงบ'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Block 3: Remaining / คงเหลือ (Soft Sky/Indigo Pastel) */}
+                <div className={`rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
+                  heroDisplayData.isOver 
+                    ? 'bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/50' 
+                    : 'bg-sky-50/90 dark:bg-sky-950/30 border border-sky-200/70 dark:border-sky-900/50'
+                }`}>
+                  <div className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-black ${
+                    heroDisplayData.isOver ? 'text-amber-700 dark:text-amber-300' : 'text-sky-600 dark:text-sky-300'
+                  }`}>
+                    <span>{heroDisplayData.isOver ? '⚠️' : '💰'}</span>
+                    <span>{heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'}</span>
+                  </div>
+                  <div className="mt-1">
+                    <div className={`text-sm sm:text-base md:text-lg font-black leading-tight ${
+                      heroDisplayData.isOver 
+                        ? 'text-amber-700 dark:text-amber-200' 
+                        : 'text-sky-700 dark:text-sky-200'
+                    }`}>
+                      {heroDisplayData.targetBudget > 0 
+                        ? (heroDisplayData.isOver ? `+${heroDisplayData.diff.toLocaleString()}` : heroDisplayData.remaining.toLocaleString())
+                        : heroDisplayData.spent.toLocaleString()}
+                    </div>
+                    <div className={`text-[9px] sm:text-[10px] font-semibold truncate ${
+                      heroDisplayData.isOver ? 'text-amber-600/80 dark:text-amber-400/80' : 'text-sky-600/80 dark:text-sky-300/70'
+                    }`}>
+                      {heroDisplayData.targetBudget > 0 
+                        ? (heroDisplayData.isOver ? 'เกินงบที่ตั้งไว้' : `เหลือ ${Math.max(0, 100 - heroDisplayData.progress)}%`) 
+                        : 'แตะจัดการงบ'}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1462,9 +1517,9 @@ export default function TripDetailPage() {
           <div className="space-y-4">
             
             {/* HERO BUDGET & QUICK ACTION CARD */}
-            <div className="relative overflow-hidden rounded-3xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/95 dark:bg-[#1a182d]/95 backdrop-blur-xl card-elevation p-4 sm:p-6 md:p-7 space-y-4">
-              <div className="absolute -top-16 -right-16 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl pointer-events-none animate-float-slow" />
-              <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
+            <div className="relative overflow-hidden rounded-3xl border border-pink-100/80 dark:border-slate-800/80 bg-gradient-to-br from-pink-50/60 via-purple-50/30 to-indigo-50/30 dark:from-slate-900/60 dark:via-[#151826] dark:to-[#151826] bg-white/95 dark:bg-[#151826]/95 backdrop-blur-xl card-elevation p-4 sm:p-6 md:p-7 space-y-4">
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-pink-400/15 rounded-full blur-3xl pointer-events-none animate-float-slow" />
+              <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/15 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
               {/* Row 1: Badges & Quick Tool Pills */}
               <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
@@ -1481,7 +1536,7 @@ export default function TripDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowTravelHubModal(true)}
-                    className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 px-3 py-1.5 rounded-xl shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer glow-pink-purple"
+                    className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 px-3 py-1.5 rounded-xl shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer glow-pink-purple"
                   >
                     <span>🧰 Travel Hub</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -1490,7 +1545,7 @@ export default function TripDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowBudgetCategoryModal(true)}
-                    className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#11101d] px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                    className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white/90 dark:bg-[#1e2235] px-2.5 py-1.5 rounded-xl border border-pink-100 dark:border-slate-700 hover:border-pink-400 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
                   >
                     <Sliders className="h-3 w-3 text-pink-500" /> 
                     <span>งบ & หมวด</span>
@@ -1505,8 +1560,8 @@ export default function TripDetailPage() {
                   onClick={() => setHeroBudgetView('all')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                     heroBudgetView === 'all'
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                      : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+                      ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-xs scale-105'
+                      : 'bg-white/80 dark:bg-[#1e2235] text-slate-700 dark:text-slate-300 hover:bg-pink-50 border border-pink-100 dark:border-slate-800'
                   }`}
                 >
                   👥 รวมทุกคน
@@ -1517,8 +1572,8 @@ export default function TripDetailPage() {
                   onClick={() => setHeroBudgetView('me')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
                     heroBudgetView === 'me'
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                      : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+                      ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-xs scale-105'
+                      : 'bg-white/80 dark:bg-[#1e2235] text-slate-700 dark:text-slate-300 hover:bg-pink-50 border border-pink-100 dark:border-slate-800'
                   }`}
                 >
                   <span>{userCat.emoji}</span>
@@ -1538,8 +1593,8 @@ export default function TripDetailPage() {
                       onClick={() => setHeroBudgetView(mKey)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
                         isSelected
-                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                          : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+                          ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-xs scale-105'
+                          : 'bg-white/80 dark:bg-[#1e2235] text-slate-700 dark:text-slate-300 hover:bg-pink-50 border border-pink-100 dark:border-slate-800'
                       }`}
                     >
                       <span>{mCat.emoji}</span>
@@ -1551,7 +1606,7 @@ export default function TripDetailPage() {
 
               {/* Row 3: Spent Metric */}
               <div className="relative z-10 pt-1">
-                <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-purple-300/70 flex items-center justify-between">
+                <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
                   <span>{heroDisplayData.title}</span>
                   {heroDisplayData.isOver && (
                     <span className="text-[10px] sm:text-[11px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
@@ -1561,13 +1616,13 @@ export default function TripDetailPage() {
                 </div>
 
                 <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
-                  <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+                  <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-slate-100">
                     {heroDisplayData.spent.toLocaleString()}
                   </span>
                   <span className="text-base sm:text-xl font-bold text-pink-600 dark:text-pink-400">
                     {trip?.currency || 'JPY'}
                   </span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-purple-400 ml-1">
+                  <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
                     (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
                   </span>
                 </div>
@@ -1575,7 +1630,7 @@ export default function TripDetailPage() {
 
               {/* Row 4: Progress Bar */}
               <div className="relative z-10 space-y-1.5">
-                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-purple-200">
+                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
                   <span>
                     {heroDisplayData.targetBudget > 0 
                       ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
@@ -1593,7 +1648,7 @@ export default function TripDetailPage() {
                   </span>
                 </div>
 
-                <div className="w-full bg-slate-200/80 dark:bg-[#11101d] rounded-full h-3 sm:h-3.5 p-0.5 overflow-hidden shadow-inner relative">
+                <div className="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-3 sm:h-3.5 p-0.5 overflow-hidden shadow-inner relative">
                   <div
                     className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
                       heroDisplayData.isOver
@@ -1643,7 +1698,7 @@ export default function TripDetailPage() {
                       setShowScanModal(true);
                     }}
                     disabled={!canAddExpense}
-                    className="py-3 px-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50"
+                    className="py-3 px-3 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <Camera className="h-4 w-4 shrink-0" />
                     <span className="truncate">บันทึกรายจ่าย AI OCR</span>
@@ -1651,7 +1706,7 @@ export default function TripDetailPage() {
 
                   <button
                     onClick={() => setShowSettlementModal(true)}
-                    className="py-3 px-3 rounded-2xl bg-white dark:bg-[#151324] border border-purple-300 dark:border-purple-800/80 hover:border-pink-500 text-slate-800 dark:text-purple-100 font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
+                    className="py-3 px-3 rounded-2xl bg-white dark:bg-[#1e2235] border border-pink-200/80 dark:border-slate-700 hover:border-pink-400 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
                   >
                     <Calculator className="h-4 w-4 text-pink-500 shrink-0" />
                     <span className="truncate">เคลียร์บิลหารเงิน</span>
@@ -1661,9 +1716,9 @@ export default function TripDetailPage() {
             </div>
 
             {/* Horizontal Filter Row */}
-            <div className="p-3.5 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 card-elevation space-y-2.5">
+            <div className="p-3.5 rounded-3xl border border-pink-100/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#151826]/95 card-elevation space-y-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <div className="text-xs font-black text-slate-900 dark:text-slate-200 flex items-center gap-1.5">
                   <Filter className="h-3.5 w-3.5 text-pink-500" />
                   <span>กรองดูรายจ่ายตามผู้จ่าย:</span>
                 </div>
@@ -1679,8 +1734,8 @@ export default function TripDetailPage() {
                   onClick={() => setExpensePayerFilter('all')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                     expensePayerFilter === 'all'
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                      : 'bg-slate-100 dark:bg-purple-950/60 text-slate-700 dark:text-purple-300'
+                      ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-xs scale-105'
+                      : 'bg-slate-100 dark:bg-[#1e2235] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60'
                   }`}
                 >
                   👥 ทุกคน ({expenses.length})
@@ -1691,8 +1746,8 @@ export default function TripDetailPage() {
                   onClick={() => setExpensePayerFilter('me')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
                     expensePayerFilter === 'me'
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                      : 'bg-slate-100 dark:bg-purple-950/60 text-slate-700 dark:text-purple-300'
+                      ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-xs scale-105'
+                      : 'bg-slate-100 dark:bg-[#1e2235] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60'
                   }`}
                 >
                   <span>{userCat.emoji}</span>
@@ -1710,8 +1765,8 @@ export default function TripDetailPage() {
                       onClick={() => setExpensePayerFilter(p.key)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
                         isSelected
-                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                          : 'bg-slate-100 dark:bg-purple-950/60 text-slate-700 dark:text-purple-300'
+                          ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 text-white shadow-xs scale-105'
+                          : 'bg-slate-100 dark:bg-[#1e2235] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60'
                       }`}
                     >
                       <span>{pCat.emoji}</span>
@@ -1728,7 +1783,7 @@ export default function TripDetailPage() {
                   <input
                     type="text"
                     placeholder="ค้นหารายการ, ร้านค้า..."
-                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-pink-100 dark:border-slate-700 bg-white/80 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                     value={expenseSearchQuery}
                     onChange={(e) => setExpenseSearchQuery(e.target.value)}
                   />
@@ -1737,7 +1792,7 @@ export default function TripDetailPage() {
                 <select
                   value={expenseCategoryFilter}
                   onChange={(e) => setExpenseCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl border border-pink-100 dark:border-slate-700 bg-white/80 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold cursor-pointer"
                 >
                   <option value="all">ทุกหมวดหมู่ ({categories.length})</option>
                   {categories.map((cat) => (
@@ -1751,10 +1806,10 @@ export default function TripDetailPage() {
 
             {/* List of Expenses */}
             {filteredExpenses.length === 0 ? (
-              <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-purple-900/50 rounded-3xl p-6 bg-white/60 dark:bg-[#1a182d]/60">
+              <div className="text-center py-12 border-2 border-dashed border-pink-200 dark:border-slate-800 rounded-3xl p-6 bg-white/60 dark:bg-[#151826]/60">
                 <Receipt className="h-10 w-10 text-pink-500 mx-auto mb-2 animate-float-slow" />
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่าย</h3>
-                <p className="text-xs text-slate-500 dark:text-purple-400 mt-1 mb-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
                   กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกนและกรอกยอดให้อัตโนมัติ
                 </p>
                 {canAddExpense && (
@@ -1763,14 +1818,14 @@ export default function TripDetailPage() {
                       setOcrSuccessToast(null);
                       setShowScanModal(true);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
                     <Camera className="h-4 w-4" /> บันทึกรายจ่ายแรก
                   </button>
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-purple-900/40 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 overflow-hidden card-elevation">
+              <div className="divide-y divide-pink-50 dark:divide-slate-800/80 rounded-3xl border border-pink-100/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#151826]/95 overflow-hidden card-elevation">
                 {filteredExpenses.map((exp, idx) => (
                   <ExpenseCard
                     key={exp.id || idx}
@@ -1794,7 +1849,7 @@ export default function TripDetailPage() {
           <div className="space-y-4 sm:space-y-6">
             
             {/* สรุปยอดจ่ายแยกตามรายคน */}
-            <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 card-elevation space-y-4">
+            <div className="p-4 sm:p-6 rounded-3xl border border-pink-100/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#151826]/95 card-elevation space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-pink-500" /> 
@@ -1802,7 +1857,7 @@ export default function TripDetailPage() {
                 </h2>
                 <button
                   onClick={() => setShowSettlementModal(true)}
-                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-sm shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white text-xs font-bold shadow-sm shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
                 >
                   <Calculator className="h-3.5 w-3.5" /> ดูการโอนเงินเคลียร์บิล
                 </button>
@@ -1820,7 +1875,7 @@ export default function TripDetailPage() {
                   const pOver = pBudget > 0 && p.total > pBudget ? p.total - pBudget : 0;
 
                   return (
-                    <div key={p.key} className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-purple-950/30 border border-slate-200/70 dark:border-purple-900/40 space-y-2">
+                    <div key={p.key} className="p-3.5 rounded-2xl bg-rose-50/40 dark:bg-[#1e2235] border border-pink-100/70 dark:border-slate-700/80 space-y-2">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{pCat.emoji}</span>
@@ -1837,7 +1892,7 @@ export default function TripDetailPage() {
                       </div>
 
                       {pBudget > 0 && (
-                        <div className="text-[10px] font-bold text-slate-500 dark:text-purple-300 flex justify-between border-t border-slate-200/60 dark:border-purple-900/30 pt-1.5">
+                        <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex justify-between border-t border-pink-100/60 dark:border-slate-700/60 pt-1.5">
                           <span>งบตั้งไว้: {pBudget.toLocaleString()} {trip?.currency}</span>
                           {pOver > 0 ? (
                             <span className="text-rose-600 font-bold">เกินงบ +{pOver.toLocaleString()}</span>
@@ -1853,7 +1908,7 @@ export default function TripDetailPage() {
             </div>
 
             {/* หมวดหมู่ค่าใช้จ่าย */}
-            <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 card-elevation space-y-4">
+            <div className="p-4 sm:p-6 rounded-3xl border border-pink-100/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#151826]/95 card-elevation space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
@@ -1878,7 +1933,7 @@ export default function TripDetailPage() {
                   return (
                     <div key={cat.id} className="space-y-1">
                       <div className="flex justify-between text-xs font-bold">
-                        <span className="flex items-center gap-1.5 text-slate-800 dark:text-purple-200">
+                        <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-300">
                           <span>{cat.icon}</span>
                           <span>{cat.label}</span>
                         </span>
@@ -1888,9 +1943,9 @@ export default function TripDetailPage() {
                         </div>
                       </div>
 
-                      <div className="w-full bg-slate-200/80 dark:bg-[#11101d] rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-pink-500 to-purple-600 rounded-full"
+                          className="h-full bg-gradient-to-r from-pink-400 via-rose-400 to-purple-500 rounded-full"
                           style={{ width: `${Math.min(catPercent, 100)}%` }}
                         />
                       </div>
@@ -1905,27 +1960,27 @@ export default function TripDetailPage() {
         {/* ==================== TAB 4: สมาชิก & สิทธิ์ (MEMBERS) ==================== */}
         {activeTab === 'members' && (
           <div className="space-y-4">
-            <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 card-elevation space-y-4">
+            <div className="p-4 sm:p-6 rounded-3xl border border-pink-100/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#151826]/95 card-elevation space-y-4">
               <div className="flex flex-wrap justify-between items-center gap-2">
                 <div>
                   <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <Users className="h-4 w-4 sm:h-5 sm:w-5 text-pink-500" />
                     <span>สมาชิกในทริปนี้ ({members.length})</span>
                   </h2>
-                  <p className="text-[11px] text-slate-500 dark:text-purple-300 font-medium mt-0.5">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                     {isOwner ? '👑 คุณเป็นเจ้าของทริป สามารถกำหนดสิทธิ์ให้เพื่อนแก้ไขหรือดูได้อย่างเดียว' : 'รายชื่อเพื่อนร่วมทริป'}
                   </p>
                 </div>
 
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <Share2 className="h-3.5 w-3.5" /> ชวนเพื่อนเข้าทริป
                 </button>
               </div>
 
-              <div className="divide-y divide-slate-100 dark:divide-purple-900/30">
+              <div className="divide-y divide-pink-50 dark:divide-slate-800/80">
                 {members.map((m) => {
                   const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
                   const mCat = getCatAvatar(m.profiles?.avatar_id);
@@ -1959,7 +2014,7 @@ export default function TripDetailPage() {
                             <select
                               value={m.role}
                               onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as any)}
-                              className="px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-300 dark:border-purple-800 bg-slate-50 dark:bg-[#11101d] text-slate-900 dark:text-white outline-none cursor-pointer"
+                              className="px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2235] text-slate-900 dark:text-white outline-none cursor-pointer"
                             >
                               <option value="editor">✏️ ผู้แก้ไข (Editor)</option>
                               <option value="viewer">👁️ ผู้เข้าชม (Viewer)</option>
@@ -1973,7 +2028,7 @@ export default function TripDetailPage() {
                             </button>
                           </div>
                         ) : (
-                          <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                          <span className="text-xs font-bold text-pink-600 dark:text-pink-400">
                             {isTripOwner ? 'Owner' : m.role === 'editor' ? 'Editor' : 'Viewer'}
                           </span>
                         )}
@@ -2000,15 +2055,15 @@ export default function TripDetailPage() {
       </button>
 
       {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
-      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-white/95 dark:bg-[#11101d]/95 backdrop-blur-2xl border-t border-slate-200/80 dark:border-purple-900/50 shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-white/95 dark:bg-[#121524]/95 backdrop-blur-2xl border-t border-pink-100/80 dark:border-slate-800/80 shadow-2xl">
         <div className="grid grid-cols-4 gap-1 max-w-md mx-auto">
           <button
             type="button"
             onClick={() => handleSwitchTab('plan')}
             className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'plan'
-                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black scale-105'
-                : 'text-slate-500 dark:text-purple-400 font-semibold active:scale-95'
+                ? 'bg-gradient-to-tr from-pink-400/20 via-rose-400/20 to-purple-400/20 text-pink-600 dark:text-pink-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
             }`}
           >
             <MapPin className="h-4 w-4 mb-0.5" />
@@ -2020,8 +2075,8 @@ export default function TripDetailPage() {
             onClick={() => handleSwitchTab('expenses')}
             className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'expenses'
-                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black scale-105'
-                : 'text-slate-500 dark:text-purple-400 font-semibold active:scale-95'
+                ? 'bg-gradient-to-tr from-pink-400/20 via-rose-400/20 to-purple-400/20 text-pink-600 dark:text-pink-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
             }`}
           >
             <DollarSign className="h-4 w-4 mb-0.5" />
@@ -2033,8 +2088,8 @@ export default function TripDetailPage() {
             onClick={() => handleSwitchTab('analytics')}
             className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'analytics'
-                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black scale-105'
-                : 'text-slate-500 dark:text-purple-400 font-semibold active:scale-95'
+                ? 'bg-gradient-to-tr from-pink-400/20 via-rose-400/20 to-purple-400/20 text-pink-600 dark:text-pink-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
             }`}
           >
             <PieChart className="h-4 w-4 mb-0.5" />
@@ -2046,8 +2101,8 @@ export default function TripDetailPage() {
             onClick={() => handleSwitchTab('members')}
             className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'members'
-                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black scale-105'
-                : 'text-slate-500 dark:text-purple-400 font-semibold active:scale-95'
+                ? 'bg-gradient-to-tr from-pink-400/20 via-rose-400/20 to-purple-400/20 text-pink-600 dark:text-pink-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
             }`}
           >
             <Users className="h-4 w-4 mb-0.5" />
@@ -2173,25 +2228,25 @@ export default function TripDetailPage() {
       {/* 10. Scan / Add Expense Modal */}
       {showScanModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#151826] shadow-2xl border border-pink-100 dark:border-slate-800 glow-pink-purple max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             
-            <div className="p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
+            <div className="p-6 pb-3 flex justify-between items-center border-b border-pink-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-sm`}>
                   {userCat.emoji}
                 </div>
                 <div>
-                  <h2 className="text-base font-black bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 bg-clip-text text-transparent">
+                  <h2 className="text-base font-black bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 dark:from-pink-400 dark:via-rose-400 dark:to-purple-300 bg-clip-text text-transparent">
                     บันทึกค่าใช้จ่าย 🧾
                   </h2>
-                  <p className="text-[11px] text-slate-600 dark:text-purple-300/70 font-medium">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                     บันทึกในนาม: <b className="text-pink-600 dark:text-pink-400">{userDisplayName}</b>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowScanModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -2199,7 +2254,7 @@ export default function TripDetailPage() {
 
             <div className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               <div>
-                <label className="relative overflow-hidden flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-pink-400/80 dark:border-pink-600/80 rounded-2xl cursor-pointer bg-pink-50/40 dark:bg-[#11101d]/60 hover:opacity-90 transition-opacity">
+                <label className="relative overflow-hidden flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-pink-300 dark:border-slate-700 rounded-2xl cursor-pointer bg-pink-50/40 dark:bg-[#1e2235] hover:opacity-90 transition-opacity">
                   {scanning && <div className="animate-scan-laser z-20" />}
 
                   {scanning ? (
@@ -2218,7 +2273,7 @@ export default function TripDetailPage() {
                       <span className="text-xs font-black text-pink-600 dark:text-pink-400">
                         ถ่ายรูปใบเสร็จ หรือเลือกจากโทรศัพท์
                       </span>
-                      <span className="text-[10px] text-slate-500 dark:text-purple-400 mt-0.5 font-medium">AI สกัดยอดเงินและร้านค้าให้อัตโนมัติ</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">AI สกัดยอดเงินและร้านค้าให้อัตโนมัติ</span>
                     </>
                   )}
                   <input type="file" accept="image/*" className="hidden" disabled={scanning} onChange={handleReceiptImage} />
@@ -2234,12 +2289,12 @@ export default function TripDetailPage() {
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">ชื่อรายการ / ร้านค้า *</label>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">ชื่อรายการ / ร้านค้า *</label>
                   <input
                     type="text"
                     required
                     placeholder="เช่น ข้าวหน้าเนื้อ, ตั๋วรถไฟ Shinkansen"
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
                     value={scannedData.title}
                     onChange={(e) => setScannedData({ ...scannedData, title: e.target.value })}
                   />
@@ -2247,20 +2302,20 @@ export default function TripDetailPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">จำนวนเงิน *</label>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">จำนวนเงิน *</label>
                     <input
                       type="number"
                       required
                       placeholder="0.00"
-                      className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-black"
+                      className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-black"
                       value={scannedData.amount}
                       onChange={(e) => setScannedData({ ...scannedData, amount: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">สกุลเงิน</label>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">สกุลเงิน</label>
                     <select
-                      className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                      className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
                       value={scannedData.currency}
                       onChange={(e) => setScannedData({ ...scannedData, currency: e.target.value })}
                     >
@@ -2277,9 +2332,9 @@ export default function TripDetailPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">หมวดหมู่</label>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">หมวดหมู่</label>
                     <select
-                      className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                      className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
                       value={scannedData.category}
                       onChange={(e) => setScannedData({ ...scannedData, category: e.target.value })}
                     >
@@ -2291,10 +2346,10 @@ export default function TripDetailPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">วันที่ใช้จ่าย</label>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">วันที่ใช้จ่าย</label>
                     <input
                       type="date"
-                      className="w-full p-3 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                      className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
                       value={scannedData.spent_at}
                       onChange={(e) => setScannedData({ ...scannedData, spent_at: e.target.value })}
                     />
@@ -2303,11 +2358,11 @@ export default function TripDetailPage() {
               </div>
             </div>
 
-            <div className="p-6 pt-3 border-t border-slate-100 dark:border-purple-900/40 flex gap-2">
+            <div className="p-6 pt-3 border-t border-pink-100 dark:border-slate-800/80 flex gap-2">
               <button
                 type="button"
                 onClick={() => setShowScanModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 ยกเลิก
               </button>
@@ -2315,7 +2370,7 @@ export default function TripDetailPage() {
                 type="button"
                 onClick={handleSaveExpense}
                 disabled={scanning || savingExpense}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-lg shadow-pink-500/25 transition-all disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-lg shadow-pink-500/25 transition-all disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5"
               >
                 {savingExpense ? (
                   <>
@@ -2334,17 +2389,17 @@ export default function TripDetailPage() {
       {/* 11. Activity Modal */}
       {showActivityModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-purple max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#151826] shadow-2xl border border-pink-100 dark:border-slate-800 glow-purple max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             
-            <div className="p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
+            <div className="p-6 pb-3 flex justify-between items-center border-b border-pink-100 dark:border-slate-800/80">
               <div>
-                <h2 className="text-base font-black text-slate-900 dark:text-white">
+                <h2 className="text-base font-black text-slate-900 dark:text-slate-100">
                   {editingActivity ? 'แก้ไขกิจกรรม ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยว 🗺️'}
                 </h2>
               </div>
               <button
                 onClick={() => setShowActivityModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -2353,22 +2408,22 @@ export default function TripDetailPage() {
             <form id="activity-form" onSubmit={handleSaveActivity} className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-3.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">วัน / Day (เช่น 04-Dec)</label>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">วัน / Day (เช่น 04-Dec)</label>
                   <input
                     type="text"
                     required
                     placeholder="Day 1 (04-Dec)"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                     value={activityForm.date_label}
                     onChange={(e) => setActivityForm({ ...activityForm, date_label: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">เวลา (เช่น 09:00 - 12:00)</label>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">เวลา (เช่น 09:00 - 12:00)</label>
                   <input
                     type="text"
                     placeholder="09:00 - 12:00"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                     value={activityForm.time_slot}
                     onChange={(e) => setActivityForm({ ...activityForm, time_slot: e.target.value })}
                   />
@@ -2377,22 +2432,22 @@ export default function TripDetailPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-1">
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">เมือง / ย่าน</label>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">เมือง / ย่าน</label>
                   <input
                     type="text"
                     placeholder="Osaka / Namba"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                     value={activityForm.city}
                     onChange={(e) => setActivityForm({ ...activityForm, city: e.target.value })}
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">สถานที่หลัก *</label>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">สถานที่หลัก *</label>
                   <input
                     type="text"
                     required
                     placeholder="เช่น Universal Studios Japan"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-bold"
                     value={activityForm.main_place}
                     onChange={(e) => setActivityForm({ ...activityForm, main_place: e.target.value })}
                   />
@@ -2400,13 +2455,13 @@ export default function TripDetailPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">ลิงก์ Google Maps ของสถานที่หลัก</label>
+                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">ลิงก์ Google Maps ของสถานที่หลัก</label>
                 {activityForm.main_place_links.map((link, lIdx) => (
                   <div key={lIdx} className="flex gap-2 mb-2">
                     <input
                       type="url"
                       placeholder="https://maps.app.goo.gl/..."
-                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                       value={link}
                       onChange={(e) => {
                         const updated = [...activityForm.main_place_links];
@@ -2421,7 +2476,7 @@ export default function TripDetailPage() {
                           const updated = activityForm.main_place_links.filter((_, i) => i !== lIdx);
                           setActivityForm({ ...activityForm, main_place_links: updated });
                         }}
-                        className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                        className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 cursor-pointer"
                         title="ลบลิงก์"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -2432,11 +2487,11 @@ export default function TripDetailPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">การเดินทาง (Transport Info)</label>
+                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">การเดินทาง (Transport Info)</label>
                 <input
                   type="text"
                   placeholder="เช่น นั่งสาย Midosuji Line ลงสถานี Namba ทางออก 14"
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1e2235] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
                   value={activityForm.transport_info}
                   onChange={(e) => setActivityForm({ ...activityForm, transport_info: e.target.value })}
                 />
@@ -2444,11 +2499,11 @@ export default function TripDetailPage() {
 
             </form>
 
-            <div className="p-6 pt-3 border-t border-slate-100 dark:border-purple-900/40 flex gap-2">
+            <div className="p-6 pt-3 border-t border-pink-100 dark:border-slate-800/80 flex gap-2">
               <button
                 type="button"
                 onClick={() => setShowActivityModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 cursor-pointer transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
               >
                 ยกเลิก
               </button>
@@ -2456,7 +2511,7 @@ export default function TripDetailPage() {
                 type="submit"
                 form="activity-form"
                 disabled={savingActivity}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white text-xs font-bold shadow-md shadow-pink-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
               >
                 {savingActivity ? 'กำลังบันทึก...' : 'บันทึกกิจกรรม'}
               </button>
@@ -2472,15 +2527,15 @@ export default function TripDetailPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200"
           onClick={() => setPreviewImage(null)}
         >
-          <div className="relative max-w-lg w-full bg-white dark:bg-[#1a182d] p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-purple-800/60 shadow-2xl space-y-3 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-purple-900/40">
+          <div className="relative max-w-lg w-full bg-white dark:bg-[#151826] p-4 sm:p-5 rounded-3xl border border-pink-100 dark:border-slate-800 shadow-2xl space-y-3 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center pb-2 border-b border-pink-100 dark:border-slate-800/80">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <ImageIcon className="h-4 w-4 text-pink-500" /> 
                 <span>รูปภาพใบเสร็จ (บันทึกในโทรศัพท์)</span>
               </h3>
               <button
                 onClick={() => setPreviewImage(null)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-pink-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -2502,7 +2557,7 @@ export default function TripDetailPage() {
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}
-                className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 ปิด
               </button>
@@ -2514,29 +2569,29 @@ export default function TripDetailPage() {
       {/* 13. Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#1a182d] p-6 shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple animate-in zoom-in-95 duration-200 space-y-4">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-purple-900/40">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#151826] p-6 shadow-2xl border border-pink-100 dark:border-slate-800 glow-pink-purple animate-in zoom-in-95 duration-200 space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-pink-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-pink-500/25">
                   <Share2 className="h-5 w-5" />
                 </div>
                 <div>
                   <h2 className="text-base font-black text-slate-900 dark:text-white">แชร์ทริปนี้ให้เพื่อน ✈️</h2>
-                  <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                     ส่งให้เพื่อนเพื่อร่วมวางแผนเที่ยวและบันทึกค่าใช้จ่าย
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-pink-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-3.5">
-              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/50 bg-slate-50/60 dark:bg-[#11101d]/60 space-y-2">
+              <div className="p-3.5 rounded-2xl border border-pink-100 dark:border-slate-800 bg-pink-50/40 dark:bg-[#1e2235] space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     🔗 ลิงก์ตรงเข้าหน้าทริป (Direct Link)
@@ -2545,46 +2600,46 @@ export default function TripDetailPage() {
                     แนะนำ
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-purple-300/70">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   สำหรับเพื่อนที่มีบัญชีแล้ว หรือต้องการเปิดดูรายละเอียดทริปทันที
                 </p>
                 <button
                   onClick={copyInviteLink}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   <span>{copiedLink ? 'คัดลอกลิงก์เรียบร้อยแล้ว!' : 'คัดลอกลิงก์ตรง (Direct Link)'}</span>
                 </button>
               </div>
 
-              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/50 bg-slate-50/60 dark:bg-[#11101d]/60 space-y-2">
+              <div className="p-3.5 rounded-2xl border border-pink-100 dark:border-slate-800 bg-pink-50/40 dark:bg-[#1e2235] space-y-2">
                 <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   👥 ลิงก์เชิญเพื่อนใหม่ (สมัครเสร็จแล้วเข้าทริปทันที)
                 </label>
-                <p className="text-[11px] text-slate-500 dark:text-purple-300/70">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   เพื่อนที่ยังไม่มีบัญชี กดลิงก์นี้เพื่อสมัครสมาชิกแล้วระบบจะดึงเข้ากลุ่มทริปนี้ให้อัตโนมัติ
                 </p>
                 <button
                   onClick={copyAuthInviteLink}
-                  className="w-full py-2.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-white dark:bg-[#11101d] hover:border-pink-500 text-slate-800 dark:text-purple-200 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className="w-full py-2.5 rounded-xl border border-pink-200 dark:border-slate-700 bg-white dark:bg-[#1e2235] hover:border-pink-400 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
-                  {copiedAuthLink ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-purple-500" />}
+                  {copiedAuthLink ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-pink-500" />}
                   <span>{copiedAuthLink ? 'คัดลอกลิงก์เชิญเรียบร้อยแล้ว!' : 'คัดลอกลิงก์เชิญสมาชิกใหม่'}</span>
                 </button>
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">รหัสเชิญประจำทริป (Trip ID)</label>
+                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">รหัสเชิญประจำทริป (Trip ID)</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     readOnly
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50 dark:bg-purple-950/30 text-xs font-mono text-slate-900 dark:text-white select-all font-bold"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2235] text-xs font-mono text-slate-900 dark:text-white select-all font-bold"
                     value={tripId}
                   />
                   <button
                     onClick={copyTripCode}
-                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-purple-900 dark:hover:bg-purple-800 text-slate-800 dark:text-purple-100 rounded-xl text-xs font-bold transition-colors shrink-0 cursor-pointer active:scale-95"
+                    className="px-4 py-2.5 bg-pink-50 hover:bg-pink-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-pink-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors shrink-0 cursor-pointer active:scale-95"
                   >
                     {copiedCode ? 'คัดลอกแล้ว' : 'คัดลอก'}
                   </button>
