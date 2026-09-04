@@ -396,7 +396,7 @@ export default function HomePage() {
                 className="w-10 h-10 rounded-2xl object-cover shadow-md shadow-rose-400/20 border border-rose-200/80 dark:border-[#323850] group-hover:scale-110 transition-transform"
               />
               <div>
-                <span className="text-base md:text-lg font-black bg-gradient-to-r from-rose-500 via-rose-400 to-purple-500 dark:from-rose-300 dark:via-rose-400 dark:to-purple-300 bg-clip-text text-transparent">
+                <span className="text-base md:text-lg font-black text-slate-900 dark:text-white">
                   Travel Tracker
                 </span>
                 <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-wider uppercase">
@@ -603,22 +603,21 @@ export default function HomePage() {
                     <h3 className="font-black text-base text-slate-900 dark:text-slate-100 group-hover:text-rose-600 dark:group-hover:text-rose-300 transition-colors line-clamp-1">
                       {tripName}
                     </h3>
-
-                    <div className="mt-2.5 space-y-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
-                        <span>{t.start_date ? new Date(t.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <DollarSign className="h-3.5 w-3.5 text-rose-400" />
-                        <span>งบประมาณ: <b className="text-slate-900 dark:text-slate-100">{tripBudget.toLocaleString()}</b> {t.currency}</span>
-                      </div>
-                    </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-rose-100/60 dark:border-[#323850]/80 flex justify-between items-center text-xs font-black text-rose-600 dark:text-rose-300">
-                    <span>เปิดดูแผนเที่ยว</span>
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1.5 transition-transform duration-300" />
+                  {/* Actions */}
+                  <div className="pt-4 border-t border-rose-50 dark:border-[#323850]/60 flex items-center justify-between gap-2">
+                    <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      งบ: <span className="font-black text-slate-900 dark:text-slate-200">{tripBudget > 0 ? `${tripBudget.toLocaleString()} ${t.currency || 'JPY'}` : 'ไม่ระบุ'}</span>
+                    </div>
+
+                    <Link
+                      href={`/trips/${t.id}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#e06b88] hover:text-white dark:bg-[#2a2f45] dark:hover:bg-[#e06b88] text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                    >
+                      <span>เข้าชม</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
                   </div>
                 </div>
               );
@@ -639,12 +638,12 @@ export default function HomePage() {
       {/* ==================== CREATE TRIP MODAL ==================== */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-pink-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             
             {/* Modal Header */}
             <div className="p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#e57b94] to-purple-500 flex items-center justify-center text-white text-lg shadow-md shadow-rose-400/20">
+                <div className="w-10 h-10 rounded-2xl bg-[#e06b88] flex items-center justify-center text-white text-lg shadow-md shadow-[#e06b88]/20">
                   ✈️
                 </div>
                 <div>
@@ -820,7 +819,7 @@ export default function HomePage() {
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#2a2f45] border border-rose-100 dark:border-[#323850] text-xs font-medium text-slate-600 dark:text-slate-300">
               กำลังนำคุณเข้าสู่หน้าแผนการเดินทาง...
               <div className="w-full bg-slate-200 dark:bg-[#1b1f30] rounded-full h-1.5 overflow-hidden mt-2">
-                <div className="h-full bg-gradient-to-r from-[#e57b94] to-purple-500 rounded-full animate-pulse w-full" />
+                <div className="h-full bg-[#e06b88] rounded-full animate-pulse w-full" />
               </div>
             </div>
 
@@ -829,7 +828,7 @@ export default function HomePage() {
               onClick={() => {
                 window.location.href = `/trips/${createdTripSuccess.id}`;
               }}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#e57b94] via-[#f08299] to-[#c084fc] hover:brightness-105 text-white text-xs font-bold shadow-md shadow-rose-400/20 hover:scale-105 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full py-3 rounded-2xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-105 transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <span>เข้าสู่หน้าทริปทันที</span>
               <ArrowRight className="h-4 w-4" />
@@ -841,10 +840,10 @@ export default function HomePage() {
       {/* ==================== EDIT TRIP MODAL ==================== */}
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#e57b94] to-purple-500 flex items-center justify-center text-white text-lg shadow-md shadow-rose-400/20">
+                <div className="w-10 h-10 rounded-2xl bg-[#e06b88] flex items-center justify-center text-white text-lg shadow-md shadow-[#e06b88]/20">
                   ✏️
                 </div>
                 <div>
@@ -951,10 +950,10 @@ export default function HomePage() {
       {/* ==================== JOIN TRIP MODAL ==================== */}
       {showJoinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#e57b94] to-purple-500 flex items-center justify-center text-white text-lg shadow-md shadow-rose-400/20">
+                <div className="w-10 h-10 rounded-2xl bg-[#e06b88] flex items-center justify-center text-white text-lg shadow-md shadow-[#e06b88]/20">
                   🔑
                 </div>
                 <div>
