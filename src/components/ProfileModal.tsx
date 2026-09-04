@@ -281,7 +281,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                 </div>
 
                 {saveError && (
-                  <div className="text-xs font-bold text-rose-600 flex items-center gap-1.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900">
+                  <div className="text-xs font-bold text-[#e06b88] dark:text-[#f7a1b5] flex items-center gap-1.5 p-2.5 rounded-xl bg-rose-50 dark:bg-[#e06b88]/20 border border-rose-200 dark:border-[#e06b88]/35">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{saveError}</span>
                   </div>
@@ -403,7 +403,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                     type="button"
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="w-full py-2.5 rounded-xl border border-rose-300 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                    className="w-full py-2.5 rounded-xl border border-rose-300 dark:border-[#e06b88]/40 text-[#e06b88] dark:text-[#f7a1b5] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {loggingOut ? (
                       <span className="flex items-center gap-1.5">

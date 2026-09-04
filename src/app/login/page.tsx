@@ -216,7 +216,7 @@ function LoginForm() {
 
         {/* Alerts */}
         {errorMsg && (
-          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/80 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in">
+          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-[#e06b88]/20 border border-rose-200 dark:border-[#e06b88]/35 text-[#e06b88] dark:text-[#f7a1b5] text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
               <span>{errorMsg}</span>

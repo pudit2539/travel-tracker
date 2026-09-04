@@ -752,7 +752,7 @@ export default function TravelHubModal({
                         </button>
                         <button
                           onClick={() => handleDeletePass(t.id, t.imageStorageKey)}
-                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
+                          className="p-2 text-slate-400 hover:text-[#e06b88] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 rounded-xl transition-colors cursor-pointer"
                           title="ลบตั๋ว"
                         >
                           <Trash2 className="h-4 w-4" />

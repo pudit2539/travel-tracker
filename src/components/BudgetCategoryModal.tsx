@@ -637,7 +637,7 @@ export default function BudgetCategoryModal({
                       <button
                         type="button"
                         onClick={() => handleDeleteCustomCategory(cat.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-[#e06b88] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 rounded-lg transition-colors cursor-pointer"
                         title="ลบหมวดหมู่นี้"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

@@ -336,7 +336,7 @@ export default function PhotoScrapbookModal({
 
                   <button
                     onClick={() => handleDeletePhoto(selectedPhoto.id)}
-                    className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                    className="p-2 text-slate-400 hover:text-[#e06b88] rounded-xl hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 transition-colors cursor-pointer"
                     title="ลบรูปภาพนี้"
                   >
                     <Trash2 className="h-4 w-4" />

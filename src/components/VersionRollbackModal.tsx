@@ -199,7 +199,7 @@ export default function VersionRollbackModal({
             <div className={`p-3 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in ${
               statusMessage.type === 'success' 
                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900' 
-                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
+                : 'bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200 dark:border-[#e06b88]/35'
             }`}>
               {statusMessage.type === 'success' ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
               <span>{statusMessage.text}</span>
@@ -292,7 +292,7 @@ export default function VersionRollbackModal({
                       <button
                         type="button"
                         onClick={() => handleDelete(snap.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-lg cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-[#e06b88] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 rounded-lg cursor-pointer transition-colors"
                         title="ลบ Snapshot"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

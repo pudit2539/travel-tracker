@@ -49,12 +49,12 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen bg-[#090611] text-slate-100 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-[#130d22] border border-rose-900/60 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
             
-            <div className="w-14 h-14 rounded-2xl bg-rose-950/80 border border-rose-800 text-rose-500 flex items-center justify-center mx-auto shadow-lg shadow-rose-900/30">
+            <div className="w-14 h-14 rounded-2xl bg-[#e06b88]/20 border border-[#e06b88]/40 text-[#f7a1b5] flex items-center justify-center mx-auto shadow-lg shadow-[#e06b88]/20">
               <ShieldAlert className="h-8 w-8" />
             </div>
 
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-rose-400 bg-rose-950 px-2.5 py-0.5 rounded-full border border-rose-900">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#f7a1b5] bg-[#e06b88]/20 px-2.5 py-0.5 rounded-full border border-[#e06b88]/40">
                 Crash Protection Safe Mode
               </span>
               <h1 className="text-lg font-black text-white mt-2">

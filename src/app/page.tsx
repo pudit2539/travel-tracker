@@ -495,7 +495,7 @@ export default function HomePage() {
 
           <div className="p-6 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation flex flex-col justify-between space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-100/80 text-rose-700 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200/80 dark:border-rose-900/40 mb-2">
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35 mb-2">
                 100 JPY = {(fxRate * 100).toFixed(2)} THB
               </div>
               <h3 className="font-black text-sm text-slate-900 dark:text-slate-100">
@@ -508,9 +508,9 @@ export default function HomePage() {
 
             <button
               onClick={() => setShowJoinModal(true)}
-              className="w-full py-2.5 px-4 rounded-2xl border border-rose-200/80 dark:border-[#323850] bg-rose-50/70 dark:bg-[#2a2f45] text-rose-700 dark:text-rose-200 font-bold text-xs hover:border-rose-300 hover:scale-[1.02] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+              className="w-full py-2.5 px-4 rounded-2xl border border-rose-200/80 dark:border-[#323850] bg-rose-50/70 dark:bg-[#2a2f45] text-[#e06b88] dark:text-[#f7a1b5] font-bold text-xs hover:border-[#e06b88]/50 hover:scale-[1.02] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
             >
-              <KeyRound className="h-3.5 w-3.5 text-rose-400" />
+              <KeyRound className="h-3.5 w-3.5 text-[#e06b88]" />
               <span>เข้าร่วมด้วยรหัสเชิญ</span>
             </button>
           </div>
@@ -532,7 +532,7 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <button
               onClick={openCreateModal}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#e57b94] via-[#f08299] to-[#c084fc] hover:brightness-105 text-white rounded-2xl text-xs font-bold shadow-md shadow-rose-400/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#e06b88] hover:bg-[#d25875] text-white rounded-2xl text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>สร้างทริปใหม่</span>
@@ -543,19 +543,19 @@ export default function HomePage() {
         {/* ==================== TRIP CARDS LIST ==================== */}
         {loading && trips.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#e06b88]" />
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">กำลังโหลดรายการทริป...</span>
           </div>
         ) : filteredTrips.length === 0 ? (
           <div className="text-center py-16 border-2 border-dashed border-rose-200 dark:border-[#323850] rounded-3xl p-8 bg-white/60 dark:bg-[#222638]/60 shadow-sm">
-            <PlaneTakeoff className="h-12 w-12 text-rose-400 mx-auto mb-3 animate-float-slow" />
+            <PlaneTakeoff className="h-12 w-12 text-[#e06b88] mx-auto mb-3 animate-float-slow" />
             <h3 className="font-black text-base text-slate-900 dark:text-slate-100 mb-1">ยังไม่มีทริปท่องเที่ยว</h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-5 max-w-sm mx-auto font-medium">
               สร้างทริปแรกของคุณเพื่อเริ่มจัดทำแผนเที่ยวและติดตามค่าใช้จ่าย
             </p>
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-400 via-rose-500 to-purple-400 text-white text-xs font-bold shadow-md shadow-rose-400/20 hover:scale-105 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-105 transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4" /> สร้างทริปแรกเลย
             </button>
@@ -572,11 +572,11 @@ export default function HomePage() {
                   onClick={() => {
                     window.location.href = `/trips/${t.id}`;
                   }}
-                  className="group relative p-5 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation hover:-translate-y-1.5 hover:border-rose-300 dark:hover:border-slate-600 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                  className="group relative p-5 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation hover:-translate-y-1.5 hover:border-[#e06b88]/50 dark:hover:border-slate-600 transition-all duration-300 cursor-pointer flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex justify-between items-start gap-2 mb-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-100/80 text-rose-700 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200/80 dark:border-rose-900/40 shadow-2xs">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
                         {t.currency || 'JPY'}
                       </span>
                       
@@ -592,7 +592,7 @@ export default function HomePage() {
                         <button
                           type="button"
                           onClick={(e) => openDeleteModal(t, e)}
-                          className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/60 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
                           title="ลบทริป"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -778,7 +778,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#e57b94] via-[#f08299] to-[#c084fc] hover:brightness-105 text-white text-xs font-bold shadow-md shadow-rose-400/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 rounded-2xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   {actionLoading ? (
                     <>
@@ -799,13 +799,13 @@ export default function HomePage() {
       {/* ==================== CREATE SUCCESS MODAL TOAST ==================== */}
       {createdTripSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-400/50 glow-pink-purple p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#e57b94] via-[#f08299] to-[#c084fc] text-white text-3xl flex items-center justify-center mx-auto shadow-lg shadow-rose-400/30 animate-bounce">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-400/50 glow-pink p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-3xl bg-[#e06b88] text-white text-3xl flex items-center justify-center mx-auto shadow-lg shadow-[#e06b88]/30 animate-bounce">
               🎉
             </div>
 
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-rose-700 dark:text-rose-200 bg-rose-100/80 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/50">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#e06b88] dark:text-[#f7a1b5] bg-rose-50 dark:bg-[#e06b88]/20 px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-[#e06b88]/35">
                 Created Successfully
               </span>
               <h3 className="text-base font-black text-slate-900 dark:text-slate-100 mt-2">
@@ -937,7 +937,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#e57b94] via-[#f08299] to-[#c084fc] hover:brightness-105 text-white text-xs font-bold shadow-md shadow-rose-400/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                  className="flex-1 py-3 rounded-2xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
                 </button>
@@ -990,7 +990,7 @@ export default function HomePage() {
               </div>
 
               {joinError && (
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-1.5 border border-rose-200 dark:border-rose-900">
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-[#e06b88]/20 text-[#e06b88] dark:text-[#f7a1b5] text-xs font-bold flex items-center gap-1.5 border border-rose-200 dark:border-[#e06b88]/35">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{joinError}</span>
                 </div>
@@ -1007,7 +1007,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={joinLoading}
-                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#e57b94] via-[#f08299] to-[#c084fc] hover:brightness-105 text-white text-xs font-bold shadow-md shadow-rose-400/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 rounded-2xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   {joinLoading ? (
                     <>
@@ -1029,7 +1029,7 @@ export default function HomePage() {
       {showDeleteModal && selectedTrip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-500/40 glow-rose p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto shadow-md">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-[#e06b88]/20 text-[#e06b88] dark:text-[#f7a1b5] border border-rose-200 dark:border-[#e06b88]/35 flex items-center justify-center text-2xl mx-auto shadow-md">
               <Trash2 className="h-7 w-7" />
             </div>
 

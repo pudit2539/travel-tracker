@@ -52,12 +52,12 @@ function ItineraryStopCardComponent({
     <div className="group p-4 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation hover:border-rose-300 dark:hover:border-slate-600 transition-all duration-300 space-y-2.5">
       <div className="flex justify-between items-center gap-2">
         <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50/90 text-rose-700 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200/80 dark:border-rose-900/40 whitespace-nowrap shrink-0">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35 whitespace-nowrap shrink-0">
             {item.date_label || `Day ${idx + 1}`}
           </span>
           {item.time_slot && (
             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap shrink-0">
-              <Clock className="h-3 w-3 text-rose-400 shrink-0" />
+              <Clock className="h-3 w-3 text-[#e06b88] dark:text-[#f7a1b5] shrink-0" />
               <span>{item.time_slot}</span>
             </span>
           )}
@@ -99,7 +99,7 @@ function ItineraryStopCardComponent({
             <button
               type="button"
               onClick={() => onDeleteActivity(item.id)}
-              className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+              className="p-1 rounded hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 text-slate-400 hover:text-[#e06b88] transition-colors cursor-pointer"
               title="ลบกิจกรรม"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -114,11 +114,11 @@ function ItineraryStopCardComponent({
             href={mainPlaceMapsUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-sm sm:text-base font-black text-slate-900 dark:text-white hover:text-rose-600 dark:hover:text-rose-300 inline-flex items-center gap-1.5 transition-colors group/title cursor-pointer"
+            className="text-sm sm:text-base font-black text-slate-900 dark:text-white hover:text-[#e06b88] dark:hover:text-[#f7a1b5] inline-flex items-center gap-1.5 transition-colors group/title cursor-pointer"
             title="เปิด Google Maps สถานที่หลัก"
           >
             <span>{item.main_place}</span>
-            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-rose-700 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-full border border-rose-200/80 dark:border-rose-900/40 group-hover/title:scale-105 transition-transform">
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#e06b88] dark:text-[#f7a1b5] bg-rose-50 dark:bg-[#e06b88]/20 px-2 py-0.5 rounded-full border border-rose-200/80 dark:border-[#e06b88]/35 group-hover/title:scale-105 transition-transform">
               <span>แผนที่ 📍</span>
               <ExternalLink className="h-2.5 w-2.5" />
             </span>
@@ -136,7 +136,7 @@ function ItineraryStopCardComponent({
                   href={foodSearchUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:scale-105 transition-all ml-1.5 align-middle cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 hover:scale-105 transition-all ml-1.5 align-middle cursor-pointer"
                   title="เปิด Google Maps ร้านอาหาร"
                 >
                   <span>เปิดแผนที่ร้าน 📍</span>
@@ -149,24 +149,24 @@ function ItineraryStopCardComponent({
 
         {item.transport_info && (
           <div className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1.5 font-medium">
-            <Bus className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+            <Bus className="h-3.5 w-3.5 text-[#e06b88] dark:text-[#f7a1b5] shrink-0" />
             <span>การเดินทาง: {item.transport_info}</span>
           </div>
         )}
 
         {item.backup_plan && (
-          <div className="mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">
+          <div className="mt-2 pt-2 border-t border-dashed border-rose-100/80 dark:border-[#323850]">
             <button
               type="button"
               onClick={() => onTogglePlanB(item.id)}
-              className="text-xs font-bold text-purple-600 dark:text-purple-300 flex items-center gap-1.5 hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#e06b88] dark:text-[#f7a1b5] flex items-center gap-1.5 hover:underline cursor-pointer"
             >
               <span>🛡️ แผนสำรอง (Plan B)</span>
               {isPlanBOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             </button>
             {isPlanBOpen && (
-              <div className="p-3 mt-2 rounded-2xl bg-purple-50/70 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-200 space-y-2 border border-purple-200/70 dark:border-slate-700/80">
-                <div className="font-bold text-[11px] text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+              <div className="p-3 mt-2 rounded-2xl bg-rose-50/60 dark:bg-[#2a2f45]/70 text-xs text-slate-700 dark:text-slate-200 space-y-2 border border-rose-200/60 dark:border-[#323850]">
+                <div className="font-bold text-[11px] text-[#e06b88] dark:text-[#f7a1b5] flex items-center gap-1.5">
                   <span>🛡️ รายการสถานที่ & ร้านอาหารสำรอง (แตะเพื่อเปิดพิกัด):</span>
                 </div>
                 <div className="space-y-1.5">
