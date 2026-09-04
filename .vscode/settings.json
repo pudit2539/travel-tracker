@@ -1,9 +1,9 @@
 {
   "git.autorefresh": false,
   "git.autofetch": false,
-  "git.detectSubmodules": false,
-  "git.detectSubmodulesLimit": 0,
-  "git.decorations.enabled": true,
+  "git.autoRepositoryDetection": false,
+  "git.decorations.enabled": false,
+  "git.openRepositoryInParentFolders": "never",
   "git.statusLimit": 0,
   "files.watcherExclude": {
     "**/.git/**": true,
