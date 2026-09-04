@@ -59,6 +59,21 @@ input, textarea, [contenteditable="true"], .selectable-text {
   touch-action: auto;
 }
 
+/* Mobile Safe Area Inset Support (Notch, Dynamic Island, Android Status Bar) */
+.safe-top-nav {
+  padding-top: max(env(safe-area-inset-top, 0px), 2.25rem);
+}
+
+@media (min-width: 640px) {
+  .safe-top-nav {
+    padding-top: 0.625rem;
+  }
+}
+
+.safe-bottom-nav {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 1.25rem);
+}
+
 /* Background Subtle Dot-Grid Pattern */
 .bg-grid-pattern {
   background-image: radial-gradient(rgba(147, 51, 234, 0.08) 1px, transparent 1px);

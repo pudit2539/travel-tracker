@@ -1047,105 +1047,167 @@ export default function TripDetailPage() {
       <div className="absolute top-20 left-10 w-80 sm:w-96 h-80 sm:h-96 bg-pink-500/10 dark:bg-pink-500/15 rounded-full blur-3xl pointer-events-none animate-float-slow" />
       <div className="absolute top-80 right-10 w-80 sm:w-96 h-80 sm:h-96 bg-purple-600/10 dark:bg-purple-600/15 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
-      {/* ==================== TOP NAVIGATION ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-900/40 bg-white/90 dark:bg-[#11101d]/90 backdrop-blur-xl transition-colors">
-        <div className="max-w-5xl mx-auto px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      {/* ==================== TOP NAVIGATION & STICKY APP HEADER ==================== */}
+      <nav className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-900/40 bg-white/95 dark:bg-[#11101d]/95 backdrop-blur-2xl transition-colors safe-top-nav">
+        <div className="max-w-5xl mx-auto px-3.5 sm:px-4 pb-2 sm:pb-2.5 space-y-2">
           
-          {/* Left: Back & Title */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <Link
-              href="/"
-              className="p-2 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
-              title="กลับไปหน้าทริปทั้งหมด"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
+          {/* Row 1: Back & Title & Action Icons */}
+          <div className="pt-1 sm:pt-1.5 flex items-center justify-between gap-2">
             
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="text-sm sm:text-base font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-md">
-                  {(trip?.name || trip?.title) || 'รายละเอียดทริป'}
-                </h1>
-                
-                <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 ${
-                  isOnline 
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900' 
-                    : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900'
-                }`}>
-                  {isOnline ? <Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-500" /> : <WifiOff className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-500" />}
-                  <span className="hidden md:inline">{isOnline ? 'ออนไลน์' : 'ออฟไลน์ (แคชเครื่อง)'}</span>
-                </span>
-              </div>
+            {/* Left: Back & Title */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <Link
+                href="/"
+                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
+                title="กลับไปหน้าทริปทั้งหมด"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+              
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h1 className="text-sm sm:text-base font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-md">
+                    {(trip?.name || trip?.title) || 'รายละเอียดทริป'}
+                  </h1>
+                  
+                  <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 ${
+                    isOnline 
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900' 
+                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900'
+                  }`}>
+                    {isOnline ? <Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-500" /> : <WifiOff className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-500" />}
+                    <span className="hidden md:inline">{isOnline ? 'ออนไลน์' : 'ออฟไลน์ (แคชเครื่อง)'}</span>
+                  </span>
+                </div>
 
-              <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-purple-300/70 font-semibold truncate">
-                <span>{trip?.currency || 'JPY'}</span>
-                <span>•</span>
-                <span>{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-purple-300/70 font-semibold truncate">
+                  <span>{trip?.currency || 'JPY'}</span>
+                  <span>•</span>
+                  <span>{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
+                </div>
               </div>
+            </div>
+
+            {/* Right Action Icons */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <NotificationBell expenses={expenses} itinerary={itinerary} members={members} tripTitle={trip?.name || trip?.title} />
+
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 hover:border-pink-500 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
+                title="ตั้งค่าโปรไฟล์"
+              >
+                <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-sm group-hover:scale-110 transition-transform overflow-hidden`}>
+                  {userCat.imgUrl ? (
+                    <img src={userCat.imgUrl} alt={userCat.name} className="w-full h-full object-cover" />
+                  ) : (
+                    userCat.emoji
+                  )}
+                </div>
+                <span className="text-[11px] font-black text-slate-800 dark:text-purple-100 max-w-[80px] truncate hidden lg:inline">
+                  {userDisplayName}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 text-xs font-bold hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer"
+                title="แชร์ทริป"
+              >
+                <Share2 className="h-3.5 w-3.5 text-pink-500" />
+                <span className="hidden sm:inline">แชร์</span>
+              </button>
+
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer"
+                title="สลับโหมด มืด/สว่าง"
+              >
+                {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-600" />}
+              </button>
+
+              {currentUser && (
+                <button
+                  onClick={async () => {
+                    if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+                      try {
+                        await supabase.auth.signOut();
+                      } catch (e) {
+                        console.error('Signout error', e);
+                      } finally {
+                        try {
+                          localStorage.clear();
+                          sessionStorage.clear();
+                        } catch {}
+                        window.location.href = '/login';
+                      }
+                    }
+                  }}
+                  className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-500 hover:text-rose-600 dark:text-purple-300 dark:hover:text-rose-400 hover:border-rose-400 shadow-2xs transition-all cursor-pointer"
+                  title="ออกจากระบบ (Sign Out)"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Right Action Icons */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <NotificationBell expenses={expenses} itinerary={itinerary} members={members} tripTitle={trip?.name || trip?.title} />
-
+          {/* Row 2: The 4 Tabs */}
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 p-1 sm:p-1.5 bg-slate-200/80 dark:bg-[#151325]/90 border border-slate-300/80 dark:border-purple-900/50 rounded-2xl sm:rounded-3xl shadow-xs">
             <button
-              onClick={() => setShowProfileModal(true)}
-              className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 hover:border-pink-500 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
-              title="ตั้งค่าโปรไฟล์"
+              type="button"
+              onClick={() => handleSwitchTab('plan')}
+              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+                activeTab === 'plan' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+              }`}
             >
-              <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-sm group-hover:scale-110 transition-transform overflow-hidden`}>
-                {userCat.imgUrl ? (
-                  <img src={userCat.imgUrl} alt={userCat.name} className="w-full h-full object-cover" />
-                ) : (
-                  userCat.emoji
-                )}
-              </div>
-              <span className="text-[11px] font-black text-slate-800 dark:text-purple-100 max-w-[80px] truncate hidden lg:inline">
-                {userDisplayName}
-              </span>
+              <span>🗺️</span>
+              <span className="truncate">แผนเที่ยว</span>
+              <span className="text-[10px] opacity-80 hidden md:inline">({itinerary.length})</span>
             </button>
 
             <button
-              onClick={() => setShowShareModal(true)}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 text-xs font-bold hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer"
-              title="แชร์ทริป"
+              type="button"
+              onClick={() => handleSwitchTab('expenses')}
+              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+                activeTab === 'expenses' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+              }`}
             >
-              <Share2 className="h-3.5 w-3.5 text-pink-500" />
-              <span className="hidden sm:inline">แชร์</span>
+              <span>💰</span>
+              <span className="truncate">รายจ่าย</span>
+              <span className="text-[10px] opacity-80 hidden md:inline">({expenses.length})</span>
             </button>
 
             <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer"
-              title="สลับโหมด มืด/สว่าง"
+              type="button"
+              onClick={() => handleSwitchTab('analytics')}
+              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+                activeTab === 'analytics' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+              }`}
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-600" />}
+              <span>📊</span>
+              <span className="truncate">สถิติ & งบ</span>
             </button>
 
-            {currentUser && (
-              <button
-                onClick={async () => {
-                  if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
-                    try {
-                      await supabase.auth.signOut();
-                    } catch (e) {
-                      console.error('Signout error', e);
-                    } finally {
-                      try {
-                        localStorage.clear();
-                        sessionStorage.clear();
-                      } catch {}
-                      window.location.href = '/login';
-                    }
-                  }
-                }}
-                className="p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-500 hover:text-rose-600 dark:text-purple-300 dark:hover:text-rose-400 hover:border-rose-400 shadow-2xs transition-all cursor-pointer"
-                title="ออกจากระบบ (Sign Out)"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('members')}
+              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+                activeTab === 'members' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>👥</span>
+              <span className="truncate">สมาชิก</span>
+              <span className="text-[10px] opacity-80 hidden md:inline">({members.length})</span>
+            </button>
           </div>
         </div>
       </nav>
@@ -1177,66 +1239,6 @@ export default function TripDetailPage() {
             </Link>
           </div>
         )}
-
-        {/* ==================== STICKY TOP TAB NAVIGATION BAR (ALL DEVICES) ==================== */}
-        <div className="sticky top-14 sm:top-16 z-30 -mx-3.5 sm:mx-0 px-3.5 sm:px-0 py-1.5 bg-slate-50/85 dark:bg-[#0d0c18]/85 backdrop-blur-xl">
-          <div className="grid grid-cols-4 gap-1 sm:gap-2 p-1 sm:p-1.5 bg-slate-200/80 dark:bg-[#151325]/90 border border-slate-300/80 dark:border-purple-900/50 rounded-2xl sm:rounded-3xl shadow-xs">
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('plan')}
-              className={`py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
-                activeTab === 'plan' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <span>🗺️</span>
-              <span className="truncate">แผนเที่ยว</span>
-              <span className="text-[10px] opacity-80 hidden md:inline">({itinerary.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('expenses')}
-              className={`py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
-                activeTab === 'expenses' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <span>💰</span>
-              <span className="truncate">รายจ่าย</span>
-              <span className="text-[10px] opacity-80 hidden md:inline">({expenses.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('analytics')}
-              className={`py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
-                activeTab === 'analytics' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <span>📊</span>
-              <span className="truncate">สถิติ & งบ</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('members')}
-              className={`py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
-                activeTab === 'members' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
-                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <span>👥</span>
-              <span className="truncate">สมาชิก</span>
-              <span className="text-[10px] opacity-80 hidden md:inline">({members.length})</span>
-            </button>
-          </div>
-        </div>
 
         {/* ==================== TAB 1: แผนการเดินทาง (ITINERARY - MAIN SCREEN) ==================== */}
         {activeTab === 'plan' && (
@@ -1998,7 +2000,7 @@ export default function TripDetailPage() {
       </button>
 
       {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
-      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 pb-4 bg-white/95 dark:bg-[#11101d]/95 backdrop-blur-2xl border-t border-slate-200/80 dark:border-purple-900/50 shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-white/95 dark:bg-[#11101d]/95 backdrop-blur-2xl border-t border-slate-200/80 dark:border-purple-900/50 shadow-2xl">
         <div className="grid grid-cols-4 gap-1 max-w-md mx-auto">
           <button
             type="button"

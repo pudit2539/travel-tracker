@@ -386,7 +386,7 @@ export default function HomePage() {
       <div className="absolute top-60 right-10 w-80 h-80 bg-purple-600/10 dark:bg-purple-600/15 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
       {/* ==================== TOP NAVIGATION ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-900/40 bg-white/90 dark:bg-[#11101d]/90 backdrop-blur-xl transition-colors">
+      <nav className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-900/40 bg-white/95 dark:bg-[#11101d]/95 backdrop-blur-2xl transition-colors safe-top-nav">
         <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 group">
