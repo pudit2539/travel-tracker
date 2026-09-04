@@ -49,15 +49,15 @@ function ItineraryStopCardComponent({
       : '';
 
   return (
-    <div className="group p-4 rounded-3xl border border-pink-100/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#151826]/95 card-elevation hover:border-pink-300 dark:hover:border-slate-700 transition-all duration-300 space-y-2.5">
+    <div className="group p-4 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation hover:border-rose-300 dark:hover:border-slate-600 transition-all duration-300 space-y-2.5">
       <div className="flex justify-between items-center gap-2">
         <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-pink-50 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200/80 dark:border-pink-800/60 whitespace-nowrap shrink-0">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50/90 text-rose-700 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200/80 dark:border-rose-900/40 whitespace-nowrap shrink-0">
             {item.date_label || `Day ${idx + 1}`}
           </span>
           {item.time_slot && (
             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap shrink-0">
-              <Clock className="h-3 w-3 text-pink-500 shrink-0" />
+              <Clock className="h-3 w-3 text-rose-400 shrink-0" />
               <span>{item.time_slot}</span>
             </span>
           )}
@@ -114,11 +114,11 @@ function ItineraryStopCardComponent({
             href={mainPlaceMapsUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-sm sm:text-base font-black text-slate-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400 inline-flex items-center gap-1.5 transition-colors group/title cursor-pointer"
+            className="text-sm sm:text-base font-black text-slate-900 dark:text-white hover:text-rose-600 dark:hover:text-rose-300 inline-flex items-center gap-1.5 transition-colors group/title cursor-pointer"
             title="เปิด Google Maps สถานที่หลัก"
           >
             <span>{item.main_place}</span>
-            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-pink-600 dark:text-pink-300 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-800 group-hover/title:scale-105 transition-transform">
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-rose-700 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-full border border-rose-200/80 dark:border-rose-900/40 group-hover/title:scale-105 transition-transform">
               <span>แผนที่ 📍</span>
               <ExternalLink className="h-2.5 w-2.5" />
             </span>
@@ -191,7 +191,7 @@ function ItineraryStopCardComponent({
                       return (
                         <div
                           key={lineIdx}
-                          className="p-2.5 rounded-xl bg-white/95 dark:bg-[#12141f] border border-purple-100 dark:border-slate-700 flex items-center justify-between gap-2 shadow-2xs hover:border-pink-300 transition-all"
+                          className="p-2.5 rounded-xl bg-white/95 dark:bg-[#1c2032] border border-purple-100 dark:border-[#323850] flex items-center justify-between gap-2 shadow-2xs hover:border-rose-300 transition-all"
                         >
                           <span className="font-medium text-slate-800 dark:text-slate-200 leading-snug">
                             {line}
@@ -200,7 +200,7 @@ function ItineraryStopCardComponent({
                             href={lineMapsUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 dark:bg-slate-700 dark:text-slate-200 hover:bg-pink-500 hover:text-white dark:hover:bg-pink-500 transition-all shrink-0 cursor-pointer shadow-2xs"
+                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 dark:bg-[#2a2f45] dark:text-slate-200 hover:bg-[#e57b94] hover:text-white dark:hover:bg-[#e57b94] transition-all shrink-0 cursor-pointer shadow-2xs"
                             title="เปิด Google Maps สำหรับรายการนี้"
                           >
                             <span>แผนที่ 📍</span>

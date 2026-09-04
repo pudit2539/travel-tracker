@@ -34,9 +34,9 @@ function ExpenseCardComponent({
     (expense.payer_name && expense.payer_name.toLowerCase() === userDisplayName.toLowerCase());
 
   return (
-    <div className="p-3.5 sm:p-4 flex justify-between items-center hover:bg-pink-50/40 dark:hover:bg-slate-800/40 transition-all duration-200 gap-2">
+    <div className="p-3.5 sm:p-4 flex justify-between items-center hover:bg-rose-50/40 dark:hover:bg-[#2a2f45]/50 transition-all duration-200 gap-2">
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-        <div className="text-lg sm:text-xl p-2 sm:p-2.5 rounded-2xl bg-gradient-to-tr from-pink-50 via-purple-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700/90 border border-pink-200/70 dark:border-slate-700 shadow-2xs shrink-0">
+        <div className="text-lg sm:text-xl p-2 sm:p-2.5 rounded-2xl bg-gradient-to-tr from-rose-50/60 via-purple-50/40 to-indigo-50/40 dark:from-[#2a2f45] dark:to-[#222638] border border-rose-200/70 dark:border-[#323850] shadow-2xs shrink-0">
           {catMeta.icon}
         </div>
         <div className="min-w-0">
@@ -46,7 +46,7 @@ function ExpenseCardComponent({
               <button
                 type="button"
                 onClick={() => onOpenReceiptPreview(expense)}
-                className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200 dark:border-pink-800 hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0"
+                className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100/90 text-rose-700 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200 dark:border-rose-900/50 hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0"
                 title="ดูรูปใบเสร็จ"
               >
                 <ImageIcon className="h-3 w-3" /> ใบเสร็จ
@@ -57,8 +57,8 @@ function ExpenseCardComponent({
             <span
               className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold px-2 py-0.2 rounded-full border ${
                 isMyExpense
-                  ? 'bg-pink-100/90 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border-pink-200 dark:border-pink-800'
-                  : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+                  ? 'bg-rose-100/90 text-rose-700 dark:bg-rose-950/50 dark:text-rose-200 border-rose-200 dark:border-rose-900/50'
+                  : 'bg-slate-100 text-slate-700 dark:bg-[#2a2f45] dark:text-slate-200 border-slate-200 dark:border-[#323850]'
               }`}
             >
               <span>{payerCat.emoji}</span>
@@ -83,7 +83,7 @@ function ExpenseCardComponent({
               {expense.currency}
             </span>
           </div>
-          <span className="text-[9px] sm:text-[10px] font-bold text-pink-600 dark:text-pink-400 block">
+          <span className="text-[9px] sm:text-[10px] font-bold text-rose-500/90 dark:text-rose-300 block">
             ≈ ฿{Math.round(Number(expense.amount) * fxRate).toLocaleString()}
           </span>
         </div>

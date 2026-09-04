@@ -11,7 +11,7 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#faf8fd' },
-    { media: '(prefers-color-scheme: dark)', color: '#0d0f18' },
+    { media: '(prefers-color-scheme: dark)', color: '#181b2a' },
   ],
 };
 
@@ -57,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-screen antialiased bg-[#faf8fd] text-[#1e293b] dark:bg-[#0d0f18] dark:text-[#f1f5f9] selection:bg-pink-400 selection:text-white transition-colors duration-300">
+      <body className="min-h-screen antialiased bg-[#faf8fd] text-[#1e293b] dark:bg-[#181b2a] dark:text-[#f1f5f9] selection:bg-rose-400 selection:text-white transition-colors duration-300">
         <ErrorBoundary>
           <ThemeProvider>{children}</ThemeProvider>
         </ErrorBoundary>

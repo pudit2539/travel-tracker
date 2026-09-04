@@ -4,24 +4,24 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #faf8fd;
-  --foreground: #1e293b;
+  --background: #faf7f8;
+  --foreground: #2d3748;
   --card: #ffffff;
-  --card-foreground: #1e293b;
-  --border: #f1e8f8;
-  --primary-pink: #f472b6;
-  --primary-purple: #c084fc;
-  --primary-black: #0d0f18;
+  --card-foreground: #2d3748;
+  --border: #f5e6ea;
+  --primary-pink: #f08299;
+  --primary-purple: #b99bf2;
+  --primary-black: #181b2a;
 }
 
 .dark {
-  --background: #0d0f18;
+  --background: #181b2a;
   --foreground: #f1f5f9;
-  --card: #151826;
+  --card: #222638;
   --card-foreground: #f8fafc;
-  --border: #23283b;
-  --primary-pink: #f472b6;
-  --primary-purple: #c084fc;
+  --border: #323850;
+  --primary-pink: #f497aa;
+  --primary-purple: #c4abf5;
 }
 
 @theme inline {
@@ -242,31 +242,31 @@ input::-ms-clear {
 
 /* Ultra-Smooth Pastel Elevation & Clean Dark Depth */
 .card-elevation {
-  box-shadow: 0 4px 20px -2px rgba(244, 114, 182, 0.07), 0 2px 8px -1px rgba(192, 132, 252, 0.05);
+  box-shadow: 0 4px 20px -2px rgba(240, 130, 153, 0.05), 0 2px 8px -1px rgba(185, 155, 242, 0.03);
 }
 
 .card-elevation:hover {
-  box-shadow: 0 10px 28px -4px rgba(244, 114, 182, 0.15), 0 4px 12px -2px rgba(192, 132, 252, 0.08);
+  box-shadow: 0 8px 24px -3px rgba(240, 130, 153, 0.10), 0 3px 10px -2px rgba(185, 155, 242, 0.05);
 }
 
 .dark .card-elevation {
-  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .dark .card-elevation:hover {
-  box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(244, 114, 182, 0.25);
+  box-shadow: 0 8px 26px -3px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(244, 151, 170, 0.20);
 }
 
 .glow-pink-purple {
-  box-shadow: 0 0 25px -4px rgba(244, 114, 182, 0.35), 0 0 15px -3px rgba(192, 132, 252, 0.25);
+  box-shadow: 0 0 20px -4px rgba(240, 130, 153, 0.20), 0 0 12px -3px rgba(185, 155, 242, 0.15);
 }
 
 .glow-purple {
-  box-shadow: 0 0 20px -3px rgba(192, 132, 252, 0.25);
+  box-shadow: 0 0 16px -3px rgba(185, 155, 242, 0.18);
 }
 
 .glow-pink {
-  box-shadow: 0 0 20px -3px rgba(244, 114, 182, 0.25);
+  box-shadow: 0 0 16px -3px rgba(240, 130, 153, 0.18);
 }
 
 /* Print Optimization */
