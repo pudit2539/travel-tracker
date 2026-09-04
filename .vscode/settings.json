@@ -1,8 +1,18 @@
 {
-  "workbench.editor.decorations.badges": false,
-  "files.autoSave": "afterDelay",
-  "files.autoSaveDelay": 500,
-  "css.lint.unknownAtRules": "ignore",
-  "git.decorations.enabled": true
+  "git.autorefresh": false,
+  "git.autoRepositoryDetection": false,
+  "git.scanRepositories": [],
+  "git.decorations.enabled": true,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/out/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/out": true
+  }
 }
-
