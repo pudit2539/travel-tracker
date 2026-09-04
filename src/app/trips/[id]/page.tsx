@@ -82,8 +82,13 @@ export default function TripDetailPage() {
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetMap>({});
   const [memberBudgets, setMemberBudgets] = useState<MemberBudgetMap>({});
   const [photosCount, setPhotosCount] = useState<number>(0);
-  
   const [activeTab, setActiveTab] = useState<'plan' | 'expenses' | 'analytics' | 'members'>('plan');
+  const handleSwitchTab = useCallback((tab: 'plan' | 'expenses' | 'analytics' | 'members') => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, []);
   const [heroBudgetView, setHeroBudgetView] = useState<'all' | 'me' | string>('all');
   const [itineraryViewMode, setItineraryViewMode] = useState<'list' | 'map'>('list');
   const [loading, setLoading] = useState(true);
@@ -1146,7 +1151,7 @@ export default function TripDetailPage() {
       </nav>
 
       {/* ==================== MAIN CONTENT CONTAINER ==================== */}
-      <main className="relative z-10 max-w-5xl mx-auto px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-4 sm:space-y-6">
+      <main className="relative z-10 max-w-5xl mx-auto px-3.5 sm:px-4 pt-3 sm:pt-4 pb-28 space-y-3.5 sm:space-y-4">
 
         {/* Guest Preview & Join Invitation Banner */}
         {!currentUser && (
@@ -1173,277 +1178,144 @@ export default function TripDetailPage() {
           </div>
         )}
 
-        {/* ==================== HERO BUDGET & QUICK ACTION CARD ==================== */}
-        <div className="relative overflow-hidden rounded-3xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/95 dark:bg-[#1a182d]/95 backdrop-blur-xl card-elevation p-4 sm:p-6 md:p-7 space-y-4">
-          <div className="absolute -top-16 -right-16 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl pointer-events-none animate-float-slow" />
-          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
+        {/* ==================== STICKY TOP TAB NAVIGATION BAR (ALL DEVICES) ==================== */}
+        <div className="sticky top-14 sm:top-16 z-30 -mx-3.5 sm:mx-0 px-3.5 sm:px-0 py-1.5 bg-slate-50/85 dark:bg-[#0d0c18]/85 backdrop-blur-xl">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 p-1 sm:p-1.5 bg-slate-200/80 dark:bg-[#151325]/90 border border-slate-300/80 dark:border-purple-900/50 rounded-2xl sm:rounded-3xl shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('plan')}
+              className={`py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+                activeTab === 'plan' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>🗺️</span>
+              <span className="truncate">แผนเที่ยว</span>
+              <span className="text-[10px] opacity-80 hidden md:inline">({itinerary.length})</span>
+            </button>
 
-          {/* Row 1: Badges & Quick Tool Pills */}
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-900 shadow-2xs">
-                {trip?.currency || 'JPY'} Workspace
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-900 shadow-2xs">
-                100 JPY = {(fxRate * 100).toFixed(2)} THB
-              </span>
-            </div>
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('expenses')}
+              className={`py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+                activeTab === 'expenses' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>💰</span>
+              <span className="truncate">รายจ่าย</span>
+              <span className="text-[10px] opacity-80 hidden md:inline">({expenses.length})</span>
+            </button>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setShowTravelHubModal(true)}
-                className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 px-3 py-1.5 rounded-xl shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer glow-pink-purple"
-              >
-                <span>🧰 Travel Hub (5-in-1)</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('analytics')}
+              className={`py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+                activeTab === 'analytics' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>📊</span>
+              <span className="truncate">สถิติ & งบ</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setShowBudgetCategoryModal(true)}
-                className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#11101d] px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-              >
-                <Sliders className="h-3 w-3 text-pink-500" /> 
-                <span>งบ & หมวด</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('members')}
+              className={`py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+                activeTab === 'members' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]' 
+                  : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>👥</span>
+              <span className="truncate">สมาชิก</span>
+              <span className="text-[10px] opacity-80 hidden md:inline">({members.length})</span>
+            </button>
           </div>
+        </div>
 
-          {/* Row 2: Swipeable Segmented Member Chips */}
-          <div className="relative z-10 flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-            <button
-              type="button"
-              onClick={() => setHeroBudgetView('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                heroBudgetView === 'all'
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                  : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
-              }`}
-            >
-              👥 รวมทุกคน
-            </button>
+        {/* ==================== TAB 1: แผนการเดินทาง (ITINERARY - MAIN SCREEN) ==================== */}
+        {activeTab === 'plan' && (
+          <div className="space-y-3.5 sm:space-y-4">
+            
+            {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-[#1a182d]/95 border border-slate-200/80 dark:border-purple-900/50 card-elevation">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-900 shadow-2xs">
+                  {trip?.currency || 'JPY'} Workspace
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-900 shadow-2xs">
+                  100 JPY = {(fxRate * 100).toFixed(2)} THB
+                </span>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => setHeroBudgetView('me')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
-                heroBudgetView === 'me'
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                  : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
-              }`}
-            >
-              <span>{userCat.emoji}</span>
-              <span>ของฉัน ({userDisplayName})</span>
-            </button>
-
-            {otherMembers.map((m) => {
-              const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
-              const mCat = getCatAvatar(m.profiles?.avatar_id);
-              const mKey = m.user_id || m.id;
-              const isSelected = heroBudgetView === mKey;
-
-              return (
+              <div className="flex items-center gap-1.5">
                 <button
-                  key={m.id}
                   type="button"
-                  onClick={() => setHeroBudgetView(mKey)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
-                      : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+                  onClick={() => setShowWeatherSection(!showWeatherSection)}
+                  className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                    showWeatherSection 
+                      ? 'bg-pink-500 text-white border-pink-500 shadow-xs' 
+                      : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 border-slate-200 dark:border-purple-900/50 hover:border-pink-500'
                   }`}
                 >
-                  <span>{mCat.emoji}</span>
-                  <span>{mName}</span>
+                  <span>🌤️ เส้นทาง & อากาศ</span>
+                  {showWeatherSection ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                 </button>
-              );
-            })}
-          </div>
 
-          {/* Row 3: Spent Metric */}
-          <div className="relative z-10 pt-1">
-            <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-purple-300/70 flex items-center justify-between">
-              <span>{heroDisplayData.title}</span>
-              {heroDisplayData.isOver && (
-                <span className="text-[10px] sm:text-[11px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
-                  ⚠️ เกินงบ +{heroDisplayData.diff.toLocaleString()} {trip?.currency}
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
-              <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
-                {heroDisplayData.spent.toLocaleString()}
-              </span>
-              <span className="text-base sm:text-xl font-bold text-pink-600 dark:text-pink-400">
-                {trip?.currency || 'JPY'}
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-purple-400 ml-1">
-                (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
-              </span>
-            </div>
-          </div>
-
-          {/* Row 4: Progress Bar */}
-          <div className="relative z-10 space-y-1.5">
-            <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-purple-200">
-              <span>
-                {heroDisplayData.targetBudget > 0 
-                  ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
-                  : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
-              </span>
-              <span className="flex items-center gap-1">
-                {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? `${heroDisplayData.targetBudget.toLocaleString()} ${trip?.currency || 'JPY'}` : 'ไม่ระบุ'}
                 <button
-                  onClick={() => setShowBudgetCategoryModal(true)}
-                  className="p-0.5 text-slate-400 hover:text-pink-500 transition-colors cursor-pointer"
-                  title="ตั้งค่าเป้าหมายงบประมาณ"
+                  type="button"
+                  onClick={() => setShowTravelHubModal(true)}
+                  className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 px-3 py-1.5 rounded-xl shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer glow-pink-purple"
                 >
-                  <Edit3 className="h-3 w-3" />
+                  <span>🧰 Travel Hub</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 </button>
-              </span>
-            </div>
-
-            <div className="w-full bg-slate-200/80 dark:bg-[#11101d] rounded-full h-3 sm:h-3.5 p-0.5 overflow-hidden shadow-inner relative">
-              <div
-                className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
-                  heroDisplayData.isOver
-                    ? 'bg-gradient-to-r from-rose-500 via-pink-600 to-red-600'
-                    : heroDisplayData.progress > 80
-                    ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600'
-                    : 'bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600'
-                }`}
-                style={{ width: `${Math.max(heroDisplayData.progress, 3)}%` }}
-              >
-                <div className="absolute inset-0 bg-white/20 animate-shimmer" />
               </div>
             </div>
-          </div>
 
-          {/* Row 5: Remaining Ribbon & Primary Action Buttons */}
-          <div className="relative z-10 pt-1 space-y-3">
-            {heroDisplayData.targetBudget > 0 && (
-              <div className={`p-2.5 sm:p-3 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-2xs ${
-                heroDisplayData.isOver
-                  ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300'
-                  : 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300'
-              }`}>
-                <div className="flex items-center gap-1.5">
-                  {heroDisplayData.isOver ? (
-                    <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  )}
-                  <span>
-                    {heroDisplayData.isOver ? 'ยอดเงินที่ใช้เกินงบประมาณ:' : 'ยอดเงินคงเหลือ:'}
-                  </span>
+            {/* Quick Budget Glance Pill (Click to jump straight into Expenses Tab) */}
+            <div 
+              onClick={() => handleSwitchTab('expenses')}
+              className="p-3 rounded-2xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-r from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/95 dark:bg-[#1a182d]/95 card-elevation flex items-center justify-between cursor-pointer hover:border-pink-400 transition-all group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-2 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white shadow-xs shrink-0">
+                  <Coins className="h-4 w-4" />
                 </div>
-                <div className="font-black text-right">
-                  <span>{heroDisplayData.isOver ? heroDisplayData.diff.toLocaleString() : heroDisplayData.remaining.toLocaleString()} {trip?.currency}</span>
-                  <span className="text-[10px] opacity-80 block sm:inline sm:ml-1">
-                    (≈ ฿{Math.round((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining) * fxRate).toLocaleString()})
-                  </span>
+                <div className="min-w-0">
+                  <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>ยอดใช้จ่ายรวม: {heroDisplayData.spent.toLocaleString()} {trip?.currency || 'JPY'}</span>
+                    <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400">
+                      (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
+                    </span>
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-purple-300/80 truncate">
+                    {heroDisplayData.targetBudget > 0 
+                      ? (heroDisplayData.isOver 
+                          ? `⚠️ เกินงบ +${heroDisplayData.diff.toLocaleString()} ${trip?.currency}` 
+                          : `คงเหลือ ${heroDisplayData.remaining.toLocaleString()} ${trip?.currency} (${heroDisplayData.progress}% ของงบ)`)
+                      : 'แตะเพื่อบันทึกบิล AI OCR หรือจัดการงบประมาณ'}
+                  </div>
                 </div>
+              </div>
+              <div className="flex items-center gap-1 text-xs font-black text-pink-600 dark:text-pink-400 shrink-0 group-hover:translate-x-0.5 transition-transform">
+                <span className="hidden sm:inline">ไปหน้ารายจ่าย</span>
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            </div>
+
+            {/* Collapsible Weather & Route Widget inside Plan */}
+            {showWeatherSection && (
+              <div className="rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 card-elevation p-3.5 sm:p-4 space-y-4">
+                <WeatherWidget defaultCity="Osaka" />
+                <RouteVisualizer dayLabel="เส้นทางภาพรวม" items={itinerary} />
               </div>
             )}
-
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5">
-              <button
-                onClick={() => {
-                  setOcrSuccessToast(null);
-                  setShowScanModal(true);
-                }}
-                disabled={!canAddExpense}
-                className="py-3 px-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50"
-              >
-                <Camera className="h-4 w-4 shrink-0" />
-                <span className="truncate">บันทึกรายจ่าย AI OCR</span>
-              </button>
-
-              <button
-                onClick={() => setShowSettlementModal(true)}
-                className="py-3 px-3 rounded-2xl bg-white dark:bg-[#151324] border border-purple-300 dark:border-purple-800/80 hover:border-pink-500 text-slate-800 dark:text-purple-100 font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
-              >
-                <Calculator className="h-4 w-4 text-pink-500 shrink-0" />
-                <span className="truncate">เคลียร์บิลหารเงิน</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ==================== COLLAPSIBLE WEATHER & ROUTE WIDGET ==================== */}
-        <div className="rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 card-elevation overflow-hidden">
-          <div 
-            onClick={() => setShowWeatherSection(!showWeatherSection)}
-            className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-purple-950/20 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-base">🌤️</span>
-              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                พยากรณ์อากาศ & เส้นทางเที่ยวสด
-              </span>
-            </div>
-            <button className="p-1 text-slate-400">
-              {showWeatherSection ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-          </div>
-
-          {showWeatherSection && (
-            <div className="p-3.5 sm:p-4 pt-0 space-y-4 border-t border-slate-100 dark:border-purple-900/30">
-              <WeatherWidget defaultCity="Osaka" />
-              <RouteVisualizer dayLabel="เส้นทางภาพรวม" items={itinerary} />
-            </div>
-          )}
-        </div>
-
-        {/* ==================== DESKTOP & TABLET TAB NAVIGATION BAR ==================== */}
-        <div className="hidden sm:grid grid-cols-4 gap-2 p-1.5 bg-slate-100/80 dark:bg-[#11101d]/80 border border-slate-200/80 dark:border-purple-900/40 rounded-3xl backdrop-blur-xl">
-          <button
-            onClick={() => setActiveTab('plan')}
-            className={`py-2.5 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              activeTab === 'plan' 
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.01]' 
-                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>🗺️ แผนการเดินทาง ({itinerary.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('expenses')}
-            className={`py-2.5 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              activeTab === 'expenses' 
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.01]' 
-                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>💰 รายจ่าย ({expenses.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`py-2.5 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              activeTab === 'analytics' 
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.01]' 
-                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>📊 สถิติ & งบหมวด</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('members')}
-            className={`py-2.5 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              activeTab === 'members' 
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/25 scale-[1.01]' 
-                : 'text-slate-600 dark:text-purple-300/70 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>👥 สมาชิก ({members.length})</span>
-          </button>
-        </div>
-
-        {/* ==================== TAB 1: แผนการเดินทาง (ITINERARY) ==================== */}
-        {activeTab === 'plan' && (
-          <div className="space-y-4">
             
             {/* Header Toolbar */}
             <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
@@ -1583,10 +1455,209 @@ export default function TripDetailPage() {
           </div>
         )}
 
-        {/* ==================== TAB 2: รายจ่าย (EXPENSES) ==================== */}
+        {/* ==================== TAB 2: รายจ่าย (EXPENSES - FOCUSED) ==================== */}
         {activeTab === 'expenses' && (
           <div className="space-y-4">
             
+            {/* HERO BUDGET & QUICK ACTION CARD */}
+            <div className="relative overflow-hidden rounded-3xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/95 dark:bg-[#1a182d]/95 backdrop-blur-xl card-elevation p-4 sm:p-6 md:p-7 space-y-4">
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl pointer-events-none animate-float-slow" />
+              <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
+
+              {/* Row 1: Badges & Quick Tool Pills */}
+              <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200 dark:border-pink-900 shadow-2xs">
+                    {trip?.currency || 'JPY'} Workspace
+                  </span>
+                  <span className="text-[10px] sm:text-[11px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-900 shadow-2xs">
+                    100 JPY = {(fxRate * 100).toFixed(2)} THB
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowTravelHubModal(true)}
+                    className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 px-3 py-1.5 rounded-xl shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer glow-pink-purple"
+                  >
+                    <span>🧰 Travel Hub</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowBudgetCategoryModal(true)}
+                    className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-purple-200 bg-white/90 dark:bg-[#11101d] px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-purple-800 hover:border-pink-500 hover:text-pink-600 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                  >
+                    <Sliders className="h-3 w-3 text-pink-500" /> 
+                    <span>งบ & หมวด</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 2: Swipeable Segmented Member Chips */}
+              <div className="relative z-10 flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => setHeroBudgetView('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                    heroBudgetView === 'all'
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                      : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+                  }`}
+                >
+                  👥 รวมทุกคน
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setHeroBudgetView('me')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
+                    heroBudgetView === 'me'
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                      : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+                  }`}
+                >
+                  <span>{userCat.emoji}</span>
+                  <span>ของฉัน ({userDisplayName})</span>
+                </button>
+
+                {otherMembers.map((m) => {
+                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
+                  const mCat = getCatAvatar(m.profiles?.avatar_id);
+                  const mKey = m.user_id || m.id;
+                  const isSelected = heroBudgetView === mKey;
+
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setHeroBudgetView(mKey)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs scale-105'
+                          : 'bg-slate-100 dark:bg-[#11101d] text-slate-700 dark:text-purple-300 hover:bg-slate-200 border border-slate-200 dark:border-purple-900/50'
+                      }`}
+                    >
+                      <span>{mCat.emoji}</span>
+                      <span>{mName}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Row 3: Spent Metric */}
+              <div className="relative z-10 pt-1">
+                <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-purple-300/70 flex items-center justify-between">
+                  <span>{heroDisplayData.title}</span>
+                  {heroDisplayData.isOver && (
+                    <span className="text-[10px] sm:text-[11px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
+                      ⚠️ เกินงบ +{heroDisplayData.diff.toLocaleString()} {trip?.currency}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
+                  <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {heroDisplayData.spent.toLocaleString()}
+                  </span>
+                  <span className="text-base sm:text-xl font-bold text-pink-600 dark:text-pink-400">
+                    {trip?.currency || 'JPY'}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-purple-400 ml-1">
+                    (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 4: Progress Bar */}
+              <div className="relative z-10 space-y-1.5">
+                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-purple-200">
+                  <span>
+                    {heroDisplayData.targetBudget > 0 
+                      ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
+                      : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? `${heroDisplayData.targetBudget.toLocaleString()} ${trip?.currency || 'JPY'}` : 'ไม่ระบุ'}
+                    <button
+                      onClick={() => setShowBudgetCategoryModal(true)}
+                      className="p-0.5 text-slate-400 hover:text-pink-500 transition-colors cursor-pointer"
+                      title="ตั้งค่าเป้าหมายงบประมาณ"
+                    >
+                      <Edit3 className="h-3 w-3" />
+                    </button>
+                  </span>
+                </div>
+
+                <div className="w-full bg-slate-200/80 dark:bg-[#11101d] rounded-full h-3 sm:h-3.5 p-0.5 overflow-hidden shadow-inner relative">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
+                      heroDisplayData.isOver
+                        ? 'bg-gradient-to-r from-rose-500 via-pink-600 to-red-600'
+                        : heroDisplayData.progress > 80
+                        ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600'
+                        : 'bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600'
+                    }`}
+                    style={{ width: `${Math.max(heroDisplayData.progress, 3)}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 5: Remaining Ribbon & Primary Action Buttons */}
+              <div className="relative z-10 pt-1 space-y-3">
+                {heroDisplayData.targetBudget > 0 && (
+                  <div className={`p-2.5 sm:p-3 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-2xs ${
+                    heroDisplayData.isOver
+                      ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300'
+                      : 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300'
+                  }`}>
+                    <div className="flex items-center gap-1.5">
+                      {heroDisplayData.isOver ? (
+                        <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      )}
+                      <span>
+                        {heroDisplayData.isOver ? 'ยอดเงินที่ใช้เกินงบประมาณ:' : 'ยอดเงินคงเหลือ:'}
+                      </span>
+                    </div>
+                    <div className="font-black text-right">
+                      <span>{heroDisplayData.isOver ? heroDisplayData.diff.toLocaleString() : heroDisplayData.remaining.toLocaleString()} {trip?.currency}</span>
+                      <span className="text-[10px] opacity-80 block sm:inline sm:ml-1">
+                        (≈ ฿{Math.round((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining) * fxRate).toLocaleString()})
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5">
+                  <button
+                    onClick={() => {
+                      setOcrSuccessToast(null);
+                      setShowScanModal(true);
+                    }}
+                    disabled={!canAddExpense}
+                    className="py-3 px-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Camera className="h-4 w-4 shrink-0" />
+                    <span className="truncate">บันทึกรายจ่าย AI OCR</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowSettlementModal(true)}
+                    className="py-3 px-3 rounded-2xl bg-white dark:bg-[#151324] border border-purple-300 dark:border-purple-800/80 hover:border-pink-500 text-slate-800 dark:text-purple-100 font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
+                  >
+                    <Calculator className="h-4 w-4 text-pink-500 shrink-0" />
+                    <span className="truncate">เคลียร์บิลหารเงิน</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Horizontal Filter Row */}
             <div className="p-3.5 rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 card-elevation space-y-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1927,15 +1998,15 @@ export default function TripDetailPage() {
       </button>
 
       {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
-      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden p-3 bg-white/90 dark:bg-[#11101d]/90 backdrop-blur-2xl border-t border-slate-200/80 dark:border-purple-900/50 shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 pb-4 bg-white/95 dark:bg-[#11101d]/95 backdrop-blur-2xl border-t border-slate-200/80 dark:border-purple-900/50 shadow-2xl">
         <div className="grid grid-cols-4 gap-1 max-w-md mx-auto">
           <button
             type="button"
-            onClick={() => setActiveTab('plan')}
+            onClick={() => handleSwitchTab('plan')}
             className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'plan'
-                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black'
-                : 'text-slate-500 dark:text-purple-400 font-semibold'
+                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black scale-105'
+                : 'text-slate-500 dark:text-purple-400 font-semibold active:scale-95'
             }`}
           >
             <MapPin className="h-4 w-4 mb-0.5" />
@@ -1944,11 +2015,11 @@ export default function TripDetailPage() {
 
           <button
             type="button"
-            onClick={() => setActiveTab('expenses')}
+            onClick={() => handleSwitchTab('expenses')}
             className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'expenses'
-                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black'
-                : 'text-slate-500 dark:text-purple-400 font-semibold'
+                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black scale-105'
+                : 'text-slate-500 dark:text-purple-400 font-semibold active:scale-95'
             }`}
           >
             <DollarSign className="h-4 w-4 mb-0.5" />
@@ -1957,11 +2028,11 @@ export default function TripDetailPage() {
 
           <button
             type="button"
-            onClick={() => setActiveTab('analytics')}
+            onClick={() => handleSwitchTab('analytics')}
             className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'analytics'
-                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black'
-                : 'text-slate-500 dark:text-purple-400 font-semibold'
+                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black scale-105'
+                : 'text-slate-500 dark:text-purple-400 font-semibold active:scale-95'
             }`}
           >
             <PieChart className="h-4 w-4 mb-0.5" />
@@ -1970,11 +2041,11 @@ export default function TripDetailPage() {
 
           <button
             type="button"
-            onClick={() => setActiveTab('members')}
+            onClick={() => handleSwitchTab('members')}
             className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'members'
-                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black'
-                : 'text-slate-500 dark:text-purple-400 font-semibold'
+                ? 'bg-gradient-to-tr from-pink-500/20 to-purple-600/20 text-pink-600 dark:text-pink-400 font-black scale-105'
+                : 'text-slate-500 dark:text-purple-400 font-semibold active:scale-95'
             }`}
           >
             <Users className="h-4 w-4 mb-0.5" />
