@@ -76,11 +76,11 @@ input, textarea, [contenteditable="true"], .selectable-text {
 
 /* Background Subtle Dot-Grid Pattern */
 .bg-grid-pattern {
-  background-image: radial-gradient(rgba(147, 51, 234, 0.08) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(224, 107, 136, 0.08) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 .dark .bg-grid-pattern {
-  background-image: radial-gradient(rgba(168, 85, 247, 0.12) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(224, 107, 136, 0.08) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -93,7 +93,7 @@ input::-ms-clear {
 /* Custom Sleek Scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(168, 85, 247, 0.35) transparent;
+  scrollbar-color: rgba(224, 107, 136, 0.35) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -104,11 +104,11 @@ input::-ms-clear {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(168, 85, 247, 0.25);
+  background: rgba(224, 107, 136, 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(236, 72, 153, 0.6);
+  background: rgba(224, 107, 136, 0.6);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -122,11 +122,11 @@ input::-ms-clear {
   background: rgba(255, 255, 255, 0.02);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(168, 85, 247, 0.35);
+  background: rgba(224, 107, 136, 0.35);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(236, 72, 153, 0.65);
+  background: rgba(224, 107, 136, 0.65);
 }
 
 /* ======================================================

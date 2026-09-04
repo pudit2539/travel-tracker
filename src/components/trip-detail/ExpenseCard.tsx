@@ -40,50 +40,50 @@ function ExpenseCardComponent({
           {catMeta.icon}
         </div>
         <div className="min-w-0">
-          <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+          <div className="font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2 truncate">
             <span className="truncate">{expense.title}</span>
             {expense.receipt_url && (
               <button
                 type="button"
                 onClick={() => onOpenReceiptPreview(expense)}
-                className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200 dark:border-[#e06b88]/35 hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0"
+                className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-lg bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/25 dark:text-[#fbc2cf] border border-rose-200/80 dark:border-[#e06b88]/40 hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0 shadow-2xs"
                 title="ดูรูปใบเสร็จ"
               >
                 <ImageIcon className="h-3 w-3" /> ใบเสร็จ
               </button>
             )}
           </div>
-          <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-300 flex flex-wrap items-center gap-1.5 mt-0.5 font-medium">
+          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-200 flex flex-wrap items-center gap-2 mt-1 font-medium">
             <span
-              className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold px-2 py-0.2 rounded-full border ${
+              className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
                 isMyExpense
-                  ? 'bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border-rose-200/80 dark:border-[#e06b88]/35'
+                  ? 'bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/25 dark:text-[#fbc2cf] border-rose-200/80 dark:border-[#e06b88]/40 shadow-xs'
                   : 'bg-slate-100 text-slate-700 dark:bg-[#2a2f45] dark:text-slate-200 border-slate-200 dark:border-[#323850]'
               }`}
             >
               <span>{payerCat.emoji}</span>
-              <span className="truncate max-w-[80px] sm:max-w-none">
+              <span className="truncate max-w-[90px] sm:max-w-none">
                 {expense.payer_name || 'สมาชิก'} {isMyExpense ? '(ฉัน)' : ''}
               </span>
             </span>
 
             <span className="text-slate-300 dark:text-slate-600">•</span>
-            <span className="font-semibold text-slate-700 dark:text-slate-200">{catMeta.label}</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{catMeta.label}</span>
             <span className="text-slate-300 dark:text-slate-600">•</span>
             <span className="text-slate-500 dark:text-slate-400">{new Date(expense.spent_at).toLocaleDateString('th-TH')}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
         <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white text-right">
           <div>
             {Number(expense.amount).toLocaleString()}{' '}
-            <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-400">
+            <span className="text-xs text-slate-400 dark:text-slate-400">
               {expense.currency}
             </span>
           </div>
-          <span className="text-[9px] sm:text-[10px] font-bold text-[#e06b88] dark:text-[#f7a1b5] block">
+          <span className="text-xs font-bold text-[#e06b88] dark:text-[#fbc2cf] block">
             ≈ ฿{Math.round(Number(expense.amount) * fxRate).toLocaleString()}
           </span>
         </div>
