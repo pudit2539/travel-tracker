@@ -1,0 +1,7 @@
+{
+  "workbench.editor.decorations.badges": false,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 500,
+  "css.lint.unknownAtRules": "ignore",
+  "git.decorations.enabled": true
+}
