@@ -1,4 +1,4 @@
-﻿// src/components/ItemizedReceiptSplitter.tsx
+// src/components/ItemizedReceiptSplitter.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -161,13 +161,13 @@ export default function ItemizedReceiptSplitter({
           </div>
           <div>
             <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-              <span>แยกรายเมนู & เลือกคนกิน</span>
+              <span>แยกรายการสินค้า/เมนู & เลือกลูกทีมที่ร่วมหาร</span>
               <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#e06b88] text-white">
                 {items.length} รายการ
               </span>
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
-              แตะไอคอนสมาชิกใต้แต่ละจาน เพื่อระบุว่าใครกินบ้าง
+              แตะไอคอนสมาชิกใต้แต่ละรายการ เพื่อระบุคนหาร
             </p>
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function ItemizedReceiptSplitter({
             type="button"
             onClick={() => onUpdateTotalAmount(sumOfItems)}
             className="px-2.5 py-1.5 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-[11px] font-black shrink-0 transition-all cursor-pointer shadow-xs active:scale-95"
-            title="ปรับยอดรวมบิลให้ตรงกับผลรวมของทุกเมนู"
+            title="ปรับยอดรวมบิลให้ตรงกับผลรวมของทุกรายการ"
           >
             ตั้งยอดบิล = {sumOfItems.toLocaleString()} {currency}
           </button>
@@ -264,7 +264,7 @@ export default function ItemizedReceiptSplitter({
                           ? 'bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/25 dark:text-[#fbc2cf] border-rose-300 dark:border-[#e06b88]/40 scale-[1.02]'
                           : 'bg-slate-50 text-slate-500 dark:bg-[#2a2f45]/50 dark:text-slate-400 border-slate-200/60 dark:border-[#323850] opacity-60 hover:opacity-100'
                       }`}
-                      title={`${member.name} ${isAssigned ? '(เลือกอยู่)' : '(ไม่ได้กิน)'}`}
+                      title={`${member.name} ${isAssigned ? '(เลือกหารรายการนี้)' : '(ไม่ได้หารรายการนี้)'}`}
                     >
                       <span>{cat.emoji}</span>
                       <span className="truncate max-w-[80px] sm:max-w-none">{member.name}</span>
@@ -345,7 +345,7 @@ export default function ItemizedReceiptSplitter({
 
                 <div className="flex items-baseline justify-between pt-0.5 border-t border-rose-100/60 dark:border-[#323850]/60">
                   <span className="text-[10px] text-slate-400 font-medium">
-                    {itemCount} จาน
+                    {itemCount} รายการ
                   </span>
                   <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                     {Math.round(total).toLocaleString()} <span className="text-[9px] font-normal text-slate-400">{currency}</span>
@@ -360,7 +360,7 @@ export default function ItemizedReceiptSplitter({
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-900/60">
             <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
             <span>
-              ยอดรวมของเมนู ({sumOfItems.toLocaleString()}) ต่างจากยอดบิลหลัก ({totalReceiptAmount.toLocaleString()}) อยู่ {Math.abs(diffAmount).toLocaleString()} {currency}
+              ยอดรวมของรายการ ({sumOfItems.toLocaleString()}) ต่างจากยอดบิลหลัก ({totalReceiptAmount.toLocaleString()}) อยู่ {Math.abs(diffAmount).toLocaleString()} {currency}
             </span>
           </div>
         )}

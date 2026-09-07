@@ -1,6 +1,44 @@
-// src/app/api/scan-receipt/route.ts
+﻿// src/app/api/scan-receipt/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+
+const STRICT_OCR_PROMPT = `You are a high-precision receipt scanner and OCR engine.
+Analyze this receipt image and extract ONLY information that is physically printed on the receipt.
+
+CRITICAL INSTRUCTIONS:
+1. TRUTHFULNESS & ACCURACY: Extract ONLY what is visible on the receipt. NEVER guess, hallucinate, assume, or extrapolate.
+2. NO FOOD BIAS: Do NOT assume this is a food/restaurant bill unless clearly indicated! If this is an electronics store (e.g. Bic Camera, Yodobashi Camera, Apple, Power Buy), pharmacy, clothing store, hotel, train/metro pass, or amusement park, accurately record the ACTUAL store name, ACTUAL category, and ACTUAL line items.
+3. CATEGORY CLASSIFICATION:
+   - "shopping": electronics, gadgets, appliances, cosmetics, clothing, souvenirs, general merchandise
+   - "food": restaurants, cafes, food stalls, beverages, dining
+   - "transport": trains, subways, Shinkansen, taxis, buses, flights, fuel, parking, tolls
+   - "hotel": hotels, hostels, accommodation
+   - "ticket": theme parks, museums, concerts, attractions
+   - "other": medical, utilities, services, miscellaneous
+4. LINE ITEMS (items):
+   - Extract distinct items/products/services clearly listed on the receipt with prices.
+   - "name": Exact product/model/dish name as printed on the receipt (Japanese, Thai, or English).
+   - "amount": Line price as a positive number.
+   - "qty": Quantity purchased as a number (default 1).
+   - If the receipt does NOT have clearly distinguishable line items, or the itemized rows are illegible/blurred, return "items": []. DO NOT make up items!
+5. TOTAL AMOUNT & CURRENCY:
+   - "amount": The grand total paid as a number.
+   - "currency": The 3-letter currency code (e.g., "JPY", "THB", "USD", "EUR"). Look for symbols like ¥, ฿, $, €.
+6. UNREADABLE / NOT A RECEIPT:
+   - If the image is not a receipt or completely illegible, set "unreadable": true.
+
+Return ONLY a JSON object matching this schema without any markdown formatting or extra text:
+{
+  "unreadable": false,
+  "merchant": "Exact store or merchant name as printed",
+  "amount": 0.00,
+  "currency": "JPY",
+  "category": "shopping",
+  "date": "YYYY-MM-DD",
+  "items": [
+    { "name": "Item name as printed", "amount": 0.00, "qty": 1 }
+  ]
+}`;
 
 export async function POST(req: Request) {
   try {
@@ -18,21 +56,83 @@ export async function POST(req: Request) {
 
     const { imageBase64, mimeType } = await req.json();
     if (!imageBase64) {
-      return NextResponse.json({ success: false, error: 'No image provided' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'กรุณาแนบรูปภาพใบเสร็จ' }, { status: 400 });
     }
 
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    const geminiKey = process.env.GEMINI_API_KEY;
+    // Check API Keys: Priority header > environment variable
+    const geminiKey = req.headers.get('x-gemini-key') || process.env.GEMINI_API_KEY;
+    const anthropicKey = req.headers.get('x-anthropic-key') || process.env.ANTHROPIC_API_KEY;
 
-    // 1. Try Anthropic Claude Vision if key configured
-    if (anthropicKey) {
+    if (!geminiKey && !anthropicKey) {
+      return NextResponse.json({
+        success: false,
+        noKey: true,
+        error: 'ยังไม่ได้เชื่อมต่อ AI API Key (กรุณาระบุ Gemini หรือ Claude API Key เพื่อให้อ่านภาพใบเสร็จจริงตามข้อความจริง ไม่สุ่มข้อมูล)',
+      }, { status: 200 });
+    }
+
+    let parsedData: any = null;
+
+    // 1. Try Google Gemini Flash Vision if configured
+    if (geminiKey) {
+      const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+      for (const model of modelsToTry) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      inlineData: {
+                        mimeType: mimeType || 'image/jpeg',
+                        data: imageBase64,
+                      },
+                    },
+                    {
+                      text: STRICT_OCR_PROMPT,
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.1,
+              },
+            }),
+          });
+
+          if (res.ok) {
+            const gJson = await res.json();
+            const candidateText = gJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const gMatch = candidateText.match(/\{[\s\S]*\}/);
+            if (gMatch) {
+              parsedData = JSON.parse(gMatch[0]);
+              break;
+            }
+          } else {
+            const errBody = await res.text();
+            console.warn(`Gemini model ${model} error:`, errBody);
+          }
+        } catch (geminiErr) {
+          console.warn(`Gemini OCR failed on ${model}:`, geminiErr);
+        }
+      }
+    }
+
+    // 2. Try Anthropic Claude Vision if Gemini wasn't available or didn't parse
+    if (!parsedData && anthropicKey) {
       try {
         const Anthropic = (await import('@anthropic-ai/sdk')).default;
         const anthropic = new Anthropic({ apiKey: anthropicKey });
 
         const response = await anthropic.messages.create({
           model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 1200,
+          max_tokens: 1500,
+          temperature: 0.1,
           messages: [
             {
               role: 'user',
@@ -47,19 +147,7 @@ export async function POST(req: Request) {
                 },
                 {
                   type: 'text',
-                  text: `กรุณาวิเคราะห์รูปภาพใบเสร็จนี้ และตอบกลับเฉพาะ JSON รูปแบบนี้เท่านั้น (ห้ามใส่ Markdown, backticks หรือคำอธิบายอื่น):
-{
-  "merchant": "ชื่อร้านค้า หรือสถานที่",
-  "amount": 0.00,
-  "currency": "JPY",
-  "category": "food",
-  "date": "YYYY-MM-DD",
-  "items": [
-    { "name": "ชื่อรายการ/เมนู", "amount": 0.00, "qty": 1 }
-  ]
-}
-* category: food, transport, shopping, hotel, ticket, other
-* items: สกัดรายการสินค้า/อาหารแต่ละแถวที่มีในใบเสร็จ หากมองไม่เห็นรายการย่อยให้ใส่เป็นรายการเดียวเท่ากับ amount`,
+                  text: STRICT_OCR_PROMPT,
                 },
               ],
             },
@@ -70,192 +158,61 @@ export async function POST(req: Request) {
         const textContent = textBlock?.type === 'text' ? textBlock.text : '{}';
         const jsonMatch = textContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          const parsedData = JSON.parse(jsonMatch[0]);
-          return NextResponse.json({ success: true, data: parsedData });
+          parsedData = JSON.parse(jsonMatch[0]);
         }
-      } catch (anthropicErr) {
-        console.warn('Anthropic OCR failed, falling back to smart extractor:', anthropicErr);
+      } catch (anthropicErr: any) {
+        console.warn('Anthropic OCR failed:', anthropicErr?.message || anthropicErr);
       }
     }
 
-    // 2. Try Gemini Vision if key configured
-    if (geminiKey) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    inline_data: {
-                      mime_type: mimeType || 'image/jpeg',
-                      data: imageBase64,
-                    },
-                  },
-                  {
-                    text: 'Extract receipt info as raw JSON only without markdown: {"merchant": string, "amount": number, "currency": "JPY", "category": "food"|"shopping"|"transport"|"hotel"|"ticket"|"other", "date": "YYYY-MM-DD", "items": [{"name": string, "amount": number, "qty": number}]}',
-                  },
-                ],
-              },
-            ],
-          }),
-        });
-
-        const gJson = await res.json();
-        const candidateText = gJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const gMatch = candidateText.match(/\{[\s\S]*\}/);
-        if (gMatch) {
-          const parsedData = JSON.parse(gMatch[0]);
-          return NextResponse.json({ success: true, data: parsedData });
-        }
-      } catch (geminiErr) {
-        console.warn('Gemini OCR failed, falling back to smart extractor:', geminiErr);
-      }
+    // 3. Handle unreadable or failed results
+    if (!parsedData || parsedData.unreadable) {
+      return NextResponse.json({
+        success: false,
+        error: 'ไม่สามารถอ่านข้อความจากใบเสร็จนี้ได้ หรือภาพไม่ชัดเจน กรุณากรอกรายการด้วยตนเอง',
+      }, { status: 200 });
     }
 
-    // 3. Intelligent Receipt Pattern Recognition Fallback (Always succeeds and auto-fills!)
-    // Generate realistic, smart parsed fields with itemized items based on receipt visual hash/timestamp
-    const receiptSampleMerchants = [
-      {
-        name: '7-Eleven Japan (セブン-イレブン)',
-        category: 'food',
-        amount: 1420,
-        items: [
-          { name: 'Onigiri Salmon (ข้าวปั้นแซลมอน)', amount: 180, qty: 2 },
-          { name: 'Meiji Green Tea Latte (ชาเขียว)', amount: 190, qty: 1 },
-          { name: 'Egg Sandwich (แซนด์วิชไข่)', amount: 280, qty: 1 },
-          { name: '7-Premium Fried Chicken (ไก่ทอด)', amount: 240, qty: 1 },
-          { name: 'Pocky Matcha (ป๊อกกี้ชาเขียว)', amount: 350, qty: 1 },
-        ],
-      },
-      {
-        name: 'FamilyMart (ファミリーマート)',
-        category: 'food',
-        amount: 980,
-        items: [
-          { name: 'FamiChiki (ไก่ทอดแฟมิลี่)', amount: 230, qty: 2 },
-          { name: 'Iced Latte (กาแฟลาเต้เย็น)', amount: 210, qty: 1 },
-          { name: 'Dorayaki (ขนมโดรายากิ)', amount: 160, qty: 1 },
-          { name: 'Water (น้ำดื่ม 500ml)', amount: 150, qty: 1 },
-        ],
-      },
-      {
-        name: 'Lawson (ローソン)',
-        category: 'food',
-        amount: 1650,
-        items: [
-          { name: 'Karaage-kun Red (ไก่คาราอาเกะ)', amount: 260, qty: 2 },
-          { name: 'Premium Roll Cake (โรลเค้ก)', amount: 210, qty: 2 },
-          { name: 'Bento Pork Katsu (ข้าวกล่องทงคัตสึ)', amount: 620, qty: 1 },
-          { name: 'Green Tea (ชาเขียวอุ่น)', amount: 90, qty: 1 },
-        ],
-      },
-      {
-        name: 'Don Quijote (ドン・キホーテ)',
-        category: 'shopping',
-        amount: 4850,
-        items: [
-          { name: 'KitKat Matcha Box (คิทแคทชาเขียว)', amount: 980, qty: 2 },
-          { name: 'Rohto Cooling Eye Drops (ยาหยอดตา)', amount: 690, qty: 1 },
-          { name: 'Shiseido Perfect Whip (โฟมล้างหน้า)', amount: 480, qty: 2 },
-          { name: 'Tokyo Banana 8pcs (ขนมโตเกียวบานาน่า)', amount: 1240, qty: 1 },
-        ],
-      },
-      {
-        name: 'Matsumoto Kiyoshi (マツモトキヨシ)',
-        category: 'shopping',
-        amount: 3200,
-        items: [
-          { name: 'DHC Vitamin C Supplements', amount: 550, qty: 2 },
-          { name: 'Biore UV Aqua Rich Sunscreen', amount: 880, qty: 1 },
-          { name: 'Lululun Face Mask 7 Days', amount: 620, qty: 1 },
-          { name: 'Meiji Collagen Powder', amount: 600, qty: 1 },
-        ],
-      },
-      {
-        name: 'Ichiran Ramen (一蘭)',
-        category: 'food',
-        amount: 3560,
-        items: [
-          { name: 'Natural Tonkotsu Ramen (ราเมงต้นตำรับ)', amount: 1080, qty: 2 },
-          { name: 'Kaeshi Half Noodle (เส้นเพิ่มครึ่งชาม)', amount: 160, qty: 1 },
-          { name: 'Soft-boiled Egg (ไข่ต้มยางมะตูม)', amount: 150, qty: 2 },
-          { name: 'Matcha Draft Beer (เบียร์ชาเขียว)', amount: 680, qty: 1 },
-          { name: 'Extra Chashu (หมูชาชูเพิ่ม)', amount: 260, qty: 1 },
-        ],
-      },
-      {
-        name: 'Starbucks Coffee Japan',
-        category: 'food',
-        amount: 1890,
-        items: [
-          { name: 'Sakura Berry Frappuccino Grande', amount: 720, qty: 1 },
-          { name: 'Matcha Cream Frappuccino Tall', amount: 630, qty: 1 },
-          { name: 'Sakura Chiffon Cake (ชิฟฟอนซากุระ)', amount: 540, qty: 1 },
-        ],
-      },
-      {
-        name: 'JR West Ticket Office',
-        category: 'transport',
-        amount: 5600,
-        items: [
-          { name: 'Haruka Limited Express (KIX -> Shin-Osaka)', amount: 2800, qty: 2 },
-        ],
-      },
-      {
-        name: 'Tokyo Metro Pass',
-        category: 'transport',
-        amount: 1600,
-        items: [
-          { name: 'Tokyo Subway 24-Hour Ticket', amount: 800, qty: 2 },
-        ],
-      },
-      {
-        name: 'Universal Studios Japan Express Pass',
-        category: 'ticket',
-        amount: 7000,
-        items: [
-          { name: 'USJ Express Pass Entry', amount: 3500, qty: 2 },
-        ],
-      },
-    ];
+    // 4. Sanitize and validate extracted data (STRICT: no hallucination)
+    const rawItems = Array.isArray(parsedData.items) ? parsedData.items : [];
+    const sanitizedItems = rawItems
+      .filter((it: any) => it && (typeof it.name === 'string' || it.amount))
+      .map((it: any) => ({
+        name: String(it.name || '').trim(),
+        amount: Math.abs(Number(it.amount) || 0),
+        qty: Math.max(1, Math.round(Number(it.qty) || 1)),
+      }))
+      .filter((it: any) => it.name.length > 0 || it.amount > 0);
 
-    // Seed pseudorandom from base64 length & date
-    const hashIndex = (imageBase64.length + new Date().getSeconds()) % receiptSampleMerchants.length;
-    const sample = receiptSampleMerchants[hashIndex];
+    let totalAmount = Math.abs(Number(parsedData.amount) || 0);
+    if (totalAmount === 0 && sanitizedItems.length > 0) {
+      totalAmount = sanitizedItems.reduce((sum: number, it: any) => sum + (it.amount * it.qty), 0);
+    }
 
-    const fallbackData = {
-      merchant: sample.name,
-      amount: sample.amount,
-      currency: 'JPY',
-      category: sample.category,
-      date: new Date().toISOString().split('T')[0],
-      items: sample.items,
+    const validCategories = ['shopping', 'food', 'transport', 'hotel', 'ticket', 'other'];
+    const category = validCategories.includes(parsedData.category) ? parsedData.category : 'shopping';
+
+    const resultData = {
+      merchant: String(parsedData.merchant || '').trim() || 'ร้านค้าตามใบเสร็จ',
+      amount: totalAmount,
+      currency: String(parsedData.currency || 'JPY').toUpperCase().trim().substring(0, 3) || 'JPY',
+      category,
+      date: /^\d{4}-\d{2}-\d{2}$/.test(parsedData.date)
+        ? parsedData.date
+        : new Date().toISOString().split('T')[0],
+      items: sanitizedItems,
     };
 
     return NextResponse.json({
       success: true,
-      isFallback: true,
-      data: fallbackData,
+      data: resultData,
     });
 
   } catch (error: any) {
-    console.error('OCR Error:', error);
-    // Even on error, return safe fallback so form can still be filled
+    console.error('OCR Route Error:', error);
     return NextResponse.json({
-      success: true,
-      isFallback: true,
-      data: {
-        merchant: 'ร้านค้าในทริป',
-        amount: 1500,
-        currency: 'JPY',
-        category: 'food',
-        date: new Date().toISOString().split('T')[0],
-        items: [{ name: 'อาหาร/สินค้า', amount: 1500, qty: 1 }],
-      },
-    });
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการสแกนใบเสร็จ กรุณาลองใหม่อีกครั้ง หรือกรอกข้อมูลด้วยตนเอง',
+    }, { status: 500 });
   }
 }

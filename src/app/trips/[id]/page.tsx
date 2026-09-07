@@ -120,6 +120,10 @@ export default function TripDetailPage() {
   const [scanning, setScanning] = useState(false);
   const [savingExpense, setSavingExpense] = useState(false);
   const [ocrSuccessToast, setOcrSuccessToast] = useState<string | null>(null);
+  const [ocrErrorToast, setOcrErrorToast] = useState<string | null>(null);
+  const [showAiKeyModal, setShowAiKeyModal] = useState(false);
+  const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('');
+  const [hasSavedGeminiKey, setHasSavedGeminiKey] = useState(false);
   const [expenseFormTab, setExpenseFormTab] = useState<'summary' | 'items'>('summary');
   const [splitAsSeparateExpenses, setSplitAsSeparateExpenses] = useState(false);
 
@@ -164,7 +168,7 @@ export default function TripDetailPage() {
   const [scannedData, setScannedData] = useState<any>({
     title: '',
     amount: '',
-    category: 'food',
+    category: 'shopping',
     currency: 'JPY',
     receipt_url: '',
     spent_at: new Date().toISOString().split('T')[0],
@@ -324,6 +328,33 @@ export default function TripDetailPage() {
   useEffect(() => {
     fetchTripData();
   }, [tripId]);
+
+  // ตรวจสอบ Gemini API Key จาก Browser LocalStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedKey = localStorage.getItem('travel_tracker_gemini_api_key');
+      if (savedKey) {
+        setHasSavedGeminiKey(true);
+        setGeminiApiKeyInput(savedKey);
+      }
+    }
+  }, []);
+
+  const handleSaveGeminiKey = (key: string) => {
+    const trimmed = key.trim();
+    if (trimmed) {
+      localStorage.setItem('travel_tracker_gemini_api_key', trimmed);
+      setHasSavedGeminiKey(true);
+      setShowAiKeyModal(false);
+      setOcrErrorToast(null);
+      setOcrSuccessToast('✅ บันทึก Gemini API Key เรียบร้อยแล้ว พร้อมสแกนใบเสร็จจริง!');
+      setTimeout(() => setOcrSuccessToast(null), 4000);
+    } else {
+      localStorage.removeItem('travel_tracker_gemini_api_key');
+      setHasSavedGeminiKey(false);
+      setShowAiKeyModal(false);
+    }
+  };
 
   // จัดการการนำเข้าไฟล์ Excel
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -554,16 +585,25 @@ export default function TripDetailPage() {
 
     setScanning(true);
     setOcrSuccessToast(null);
+    setOcrErrorToast(null);
 
     try {
       // 1. Client-Side Image Compression (ย่อขนาดรูปทันทีก่อนอัปโหลด ลดจาก 5-15MB เหลือ ~250KB)
       const compressed = await compressReceiptImage(file, 1200, 0.82);
 
-      // 2. ดึง Session Token สำหรับ Auth Check
+      // 2. ดึง Session Token สำหรับ Auth Check และคีย์ AI จาก LocalStorage
       const { data: { session } } = await supabase.auth.getSession();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      const localGeminiKey = typeof window !== 'undefined' ? localStorage.getItem('travel_tracker_gemini_api_key') : null;
+      if (localGeminiKey) {
+        headers['x-gemini-key'] = localGeminiKey;
+      }
+      const localAnthropicKey = typeof window !== 'undefined' ? localStorage.getItem('travel_tracker_anthropic_api_key') : null;
+      if (localAnthropicKey) {
+        headers['x-anthropic-key'] = localAnthropicKey;
       }
 
       // 3. ส่งข้อมูลภาพที่บีบอัดแล้วไปยัง API
@@ -573,57 +613,63 @@ export default function TripDetailPage() {
         body: JSON.stringify({ imageBase64: compressed.base64, mimeType: compressed.mimeType }),
       });
       const json = await res.json();
-      if (json.data) {
-        const rawItems = Array.isArray(json.data.items) ? json.data.items : [];
-        const allIds = allMembersForSplit.map((m) => m.id);
-        const mappedItems: ItemizedDish[] = rawItems.map((item: any, idx: number) => ({
-          id: `item_${Date.now()}_${idx}`,
-          name: item.name || 'เมนู/สินค้า',
-          amount: Number(item.amount || 0),
-          qty: Number(item.qty || 1),
-          assignedMemberIds: allIds, // default to all members
-        }));
 
-        setScannedData((prev: any) => ({
-          ...prev,
-          title: json.data.merchant || prev.title || 'ค่าใช้จ่ายทั่วไป',
-          amount: json.data.amount ? String(json.data.amount) : prev.amount || '1000',
-          category: json.data.category || prev.category || 'food',
-          currency: json.data.currency || trip?.currency || 'JPY',
-          spent_at: json.data.date || prev.spent_at || new Date().toISOString().split('T')[0],
-          receipt_url: compressed.dataUrl,
-          items: mappedItems.length > 0 ? mappedItems : (prev.items || []),
-        }));
-
-        if (mappedItems.length > 0) {
-          setExpenseFormTab('items');
-        }
-
-        setOcrSuccessToast(
-          `✨ AI สแกนใบเสร็จสำเร็จ: "${json.data.merchant}" ${
-            mappedItems.length > 0
-              ? `(แยกได้ ${mappedItems.length} เมนู)`
-              : `ยอด ${Number(json.data.amount || 0).toLocaleString()} ${json.data.currency || 'JPY'}`
-          }`
-        );
-        setTimeout(() => setOcrSuccessToast(null), 5000);
-      } else {
+      if (json.noKey) {
         setScannedData((prev: any) => ({ ...prev, receipt_url: compressed.dataUrl }));
+        setOcrErrorToast('ยังไม่ได้เชื่อมต่อ AI API Key ในระบบ กรุณาใส่ Gemini API Key เพื่อให้อ่านภาพจริง หรือกรอกรายการด้วยตนเอง');
+        setShowAiKeyModal(true);
+        return;
       }
+
+      if (!json.success || !json.data) {
+        setScannedData((prev: any) => ({ ...prev, receipt_url: compressed.dataUrl }));
+        setOcrErrorToast(json.error || 'ไม่สามารถอ่านข้อความจากใบเสร็จนี้ได้ กรุณากรอกรายการด้วยตนเอง');
+        return;
+      }
+
+      const rawItems = Array.isArray(json.data.items) ? json.data.items : [];
+      const allIds = allMembersForSplit.map((m) => m.id);
+      const mappedItems: ItemizedDish[] = rawItems.map((item: any, idx: number) => ({
+        id: `item_${Date.now()}_${idx}`,
+        name: item.name || 'รายการสินค้า',
+        amount: Number(item.amount || 0),
+        qty: Number(item.qty || 1),
+        assignedMemberIds: allIds, // default to all members
+      }));
+
+      setScannedData((prev: any) => ({
+        ...prev,
+        title: json.data.merchant || prev.title || 'ค่าใช้จ่ายตามใบเสร็จ',
+        amount: json.data.amount > 0 ? String(json.data.amount) : (prev.amount || ''),
+        category: json.data.category || 'shopping',
+        currency: json.data.currency || trip?.currency || 'JPY',
+        spent_at: json.data.date || prev.spent_at || new Date().toISOString().split('T')[0],
+        receipt_url: compressed.dataUrl,
+        items: mappedItems,
+      }));
+
+      if (mappedItems.length > 0) {
+        setExpenseFormTab('items');
+        setOcrSuccessToast(`✨ AI สแกนใบเสร็จสำเร็จ: "${json.data.merchant}" (แยกได้ ${mappedItems.length} รายการ)`);
+      } else {
+        setExpenseFormTab('summary');
+        setOcrSuccessToast(`ℹ️ สแกนสำเร็จ: "${json.data.merchant}" ยอดรวม ${Number(json.data.amount || 0).toLocaleString()} ${json.data.currency || 'JPY'} (ไม่พบรายการย่อยในใบเสร็จ)`);
+      }
+      setTimeout(() => {
+        setOcrSuccessToast(null);
+      }, 5000);
     } catch (err) {
-      console.warn('OCR scan fallback:', err);
-      // Fallback
+      console.warn('OCR scan error:', err);
       const reader = new FileReader();
       reader.onload = () => {
         const fallbackUrl = reader.result as string;
         setScannedData((prev: any) => ({
           ...prev,
-          title: prev.title || 'ค่าใช้จ่ายใบเสร็จ',
-          amount: prev.amount || '1000',
           receipt_url: fallbackUrl,
         }));
       };
       reader.readAsDataURL(file);
+      setOcrErrorToast('ไม่สามารถสแกนใบเสร็จได้ กรุณากรอกข้อมูลด้วยตนเอง');
     } finally {
       setScanning(false);
     }
@@ -2378,7 +2424,7 @@ export default function TripDetailPage() {
                   }`}
                 >
                   <Utensils className="h-3.5 w-3.5" />
-                  <span>แยกรายเมนู (Split ✨)</span>
+                  <span>แยกรายการสินค้า/เมนู (Split ✨)</span>
                   {scannedData.items?.length > 0 && (
                     <span
                       className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
@@ -2395,14 +2441,26 @@ export default function TripDetailPage() {
             {/* Modal Body */}
             <div className="p-5 sm:p-6 pt-3 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               {/* Receipt Upload Banner (Available in both tabs) */}
-              <div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1 text-[11px]">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">สแกนตัวหนังสือตามภาพจริง (ไม่สุ่มมั่ว)</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAiKeyModal(true)}
+                    className="inline-flex items-center gap-1 font-bold text-[#e06b88] hover:text-[#d25875] dark:text-[#fbc2cf] cursor-pointer active:scale-95"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    <span>{hasSavedGeminiKey ? 'Gemini Key (เชื่อมต่อแล้ว ✨)' : '🔑 ใส่ Gemini Key ฟรี'}</span>
+                  </button>
+                </div>
+
                 <label className="relative overflow-hidden flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-rose-300 dark:border-[#323850] rounded-2xl cursor-pointer bg-rose-50/40 dark:bg-[#2a2f45] hover:opacity-90 transition-opacity">
                   {scanning && <div className="animate-scan-laser z-20" />}
 
                   {scanning ? (
                     <div className="flex flex-col items-center gap-1.5 text-rose-600 dark:text-[#fbc2cf] z-10">
                       <Loader2 className="h-6 w-6 animate-spin text-[#e06b88]" />
-                      <span className="text-xs font-black tracking-wide">⚡ AI กำลังสแกนแยกเมนูจากใบเสร็จ...</span>
+                      <span className="text-xs font-black tracking-wide">⚡ AI กำลังสแกนแยกรายการจากใบเสร็จ...</span>
                     </div>
                   ) : scannedData.receipt_url ? (
                     <div className="flex items-center gap-2.5 p-2 text-xs font-bold text-rose-600 dark:text-[#fbc2cf]">
@@ -2416,13 +2474,31 @@ export default function TripDetailPage() {
                         ถ่ายรูปใบเสร็จ หรือเลือกรูปจากโทรศัพท์
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                        AI สกัดชื่อร้าน ยอดเงิน และแยกรายการอาหารให้อัตโนมัติ ✨
+                        AI อ่านชื่อร้าน ยอดเงิน และแยกรายการสินค้า/เมนูตามจริง ✨
                       </span>
                     </>
                   )}
                   <input type="file" accept="image/*" className="hidden" disabled={scanning} onChange={handleReceiptImage} />
                 </label>
               </div>
+
+              {ocrErrorToast && (
+                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/80 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-start justify-between gap-2 animate-in fade-in">
+                  <div className="flex items-start gap-2 min-w-0">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-500 mt-0.5" />
+                    <span className="leading-snug">{ocrErrorToast}</span>
+                  </div>
+                  {!hasSavedGeminiKey && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAiKeyModal(true)}
+                      className="px-2.5 py-1 rounded-lg bg-[#e06b88] hover:bg-[#d25875] text-white text-[10px] font-black shrink-0 cursor-pointer shadow-xs active:scale-95"
+                    >
+                      ใส่ API Key
+                    </button>
+                  )}
+                </div>
+              )}
 
               {ocrSuccessToast && (
                 <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
@@ -2828,6 +2904,84 @@ export default function TripDetailPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: ตั้งค่า Gemini API Key สำหรับ AI Vision สแกนใบเสร็จจริง */}
+      {showAiKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-3xl bg-white dark:bg-[#1c2032] border border-rose-200 dark:border-[#323850] shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-base">
+                <div className="w-8 h-8 rounded-xl bg-[#e06b88] text-white flex items-center justify-center shadow-xs">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <span>ตั้งค่า AI สแกนใบเสร็จ (Gemini)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAiKeyModal(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a2f45] cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              เพื่อให้ระบบอ่านตัวหนังสือ ชื่อร้าน ราคาสินค้า (อุปกรณ์ไอที, เสื้อผ้า, ค่าเดินทาง, อาหาร) จากใบเสร็จจริงโดย<strong>ไม่สุ่มหรือสมมุติข้อมูล</strong> กรุณาระบุ Google Gemini API Key
+            </p>
+
+            <a
+              href="https://aistudio.google.com/app/apikey"
+              target="_blank"
+              rel="noreferrer"
+              className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex items-center justify-between gap-2 text-xs font-bold text-amber-800 dark:text-amber-200 hover:opacity-95 transition-opacity"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">🎁</span>
+                <span>รับ Gemini API Key ฟรีจาก Google AI Studio</span>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-amber-600" />
+            </a>
+
+            <div>
+              <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
+                Google Gemini API Key
+              </label>
+              <input
+                type="password"
+                value={geminiApiKeyInput}
+                onChange={(e) => setGeminiApiKeyInput(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#323850] bg-slate-50 dark:bg-[#2a2f45] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-[#e06b88]"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                คีย์จะถูกบันทึกไว้ใน Browser ของคุณอย่างปลอดภัย หรือใส่ GEMINI_API_KEY ใน .env.local ก็ได้
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              {hasSavedGeminiKey && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGeminiApiKeyInput('');
+                    handleSaveGeminiKey('');
+                  }}
+                  className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-[#323850] text-slate-500 hover:text-rose-600 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  ล้างค่า
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handleSaveGeminiKey(geminiApiKeyInput)}
+                className="flex-1 py-2.5 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
+              >
+                บันทึก API Key
+              </button>
             </div>
           </div>
         </div>
