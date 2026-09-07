@@ -1,4 +1,4 @@
-﻿// src/app/api/scan-receipt/route.ts
+// src/app/api/scan-receipt/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
@@ -125,43 +125,47 @@ export async function POST(req: Request) {
 
     // 2. Try Anthropic Claude Vision if Gemini wasn't available or didn't parse
     if (!parsedData && anthropicKey) {
-      try {
-        const Anthropic = (await import('@anthropic-ai/sdk')).default;
-        const anthropic = new Anthropic({ apiKey: anthropicKey });
+      const claudeModels = ['claude-sonnet-4-6', 'claude-sonnet-4-5-20250929', 'claude-haiku-4-5-20251001', 'claude-3-5-sonnet-20241022'];
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      const anthropic = new Anthropic({ apiKey: anthropicKey });
 
-        const response = await anthropic.messages.create({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 1500,
-          temperature: 0.1,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'image',
-                  source: {
-                    type: 'base64',
-                    media_type: mimeType || 'image/jpeg',
-                    data: imageBase64,
+      for (const cModel of claudeModels) {
+        try {
+          const response = await anthropic.messages.create({
+            model: cModel,
+            max_tokens: 1500,
+            temperature: 0.1,
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'image',
+                    source: {
+                      type: 'base64',
+                      media_type: mimeType || 'image/jpeg',
+                      data: imageBase64,
+                    },
                   },
-                },
-                {
-                  type: 'text',
-                  text: STRICT_OCR_PROMPT,
-                },
-              ],
-            },
-          ],
-        });
+                  {
+                    type: 'text',
+                    text: STRICT_OCR_PROMPT,
+                  },
+                ],
+              },
+            ],
+          });
 
-        const textBlock = response.content.find((c) => c.type === 'text');
-        const textContent = textBlock?.type === 'text' ? textBlock.text : '{}';
-        const jsonMatch = textContent.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsedData = JSON.parse(jsonMatch[0]);
+          const textBlock = response.content.find((c) => c.type === 'text');
+          const textContent = textBlock?.type === 'text' ? textBlock.text : '{}';
+          const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            parsedData = JSON.parse(jsonMatch[0]);
+            break;
+          }
+        } catch (anthropicErr: any) {
+          console.warn(`Anthropic OCR failed with ${cModel}:`, anthropicErr?.message || anthropicErr);
         }
-      } catch (anthropicErr: any) {
-        console.warn('Anthropic OCR failed:', anthropicErr?.message || anthropicErr);
       }
     }
 
