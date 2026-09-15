@@ -124,7 +124,6 @@ export default function TripDetailPage() {
   const [showAiKeyModal, setShowAiKeyModal] = useState(false);
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('');
   const [hasSavedGeminiKey, setHasSavedGeminiKey] = useState(false);
-  const [expenseFormTab, setExpenseFormTab] = useState<'summary' | 'items'>('summary');
   const [splitAsSeparateExpenses, setSplitAsSeparateExpenses] = useState(false);
 
   const [showActivityModal, setShowActivityModal] = useState(false);
@@ -169,9 +168,10 @@ export default function TripDetailPage() {
     title: '',
     amount: '',
     category: 'shopping',
-    currency: 'JPY',
+    currency: 'THB',
     receipt_url: '',
     spent_at: new Date().toISOString().split('T')[0],
+    payer_id: 'me',
     items: [] as ItemizedDish[],
   });
 
@@ -642,18 +642,17 @@ export default function TripDetailPage() {
         title: json.data.merchant || prev.title || 'ค่าใช้จ่ายตามใบเสร็จ',
         amount: json.data.amount > 0 ? String(json.data.amount) : (prev.amount || ''),
         category: json.data.category || 'shopping',
-        currency: json.data.currency || trip?.currency || 'JPY',
+        currency: json.data.currency || trip?.currency || 'THB',
         spent_at: json.data.date || prev.spent_at || new Date().toISOString().split('T')[0],
         receipt_url: compressed.dataUrl,
         items: mappedItems,
       }));
 
       if (mappedItems.length > 0) {
-        setExpenseFormTab('items');
+        setSplitAsSeparateExpenses(true);
         setOcrSuccessToast(`✨ AI สแกนใบเสร็จสำเร็จ: "${json.data.merchant}" (แยกได้ ${mappedItems.length} รายการ)`);
       } else {
-        setExpenseFormTab('summary');
-        setOcrSuccessToast(`ℹ️ สแกนสำเร็จ: "${json.data.merchant}" ยอดรวม ${Number(json.data.amount || 0).toLocaleString()} ${json.data.currency || 'JPY'} (ไม่พบรายการย่อยในใบเสร็จ)`);
+        setOcrSuccessToast(`ℹ️ สแกนสำเร็จ: "${json.data.merchant}" ยอดรวม ${Number(json.data.amount || 0).toLocaleString()} ${json.data.currency || 'THB'} (ไม่พบรายการย่อยในใบเสร็จ)`);
       }
       setTimeout(() => {
         setOcrSuccessToast(null);
@@ -678,15 +677,40 @@ export default function TripDetailPage() {
   // บันทึกค่าใช้จ่าย
   const handleSaveExpense = async () => {
     if (savingExpense) return;
-    if (!scannedData.amount || !scannedData.title) {
-      alert('กรุณากรอกชื่อรายการและจำนวนเงิน');
+
+    // คำนวณหายอดเงินรวม (หากไม่ได้พิมพ์ยอดรวม แต่มีรายการย่อย ให้ใช้ผลรวมรายการย่อย)
+    let calculatedAmount = Number(scannedData.amount);
+    if ((!calculatedAmount || isNaN(calculatedAmount) || calculatedAmount <= 0) && scannedData.items && scannedData.items.length > 0) {
+      calculatedAmount = scannedData.items.reduce((sum: number, it: any) => sum + (Number(it.amount) || 0), 0);
+    }
+
+    // ตั้งชื่อรายการเริ่มต้นหากไม่ได้กรอก
+    let finalTitle = (scannedData.title || '').trim();
+    if (!finalTitle) {
+      if (scannedData.items && scannedData.items.length > 0 && scannedData.items[0]?.name) {
+        finalTitle = scannedData.items[0].name;
+      } else {
+        finalTitle = 'ค่าใช้จ่ายทั่วไป';
+      }
+    }
+
+    if (!calculatedAmount || calculatedAmount <= 0) {
+      alert('กรุณาระบุจำนวนเงิน หรือเพิ่มรายการสินค้า');
       return;
     }
 
     setSavingExpense(true);
     try {
-      const payerName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'สมาชิก';
-      const payerAvatar = userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id || 'cat_pink';
+      // ระบุผู้สำรองจ่ายที่เลือก
+      const selectedPayerId = scannedData.payer_id || 'me';
+      const selectedPayer = allMembersForSplit.find((m) => m.id === selectedPayerId) || {
+        id: currentUser?.id || 'me',
+        name: userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'สมาชิก',
+        avatar: userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id || 'cat_pink',
+      };
+      const payerName = selectedPayer.name.replace(' (ฉัน)', '');
+      const payerAvatar = selectedPayer.avatar || 'cat_pink';
+      const payerId = selectedPayer.id === 'me' ? (currentUser?.id || null) : (selectedPayer.id === selectedPayer.name ? null : selectedPayer.id);
 
       let receiptStorageRef = null;
       if (scannedData.receipt_url) {
@@ -726,12 +750,12 @@ export default function TripDetailPage() {
             const isMe = mt.member.id === 'me' || mt.member.id === currentUser?.id;
             return {
               trip_id: tripId,
-              title: `${scannedData.title.trim()} (${mt.member.name})`,
+              title: `${finalTitle} (${mt.member.name.replace(' (ฉัน)', '')})`,
               amount: Math.round(mt.total),
-              currency: scannedData.currency,
-              category: scannedData.category,
+              currency: scannedData.currency || trip?.currency || 'THB',
+              category: scannedData.category || 'shopping',
               receipt_url: receiptStorageRef,
-              spent_at: scannedData.spent_at,
+              spent_at: scannedData.spent_at || new Date().toISOString().split('T')[0],
               payer_id: isMe ? (currentUser?.id || null) : (mt.member.id === mt.member.name ? null : mt.member.id),
               payer_name: mt.member.name.replace(' (ฉัน)', ''),
               payer_avatar: mt.member.avatar,
@@ -747,13 +771,13 @@ export default function TripDetailPage() {
         const { error } = await supabase.from('expenses').insert([
           {
             trip_id: tripId,
-            title: scannedData.title.trim(),
-            amount: Number(scannedData.amount),
-            currency: scannedData.currency,
-            category: scannedData.category,
+            title: finalTitle,
+            amount: calculatedAmount,
+            currency: scannedData.currency || trip?.currency || 'THB',
+            category: scannedData.category || 'shopping',
             receipt_url: receiptStorageRef,
-            spent_at: scannedData.spent_at,
-            payer_id: currentUser?.id || null,
+            spent_at: scannedData.spent_at || new Date().toISOString().split('T')[0],
+            payer_id: payerId,
             payer_name: payerName,
             payer_avatar: payerAvatar,
           },
@@ -764,15 +788,15 @@ export default function TripDetailPage() {
       triggerConfetti();
       setShowScanModal(false);
       setOcrSuccessToast(null);
-      setExpenseFormTab('summary');
       setSplitAsSeparateExpenses(false);
       setScannedData({
         title: '',
         amount: '',
-        category: 'food',
-        currency: trip?.currency || 'JPY',
+        category: 'shopping',
+        currency: trip?.currency || 'THB',
         receipt_url: '',
         spent_at: new Date().toISOString().split('T')[0],
+        payer_id: 'me',
         items: [] as ItemizedDish[],
       });
       fetchTripData();
@@ -2353,12 +2377,13 @@ export default function TripDetailPage() {
       />
 
       {/* 10. Scan / Add Expense Modal with Itemized Split */}
+      {/* 10. Scan / Add Expense Modal (Unified Single Clean Form) */}
       {showScanModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-pink-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-pink-purple max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 pb-3 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
+            <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
               <div className="flex items-center gap-2.5">
                 <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-sm shadow-xs`}>
                   {userCat.emoji}
@@ -2367,94 +2392,37 @@ export default function TripDetailPage() {
                   <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                     บันทึกค่าใช้จ่าย 🧾
                   </h2>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                    ผู้จ่าย: <b className="text-[#e06b88] dark:text-[#fbc2cf]">{userDisplayName}</b>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    กรอกข้อมูลหรือสแกนใบเสร็จในหน้าเดียว
                   </p>
                 </div>
               </div>
               <button
-                onClick={() => {
-                  setShowScanModal(false);
-                  setExpenseFormTab('summary');
-                }}
+                onClick={() => setShowScanModal(false)}
                 className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a2f45] cursor-pointer transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Tab Switcher: Summary vs Itemized Split */}
-            <div className="px-5 sm:px-6 pt-3">
-              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#2a2f45] border border-slate-200/80 dark:border-[#323850] shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setExpenseFormTab('summary')}
-                  className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    expenseFormTab === 'summary'
-                      ? 'bg-[#e06b88] text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Receipt className="h-3.5 w-3.5" />
-                  <span>บิลรวม (Summary)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setExpenseFormTab('items');
-                    if (!scannedData.items || scannedData.items.length === 0) {
-                      setScannedData((prev: any) => ({
-                        ...prev,
-                        items: [
-                          {
-                            id: `item_${Date.now()}`,
-                            name: prev.title || 'เมนูที่ 1',
-                            amount: Number(prev.amount) || 0,
-                            qty: 1,
-                            assignedMemberIds: allMembersForSplit.map((m) => m.id),
-                          },
-                        ],
-                      }));
-                    }
-                  }}
-                  className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    expenseFormTab === 'items'
-                      ? 'bg-[#e06b88] text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Utensils className="h-3.5 w-3.5" />
-                  <span>แยกรายการสินค้า/เมนู (Split ✨)</span>
-                  {scannedData.items?.length > 0 && (
-                    <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                        expenseFormTab === 'items' ? 'bg-white/20 text-white' : 'bg-[#e06b88] text-white'
-                      }`}
-                    >
-                      {scannedData.items.length}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-
             {/* Modal Body */}
-            <div className="p-5 sm:p-6 pt-3 overflow-y-auto custom-scrollbar flex-1 space-y-4">
-              {/* Receipt Upload Banner (Available in both tabs) */}
-              <div className="space-y-2">
+            <div className="p-4 sm:p-5 pt-3 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+              
+              {/* 1. Receipt Upload Area */}
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between px-1 text-[11px]">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">สแกนตัวหนังสือตามภาพจริง (ไม่สุ่มมั่ว)</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">⚡ สแกนตัวหนังสือตามภาพจริง (ไม่สุ่มมั่ว)</span>
                   <button
                     type="button"
                     onClick={() => setShowAiKeyModal(true)}
                     className="inline-flex items-center gap-1 font-bold text-[#e06b88] hover:text-[#d25875] dark:text-[#fbc2cf] cursor-pointer active:scale-95"
                   >
                     <Sparkles className="h-3 w-3" />
-                    <span>{hasSavedGeminiKey ? 'Gemini Key (เชื่อมต่อแล้ว ✨)' : '🔑 ใส่ Gemini Key ฟรี'}</span>
+                    <span>{hasSavedGeminiKey ? 'Gemini Key (เชื่อมต่อแล้ว ✨)' : '🔑 ตั้งค่า AI Key'}</span>
                   </button>
                 </div>
 
-                <label className="relative overflow-hidden flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-rose-300 dark:border-[#323850] rounded-2xl cursor-pointer bg-rose-50/40 dark:bg-[#2a2f45] hover:opacity-90 transition-opacity">
+                <label className="relative overflow-hidden flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-rose-300 dark:border-[#323850] rounded-2xl cursor-pointer bg-rose-50/40 dark:bg-[#2a2f45] hover:opacity-90 transition-opacity">
                   {scanning && <div className="animate-scan-laser z-20" />}
 
                   {scanning ? (
@@ -2469,12 +2437,12 @@ export default function TripDetailPage() {
                     </div>
                   ) : (
                     <>
-                      <Camera className="h-7 w-7 text-rose-400 mb-1 animate-float-slow" />
+                      <Camera className="h-6 w-6 text-rose-400 mb-1 animate-float-slow" />
                       <span className="text-xs font-black text-rose-600 dark:text-[#fbc2cf]">
                         ถ่ายรูปใบเสร็จ หรือเลือกรูปจากโทรศัพท์
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                        AI อ่านชื่อร้าน ยอดเงิน และแยกรายการสินค้า/เมนูตามจริง ✨
+                        AI ช่วยเติมชื่อร้าน ยอดเงิน และรายการสินค้าให้อัตโนมัติ ✨
                       </span>
                     </>
                   )}
@@ -2507,120 +2475,217 @@ export default function TripDetailPage() {
                 </div>
               )}
 
-              {/* TAB 1: SUMMARY FORM */}
-              {expenseFormTab === 'summary' && (
-                <div className="space-y-3 animate-in fade-in duration-150">
-                  <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">ชื่อรายการ / ร้านค้า *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="เช่น ข้าวหน้าเนื้อ, ตั๋วรถไฟ Shinkansen"
-                      className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-slate-50/50 dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs outline-none focus:border-[#e06b88] font-bold"
-                      value={scannedData.title}
-                      onChange={(e) => setScannedData({ ...scannedData, title: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">จำนวนเงิน *</label>
-                      <input
-                        type="number"
-                        required
-                        placeholder="0.00"
-                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-slate-50/50 dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs outline-none focus:border-[#e06b88] font-black"
-                        value={scannedData.amount}
-                        onChange={(e) => setScannedData({ ...scannedData, amount: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">สกุลเงิน</label>
-                      <select
-                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-slate-50/50 dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs outline-none focus:border-[#e06b88] font-bold"
-                        value={scannedData.currency}
-                        onChange={(e) => setScannedData({ ...scannedData, currency: e.target.value })}
-                      >
-                        <option value="JPY">JPY (¥)</option>
-                        <option value="THB">THB (฿)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                        <option value="KRW">KRW (₩)</option>
-                        <option value="GBP">GBP (£)</option>
-                        <option value="SGD">SGD (S$)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">หมวดหมู่</label>
-                      <select
-                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-slate-50/50 dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs outline-none focus:border-[#e06b88] font-bold"
-                        value={scannedData.category}
-                        onChange={(e) => setScannedData({ ...scannedData, category: e.target.value })}
-                      >
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.icon} {cat.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">วันที่ใช้จ่าย</label>
-                      <input
-                        type="date"
-                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-slate-50/50 dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs outline-none focus:border-[#e06b88] font-bold"
-                        value={scannedData.spent_at}
-                        onChange={(e) => setScannedData({ ...scannedData, spent_at: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: ITEMIZED SPLIT COMPONENT */}
-              {expenseFormTab === 'items' && (
-                <div className="space-y-4 animate-in fade-in duration-150">
-                  <ItemizedReceiptSplitter
-                    items={scannedData.items || []}
-                    onChangeItems={(newItems) => setScannedData((prev: any) => ({ ...prev, items: newItems }))}
-                    members={allMembersForSplit}
-                    currency={scannedData.currency || 'JPY'}
-                    totalReceiptAmount={Number(scannedData.amount) || 0}
-                    onUpdateTotalAmount={(newTotal) => setScannedData((prev: any) => ({ ...prev, amount: String(newTotal) }))}
-                  />
-
-                  {/* Separate Expenses Checkbox Toggle */}
-                  <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-rose-50/70 dark:bg-[#2a2f45] border border-rose-200/80 dark:border-[#323850] cursor-pointer hover:border-[#e06b88] transition-all shadow-2xs">
-                    <input
-                      type="checkbox"
-                      checked={splitAsSeparateExpenses}
-                      onChange={(e) => setSplitAsSeparateExpenses(e.target.checked)}
-                      className="w-4 h-4 mt-0.5 rounded text-[#e06b88] focus:ring-[#e06b88] accent-[#e06b88] cursor-pointer"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-xs font-black text-slate-900 dark:text-white block">
-                        แยกบันทึกเป็นรายการของแต่ละคนอัตโนมัติ 🪄
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-300 block font-medium mt-0.5">
-                        ระบบจะสร้างรายการค่าใช้จ่ายแยกชื่อตามยอดที่แต่ละคนกินจริง เพื่อให้เห็นสถิติชัดเจนในกราฟ
-                      </span>
-                    </div>
+              {/* 2. Main Expense Fields Card */}
+              <div className="space-y-3 p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 dark:bg-[#1c2032] border border-slate-200/80 dark:border-[#323850]">
+                {/* Store / Merchant Name */}
+                <div>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
+                    ชื่อรายการ / ร้านค้า *
                   </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="เช่น KFC พระโขนง, Shabu Buffet, ร้านขายยา Matsumoto"
+                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-white dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-[#e06b88] font-bold"
+                    value={scannedData.title}
+                    onChange={(e) => setScannedData({ ...scannedData, title: e.target.value })}
+                  />
                 </div>
-              )}
+
+                {/* Amount & Currency */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                      <span>ยอดเงินรวม *</span>
+                      {scannedData.items && scannedData.items.length > 0 && (
+                        <span className="text-[10px] text-[#e06b88] dark:text-[#fbc2cf] font-bold">
+                          (คำนวณจากรายการ)
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="0.00"
+                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-white dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-[#e06b88] font-black"
+                      value={scannedData.amount}
+                      onChange={(e) => setScannedData({ ...scannedData, amount: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">สกุลเงิน</label>
+                    <select
+                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-white dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-[#e06b88] font-bold"
+                      value={scannedData.currency}
+                      onChange={(e) => setScannedData({ ...scannedData, currency: e.target.value })}
+                    >
+                      <option value="THB">THB (฿)</option>
+                      <option value="JPY">JPY (¥)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="KRW">KRW (₩)</option>
+                      <option value="GBP">GBP (£)</option>
+                      <option value="SGD">SGD (S$)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Category & Date */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">หมวดหมู่</label>
+                    <select
+                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-white dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-[#e06b88] font-bold"
+                      value={scannedData.category}
+                      onChange={(e) => setScannedData({ ...scannedData, category: e.target.value })}
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.icon} {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">วันที่ใช้จ่าย</label>
+                    <input
+                      type="date"
+                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-white dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-[#e06b88] font-bold"
+                      value={scannedData.spent_at}
+                      onChange={(e) => setScannedData({ ...scannedData, spent_at: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Payer (ผู้สำรองจ่าย) */}
+                <div>
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
+                    💳 ใครเป็นคนสำรองจ่ายเงินไปก่อน?
+                  </label>
+                  <select
+                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#323850] bg-white dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-[#e06b88] font-bold"
+                    value={scannedData.payer_id || 'me'}
+                    onChange={(e) => setScannedData({ ...scannedData, payer_id: e.target.value })}
+                  >
+                    {allMembersForSplit.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* 3. Itemized Split Section (แยกรายชิ้น / เลือกคนหาร) */}
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Utensils className="h-4 w-4 text-[#e06b88] dark:text-[#fbc2cf]" />
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                      แยกรายการสินค้า / สมาชิกที่ร่วมหาร
+                    </h3>
+                    {scannedData.items && scannedData.items.length > 0 && (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#e06b88] text-white">
+                        {scannedData.items.length} รายการ
+                      </span>
+                    )}
+                  </div>
+
+                  {(!scannedData.items || scannedData.items.length === 0) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const defaultItem: ItemizedDish = {
+                          id: `item_${Date.now()}`,
+                          name: scannedData.title || 'รายการที่ 1',
+                          amount: Number(scannedData.amount) || 0,
+                          qty: 1,
+                          assignedMemberIds: allMembersForSplit.map((m) => m.id),
+                        };
+                        setScannedData((prev: any) => ({
+                          ...prev,
+                          items: [defaultItem],
+                        }));
+                        setSplitAsSeparateExpenses(true);
+                      }}
+                      className="text-xs font-black text-[#e06b88] hover:text-[#d25875] dark:text-[#fbc2cf] flex items-center gap-1 cursor-pointer active:scale-95"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>+ เพิ่มรายการแยกคนหาร</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* If items exist */}
+                {scannedData.items && scannedData.items.length > 0 ? (
+                  <div className="space-y-3">
+                    <ItemizedReceiptSplitter
+                      items={scannedData.items}
+                      onChangeItems={(newItems) => {
+                        setScannedData((prev: any) => {
+                          const newSum = newItems.reduce((sum, it) => sum + Number(it.amount || 0), 0);
+                          return {
+                            ...prev,
+                            items: newItems,
+                            amount: newSum > 0 ? String(newSum) : prev.amount,
+                          };
+                        });
+                      }}
+                      members={allMembersForSplit}
+                      currency={scannedData.currency || 'THB'}
+                      totalReceiptAmount={Number(scannedData.amount) || 0}
+                      onUpdateTotalAmount={(newTotal) => setScannedData((prev: any) => ({ ...prev, amount: String(newTotal) }))}
+                    />
+
+                    {/* Separate Expenses Checkbox Toggle */}
+                    <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-rose-50/70 dark:bg-[#1c2032] border border-rose-200/80 dark:border-[#323850] cursor-pointer hover:border-[#e06b88] transition-all shadow-2xs">
+                      <input
+                        type="checkbox"
+                        checked={splitAsSeparateExpenses}
+                        onChange={(e) => setSplitAsSeparateExpenses(e.target.checked)}
+                        className="w-4 h-4 mt-0.5 rounded text-[#e06b88] focus:ring-[#e06b88] accent-[#e06b88] cursor-pointer"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-black text-slate-900 dark:text-white block">
+                          แยกบันทึกเป็นรายการของแต่ละคนอัตโนมัติ 🪄
+                        </span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-300 block font-medium mt-0.5">
+                          ระบบจะสร้างรายการค่าใช้จ่ายแยกชื่อตามยอดที่แต่ละคนกิน/ใช้จริง เพื่อให้เห็นสถิติชัดเจนในกราฟ
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-2xl border border-dashed border-slate-200 dark:border-[#323850] bg-slate-50/50 dark:bg-[#1c2032]/40 text-center space-y-1">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      💡 บิลนี้จะบันทึกเป็นยอดรวมก้อนเดียว ({scannedData.amount || '0'} {scannedData.currency || 'THB'})
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      หรือกด <button type="button" onClick={() => {
+                        const defaultItem: ItemizedDish = {
+                          id: `item_${Date.now()}`,
+                          name: scannedData.title || 'รายการที่ 1',
+                          amount: Number(scannedData.amount) || 0,
+                          qty: 1,
+                          assignedMemberIds: allMembersForSplit.map((m) => m.id),
+                        };
+                        setScannedData((prev: any) => ({
+                          ...prev,
+                          items: [defaultItem],
+                        }));
+                        setSplitAsSeparateExpenses(true);
+                      }} className="text-[#e06b88] font-bold underline cursor-pointer">+ เพิ่มรายการย่อย</button> เพื่อเลือกว่าเมนูไหนใครกินบ้าง
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Modal Footer Buttons */}
-            <div className="p-5 sm:p-6 pt-3 border-t border-rose-100 dark:border-[#323850]/80 flex gap-2.5">
+            <div className="p-4 sm:p-5 pt-3 border-t border-rose-100 dark:border-[#323850]/80 flex gap-2.5">
               <button
                 type="button"
-                onClick={() => {
-                  setShowScanModal(false);
-                  setExpenseFormTab('summary');
-                }}
+                onClick={() => setShowScanModal(false)}
                 className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#323850] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#2a2f45] transition-colors cursor-pointer"
               >
                 ยกเลิก
@@ -2636,11 +2701,10 @@ export default function TripDetailPage() {
                     <Loader2 className="h-4 w-4 animate-spin" /> กำลังบันทึก...
                   </>
                 ) : (
-                  splitAsSeparateExpenses ? 'แยกบันทึกรายคน ✨' : 'บันทึกรายการ'
+                  splitAsSeparateExpenses && scannedData.items?.length > 0 ? 'แยกบันทึกรายคน ✨' : 'บันทึกรายการ'
                 )}
               </button>
             </div>
-
           </div>
         </div>
       )}
