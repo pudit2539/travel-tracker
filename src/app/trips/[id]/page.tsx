@@ -606,11 +606,15 @@ export default function TripDetailPage() {
         headers['x-anthropic-key'] = localAnthropicKey;
       }
 
-      // 3. ส่งข้อมูลภาพที่บีบอัดแล้วไปยัง API
+      // 3. ส่งข้อมูลภาพที่บีบอัดแล้วไปยัง API พร้อม Trip Currency Context
       const res = await fetch('/api/scan-receipt', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ imageBase64: compressed.base64, mimeType: compressed.mimeType }),
+        body: JSON.stringify({ 
+          imageBase64: compressed.base64, 
+          mimeType: compressed.mimeType,
+          tripCurrency: trip?.currency || 'THB',
+        }),
       });
       const json = await res.json();
 
@@ -2233,10 +2237,20 @@ export default function TripDetailPage() {
         type="button"
         onClick={() => setShowCurrencyCalculator(true)}
         className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-[#e06b88] hover:bg-[#d25875] text-white font-black text-xs sm:text-sm shadow-xl shadow-[#e06b88]/30 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer glow-pink"
-        title="เครื่องคิดเลขแปลงเงินเยน-บาทด่วน"
+        title={`เครื่องคิดเลขแปลงเงินด่วน (${tripBaseCurrency} ⇄ THB)`}
       >
         <Coins className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
-        <span className="text-xs sm:text-sm font-black">¥ ⇄ ฿</span>
+        <span className="text-xs sm:text-sm font-black">
+          {tripBaseCurrency === 'CNY'
+            ? '元 ⇄ ฿'
+            : tripBaseCurrency === 'USD'
+            ? '$ ⇄ ฿'
+            : tripBaseCurrency === 'EUR'
+            ? '€ ⇄ ฿'
+            : tripBaseCurrency === 'THB'
+            ? '฿ ⇄ ¥'
+            : '¥ ⇄ ฿'}
+        </span>
       </button>
 
       {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
@@ -2302,7 +2316,8 @@ export default function TripDetailPage() {
       <QuickCurrencyCalculator
         isOpen={showCurrencyCalculator}
         onClose={() => setShowCurrencyCalculator(false)}
-        defaultCurrency={trip?.currency || 'JPY'}
+        defaultCurrency={tripBaseCurrency}
+        fxRate={fxRate}
         onApplyExpense={(amount, curr, note) => {
           setScannedData((prev: any) => ({
             ...prev,

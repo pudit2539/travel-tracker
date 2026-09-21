@@ -18,7 +18,7 @@ import NotificationBell from '@/components/NotificationBell';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb, convertToThb } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
 
 export default function HomePage() {
@@ -344,9 +344,13 @@ export default function HomePage() {
     });
   }, [trips, deferredSearchQuery]);
 
-  const totalCombinedBudget = useMemo(() => {
-    return trips.reduce((acc, curr) => acc + Number(curr.total_budget ?? curr.budget ?? 0), 0);
-  }, [trips]);
+  const totalCombinedBudgetInThb = useMemo(() => {
+    return trips.reduce((acc, curr) => {
+      const budget = Number(curr.total_budget ?? curr.budget ?? 0);
+      const currCode = curr.currency || 'JPY';
+      return acc + convertToThb(budget, currCode, fxRate);
+    }, 0);
+  }, [trips, fxRate]);
 
   const userCat = getCatAvatar(profile?.avatar_id);
   const userDisplayName = profile?.display_name || user?.email?.split('@')[0] || 'นักเดินทาง';
@@ -484,10 +488,10 @@ export default function HomePage() {
               <div>
                 <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">งบประมาณรวมทุกทริป</div>
                 <div className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-0.5">
-                  {totalCombinedBudget.toLocaleString()} <span className="text-sm font-bold text-rose-500 dark:text-rose-300">JPY</span>
+                  ≈ ฿{Math.round(totalCombinedBudgetInThb).toLocaleString()} <span className="text-sm font-bold text-rose-500 dark:text-rose-300">THB</span>
                 </div>
                 <div className="text-[10px] text-slate-400 dark:text-slate-400 font-medium">
-                  ≈ ฿{Math.round(totalCombinedBudget * fxRate).toLocaleString()}
+                  คำนวณตามอัตราแลกเปลี่ยนจริงของแต่ละทริป
                 </div>
               </div>
             </div>

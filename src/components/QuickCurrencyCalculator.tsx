@@ -1,53 +1,80 @@
 // src/components/QuickCurrencyCalculator.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Calculator, X, ArrowRightLeft, Sparkles, Plus, 
   Coins, DollarSign, Check, Percent, ArrowDown, ChevronRight
 } from 'lucide-react';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency } from '@/lib/currency';
 
 interface QuickCurrencyCalculatorProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyExpense?: (amount: number, currency: string, note?: string) => void;
   defaultCurrency?: string;
+  fxRate?: number;
 }
+
+const SUPPORTED_FOREIGN_CURRENCIES = [
+  { code: 'JPY', name: 'เยนญี่ปุ่น', symbol: '¥' },
+  { code: 'CNY', name: 'หยวนจีน', symbol: '元' },
+  { code: 'USD', name: 'ดอลลาร์สหรัฐ', symbol: '$' },
+  { code: 'EUR', name: 'ยูโร', symbol: '€' },
+  { code: 'KRW', name: 'วอนเกาหลี', symbol: '₩' },
+  { code: 'SGD', name: 'ดอลลาร์สิงคโปร์', symbol: 'S$' },
+];
 
 export default function QuickCurrencyCalculator({
   isOpen,
   onClose,
   onApplyExpense,
   defaultCurrency = 'JPY',
+  fxRate: propFxRate,
 }: QuickCurrencyCalculatorProps) {
-  const [jpyAmount, setJpyAmount] = useState<string>('1000');
-  const [direction, setDirection] = useState<'jpy_to_thb' | 'thb_to_jpy'>('jpy_to_thb');
-  const [fxRate, setFxRate] = useState<number>(() => getCustomJpyToThbRate());
+  const initialCurrency = defaultCurrency === 'THB' ? 'JPY' : (defaultCurrency || 'JPY').toUpperCase();
+  const [foreignCurrency, setForeignCurrency] = useState<string>(initialCurrency);
+  const [inputAmount, setInputAmount] = useState<string>('1000');
+  const [direction, setDirection] = useState<'foreign_to_thb' | 'thb_to_foreign'>('foreign_to_thb');
+  const [fxRate, setFxRate] = useState<number>(() => propFxRate ?? getCustomJpyToThbRate());
   const [isTaxFree, setIsTaxFree] = useState<boolean>(false);
   const [editingRate, setEditingRate] = useState(false);
   const [tempRate, setTempRate] = useState(String((getCustomJpyToThbRate() * 100).toFixed(2)));
 
-  const numInput = parseFloat(jpyAmount) || 0;
+  useEffect(() => {
+    if (defaultCurrency && defaultCurrency !== 'THB') {
+      setForeignCurrency(defaultCurrency.toUpperCase());
+    }
+  }, [defaultCurrency]);
 
-  // Tax calculation (Japan 10% consumption tax)
+  const activeMeta = useMemo(() => {
+    return SUPPORTED_FOREIGN_CURRENCIES.find((c) => c.code === foreignCurrency) || {
+      code: foreignCurrency,
+      name: foreignCurrency,
+      symbol: foreignCurrency,
+    };
+  }, [foreignCurrency]);
+
+  const numInput = parseFloat(inputAmount) || 0;
+
+  // Tax calculation (Japan 10% consumption tax if JPY)
   const adjustedInput = useMemo(() => {
-    if (!isTaxFree) return numInput;
-    // If tax free applied on tax-inclusive price (remove 10% tax: divide by 1.1)
-    return direction === 'jpy_to_thb' ? Math.round(numInput / 1.1) : numInput;
-  }, [numInput, isTaxFree, direction]);
+    if (!isTaxFree || foreignCurrency !== 'JPY') return numInput;
+    return direction === 'foreign_to_thb' ? Math.round(numInput / 1.1) : numInput;
+  }, [numInput, isTaxFree, direction, foreignCurrency]);
 
   const convertedAmount = useMemo(() => {
-    if (direction === 'jpy_to_thb') {
-      return adjustedInput * fxRate;
+    if (numInput <= 0) return 0;
+    if (direction === 'foreign_to_thb') {
+      return convertCurrency(adjustedInput, foreignCurrency, 'THB', fxRate);
     } else {
-      return fxRate > 0 ? adjustedInput / fxRate : 0;
+      return convertCurrency(adjustedInput, 'THB', foreignCurrency, fxRate);
     }
-  }, [adjustedInput, fxRate, direction]);
+  }, [adjustedInput, fxRate, direction, foreignCurrency, numInput]);
 
   const addPreset = (addVal: number) => {
-    const current = parseFloat(jpyAmount) || 0;
-    setJpyAmount(String(current + addVal));
+    const current = parseFloat(inputAmount) || 0;
+    setInputAmount(String(current + addVal));
   };
 
   const handleSaveRate = () => {
@@ -62,16 +89,21 @@ export default function QuickCurrencyCalculator({
 
   const handleTransferToExpense = () => {
     if (onApplyExpense && numInput > 0) {
+      const appliedAmount = direction === 'foreign_to_thb' ? adjustedInput : Math.round(convertedAmount);
+      const appliedCurrency = foreignCurrency;
+      const thbEquiv = direction === 'foreign_to_thb' ? convertedAmount : numInput;
       onApplyExpense(
-        direction === 'jpy_to_thb' ? adjustedInput : Math.round(convertedAmount),
-        defaultCurrency,
-        `แปลงเงิน ${adjustedInput.toLocaleString()} JPY (${convertedAmount.toFixed(2)} THB)`
+        appliedAmount,
+        appliedCurrency,
+        `แปลงเงิน ${appliedAmount.toLocaleString()} ${appliedCurrency} (≈ ฿${thbEquiv.toFixed(2)})`
       );
       onClose();
     }
   };
 
   if (!isOpen) return null;
+
+  const isSmallUnit = foreignCurrency === 'USD' || foreignCurrency === 'EUR' || foreignCurrency === 'CNY' || foreignCurrency === 'SGD';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-200">
@@ -91,7 +123,7 @@ export default function QuickCurrencyCalculator({
                 </span>
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-purple-300 font-medium">
-                คำนวณเงินเยน ⇄ บาท & เช็กราคา Tax-Free ทันใจ
+                แปลงสกุลเงินต่างประเทศ ⇄ บาทไทย ทันใจ
               </p>
             </div>
           </div>
@@ -103,11 +135,36 @@ export default function QuickCurrencyCalculator({
           </button>
         </div>
 
+        {/* Currency Switcher Tabs */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 custom-scrollbar">
+          {SUPPORTED_FOREIGN_CURRENCIES.map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => {
+                setForeignCurrency(c.code);
+                if (c.code === 'CNY' || c.code === 'USD' || c.code === 'EUR') {
+                  if (inputAmount === '1000' || inputAmount === '5000' || inputAmount === '10000') {
+                    setInputAmount('100');
+                  }
+                }
+              }}
+              className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                foreignCurrency === c.code
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-purple-950/50 text-slate-600 dark:text-purple-300 hover:bg-slate-200 border border-slate-200/60 dark:border-purple-900/40'
+              }`}
+            >
+              <span>{c.symbol} {c.code}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Exchange Rate Badge & Direction Switcher */}
         <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100 dark:bg-purple-950/50 border border-slate-200/80 dark:border-purple-900/50">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-purple-200">
-            <span>เรทแลกเปลี่ยน:</span>
-            {editingRate ? (
+            <span>เรท:</span>
+            {foreignCurrency === 'JPY' && editingRate ? (
               <div className="flex items-center gap-1">
                 <input
                   type="number"
@@ -123,7 +180,7 @@ export default function QuickCurrencyCalculator({
                   บันทึก
                 </button>
               </div>
-            ) : (
+            ) : foreignCurrency === 'JPY' ? (
               <button
                 onClick={() => setEditingRate(true)}
                 className="underline hover:text-pink-600 dark:hover:text-pink-400 cursor-pointer font-black"
@@ -131,33 +188,39 @@ export default function QuickCurrencyCalculator({
               >
                 100 JPY = {(fxRate * 100).toFixed(2)} THB ✏️
               </button>
+            ) : (
+              <span className="font-black">
+                1 {foreignCurrency} ≈ {convertCurrency(1, foreignCurrency, 'THB', fxRate).toFixed(2)} THB
+              </span>
             )}
           </div>
 
           <button
-            onClick={() => setDirection(direction === 'jpy_to_thb' ? 'thb_to_jpy' : 'jpy_to_thb')}
+            onClick={() => setDirection(direction === 'foreign_to_thb' ? 'thb_to_foreign' : 'foreign_to_thb')}
             className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-[#1a182d] text-pink-600 dark:text-pink-400 text-xs font-black shadow-2xs hover:scale-105 transition-transform cursor-pointer border border-pink-200 dark:border-pink-900/60"
           >
             <ArrowRightLeft className="h-3 w-3" />
-            <span>{direction === 'jpy_to_thb' ? 'JPY ➔ THB' : 'THB ➔ JPY'}</span>
+            <span>{direction === 'foreign_to_thb' ? `${activeMeta.code} ➔ THB` : `THB ➔ ${activeMeta.code}`}</span>
           </button>
         </div>
 
         {/* Main Input Box */}
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-700 dark:text-purple-200 flex justify-between">
-            <span>{direction === 'jpy_to_thb' ? 'ยอดเงินเยน (JPY ¥)' : 'ยอดเงินบาท (THB ฿)'}</span>
-            <button
-              onClick={() => setIsTaxFree(!isTaxFree)}
-              className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full border transition-all cursor-pointer ${
-                isTaxFree
-                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300'
-                  : 'bg-slate-100 text-slate-600 dark:bg-purple-950 dark:text-purple-400 border-slate-300'
-              }`}
-            >
-              <Percent className="h-2.5 w-2.5" />
-              <span>{isTaxFree ? 'หักภาษี Tax-Free 10% แล้ว' : 'คิดแบบ Tax-Free (ปลอดภาษี)'}</span>
-            </button>
+            <span>{direction === 'foreign_to_thb' ? `ยอดเงิน (${activeMeta.code} ${activeMeta.symbol})` : 'ยอดเงินบาท (THB ฿)'}</span>
+            {foreignCurrency === 'JPY' && (
+              <button
+                onClick={() => setIsTaxFree(!isTaxFree)}
+                className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full border transition-all cursor-pointer ${
+                  isTaxFree
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300'
+                    : 'bg-slate-100 text-slate-600 dark:bg-purple-950 dark:text-purple-400 border-slate-300'
+                }`}
+              >
+                <Percent className="h-2.5 w-2.5" />
+                <span>{isTaxFree ? 'หัก Tax-Free 10% แล้ว' : 'คิดแบบ Tax-Free ญี่ปุ่น'}</span>
+              </button>
+            )}
           </label>
 
           <div className="relative">
@@ -165,66 +228,103 @@ export default function QuickCurrencyCalculator({
               type="number"
               autoFocus
               placeholder="0"
-              value={jpyAmount}
-              onChange={(e) => setJpyAmount(e.target.value)}
+              value={inputAmount}
+              onChange={(e) => setInputAmount(e.target.value)}
               className="w-full text-2xl sm:text-3xl font-black p-3.5 rounded-2xl border-2 border-pink-400/80 dark:border-pink-500/80 bg-slate-50 dark:bg-[#11101d] text-slate-900 dark:text-white outline-none focus:ring-4 focus:ring-pink-500/20 shadow-inner"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-pink-600 dark:text-pink-400">
-              {direction === 'jpy_to_thb' ? '¥ JPY' : '฿ THB'}
+              {direction === 'foreign_to_thb' ? `${activeMeta.symbol} ${activeMeta.code}` : '฿ THB'}
             </span>
           </div>
 
           {/* Quick Preset Buttons */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
             <button
-              onClick={() => setJpyAmount('0')}
+              onClick={() => setInputAmount('0')}
               className="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-purple-950 text-slate-700 dark:text-purple-300 text-xs font-bold shrink-0 hover:bg-slate-300 cursor-pointer"
             >
               C
             </button>
-            <button
-              onClick={() => addPreset(100)}
-              className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
-            >
-              +100
-            </button>
-            <button
-              onClick={() => addPreset(500)}
-              className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
-            >
-              +500
-            </button>
-            <button
-              onClick={() => addPreset(1000)}
-              className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
-            >
-              +1,000
-            </button>
-            <button
-              onClick={() => addPreset(5000)}
-              className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
-            >
-              +5,000
-            </button>
-            <button
-              onClick={() => addPreset(10000)}
-              className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
-            >
-              +10,000
-            </button>
+            {isSmallUnit ? (
+              <>
+                <button
+                  onClick={() => addPreset(10)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +10
+                </button>
+                <button
+                  onClick={() => addPreset(50)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +50
+                </button>
+                <button
+                  onClick={() => addPreset(100)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +100
+                </button>
+                <button
+                  onClick={() => addPreset(500)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +500
+                </button>
+                <button
+                  onClick={() => addPreset(1000)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +1,000
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => addPreset(100)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +100
+                </button>
+                <button
+                  onClick={() => addPreset(500)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +500
+                </button>
+                <button
+                  onClick={() => addPreset(1000)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +1,000
+                </button>
+                <button
+                  onClick={() => addPreset(5000)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +5,000
+                </button>
+                <button
+                  onClick={() => addPreset(10000)}
+                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  +10,000
+                </button>
+              </>
+            )}
           </div>
         </div>
 
         {/* Converted Result Display Box */}
         <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 border border-pink-300/80 dark:border-purple-800/80 space-y-1 text-center">
           <span className="text-xs font-bold text-slate-500 dark:text-purple-300">
-            {direction === 'jpy_to_thb' ? 'คิดเป็นเงินไทยประมาณ' : 'คิดเป็นเงินเยนประมาณ'}
+            {direction === 'foreign_to_thb' ? 'คิดเป็นเงินไทยประมาณ' : `คิดเป็นเงิน${activeMeta.name}ประมาณ`}
           </span>
           <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
-            {direction === 'jpy_to_thb' ? '฿' : '¥'}
+            {direction === 'foreign_to_thb' ? '฿' : activeMeta.symbol}
             {convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          {isTaxFree && (
+          {isTaxFree && foreignCurrency === 'JPY' && (
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">
               ✨ ประหยัดภาษีไปได้ {(numInput - adjustedInput).toLocaleString()} JPY (≈ ฿{((numInput - adjustedInput) * fxRate).toFixed(2)})
             </span>
