@@ -2351,7 +2351,8 @@ export default function TripDetailPage() {
         members={members}
         currentUser={currentUser}
         userDisplayName={userDisplayName}
-        currency={trip?.currency || 'JPY'}
+        currency={trip?.currency || 'THB'}
+        fxRate={fxRate}
       />
 
       {/* 5. AI Assistant Modal */}

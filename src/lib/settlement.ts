@@ -5,6 +5,7 @@ import { convertCurrency } from './currency';
 export interface MemberBalance {
   name: string;
   avatar: string;
+  id?: string;
   totalPaid: number;
   fairShare: number;
   netBalance: number; // positive = should receive, negative = should pay
@@ -28,10 +29,14 @@ export interface SettlementSummary {
   transfers: TransferPlan[];
 }
 
+function cleanMemberName(name: string): string {
+  return (name || '').replace(/\s*\(ฉัน\)\s*/gi, '').trim().toLowerCase();
+}
+
 export function calculateSettlement(
   expenses: any[],
   membersList: { name: string; avatar: string; id?: string }[],
-  currency: string = 'JPY',
+  currency: string = 'THB',
   jpyThbRate?: number
 ): SettlementSummary {
   if (!membersList || membersList.length === 0) {
@@ -44,16 +49,36 @@ export function calculateSettlement(
     };
   }
 
-  // 1. Calculate total paid per member
+  const baseCurrency = (currency || 'THB').toUpperCase();
+
+  // 1. Initialize total paid per member (using normalized member key)
   const paidMap = new Map<string, number>();
-  membersList.forEach((m) => paidMap.set(m.name.toLowerCase(), 0));
+  membersList.forEach((m) => {
+    paidMap.set(cleanMemberName(m.name), 0);
+  });
 
   let totalSpent = 0;
+
   expenses.forEach((e) => {
-    const amount = Number(e.amount || 0);
-    totalSpent += amount;
-    const payer = (e.payer_name || 'สมาชิก').toLowerCase();
-    paidMap.set(payer, (paidMap.get(payer) || 0) + amount);
+    const rawAmount = Number(e.amount || 0);
+    if (rawAmount <= 0) return;
+
+    const expCurrency = (e.currency || baseCurrency).toUpperCase();
+    // Normalize every expense into the trip's base settlement currency
+    const normalizedAmount = convertCurrency(rawAmount, expCurrency, baseCurrency, jpyThbRate);
+    totalSpent += normalizedAmount;
+
+    // Match payer against membersList by ID or cleaned name
+    const eId = e.payer_id?.toLowerCase();
+    const eName = cleanMemberName(e.payer_name);
+
+    let matchedMember = membersList.find((m) => {
+      if (eId && m.id && m.id.toLowerCase() === eId) return true;
+      return cleanMemberName(m.name) === eName;
+    });
+
+    const payerKey = matchedMember ? cleanMemberName(matchedMember.name) : (eName || 'สมาชิก');
+    paidMap.set(payerKey, (paidMap.get(payerKey) || 0) + normalizedAmount);
   });
 
   const memberCount = membersList.length;
@@ -61,20 +86,22 @@ export function calculateSettlement(
 
   // 2. Build balances
   const balances: MemberBalance[] = membersList.map((m) => {
-    const totalPaid = paidMap.get(m.name.toLowerCase()) || 0;
+    const key = cleanMemberName(m.name);
+    const totalPaid = paidMap.get(key) || 0;
     const netBalance = totalPaid - averagePerPerson;
     return {
-      name: m.name,
+      name: m.name.replace(/\s*\(ฉัน\)\s*/gi, ''),
       avatar: m.avatar || 'cat_pink',
-      totalPaid,
-      fairShare: averagePerPerson,
+      id: m.id,
+      totalPaid: Math.round(totalPaid),
+      fairShare: Math.round(averagePerPerson),
       netBalance,
     };
   });
 
   // 3. Debt Simplification Algorithm (Greedy matching)
-  // Debtors: netBalance < -0.01 (owe money)
-  // Creditors: netBalance > 0.01 (should receive money)
+  // Debtors: netBalance < -0.5 (owe money)
+  // Creditors: netBalance > 0.5 (should receive money)
   const debtors: { name: string; avatar: string; amount: number }[] = [];
   const creditors: { name: string; avatar: string; amount: number }[] = [];
 
@@ -86,7 +113,7 @@ export function calculateSettlement(
     }
   });
 
-  // Sort descending
+  // Sort descending to settle largest debts first
   debtors.sort((a, b) => b.amount - a.amount);
   creditors.sort((a, b) => b.amount - a.amount);
 
@@ -102,7 +129,10 @@ export function calculateSettlement(
     const roundedAmount = Math.round(settledAmount);
 
     if (roundedAmount > 0) {
-      const thb = convertCurrency(roundedAmount, currency, 'THB', jpyThbRate);
+      const thb = baseCurrency === 'THB' 
+        ? roundedAmount 
+        : convertCurrency(roundedAmount, baseCurrency, 'THB', jpyThbRate);
+
       transfers.push({
         from: debtor.name,
         fromAvatar: debtor.avatar,
@@ -110,7 +140,7 @@ export function calculateSettlement(
         toAvatar: creditor.avatar,
         amount: roundedAmount,
         amountTHB: Math.round(thb),
-        currency,
+        currency: baseCurrency,
       });
     }
 
@@ -122,9 +152,9 @@ export function calculateSettlement(
   }
 
   return {
-    totalSpent,
+    totalSpent: Math.round(totalSpent),
     memberCount,
-    averagePerPerson,
+    averagePerPerson: Math.round(averagePerPerson),
     balances,
     transfers,
   };

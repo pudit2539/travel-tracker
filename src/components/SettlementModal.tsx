@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react';
 import { calculateSettlement, TransferPlan, MemberBalance } from '@/lib/settlement';
 import { getCatAvatar } from '@/lib/avatars';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency } from '@/lib/currency';
 import { 
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
   Users, DollarSign, Calculator, ChevronRight, SlidersHorizontal
@@ -18,6 +18,7 @@ interface SettlementModalProps {
   currentUser: any;
   userDisplayName?: string;
   currency: string;
+  fxRate?: number;
 }
 
 export default function SettlementModal({
@@ -27,9 +28,10 @@ export default function SettlementModal({
   members,
   currentUser,
   userDisplayName,
-  currency = 'JPY',
+  currency = 'THB',
+  fxRate: propFxRate,
 }: SettlementModalProps) {
-  const [fxRate, setFxRate] = useState<number>(() => getCustomJpyToThbRate());
+  const [fxRate, setFxRate] = useState<number>(() => propFxRate ?? getCustomJpyToThbRate());
   const [showRateSettings, setShowRateSettings] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
 
@@ -106,7 +108,8 @@ export default function SettlementModal({
       msg += `✨ สมาชิกทุกคนจ่ายเท่ากันเรียบร้อยแล้ว ไม่มียอดค้างโอน!\n`;
     } else {
       settlement.transfers.forEach((t, i) => {
-        msg += `${i + 1}. ${t.from} ➔ โอนให้ ${t.to}: ${t.amount.toLocaleString()} ${currency} (≈ ฿${t.amountTHB.toLocaleString()})\n`;
+        const thbText = currency !== 'THB' ? ` (≈ ฿${t.amountTHB.toLocaleString()})` : '';
+        msg += `${i + 1}. ${t.from} ➔ โอนให้ ${t.to}: ${t.amount.toLocaleString()} ${currency}${thbText}\n`;
       });
     }
 
@@ -172,7 +175,13 @@ export default function SettlementModal({
           {/* Rate setting toggle */}
           <div className="flex justify-between items-center text-xs">
             <span className="text-slate-600 dark:text-purple-300/80 font-medium">
-              อัตราแลกเปลี่ยน: <b className="text-slate-900 dark:text-white">100 JPY = {(fxRate * 100).toFixed(2)} THB</b>
+              อัตราแลกเปลี่ยน: <b className="text-slate-900 dark:text-white">
+                {currency === 'CNY'
+                  ? `1 CNY ≈ ${convertCurrency(1, 'CNY', 'THB', fxRate).toFixed(2)} THB`
+                  : currency === 'USD'
+                  ? `1 USD ≈ ${convertCurrency(1, 'USD', 'THB', fxRate).toFixed(2)} THB`
+                  : `100 JPY = ${(fxRate * 100).toFixed(2)} THB`}
+              </b>
             </span>
             <button
               onClick={() => setShowRateSettings(!showRateSettings)}
@@ -263,9 +272,11 @@ export default function SettlementModal({
                         <div className="text-xs font-black text-slate-900 dark:text-white">
                           {t.amount.toLocaleString()} {currency}
                         </div>
-                        <span className="text-[10px] font-extrabold text-pink-600 dark:text-pink-400">
-                          ≈ ฿{t.amountTHB.toLocaleString()}
-                        </span>
+                        {currency !== 'THB' && (
+                          <span className="text-[10px] font-extrabold text-pink-600 dark:text-pink-400 block">
+                            ≈ ฿{t.amountTHB.toLocaleString()}
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
