@@ -712,6 +712,7 @@ export default function HomePage() {
                   >
                     <option value="JPY">🇯🇵 JPY (เยนญี่ปุ่น - ¥)</option>
                     <option value="THB">🇹🇭 THB (บาทไทย - ฿)</option>
+                    <option value="CNY">🇨🇳 CNY (หยวนจีน - 元)</option>
                     <option value="USD">🇺🇸 USD (ดอลลาร์สหรัฐ - $)</option>
                     <option value="EUR">🇪🇺 EUR (ยูโร - €)</option>
                     <option value="KRW">🇰🇷 KRW (วอนเกาหลี - ₩)</option>
@@ -896,6 +897,7 @@ export default function HomePage() {
                   >
                     <option value="JPY">🇯🇵 JPY (¥)</option>
                     <option value="THB">🇹🇭 THB (฿)</option>
+                    <option value="CNY">🇨🇳 CNY (元)</option>
                     <option value="USD">🇺🇸 USD ($)</option>
                     <option value="EUR">🇪🇺 EUR (€)</option>
                     <option value="KRW">🇰🇷 KRW (₩)</option>

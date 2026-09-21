@@ -22,6 +22,7 @@ import {
 } from '@/lib/categories';
 import { supabase } from '@/lib/supabase';
 import { getCatAvatar } from '@/lib/avatars';
+import { convertToThb } from '@/lib/currency';
 
 interface BudgetCategoryModalProps {
   isOpen: boolean;
@@ -360,6 +361,7 @@ export default function BudgetCategoryModal({
                     >
                       <option value="JPY">JPY (¥)</option>
                       <option value="THB">THB (฿)</option>
+                      <option value="CNY">CNY (元)</option>
                       <option value="USD">USD ($)</option>
                       <option value="EUR">EUR (€)</option>
                       <option value="KRW">KRW (₩)</option>
@@ -369,7 +371,11 @@ export default function BudgetCategoryModal({
 
                 <div className="flex items-center justify-between pt-1">
                   <div className="text-[11px] font-bold text-slate-500 dark:text-purple-300">
-                    ≈ ฿{Math.round(Number(totalBudget || 0) * fxRate).toLocaleString()} THB
+                    {currency !== 'THB' ? (
+                      <>≈ ฿{Math.round(convertToThb(Number(totalBudget || 0), currency, fxRate)).toLocaleString()} THB</>
+                    ) : (
+                      <>{Number(totalBudget || 0).toLocaleString()} THB</>
+                    )}
                   </div>
 
                   <button

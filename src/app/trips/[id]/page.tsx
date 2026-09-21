@@ -2521,6 +2521,7 @@ export default function TripDetailPage() {
                     >
                       <option value="THB">THB (฿)</option>
                       <option value="JPY">JPY (¥)</option>
+                      <option value="CNY">CNY (元)</option>
                       <option value="USD">USD ($)</option>
                       <option value="EUR">EUR (€)</option>
                       <option value="KRW">KRW (₩)</option>

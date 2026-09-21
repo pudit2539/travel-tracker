@@ -5,6 +5,7 @@ import React from 'react';
 import { Trash2, Image as ImageIcon } from 'lucide-react';
 import { getCatAvatar } from '@/lib/avatars';
 import { getCategoryMeta, CategoryItem } from '@/lib/categories';
+import { convertToThb } from '@/lib/currency';
 
 interface ExpenseCardProps {
   expense: any;
@@ -83,9 +84,11 @@ function ExpenseCardComponent({
               {expense.currency}
             </span>
           </div>
-          <span className="text-xs font-bold text-[#e06b88] dark:text-[#fbc2cf] block">
-            ≈ ฿{Math.round(Number(expense.amount) * fxRate).toLocaleString()}
-          </span>
+          {(expense.currency || 'JPY') !== 'THB' && (
+            <span className="text-xs font-bold text-[#e06b88] dark:text-[#fbc2cf] block">
+              ≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
+            </span>
+          )}
         </div>
         {canAddExpense && (
           <button
