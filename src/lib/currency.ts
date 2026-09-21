@@ -59,55 +59,52 @@ export function setCustomJpyToThbRate(rate: number): void {
 }
 
 /**
- * Convert any amount from a given currency to THB.
- * Uses JPY as the pivot currency (all DEFAULT_RATES are relative to JPY).
- *
- * @param amount       - the amount to convert
- * @param fromCurrency - the source currency (e.g. 'JPY', 'THB', 'CNY', 'USD')
- * @param jpyThbRate   - custom JPY→THB rate from user settings (optional, uses stored rate if omitted)
+ * Convert any amount from one currency to another.
+ * Uses JPY as the internal pivot currency.
  */
-export function convertToThb(
-  amount: number,
-  fromCurrency: string,
-  jpyThbRate?: number
-): number {
-  const currency = (fromCurrency || 'JPY').toUpperCase();
-
-  // THB → THB: no conversion
-  if (currency === 'THB') return amount;
-
-  const jpyThb = jpyThbRate ?? getCustomJpyToThbRate();
-
-  // JPY → THB directly
-  if (currency === 'JPY') return amount * jpyThb;
-
-  // Other currencies: convert to JPY first, then to THB
-  // rate = how many <currency> per 1 JPY
-  const ratePerJpy = DEFAULT_RATES[currency];
-  if (!ratePerJpy || ratePerJpy === 0) return amount * jpyThb; // fallback: treat as JPY
-
-  const amountInJpy = amount / ratePerJpy;
-  return amountInJpy * jpyThb;
-}
-
-/** @deprecated Use convertToThb() for any-to-THB conversion */
 export function convertCurrency(
   amount: number,
   fromCurrency: string,
   toCurrency: string,
   customJpyThbRate?: number
 ): number {
-  if (fromCurrency === toCurrency) return amount;
+  const from = (fromCurrency || 'JPY').toUpperCase();
+  const to = (toCurrency || 'JPY').toUpperCase();
+  if (from === to || !amount) return amount;
 
-  const jpyThb = customJpyThbRate || getCustomJpyToThbRate();
+  const jpyThb = customJpyThbRate ?? getCustomJpyToThbRate();
 
-  if (fromCurrency === 'JPY' && toCurrency === 'THB') return amount * jpyThb;
-  if (fromCurrency === 'THB' && toCurrency === 'JPY') return amount / jpyThb;
+  // 1. Convert source amount into JPY (pivot)
+  let amountInJpy = amount;
+  if (from === 'JPY') {
+    amountInJpy = amount;
+  } else if (from === 'THB') {
+    amountInJpy = jpyThb > 0 ? amount / jpyThb : amount;
+  } else {
+    const ratePerJpy = DEFAULT_RATES[from];
+    amountInJpy = (ratePerJpy && ratePerJpy > 0) ? amount / ratePerJpy : amount;
+  }
 
-  // Generic pivot via JPY
-  const fromRate = DEFAULT_RATES[fromCurrency] || 1;
-  const toRate = DEFAULT_RATES[toCurrency] || 1;
-  return (amount / fromRate) * toRate;
+  // 2. Convert JPY into target currency
+  if (to === 'JPY') {
+    return amountInJpy;
+  } else if (to === 'THB') {
+    return amountInJpy * jpyThb;
+  } else {
+    const ratePerJpy = DEFAULT_RATES[to];
+    return (ratePerJpy && ratePerJpy > 0) ? amountInJpy * ratePerJpy : amountInJpy;
+  }
+}
+
+/**
+ * Convert any amount from a given currency directly to THB.
+ */
+export function convertToThb(
+  amount: number,
+  fromCurrency: string,
+  jpyThbRate?: number
+): number {
+  return convertCurrency(amount, fromCurrency, 'THB', jpyThbRate);
 }
 
 export function formatCurrencyWithThb(

@@ -18,7 +18,7 @@ import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
-import { getCustomJpyToThbRate, formatCurrencyWithThb } from '@/lib/currency';
+import { getCustomJpyToThbRate, formatCurrencyWithThb, convertCurrency, convertToThb } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
 import { 
   CategoryItem, 
@@ -942,10 +942,16 @@ export default function TripDetailPage() {
   const userDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'นักเดินทาง';
   const userCat = getCatAvatar(userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id);
 
-  // คำนวณยอดเงินรวม
+  // คำนวณยอดเงินรวม (แปลงทุกค่าใช้จ่ายเป็นสกุลเงินหลักของทริป)
+  const tripBaseCurrency = trip?.currency || 'THB';
+
   const totalSpent = useMemo(() => {
-    return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-  }, [expenses]);
+    return expenses.reduce((acc, curr) => {
+      const amt = Number(curr.amount || 0);
+      const converted = convertCurrency(amt, curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
+      return acc + converted;
+    }, 0);
+  }, [expenses, tripBaseCurrency, fxRate]);
 
   const targetBudget = Number(trip?.total_budget ?? trip?.budget ?? 0);
 
@@ -971,7 +977,10 @@ export default function TripDetailPage() {
     } else if (heroBudgetView === 'me') {
       const mySpent = expenses
         .filter((e) => (e.payer_id && e.payer_id === currentUser?.id) || (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase()))
-        .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+        .reduce((acc, curr) => {
+          const amt = Number(curr.amount || 0);
+          return acc + convertCurrency(amt, curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
+        }, 0);
 
       const myBudget = memberBudgets['me'] || (targetBudget > 0 && members.length > 0 ? Math.round(targetBudget / (members.length + 1)) : 0);
       const progress = myBudget > 0 ? Math.min(Math.round((mySpent / myBudget) * 100), 100) : 0;
@@ -996,7 +1005,10 @@ export default function TripDetailPage() {
       
       const memberSpent = expenses
         .filter((e) => (e.payer_id && e.payer_id === targetMember?.user_id) || (e.payer_name && e.payer_name.toLowerCase() === mName.toLowerCase()))
-        .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+        .reduce((acc, curr) => {
+          const amt = Number(curr.amount || 0);
+          return acc + convertCurrency(amt, curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
+        }, 0);
 
       const mBudget = memberBudgets[heroBudgetView] || 0;
       const progress = mBudget > 0 ? Math.min(Math.round((memberSpent / mBudget) * 100), 100) : 0;
@@ -1016,7 +1028,7 @@ export default function TripDetailPage() {
         viewName: mName,
       };
     }
-  }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members]);
+  }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members, tripBaseCurrency, fxRate]);
 
   // สมาชิกคนอื่นๆ (กรองตัวฉันเองออกอย่างเข้มงวด และตัดชื่อซ้ำ)
   const otherMembers = useMemo(() => {
@@ -1122,11 +1134,12 @@ export default function TripDetailPage() {
       if (!map.has(key)) {
         map.set(key, { name, avatar, total: 0, isMe, key });
       }
-      map.get(key)!.total += Number(e.amount || 0);
+      const amt = Number(e.amount || 0);
+      map.get(key)!.total += convertCurrency(amt, e.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
     });
 
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [expenses, currentUser, userDisplayName, userProfile]);
+  }, [expenses, currentUser, userDisplayName, userProfile, tripBaseCurrency, fxRate]);
 
   // Filtered expenses
   const filteredExpenses = useMemo(() => {
@@ -1401,10 +1414,14 @@ export default function TripDetailPage() {
             <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-[#222638]/95 border border-rose-100/80 dark:border-[#323850]/80 card-elevation">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
-                  {trip?.currency || 'JPY'} Workspace
+                  {tripBaseCurrency} Workspace
                 </span>
                 <span className="text-[10px] sm:text-[11px] font-bold text-[#e06b88] dark:text-[#f7a1b5] bg-rose-50 dark:bg-[#e06b88]/20 px-2 py-0.5 rounded-full border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
-                  100 JPY = {(fxRate * 100).toFixed(2)} THB
+                  {tripBaseCurrency === 'CNY'
+                    ? `1 CNY ≈ ${convertCurrency(1, 'CNY', 'THB', fxRate).toFixed(2)} THB`
+                    : tripBaseCurrency === 'USD'
+                    ? `1 USD ≈ ${convertCurrency(1, 'USD', 'THB', fxRate).toFixed(2)} THB`
+                    : `100 JPY = ${(fxRate * 100).toFixed(2)} THB`}
                 </span>
               </div>
 
@@ -1461,11 +1478,17 @@ export default function TripDetailPage() {
                   </div>
                   <div className="mt-1">
                     <div className="text-sm sm:text-base md:text-lg font-black text-[#e06b88] dark:text-[#f7a1b5] leading-tight">
-                      {heroDisplayData.spent.toLocaleString()}
+                      {heroDisplayData.spent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </div>
-                    <div className="text-[9px] sm:text-[10px] font-semibold text-[#e06b88]/80 dark:text-[#f7a1b5]/70 truncate">
-                      ≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()}
-                    </div>
+                    {tripBaseCurrency !== 'THB' ? (
+                      <div className="text-[9px] sm:text-[10px] font-semibold text-[#e06b88]/80 dark:text-[#f7a1b5]/70 truncate">
+                        ≈ ฿{Math.round(convertToThb(heroDisplayData.spent, tripBaseCurrency, fxRate)).toLocaleString()}
+                      </div>
+                    ) : (
+                      <div className="text-[9px] sm:text-[10px] font-semibold text-[#e06b88]/80 dark:text-[#f7a1b5]/70 truncate">
+                        {tripBaseCurrency}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1477,11 +1500,23 @@ export default function TripDetailPage() {
                   </div>
                   <div className="mt-1">
                     <div className="text-sm sm:text-base md:text-lg font-black text-emerald-700 dark:text-emerald-200 leading-tight">
-                      {heroDisplayData.targetBudget > 0 ? heroDisplayData.targetBudget.toLocaleString() : '-'}
+                      {heroDisplayData.targetBudget > 0 ? heroDisplayData.targetBudget.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '-'}
                     </div>
-                    <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
-                      {heroDisplayData.targetBudget > 0 ? `≈ ฿${Math.round(heroDisplayData.targetBudget * fxRate).toLocaleString()}` : 'ยังไม่ระบุงบ'}
-                    </div>
+                    {heroDisplayData.targetBudget > 0 ? (
+                      tripBaseCurrency !== 'THB' ? (
+                        <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
+                          ≈ ฿{Math.round(convertToThb(heroDisplayData.targetBudget, tripBaseCurrency, fxRate)).toLocaleString()}
+                        </div>
+                      ) : (
+                        <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
+                          {tripBaseCurrency}
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
+                        ยังไม่ระบุงบ
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1504,8 +1539,8 @@ export default function TripDetailPage() {
                         : 'text-sky-700 dark:text-sky-200'
                     }`}>
                       {heroDisplayData.targetBudget > 0 
-                        ? (heroDisplayData.isOver ? `+${heroDisplayData.diff.toLocaleString()}` : heroDisplayData.remaining.toLocaleString())
-                        : heroDisplayData.spent.toLocaleString()}
+                        ? (heroDisplayData.isOver ? `+${heroDisplayData.diff.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : heroDisplayData.remaining.toLocaleString(undefined, { maximumFractionDigits: 0 }))
+                        : heroDisplayData.spent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </div>
                     <div className={`text-[9px] sm:text-[10px] font-semibold truncate ${
                       heroDisplayData.isOver ? 'text-amber-600/80 dark:text-amber-400/80' : 'text-sky-600/80 dark:text-sky-300/70'
@@ -1678,10 +1713,14 @@ export default function TripDetailPage() {
               <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
-                    {trip?.currency || 'JPY'} Workspace
+                    {tripBaseCurrency} Workspace
                   </span>
                   <span className="text-[10px] sm:text-[11px] font-bold text-[#e06b88] dark:text-[#f7a1b5] bg-rose-50 dark:bg-[#e06b88]/20 px-2 py-0.5 rounded-full border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
-                    100 JPY = {(fxRate * 100).toFixed(2)} THB
+                    {tripBaseCurrency === 'CNY'
+                      ? `1 CNY ≈ ${convertCurrency(1, 'CNY', 'THB', fxRate).toFixed(2)} THB`
+                      : tripBaseCurrency === 'USD'
+                      ? `1 USD ≈ ${convertCurrency(1, 'USD', 'THB', fxRate).toFixed(2)} THB`
+                      : `100 JPY = ${(fxRate * 100).toFixed(2)} THB`}
                   </span>
                 </div>
 
@@ -1694,39 +1733,31 @@ export default function TripDetailPage() {
                     <span>🧰 Travel Hub</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowBudgetCategoryModal(true)}
-                    className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white/90 dark:bg-[#2a2f45] px-2.5 py-1.5 rounded-xl border border-rose-100 dark:border-[#323850] hover:border-[#e06b88]/50 hover:text-[#e06b88] transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-                  >
-                    <Sliders className="h-3 w-3 text-[#e06b88]" /> 
-                    <span>งบ & หมวด</span>
-                  </button>
                 </div>
               </div>
 
-              {/* Row 2: Swipeable Segmented Member Chips */}
+              {/* Row 2: Member Quick View Pills */}
               <div className="relative z-10 flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
                 <button
                   type="button"
                   onClick={() => setHeroBudgetView('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                     heroBudgetView === 'all'
-                      ? 'bg-[#e06b88] text-white shadow-xs scale-105'
-                      : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 hover:bg-rose-50 border border-rose-100 dark:border-[#323850]'
+                      ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-105'
+                      : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#323850]'
                   }`}
                 >
-                  👥 รวมทุกคน
+                  <Users className="h-3.5 w-3.5" />
+                  <span>รวมทุกคน</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setHeroBudgetView('me')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
+                  className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                     heroBudgetView === 'me'
-                      ? 'bg-[#e06b88] text-white shadow-xs scale-105'
-                      : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 hover:bg-rose-50 border border-rose-100 dark:border-[#323850]'
+                      ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-105'
+                      : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#323850]'
                   }`}
                 >
                   <span>{userCat.emoji}</span>
@@ -1734,20 +1765,19 @@ export default function TripDetailPage() {
                 </button>
 
                 {otherMembers.map((m) => {
-                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
+                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'เพื่อน';
                   const mCat = getCatAvatar(m.profiles?.avatar_id);
-                  const mKey = m.user_id || m.id;
-                  const isSelected = heroBudgetView === mKey;
+                  const isSelected = heroBudgetView === m.user_id || heroBudgetView === m.id;
 
                   return (
                     <button
                       key={m.id}
                       type="button"
-                      onClick={() => setHeroBudgetView(mKey)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
+                      onClick={() => setHeroBudgetView(m.user_id || m.id)}
+                      className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                         isSelected
-                          ? 'bg-[#e06b88] text-white shadow-xs scale-105'
-                          : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 hover:bg-rose-50 border border-rose-100 dark:border-[#323850]'
+                          ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-105'
+                          : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#323850]'
                       }`}
                     >
                       <span>{mCat.emoji}</span>
@@ -1763,21 +1793,23 @@ export default function TripDetailPage() {
                   <span>{heroDisplayData.title}</span>
                   {heroDisplayData.isOver && (
                     <span className="text-[10px] sm:text-[11px] font-black text-[#e06b88] dark:text-[#f7a1b5] bg-rose-50 dark:bg-[#e06b88]/20 px-2 py-0.5 rounded-md border border-rose-200 dark:border-[#e06b88]/35">
-                      ⚠️ เกินงบ +{heroDisplayData.diff.toLocaleString()} {trip?.currency}
+                      ⚠️ เกินงบ +{heroDisplayData.diff.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}
                     </span>
                   )}
                 </div>
 
                 <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
                   <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-                    {heroDisplayData.spent.toLocaleString()}
+                    {heroDisplayData.spent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </span>
                   <span className="text-base sm:text-xl font-bold text-[#e06b88] dark:text-[#f497aa]">
-                    {trip?.currency || 'JPY'}
+                    {tripBaseCurrency}
                   </span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
-                    (≈ ฿{Math.round(heroDisplayData.spent * fxRate).toLocaleString()})
-                  </span>
+                  {tripBaseCurrency !== 'THB' && (
+                    <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
+                      (≈ ฿{Math.round(convertToThb(heroDisplayData.spent, tripBaseCurrency, fxRate)).toLocaleString()})
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -1790,7 +1822,7 @@ export default function TripDetailPage() {
                       : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
                   </span>
                   <span className="flex items-center gap-1">
-                    {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? `${heroDisplayData.targetBudget.toLocaleString()} ${trip?.currency || 'JPY'}` : 'ไม่ระบุ'}
+                    {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? `${heroDisplayData.targetBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })} ${tripBaseCurrency}` : 'ไม่ระบุ'}
                     <button
                       onClick={() => setShowBudgetCategoryModal(true)}
                       className="p-0.5 text-slate-400 hover:text-[#e06b88] transition-colors cursor-pointer"
@@ -1834,10 +1866,12 @@ export default function TripDetailPage() {
                       </span>
                     </div>
                     <div className="font-black text-right">
-                      <span>{heroDisplayData.isOver ? heroDisplayData.diff.toLocaleString() : heroDisplayData.remaining.toLocaleString()} {trip?.currency}</span>
-                      <span className="text-[10px] opacity-80 block sm:inline sm:ml-1">
-                        (≈ ฿{Math.round((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining) * fxRate).toLocaleString()})
-                      </span>
+                      <span>{heroDisplayData.isOver ? heroDisplayData.diff.toLocaleString(undefined, { maximumFractionDigits: 0 }) : heroDisplayData.remaining.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}</span>
+                      {tripBaseCurrency !== 'THB' && (
+                        <span className="text-[10px] opacity-80 block sm:inline sm:ml-1">
+                          (≈ ฿{Math.round(convertToThb((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining), tripBaseCurrency, fxRate)).toLocaleString()})
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1874,7 +1908,7 @@ export default function TripDetailPage() {
                   <span>กรองดูรายจ่ายตามผู้จ่าย:</span>
                 </div>
                 <div className="text-xs font-bold text-rose-600 dark:text-rose-300">
-                  ยอดรวมที่เลือก: {filteredExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0).toLocaleString()} {trip?.currency || 'JPY'}
+                  ยอดรวมที่เลือก: {filteredExpenses.reduce((acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}
                 </div>
               </div>
 
@@ -2077,7 +2111,7 @@ export default function TripDetailPage() {
                 {categories.map((cat) => {
                   const spentInCat = expenses
                     .filter((e) => e.category === cat.id)
-                    .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+                    .reduce((acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate), 0);
                   const catTarget = categoryBudgets[cat.id] || 0;
                   const catPercent = totalSpent > 0 ? (spentInCat / totalSpent) * 100 : 0;
 
@@ -2089,7 +2123,7 @@ export default function TripDetailPage() {
                           <span>{cat.label}</span>
                         </span>
                         <div className="text-right">
-                          <span className="text-slate-900 dark:text-white">{spentInCat.toLocaleString()} {trip?.currency}</span>
+                          <span className="text-slate-900 dark:text-white">{spentInCat.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}</span>
                           <span className="text-[10px] text-slate-400 ml-1">({catPercent.toFixed(0)}%)</span>
                         </div>
                       </div>
