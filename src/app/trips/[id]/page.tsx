@@ -7,13 +7,13 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { parseTripExcel } from '@/lib/excelParser';
 import { useTheme } from '@/components/ThemeProvider';
+import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import NotificationBell from '@/components/NotificationBell';
-import WeatherWidget from '@/components/WeatherWidget';
-import RouteVisualizer from '@/components/RouteVisualizer';
-import InteractiveTripMap from '@/components/InteractiveTripMap';
-import { ExpenseCard } from '@/components/trip-detail/ExpenseCard';
-import { ItineraryStopCard } from '@/components/trip-detail/ItineraryStopCard';
+import { TripPlanTab } from '@/components/trip-tabs/TripPlanTab';
+import { TripExpensesTab } from '@/components/trip-tabs/TripExpensesTab';
+import { TripAnalyticsTab } from '@/components/trip-tabs/TripAnalyticsTab';
+import { TripMembersTab } from '@/components/trip-tabs/TripMembersTab';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
@@ -884,6 +884,44 @@ export default function TripDetailPage() {
     XLSX.writeFile(wb, `${tripTitle}_export.xlsx`);
   };
 
+  // ส่งออกเฉพาะค่าใช้จ่ายเป็น Excel อย่างละเอียดพร้อมแปลง THB
+  const exportExpensesToExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const expenseRows = expenses.map((e, idx) => {
+      const catMeta = getCategoryMeta(categories, e.category);
+      const thbAmount = Math.round(convertToThb(Number(e.amount || 0), e.currency || tripBaseCurrency, fxRate));
+      return {
+        'ลำดับ': idx + 1,
+        'วันที่': e.spent_at || '-',
+        'รายการ / ร้านค้า': e.title || '-',
+        'ผู้จ่าย': e.payer_name || '-',
+        'หมวดหมู่': catMeta.label,
+        'จำนวนเงิน': Number(e.amount || 0),
+        'สกุลเงิน': e.currency || tripBaseCurrency,
+        'เทียบเท่าเงินบาท (THB)': thbAmount,
+        'มีรูปใบเสร็จ': e.receipt_url ? 'มี' : 'ไม่มี',
+      };
+    });
+
+    const expSheet = XLSX.utils.json_to_sheet(expenseRows);
+    expSheet['!cols'] = [
+      { wch: 6 },
+      { wch: 12 },
+      { wch: 28 },
+      { wch: 16 },
+      { wch: 16 },
+      { wch: 14 },
+      { wch: 10 },
+      { wch: 20 },
+      { wch: 12 },
+    ];
+    XLSX.utils.book_append_sheet(wb, expSheet, 'Expenses_Summary');
+
+    const tripTitle = (trip?.name || trip?.title || 'trip').replace(/[/\\?%*:|"<>]/g, '-');
+    XLSX.writeFile(wb, `${tripTitle}_Expenses_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   // Permissions
   const isOwner = useMemo(() => {
     if (!currentUser) return false;
@@ -1327,56 +1365,92 @@ export default function TripDetailPage() {
             <button
               type="button"
               onClick={() => handleSwitchTab('plan')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+              className={`relative py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'plan' 
-                  ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-[1.02]' 
+                  ? 'text-white' 
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
-              <span>🗺️</span>
-              <span className="truncate">แผนเที่ยว</span>
-              <span className="text-[10px] opacity-85 hidden md:inline">({itinerary.length})</span>
+              {activeTab === 'plan' && (
+                <motion.div
+                  layoutId="activeTopTabPill"
+                  className="absolute inset-0 bg-[#e06b88] rounded-xl sm:rounded-2xl shadow-sm shadow-[#e06b88]/30"
+                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
+                <span>🗺️</span>
+                <span className="truncate">แผนเที่ยว</span>
+                <span className="text-[10px] opacity-85 hidden md:inline">({itinerary.length})</span>
+              </span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSwitchTab('expenses')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+              className={`relative py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'expenses' 
-                  ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-[1.02]' 
+                  ? 'text-white' 
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
-              <span>💰</span>
-              <span className="truncate">รายจ่าย</span>
-              <span className="text-[10px] opacity-85 hidden md:inline">({expenses.length})</span>
+              {activeTab === 'expenses' && (
+                <motion.div
+                  layoutId="activeTopTabPill"
+                  className="absolute inset-0 bg-[#e06b88] rounded-xl sm:rounded-2xl shadow-sm shadow-[#e06b88]/30"
+                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
+                <span>💰</span>
+                <span className="truncate">รายจ่าย</span>
+                <span className="text-[10px] opacity-85 hidden md:inline">({expenses.length})</span>
+              </span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSwitchTab('analytics')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+              className={`relative py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'analytics' 
-                  ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-[1.02]' 
+                  ? 'text-white' 
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
-              <span>📊</span>
-              <span className="truncate">สถิติ & งบ</span>
+              {activeTab === 'analytics' && (
+                <motion.div
+                  layoutId="activeTopTabPill"
+                  className="absolute inset-0 bg-[#e06b88] rounded-xl sm:rounded-2xl shadow-sm shadow-[#e06b88]/30"
+                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
+                <span>📊</span>
+                <span className="truncate">สถิติ & งบ</span>
+              </span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSwitchTab('members')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+              className={`relative py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'members' 
-                  ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-[1.02]' 
+                  ? 'text-white' 
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
-              <span>👥</span>
-              <span className="truncate">สมาชิก</span>
-              <span className="text-[10px] opacity-85 hidden md:inline">({members.length})</span>
+              {activeTab === 'members' && (
+                <motion.div
+                  layoutId="activeTopTabPill"
+                  className="absolute inset-0 bg-[#e06b88] rounded-xl sm:rounded-2xl shadow-sm shadow-[#e06b88]/30"
+                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
+                <span>👥</span>
+                <span className="truncate">สมาชิก</span>
+                <span className="text-[10px] opacity-85 hidden md:inline">({members.length})</span>
+              </span>
             </button>
           </div>
         </div>
@@ -1410,825 +1484,134 @@ export default function TripDetailPage() {
           </div>
         )}
 
-        {/* ==================== TAB 1: แผนการเดินทาง (ITINERARY - MAIN SCREEN) ==================== */}
-        {activeTab === 'plan' && (
-          <div className="space-y-3.5 sm:space-y-4">
-            
-            {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-[#222638]/95 border border-rose-100/80 dark:border-[#323850]/80 card-elevation">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
-                  {tripBaseCurrency} Workspace
-                </span>
-                <span className="text-[10px] sm:text-[11px] font-bold text-[#e06b88] dark:text-[#f7a1b5] bg-rose-50 dark:bg-[#e06b88]/20 px-2 py-0.5 rounded-full border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
-                  {tripBaseCurrency === 'CNY'
-                    ? `1 CNY ≈ ${convertCurrency(1, 'CNY', 'THB', fxRate).toFixed(2)} THB`
-                    : tripBaseCurrency === 'USD'
-                    ? `1 USD ≈ ${convertCurrency(1, 'USD', 'THB', fxRate).toFixed(2)} THB`
-                    : `100 JPY = ${(fxRate * 100).toFixed(2)} THB`}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setShowWeatherSection(!showWeatherSection)}
-                  className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
-                    showWeatherSection 
-                      ? 'bg-[#e06b88] text-white border-[#e06b88] shadow-xs' 
-                      : 'bg-slate-100 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#323850] hover:border-[#e06b88]/50'
-                  }`}
-                >
-                  <span>🌤️ เส้นทาง & อากาศ</span>
-                  {showWeatherSection ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowTravelHubModal(true)}
-                  className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-[#e06b88] hover:bg-[#d25875] px-3 py-1.5 rounded-xl shadow-md shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                >
-                  <span>🧰 Travel Hub</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                </button>
-              </div>
-            </div>
-
-            {/* Aesthetic 3-Block Pastel Budget Overview Card (Click to jump to Expenses Tab) */}
-            <div 
-              onClick={() => handleSwitchTab('expenses')}
-              className="p-3 sm:p-3.5 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation space-y-2.5 cursor-pointer hover:border-[#e06b88]/50 dark:hover:border-slate-600 transition-all group"
+        <AnimatePresence mode="wait">
+          {activeTab === 'plan' && (
+            <motion.div
+              key="plan"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
             >
-              {/* Card Header */}
-              <div className="flex items-center justify-between px-0.5">
-                <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-slate-200">
-                  <Coins className="h-4 w-4 text-[#e06b88]" />
-                  <span>สรุปงบประมาณทริป</span>
-                  <span className="text-[10px] font-semibold text-slate-400">({heroDisplayData.title})</span>
-                </div>
-                <div className="flex items-center gap-1 text-[11px] font-black text-[#e06b88] dark:text-[#f7a1b5] group-hover:translate-x-0.5 transition-transform">
-                  <span>ไปหน้ารายจ่าย</span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </div>
-              </div>
+              <TripPlanTab
+                trip={trip}
+                tripBaseCurrency={tripBaseCurrency}
+                fxRate={fxRate}
+                heroDisplayData={heroDisplayData}
+                itinerary={itinerary}
+                filteredItinerary={filteredItinerary}
+                availableDays={availableDays}
+                selectedDayFilter={selectedDayFilter}
+                setSelectedDayFilter={setSelectedDayFilter}
+                itineraryViewMode={itineraryViewMode}
+                setItineraryViewMode={setItineraryViewMode}
+                showWeatherSection={showWeatherSection}
+                setShowWeatherSection={setShowWeatherSection}
+                setShowTravelHubModal={setShowTravelHubModal}
+                setShowPrintableModal={setShowPrintableModal}
+                canImportExcel={canImportExcel}
+                handleFileUpload={handleFileUpload}
+                exportToExcel={exportToExcel}
+                canEditPlan={canEditPlan}
+                handleOpenAddActivity={handleOpenAddActivity}
+                reordering={reordering}
+                expandedPlanB={expandedPlanB}
+                setExpandedPlanB={setExpandedPlanB}
+                handleMoveActivity={handleMoveActivity}
+                handleOpenEditActivity={handleOpenEditActivity}
+                handleDeleteActivity={handleDeleteActivity}
+                onSwitchTab={handleSwitchTab}
+              />
+            </motion.div>
+          )}
 
-              {/* 3 Pastel Summary Blocks */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                {/* Block 1: Used / จ่ายแล้ว (Soft Sakura Rose Pastel) */}
-                <div className="rounded-2xl p-2.5 sm:p-3 bg-rose-50/90 dark:bg-[#e06b88]/15 border border-rose-200/70 dark:border-[#e06b88]/30 flex flex-col justify-between">
-                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black text-[#e06b88] dark:text-[#f7a1b5]">
-                    <span>💸</span>
-                    <span>ใช้ไปแล้ว</span>
-                  </div>
-                  <div className="mt-1">
-                    <div className="text-sm sm:text-base md:text-lg font-black text-[#e06b88] dark:text-[#f7a1b5] leading-tight">
-                      {heroDisplayData.spent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </div>
-                    {tripBaseCurrency !== 'THB' ? (
-                      <div className="text-[9px] sm:text-[10px] font-semibold text-[#e06b88]/80 dark:text-[#f7a1b5]/70 truncate">
-                        ≈ ฿{Math.round(convertToThb(heroDisplayData.spent, tripBaseCurrency, fxRate)).toLocaleString()}
-                      </div>
-                    ) : (
-                      <div className="text-[9px] sm:text-[10px] font-semibold text-[#e06b88]/80 dark:text-[#f7a1b5]/70 truncate">
-                        {tripBaseCurrency}
-                      </div>
-                    )}
-                  </div>
-                </div>
+          {activeTab === 'expenses' && (
+            <motion.div
+              key="expenses"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              <TripExpensesTab
+                trip={trip}
+                tripBaseCurrency={tripBaseCurrency}
+                fxRate={fxRate}
+                heroDisplayData={heroDisplayData}
+                heroBudgetView={heroBudgetView}
+                setHeroBudgetView={setHeroBudgetView}
+                userDisplayName={userDisplayName}
+                userCat={userCat}
+                otherMembers={otherMembers}
+                expenses={expenses}
+                filteredExpenses={filteredExpenses}
+                categories={categories}
+                currentUser={currentUser}
+                canAddExpense={canAddExpense}
+                expensePayerFilter={expensePayerFilter}
+                setExpensePayerFilter={setExpensePayerFilter}
+                otherPayers={otherPayers}
+                expenseSearchQuery={expenseSearchQuery}
+                setExpenseSearchQuery={setExpenseSearchQuery}
+                expenseCategoryFilter={expenseCategoryFilter}
+                setExpenseCategoryFilter={setExpenseCategoryFilter}
+                setShowTravelHubModal={setShowTravelHubModal}
+                setShowScanModal={setShowScanModal}
+                setShowSettlementModal={setShowSettlementModal}
+                setShowBudgetCategoryModal={setShowBudgetCategoryModal}
+                setOcrSuccessToast={setOcrSuccessToast}
+                handleOpenReceiptPreview={handleOpenReceiptPreview}
+                handleDeleteExpense={handleDeleteExpense}
+                exportExpensesToExcel={exportExpensesToExcel}
+              />
+            </motion.div>
+          )}
 
-                {/* Block 2: Target / ตั้งเป้า (Soft Mint/Emerald Pastel) */}
-                <div className="rounded-2xl p-2.5 sm:p-3 bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/50 flex flex-col justify-between">
-                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black text-emerald-600 dark:text-emerald-300">
-                    <span>🎯</span>
-                    <span>ตั้งเป้าไว้</span>
-                  </div>
-                  <div className="mt-1">
-                    <div className="text-sm sm:text-base md:text-lg font-black text-emerald-700 dark:text-emerald-200 leading-tight">
-                      {heroDisplayData.targetBudget > 0 ? heroDisplayData.targetBudget.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '-'}
-                    </div>
-                    {heroDisplayData.targetBudget > 0 ? (
-                      tripBaseCurrency !== 'THB' ? (
-                        <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
-                          ≈ ฿{Math.round(convertToThb(heroDisplayData.targetBudget, tripBaseCurrency, fxRate)).toLocaleString()}
-                        </div>
-                      ) : (
-                        <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
-                          {tripBaseCurrency}
-                        </div>
-                      )
-                    ) : (
-                      <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
-                        ยังไม่ระบุงบ
-                      </div>
-                    )}
-                  </div>
-                </div>
+          {activeTab === 'analytics' && (
+            <motion.div
+              key="analytics"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              <TripAnalyticsTab
+                distinctPayers={distinctPayers}
+                totalSpent={totalSpent}
+                members={members}
+                memberBudgets={memberBudgets}
+                categories={categories}
+                categoryBudgets={categoryBudgets}
+                expenses={expenses}
+                trip={trip}
+                tripBaseCurrency={tripBaseCurrency}
+                fxRate={fxRate}
+                setShowSettlementModal={setShowSettlementModal}
+                setShowBudgetCategoryModal={setShowBudgetCategoryModal}
+              />
+            </motion.div>
+          )}
 
-                {/* Block 3: Remaining / คงเหลือ (Soft Sky/Indigo Pastel) */}
-                <div className={`rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
-                  heroDisplayData.isOver 
-                    ? 'bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/50' 
-                    : 'bg-sky-50/90 dark:bg-sky-950/30 border border-sky-200/70 dark:border-sky-900/50'
-                }`}>
-                  <div className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-black ${
-                    heroDisplayData.isOver ? 'text-amber-700 dark:text-amber-300' : 'text-sky-600 dark:text-sky-300'
-                  }`}>
-                    <span>{heroDisplayData.isOver ? '⚠️' : '💰'}</span>
-                    <span>{heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'}</span>
-                  </div>
-                  <div className="mt-1">
-                    <div className={`text-sm sm:text-base md:text-lg font-black leading-tight ${
-                      heroDisplayData.isOver 
-                        ? 'text-amber-700 dark:text-amber-200' 
-                        : 'text-sky-700 dark:text-sky-200'
-                    }`}>
-                      {heroDisplayData.targetBudget > 0 
-                        ? (heroDisplayData.isOver ? `+${heroDisplayData.diff.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : heroDisplayData.remaining.toLocaleString(undefined, { maximumFractionDigits: 0 }))
-                        : heroDisplayData.spent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </div>
-                    <div className={`text-[9px] sm:text-[10px] font-semibold truncate ${
-                      heroDisplayData.isOver ? 'text-amber-600/80 dark:text-amber-400/80' : 'text-sky-600/80 dark:text-sky-300/70'
-                    }`}>
-                      {heroDisplayData.targetBudget > 0 
-                        ? (heroDisplayData.isOver ? 'เกินงบที่ตั้งไว้' : `เหลือ ${Math.max(0, 100 - heroDisplayData.progress)}%`) 
-                        : 'แตะจัดการงบ'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Collapsible Weather & Route Widget inside Plan */}
-            {showWeatherSection && (
-              <div className="rounded-3xl border border-slate-200/80 dark:border-purple-900/50 bg-white/95 dark:bg-[#1a182d]/95 card-elevation p-3.5 sm:p-4 space-y-4">
-                <WeatherWidget defaultCity="Osaka" />
-                <RouteVisualizer dayLabel="เส้นทางภาพรวม" items={itinerary} />
-              </div>
-            )}
-            
-            {/* Header Toolbar */}
-            <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full custom-scrollbar">
-                <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-200 dark:bg-[#11101d] border border-slate-300 dark:border-purple-900/60 shrink-0">
-                  <button
-                    onClick={() => setItineraryViewMode('list')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                      itineraryViewMode === 'list'
-                        ? 'bg-white dark:bg-[#1a182d] text-pink-600 dark:text-pink-400 shadow-2xs'
-                        : 'text-slate-600 dark:text-purple-400 hover:text-slate-900'
-                    }`}
-                  >
-                    <List className="h-3 w-3" />
-                    <span>รายการ</span>
-                  </button>
-                  <button
-                    onClick={() => setItineraryViewMode('map')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                      itineraryViewMode === 'map'
-                        ? 'bg-white dark:bg-[#1a182d] text-pink-600 dark:text-pink-400 shadow-2xs'
-                        : 'text-slate-600 dark:text-purple-400 hover:text-slate-900'
-                    }`}
-                  >
-                    <MapIcon className="h-3 w-3" />
-                    <span>แผนที่หมุด 🗺️</span>
-                  </button>
-                </div>
-
-                {availableDays.length > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setSelectedDayFilter('all')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                        selectedDayFilter === 'all'
-                          ? 'bg-[#e06b88] text-white shadow-xs scale-105'
-                          : 'bg-slate-100 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#323850] hover:bg-slate-200'
-                      }`}
-                    >
-                      ทั้งหมด ({itinerary.length})
-                    </button>
-                    {availableDays.map((day) => (
-                      <button
-                        key={day}
-                        onClick={() => setSelectedDayFilter(day)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                          selectedDayFilter === day
-                            ? 'bg-[#e06b88] text-white shadow-xs scale-105'
-                            : 'bg-slate-100 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#323850] hover:bg-slate-200'
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 ml-auto">
-                <button
-                  onClick={() => setShowPrintableModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#323850] bg-white/90 dark:bg-[#2a2f45] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-rose-300 transition-all cursor-pointer shadow-2xs"
-                  title="พิมพ์ / เซฟเป็น PDF"
-                >
-                  <FileText className="h-3.5 w-3.5 text-rose-500" />
-                  <span className="hidden sm:inline">พิมพ์ PDF</span>
-                </button>
-
-                {canImportExcel && (
-                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-[#323850] bg-rose-50/80 dark:bg-[#2a2f45] text-rose-700 dark:text-rose-200 text-xs font-bold hover:border-rose-400 cursor-pointer transition-all shadow-2xs">
-                    <Upload className="h-3.5 w-3.5 text-rose-500" />
-                    <span className="hidden sm:inline">Import Excel</span>
-                    <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
-                  </label>
-                )}
-
-                <button
-                  onClick={exportToExcel}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#323850] bg-white/90 dark:bg-[#2a2f45] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 transition-all cursor-pointer shadow-2xs"
-                  title="ดาวน์โหลดไฟล์ Excel"
-                >
-                  <Download className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className="hidden sm:inline">Export Excel</span>
-                </button>
-
-                {canEditPlan && (
-                  <button
-                    onClick={() => handleOpenAddActivity(null, selectedDayFilter !== 'all' ? selectedDayFilter : undefined)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>เพิ่มกิจกรรม</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {itineraryViewMode === 'map' ? (
-              <InteractiveTripMap itinerary={itinerary} selectedDay={selectedDayFilter} />
-            ) : (
-              filteredItinerary.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-[#323850] rounded-3xl p-6 bg-white/60 dark:bg-[#222638]/60">
-                  <Navigation className="h-10 w-10 text-rose-400 mx-auto mb-2 animate-float-slow" />
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีกิจกรรมในแผนเที่ยวนี้</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
-                    กดปุ่มเพิ่มกิจกรรม หรือนำเข้าจากไฟล์ Excel ได้ทันที
-                  </p>
-                  {canEditPlan && (
-                    <button
-                      onClick={() => handleOpenAddActivity()}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md hover:scale-105 transition-all"
-                    >
-                      <Plus className="h-4 w-4" /> เพิ่มกิจกรรมแรก
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredItinerary.map((item, idx) => (
-                    <ItineraryStopCard
-                      key={item.id || idx}
-                      item={item}
-                      idx={idx}
-                      totalItems={itinerary.length}
-                      canEditPlan={canEditPlan}
-                      reordering={reordering}
-                      isPlanBOpen={expandedPlanB[item.id] || false}
-                      onTogglePlanB={(id) => setExpandedPlanB((prev) => ({ ...prev, [id]: !prev[id] }))}
-                      onMoveActivity={handleMoveActivity}
-                      onOpenEditActivity={handleOpenEditActivity}
-                      onDeleteActivity={handleDeleteActivity}
-                    />
-                  ))}
-                </div>
-              )
-            )}
-          </div>
-        )}
-
-        {/* ==================== TAB 2: รายจ่าย (EXPENSES - FOCUSED) ==================== */}
-        {activeTab === 'expenses' && (
-          <div className="space-y-4">
-            
-            {/* HERO BUDGET & QUICK ACTION CARD */}
-            <div className="relative overflow-hidden rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-gradient-to-br from-rose-50/60 via-purple-50/30 to-indigo-50/30 dark:from-[#1b1f30] dark:via-[#222638] dark:to-[#222638] bg-white/95 dark:bg-[#222638]/95 backdrop-blur-xl card-elevation p-4 sm:p-6 md:p-7 space-y-4">
-              <div className="absolute -top-16 -right-16 w-48 h-48 bg-rose-400/10 rounded-full blur-3xl pointer-events-none animate-float-slow" />
-              <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
-
-              {/* Row 1: Badges & Quick Tool Pills */}
-              <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
-                    {tripBaseCurrency} Workspace
-                  </span>
-                  <span className="text-[10px] sm:text-[11px] font-bold text-[#e06b88] dark:text-[#f7a1b5] bg-rose-50 dark:bg-[#e06b88]/20 px-2 py-0.5 rounded-full border border-rose-200/80 dark:border-[#e06b88]/35 shadow-2xs">
-                    {tripBaseCurrency === 'CNY'
-                      ? `1 CNY ≈ ${convertCurrency(1, 'CNY', 'THB', fxRate).toFixed(2)} THB`
-                      : tripBaseCurrency === 'USD'
-                      ? `1 USD ≈ ${convertCurrency(1, 'USD', 'THB', fxRate).toFixed(2)} THB`
-                      : `100 JPY = ${(fxRate * 100).toFixed(2)} THB`}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setShowTravelHubModal(true)}
-                    className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-[#e06b88] hover:bg-[#d25875] px-3 py-1.5 rounded-xl shadow-md shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <span>🧰 Travel Hub</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Row 2: Member Quick View Pills */}
-              <div className="relative z-10 flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-                <button
-                  type="button"
-                  onClick={() => setHeroBudgetView('all')}
-                  className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                    heroBudgetView === 'all'
-                      ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-105'
-                      : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#323850]'
-                  }`}
-                >
-                  <Users className="h-3.5 w-3.5" />
-                  <span>รวมทุกคน</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setHeroBudgetView('me')}
-                  className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                    heroBudgetView === 'me'
-                      ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-105'
-                      : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#323850]'
-                  }`}
-                >
-                  <span>{userCat.emoji}</span>
-                  <span>ของฉัน ({userDisplayName})</span>
-                </button>
-
-                {otherMembers.map((m) => {
-                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'เพื่อน';
-                  const mCat = getCatAvatar(m.profiles?.avatar_id);
-                  const isSelected = heroBudgetView === m.user_id || heroBudgetView === m.id;
-
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setHeroBudgetView(m.user_id || m.id)}
-                      className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                        isSelected
-                          ? 'bg-[#e06b88] text-white shadow-sm shadow-[#e06b88]/30 scale-105'
-                          : 'bg-white/80 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#323850]'
-                      }`}
-                    >
-                      <span>{mCat.emoji}</span>
-                      <span>{mName}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Row 3: Spent Metric */}
-              <div className="relative z-10 pt-1">
-                <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                  <span>{heroDisplayData.title}</span>
-                  {heroDisplayData.isOver && (
-                    <span className="text-[10px] sm:text-[11px] font-black text-[#e06b88] dark:text-[#f7a1b5] bg-rose-50 dark:bg-[#e06b88]/20 px-2 py-0.5 rounded-md border border-rose-200 dark:border-[#e06b88]/35">
-                      ⚠️ เกินงบ +{heroDisplayData.diff.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
-                  <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-                    {heroDisplayData.spent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </span>
-                  <span className="text-base sm:text-xl font-bold text-[#e06b88] dark:text-[#f497aa]">
-                    {tripBaseCurrency}
-                  </span>
-                  {tripBaseCurrency !== 'THB' && (
-                    <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
-                      (≈ ฿{Math.round(convertToThb(heroDisplayData.spent, tripBaseCurrency, fxRate)).toLocaleString()})
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Row 4: Progress Bar */}
-              <div className="relative z-10 space-y-1.5">
-                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span>
-                    {heroDisplayData.targetBudget > 0 
-                      ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
-                      : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? `${heroDisplayData.targetBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })} ${tripBaseCurrency}` : 'ไม่ระบุ'}
-                    <button
-                      onClick={() => setShowBudgetCategoryModal(true)}
-                      className="p-0.5 text-slate-400 hover:text-[#e06b88] transition-colors cursor-pointer"
-                      title="ตั้งค่าเป้าหมายงบประมาณ"
-                    >
-                      <Edit3 className="h-3 w-3" />
-                    </button>
-                  </span>
-                </div>
-
-                <div className="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-3 sm:h-3.5 p-0.5 overflow-hidden shadow-inner relative">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
-                      heroDisplayData.isOver
-                        ? 'bg-rose-600'
-                        : 'bg-[#e06b88]'
-                    }`}
-                    style={{ width: `${Math.max(heroDisplayData.progress, 3)}%` }}
-                  >
-                    <div className="absolute inset-0 bg-white/20 animate-shimmer" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 5: Remaining Ribbon & Primary Action Buttons */}
-              <div className="relative z-10 pt-1 space-y-3">
-                {heroDisplayData.targetBudget > 0 && (
-                  <div className={`p-2.5 sm:p-3 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-2xs ${
-                    heroDisplayData.isOver
-                      ? 'bg-rose-50/80 dark:bg-[#e06b88]/15 border-rose-300 dark:border-[#e06b88]/30 text-[#e06b88] dark:text-[#f7a1b5]'
-                      : 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300'
-                  }`}>
-                    <div className="flex items-center gap-1.5">
-                      {heroDisplayData.isOver ? (
-                        <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
-                      ) : (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                      )}
-                      <span>
-                        {heroDisplayData.isOver ? 'ยอดเงินที่ใช้เกินงบประมาณ:' : 'ยอดเงินคงเหลือ:'}
-                      </span>
-                    </div>
-                    <div className="font-black text-right">
-                      <span>{heroDisplayData.isOver ? heroDisplayData.diff.toLocaleString(undefined, { maximumFractionDigits: 0 }) : heroDisplayData.remaining.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}</span>
-                      {tripBaseCurrency !== 'THB' && (
-                        <span className="text-[10px] opacity-80 block sm:inline sm:ml-1">
-                          (≈ ฿{Math.round(convertToThb((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining), tripBaseCurrency, fxRate)).toLocaleString()})
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5">
-                  <button
-                    onClick={() => {
-                      setOcrSuccessToast(null);
-                      setShowScanModal(true);
-                    }}
-                    disabled={!canAddExpense}
-                    className="py-3 px-3 rounded-2xl bg-[#e06b88] hover:bg-[#d25875] active:bg-[#c34966] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#e06b88]/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Camera className="h-4 w-4 shrink-0" />
-                    <span className="truncate">บันทึกรายจ่าย AI OCR</span>
-                  </button>
-
-                  <button
-                    onClick={() => setShowSettlementModal(true)}
-                    className="py-3 px-3 rounded-2xl bg-white dark:bg-[#2a2f45] border border-rose-200/80 dark:border-[#323850] hover:border-rose-300 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
-                  >
-                    <Calculator className="h-4 w-4 text-rose-400 shrink-0" />
-                    <span className="truncate">เคลียร์บิลหารเงิน</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Horizontal Filter Row */}
-            <div className="p-3.5 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation space-y-2.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-xs font-black text-slate-900 dark:text-slate-200 flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-rose-400" />
-                  <span>กรองดูรายจ่ายตามผู้จ่าย:</span>
-                </div>
-                <div className="text-xs font-bold text-rose-600 dark:text-rose-300">
-                  ยอดรวมที่เลือก: {filteredExpenses.reduce((acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}
-                </div>
-              </div>
-
-              {/* Swipeable Payer Filter Chips */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-                <button
-                  type="button"
-                  onClick={() => setExpensePayerFilter('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                    expensePayerFilter === 'all'
-                      ? 'bg-[#e06b88] text-white shadow-xs scale-105'
-                      : 'bg-slate-100 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#323850]/60'
-                  }`}
-                >
-                  👥 ทุกคน ({expenses.length})
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setExpensePayerFilter('me')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
-                    expensePayerFilter === 'me'
-                      ? 'bg-[#e06b88] text-white shadow-xs scale-105'
-                      : 'bg-slate-100 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#323850]/60'
-                  }`}
-                >
-                  <span>{userCat.emoji}</span>
-                  <span>ของฉัน ({userDisplayName})</span>
-                </button>
-
-                {otherPayers.map((p) => {
-                  const pCat = getCatAvatar(p.avatar);
-                  const isSelected = expensePayerFilter.toLowerCase() === p.key.toLowerCase() || expensePayerFilter.toLowerCase() === p.name.toLowerCase();
-
-                  return (
-                    <button
-                      key={p.key}
-                      type="button"
-                      onClick={() => setExpensePayerFilter(p.key)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
-                        isSelected
-                          ? 'bg-[#e06b88] text-white shadow-xs scale-105'
-                          : 'bg-slate-100 dark:bg-[#2a2f45] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#323850]/60'
-                      }`}
-                    >
-                      <span>{pCat.emoji}</span>
-                      <span>{p.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Search & Category Filter */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="ค้นหารายการ, ร้านค้า..."
-                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-rose-100 dark:border-[#323850] bg-white/80 dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs outline-none focus:border-rose-400 font-medium"
-                    value={expenseSearchQuery}
-                    onChange={(e) => setExpenseSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                <select
-                  value={expenseCategoryFilter}
-                  onChange={(e) => setExpenseCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-rose-100 dark:border-[#323850] bg-white/80 dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs outline-none focus:border-rose-400 font-bold cursor-pointer"
-                >
-                  <option value="all">ทุกหมวดหมู่ ({categories.length})</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* List of Expenses */}
-            {filteredExpenses.length === 0 ? (
-              <div className="text-center py-12 border-2 border-dashed border-rose-200 dark:border-[#323850] rounded-3xl p-6 bg-white/60 dark:bg-[#222638]/60">
-                <Receipt className="h-10 w-10 text-rose-400 mx-auto mb-2 animate-float-slow" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่าย</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
-                  กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกนและกรอกยอดให้อัตโนมัติ
-                </p>
-                {canAddExpense && (
-                  <button
-                    onClick={() => {
-                      setOcrSuccessToast(null);
-                      setShowScanModal(true);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Camera className="h-4 w-4" /> บันทึกรายจ่ายแรก
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="divide-y divide-rose-50 dark:divide-[#323850]/80 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 overflow-hidden card-elevation">
-                {filteredExpenses.map((exp, idx) => (
-                  <ExpenseCard
-                    key={exp.id || idx}
-                    expense={exp}
-                    categories={categories}
-                    currentUserId={currentUser?.id}
-                    userDisplayName={userDisplayName}
-                    fxRate={fxRate}
-                    canAddExpense={canAddExpense}
-                    onOpenReceiptPreview={handleOpenReceiptPreview}
-                    onDeleteExpense={handleDeleteExpense}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ==================== TAB 3: สถิติ & จัดการงบหมวดหมู่ (ANALYTICS) ==================== */}
-        {activeTab === 'analytics' && (
-          <div className="space-y-4 sm:space-y-6">
-            
-            {/* สรุปยอดจ่ายแยกตามรายคน */}
-            <div className="p-4 sm:p-6 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-[#e06b88]" /> 
-                  <span>สรุปยอดจ่ายแยกตามรายคน (Who Paid)</span>
-                </h2>
-                <button
-                  onClick={() => setShowSettlementModal(true)}
-                  className="px-3 py-1.5 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-sm shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
-                >
-                  <Calculator className="h-3.5 w-3.5" /> ดูการโอนเงินเคลียร์บิล
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {distinctPayers.map((p) => {
-                  const pCat = getCatAvatar(p.avatar);
-                  const sharePercent = totalSpent > 0 ? (p.total / totalSpent) * 100 : 0;
-                  
-                  const targetMemberObj = members.find((m) => m.profiles?.display_name?.toLowerCase() === p.name.toLowerCase() || m.user_id === p.key);
-                  const pKey = p.isMe ? 'me' : (targetMemberObj?.user_id || targetMemberObj?.id || p.key);
-                  const pBudget = memberBudgets[pKey] || 0;
-                  const pRemaining = pBudget > p.total ? pBudget - p.total : 0;
-                  const pOver = pBudget > 0 && p.total > pBudget ? p.total - pBudget : 0;
-
-                  return (
-                    <div key={p.key} className="p-3.5 rounded-2xl bg-rose-50/40 dark:bg-[#2a2f45] border border-rose-100/70 dark:border-[#323850]/80 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{pCat.emoji}</span>
-                          <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">{p.name}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white">
-                            {p.total.toLocaleString()} {trip?.currency || 'JPY'}
-                          </span>
-                          <span className="text-[10px] text-rose-600 dark:text-rose-300 block font-bold">
-                            ({sharePercent.toFixed(1)}% ของทริป)
-                          </span>
-                        </div>
-                      </div>
-
-                      {pBudget > 0 && (
-                        <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex justify-between border-t border-rose-100/60 dark:border-[#323850]/60 pt-1.5">
-                          <span>งบตั้งไว้: {pBudget.toLocaleString()} {trip?.currency}</span>
-                          {pOver > 0 ? (
-                            <span className="text-rose-600 font-bold">เกินงบ +{pOver.toLocaleString()}</span>
-                          ) : (
-                            <span className="text-emerald-600 font-bold">เหลือ {pRemaining.toLocaleString()}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* หมวดหมู่ค่าใช้จ่าย */}
-            <div className="p-4 sm:p-6 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
-                  <span>สัดส่วนค่าใช้จ่ายตามหมวดหมู่</span>
-                </h2>
-                <button
-                  onClick={() => setShowBudgetCategoryModal(true)}
-                  className="text-xs font-bold text-rose-600 dark:text-rose-300 hover:underline cursor-pointer"
-                >
-                  แก้ไขงบหมวดหมู่
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {categories.map((cat) => {
-                  const spentInCat = expenses
-                    .filter((e) => e.category === cat.id)
-                    .reduce((acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate), 0);
-                  const catTarget = categoryBudgets[cat.id] || 0;
-                  const catPercent = totalSpent > 0 ? (spentInCat / totalSpent) * 100 : 0;
-
-                  return (
-                    <div key={cat.id} className="space-y-1">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-300">
-                          <span>{cat.icon}</span>
-                          <span>{cat.label}</span>
-                        </span>
-                        <div className="text-right">
-                          <span className="text-slate-900 dark:text-white">{spentInCat.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}</span>
-                          <span className="text-[10px] text-slate-400 ml-1">({catPercent.toFixed(0)}%)</span>
-                        </div>
-                      </div>
-
-                      <div className="w-full bg-slate-100 dark:bg-[#2a2f45] rounded-full h-2 overflow-hidden">
-                        <div
-                          className="h-full bg-[#e06b88] rounded-full"
-                          style={{ width: `${Math.min(catPercent, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ==================== TAB 4: สมาชิก & สิทธิ์ (MEMBERS) ==================== */}
-        {activeTab === 'members' && (
-          <div className="space-y-4">
-            <div className="p-4 sm:p-6 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation space-y-4">
-              <div className="flex flex-wrap justify-between items-center gap-2">
-                <div>
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-rose-400" />
-                    <span>สมาชิกในทริปนี้ ({members.length})</span>
-                  </h2>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    {isOwner ? '👑 คุณเป็นเจ้าของทริป สามารถกำหนดสิทธิ์ให้เพื่อนแก้ไขหรือดูได้อย่างเดียว' : 'รายชื่อเพื่อนร่วมทริป'}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <Share2 className="h-3.5 w-3.5" /> ชวนเพื่อนเข้าทริป
-                </button>
-              </div>
-
-              <div className="divide-y divide-rose-50 dark:divide-[#323850]/80">
-                {members.map((m) => {
-                  const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
-                  const mCat = getCatAvatar(m.profiles?.avatar_id);
-                  const isCurrent = m.user_id === currentUser?.id;
-                  const isTripOwner = m.role === 'owner' || m.user_id === trip?.created_by;
-
-                  return (
-                    <div key={m.id} className="py-3 flex justify-between items-center gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-base shadow-2xs`}>
-                          {mCat.emoji}
-                        </div>
-                        <div>
-                          <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <span>{mName}</span>
-                            {isCurrent && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35">
-                                ฉัน
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            {isTripOwner ? '👑 เจ้าของทริป' : m.role === 'editor' ? '✏️ สิทธิ์แก้ไขแผนและรายจ่าย' : '👁️ สิทธิ์เปิดดูอย่างเดียว'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {isOwner && !isTripOwner ? (
-                          <div className="flex items-center gap-1.5">
-                            <select
-                              value={m.role}
-                              onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as any)}
-                              className="px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-300 dark:border-[#323850] bg-slate-50 dark:bg-[#2a2f45] text-slate-900 dark:text-white outline-none cursor-pointer"
-                            >
-                              <option value="editor">✏️ ผู้แก้ไข (Editor)</option>
-                              <option value="viewer">👁️ ผู้เข้าชม (Viewer)</option>
-                            </select>
-                            <button
-                              onClick={() => handleRemoveMember(m.id, mName)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
-                              title="ลบสมาชิก"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-xs font-bold text-rose-600 dark:text-rose-300">
-                            {isTripOwner ? 'Owner' : m.role === 'editor' ? 'Editor' : 'Viewer'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
+          {activeTab === 'members' && (
+            <motion.div
+              key="members"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              <TripMembersTab
+                members={members}
+                isOwner={isOwner}
+                currentUser={currentUser}
+                trip={trip}
+                setShowShareModal={setShowShareModal}
+                handleUpdateMemberRole={handleUpdateMemberRole}
+                handleRemoveMember={handleRemoveMember}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </main>
 
@@ -2259,53 +1642,89 @@ export default function TripDetailPage() {
           <button
             type="button"
             onClick={() => handleSwitchTab('plan')}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+            className={`relative flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'plan'
-                ? 'bg-[#e06b88]/15 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f497aa] font-black scale-105'
+                ? 'text-[#e06b88] dark:text-[#f497aa] font-black'
                 : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
             }`}
           >
-            <MapPin className="h-4 w-4 mb-0.5" />
-            <span className="text-[10px]">แผนเที่ยว ({itinerary.length})</span>
+            {activeTab === 'plan' && (
+              <motion.div
+                layoutId="activeBottomTabPill"
+                className="absolute inset-0 bg-[#e06b88]/15 dark:bg-[#e06b88]/20 rounded-2xl"
+                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+              />
+            )}
+            <div className="relative z-10 flex flex-col items-center justify-center">
+              <MapPin className="h-4 w-4 mb-0.5" />
+              <span className="text-[10px]">แผนเที่ยว ({itinerary.length})</span>
+            </div>
           </button>
 
           <button
             type="button"
             onClick={() => handleSwitchTab('expenses')}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+            className={`relative flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'expenses'
-                ? 'bg-[#e06b88]/15 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f497aa] font-black scale-105'
+                ? 'text-[#e06b88] dark:text-[#f497aa] font-black'
                 : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
             }`}
           >
-            <DollarSign className="h-4 w-4 mb-0.5" />
-            <span className="text-[10px]">รายจ่าย ({expenses.length})</span>
+            {activeTab === 'expenses' && (
+              <motion.div
+                layoutId="activeBottomTabPill"
+                className="absolute inset-0 bg-[#e06b88]/15 dark:bg-[#e06b88]/20 rounded-2xl"
+                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+              />
+            )}
+            <div className="relative z-10 flex flex-col items-center justify-center">
+              <DollarSign className="h-4 w-4 mb-0.5" />
+              <span className="text-[10px]">รายจ่าย ({expenses.length})</span>
+            </div>
           </button>
 
           <button
             type="button"
             onClick={() => handleSwitchTab('analytics')}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+            className={`relative flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'analytics'
-                ? 'bg-[#e06b88]/15 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f497aa] font-black scale-105'
+                ? 'text-[#e06b88] dark:text-[#f497aa] font-black'
                 : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
             }`}
           >
-            <PieChart className="h-4 w-4 mb-0.5" />
-            <span className="text-[10px]">สถิติ & งบ</span>
+            {activeTab === 'analytics' && (
+              <motion.div
+                layoutId="activeBottomTabPill"
+                className="absolute inset-0 bg-[#e06b88]/15 dark:bg-[#e06b88]/20 rounded-2xl"
+                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+              />
+            )}
+            <div className="relative z-10 flex flex-col items-center justify-center">
+              <PieChart className="h-4 w-4 mb-0.5" />
+              <span className="text-[10px]">สถิติ & งบ</span>
+            </div>
           </button>
 
           <button
             type="button"
             onClick={() => handleSwitchTab('members')}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+            className={`relative flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
               activeTab === 'members'
-                ? 'bg-[#e06b88]/15 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f497aa] font-black scale-105'
+                ? 'text-[#e06b88] dark:text-[#f497aa] font-black'
                 : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
             }`}
           >
-            <Users className="h-4 w-4 mb-0.5" />
-            <span className="text-[10px]">สมาชิก ({members.length})</span>
+            {activeTab === 'members' && (
+              <motion.div
+                layoutId="activeBottomTabPill"
+                className="absolute inset-0 bg-[#e06b88]/15 dark:bg-[#e06b88]/20 rounded-2xl"
+                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+              />
+            )}
+            <div className="relative z-10 flex flex-col items-center justify-center">
+              <Users className="h-4 w-4 mb-0.5" />
+              <span className="text-[10px]">สมาชิก ({members.length})</span>
+            </div>
           </button>
         </div>
       </div>

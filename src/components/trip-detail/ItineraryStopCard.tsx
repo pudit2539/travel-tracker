@@ -4,7 +4,8 @@
 import React from 'react';
 import { 
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
-  ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield 
+  ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
+  Navigation
 } from 'lucide-react';
 
 interface ItineraryStopCardProps {
@@ -39,6 +40,10 @@ function ItineraryStopCardComponent({
           item.main_place + ' ' + (item.city || 'Japan')
         )}`;
 
+  const mainPlaceDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    item.main_place + (item.city ? ' ' + item.city : '')
+  )}`;
+
   const foodSearchUrl =
     item.food_links && item.food_links[0]
       ? item.food_links[0]
@@ -47,6 +52,12 @@ function ItineraryStopCardComponent({
           item.food_recommendation.split(/[,(]/)[0].trim() + ' ' + (item.city || 'Japan')
         )}`
       : '';
+
+  const foodDirectionsUrl = item.food_recommendation
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+        item.food_recommendation.split(/[,(]/)[0].trim() + (item.city ? ' ' + item.city : '')
+      )}`
+    : '';
 
   return (
     <div className="group p-4 sm:p-5 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation hover:border-[#e06b88]/50 dark:hover:border-[#e06b88]/50 transition-all duration-300 space-y-3">
@@ -111,8 +122,8 @@ function ItineraryStopCardComponent({
       </div>
 
       <div className="space-y-2.5">
-        {/* Main Place Name & Location Badge */}
-        <div>
+        {/* Main Place Name & Location Badge + 1-Tap Navigation */}
+        <div className="flex items-center gap-2 flex-wrap">
           <a
             href={mainPlaceMapsUrl}
             target="_blank"
@@ -126,13 +137,24 @@ function ItineraryStopCardComponent({
               <ExternalLink className="h-3 w-3" />
             </span>
           </a>
+
+          <a
+            href={mainPlaceDirectionsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-xs shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title="เปิดระบบนำทางแบบเลี้ยวต่อเลี้ยว (Turn-by-turn Navigation)"
+          >
+            <Navigation className="h-3 w-3 fill-white" />
+            <span>นำทาง 🧭</span>
+          </a>
         </div>
 
         {/* Food & Dining Recommendations */}
         {item.food_recommendation && (
           <div className="text-sm text-slate-700 dark:text-slate-200 flex items-start gap-2.5 pt-0.5 leading-relaxed">
             <Utensils className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 flex-wrap">
               <span className="font-black text-slate-900 dark:text-white">ร้านอาหาร / คาเฟ่: </span>
               <span className="font-medium">{item.food_recommendation}</span>
               {foodSearchUrl && (
@@ -140,11 +162,23 @@ function ItineraryStopCardComponent({
                   href={foodSearchUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/25 dark:text-amber-200 border border-amber-200/80 dark:border-amber-500/40 hover:scale-105 active:scale-95 transition-all ml-1.5 align-middle cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/25 dark:text-amber-200 border border-amber-200/80 dark:border-amber-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
                   title="เปิด Google Maps ร้านอาหาร"
                 >
-                  <span>เปิดแผนที่ร้าน 📍</span>
+                  <span>แผนที่ร้าน 📍</span>
                   <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+              {foodDirectionsUrl && (
+                <a
+                  href={foodDirectionsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-2xs"
+                  title="นำทางไปร้านอาหาร"
+                >
+                  <Navigation className="h-2.5 w-2.5 fill-emerald-600 dark:fill-emerald-300" />
+                  <span>นำทาง</span>
                 </a>
               )}
             </div>
