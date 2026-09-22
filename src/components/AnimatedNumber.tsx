@@ -49,3 +49,4 @@ export function AnimatedNumber({
 }
 
 export default AnimatedNumber;
+

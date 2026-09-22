@@ -254,7 +254,7 @@ export default function NotificationBell({
 
       {/* Popover / Dropdown Drawer */}
       {isOpen && (
-        <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 z-50 w-auto sm:w-96 rounded-3xl bg-white/95 dark:bg-[#1a182d]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-purple-800/60 shadow-2xl glow-pink-purple overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 z-50 w-auto sm:w-96 rounded-3xl bg-white dark:bg-[#1a182d] border border-slate-200/90 dark:border-purple-800/60 shadow-2xl glow-pink-purple overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           
           {/* Header */}
           <div className="p-4 pb-3 border-b border-slate-100 dark:border-purple-900/40 flex items-center justify-between">

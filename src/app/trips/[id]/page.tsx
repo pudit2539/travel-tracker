@@ -1259,7 +1259,7 @@ export default function TripDetailPage() {
       <div className="absolute top-80 right-10 w-80 sm:w-96 h-80 sm:h-96 bg-purple-500/8 dark:bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
       {/* ==================== TOP NAVIGATION & STICKY APP HEADER ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#1b1f30]/95 backdrop-blur-2xl transition-colors safe-top-nav">
+      <nav className="sticky top-0 z-40 border-b border-rose-100/80 dark:border-[#323850]/80 bg-white/98 dark:bg-[#1b1f30]/98 shadow-xs transition-colors safe-top-nav">
         <div className="max-w-5xl mx-auto px-3.5 sm:px-4 pb-2 sm:pb-2.5 space-y-2">
           
           {/* Row 1: Back & Title & Action Icons */}
@@ -1637,7 +1637,7 @@ export default function TripDetailPage() {
       </button>
 
       {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
-      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-white/95 dark:bg-[#1b1f30]/95 backdrop-blur-2xl border-t border-rose-100/80 dark:border-[#323850]/80 shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-white/98 dark:bg-[#1b1f30]/98 border-t border-rose-100/80 dark:border-[#323850]/80 shadow-2xl">
         <div className="grid grid-cols-4 gap-1 max-w-md mx-auto">
           <button
             type="button"
