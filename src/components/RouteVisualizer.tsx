@@ -48,18 +48,18 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
   };
 
   return (
-    <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 backdrop-blur-xl card-elevation transition-all space-y-4">
+    <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 backdrop-blur-xl card-elevation transition-all space-y-4">
       
       {/* Header with Day Label & Multi-Stop Button */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#e06b88] text-white flex items-center justify-center shadow-md shadow-[#e06b88]/20 shrink-0 animate-float-slow">
+          <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/25 shrink-0 animate-float-slow">
             <Navigation className="h-5 w-5" />
           </div>
           <div>
             <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
-              <span>แผนที่เส้นทาง: <b className="text-[#e06b88] dark:text-[#fbc2cf]">{dayLabel}</b></span>
-              <span className="text-[11px] sm:text-xs font-black text-[#e06b88] dark:text-[#fbc2cf] bg-rose-50 dark:bg-[#e06b88]/25 px-2.5 py-0.5 rounded-full border border-rose-200/80 dark:border-[#e06b88]/40 shadow-xs">
+              <span>แผนที่เส้นทาง: <b className="text-blue-600 dark:text-blue-400">{dayLabel}</b></span>
+              <span className="text-[11px] sm:text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full border border-blue-200/80 dark:border-blue-800 shadow-xs">
                 {items.length} จุดหมาย
               </span>
             </h3>
@@ -74,7 +74,7 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
             href={generateMultiStopMapsUrl()}
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2 rounded-2xl bg-[#e06b88] hover:bg-[#d25875] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer shrink-0"
+            className="px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer shrink-0"
           >
             <Compass className="h-4 w-4" />
             <span>เปิดเส้นทางใน Google Maps</span>
@@ -98,19 +98,19 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
                 href={directMapUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="group p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#323850] bg-slate-50/90 dark:bg-[#2a2f45] hover:border-[#e06b88] dark:hover:border-[#e06b88]/60 transition-all cursor-pointer flex items-center gap-3 min-w-[170px] max-w-[220px] shadow-2xs"
+                className="group p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#222c42] bg-slate-50/90 dark:bg-[#1c2438] hover:border-blue-500 dark:hover:border-blue-400 transition-all cursor-pointer flex items-center gap-3 min-w-[170px] max-w-[220px] shadow-2xs"
                 title="เปิดดูใน Google Maps"
               >
-                <div className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black text-white shrink-0 bg-[#e06b88] shadow-xs">
+                <div className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black text-white shrink-0 bg-blue-600 shadow-xs">
                   {idx + 1}
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1">
-                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate group-hover:text-[#e06b88] dark:group-hover:text-[#fbc2cf] transition-colors">
+                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {cleanName}
                     </span>
-                    <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-[#e06b88] shrink-0" />
+                    <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-blue-600 shrink-0" />
                   </div>
                   <span className="text-[11px] text-slate-500 dark:text-slate-300 block font-semibold truncate mt-0.5">
                     {item.time_slot || item.city || 'จุดแวะ'}

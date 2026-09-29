@@ -124,7 +124,7 @@ export function TripHeroCover({ trip, itineraryCount = 0, totalSpent = 0, curren
   }, []);
 
   return (
-    <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 dark:border-[#262c3d] group">
+    <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/90 dark:border-[#222c42] group">
       {/* Background Cover Image with Gradient Scrim */}
       <div className="h-44 sm:h-52 w-full relative overflow-hidden bg-slate-900">
         <img
@@ -136,7 +136,7 @@ export function TripHeroCover({ trip, itineraryCount = 0, totalSpent = 0, curren
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/30" />
 
-        {/* Top Floating Countdown Pill */}
+        {/* Top Floating Countdown Pill (Trip.com style) */}
         {tripCountdown && (
           <div className="absolute top-3.5 left-3.5 sm:left-5 z-10">
             <div className={`px-3 py-1.5 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 backdrop-blur-xs ${tripCountdown.badgeColor}`}>
@@ -163,24 +163,24 @@ export function TripHeroCover({ trip, itineraryCount = 0, totalSpent = 0, curren
 
           <div className="hidden sm:block text-right">
             <span className="text-[10px] uppercase font-bold text-slate-300 block">ยอดใช้จ่ายรวม</span>
-            <span className="text-base font-black text-rose-300 font-mono">
+            <span className="text-base font-black text-amber-300 font-mono">
               {totalSpent.toLocaleString()} {currency}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Cat Companion Mood Banner directly below cover */}
-      <div className="p-3 sm:p-3.5 bg-slate-50/90 dark:bg-[#171a23] border-t border-slate-200/80 dark:border-[#262c3d] flex items-center justify-between gap-3 text-xs">
+      {/* Cat Companion Mood Banner directly below cover (With subtle pink gimmick) */}
+      <div className="p-3 sm:p-3.5 bg-white dark:bg-[#151b2b] border-t border-slate-200/90 dark:border-[#222c42] flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#1f2433] shadow-xs flex items-center justify-center text-base shrink-0 border border-slate-200/80 dark:border-[#2d3448]">
+          <div className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-[#1c2438] shadow-xs flex items-center justify-center text-base shrink-0 border border-slate-200/80 dark:border-[#222c42]">
             {catMoodGreeting.icon}
           </div>
           <div>
             <div className="flex items-center gap-1.5 font-black text-slate-900 dark:text-white">
               <span>{catMoodGreeting.mood}</span>
-              <span className="text-[10px] text-[#c25872] dark:text-[#d47087] bg-rose-50 dark:bg-[#d47087]/15 px-2 py-0.2 rounded-full font-bold border border-rose-200/60 dark:border-[#d47087]/30">
-                Cat AI Companion
+              <span className="text-[10px] text-[#f43f5e] dark:text-[#fb7185] bg-rose-50 dark:bg-rose-950/40 px-2 py-0.2 rounded-full font-bold border border-rose-200/80 dark:border-[#fb7185]/30">
+                Cat AI Companion 🐾
               </span>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">

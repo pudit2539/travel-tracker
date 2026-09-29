@@ -4,24 +4,30 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f9f9fb;
+  --background: #f4f6fa;
   --foreground: #1e293b;
   --card: #ffffff;
   --card-foreground: #1e293b;
-  --border: #e8ebf0;
-  --primary-pink: #c25872;
-  --primary-purple: #c25872;
-  --primary-black: #0f1117;
+  --border: #e2e8f0;
+  --primary-blue: #0066f6;
+  --primary-blue-hover: #0052cc;
+  --primary-pink: #f43f5e;
+  --primary-pink-subtle: #fff1f2;
+  --primary-purple: #2563eb;
+  --primary-black: #0b0f19;
 }
 
 .dark {
-  --background: #0f1117;
-  --foreground: #e2e8f0;
-  --card: #171a23;
+  --background: #0b0f19;
+  --foreground: #f1f5f9;
+  --card: #151b2b;
   --card-foreground: #f8fafc;
-  --border: #262c3d;
-  --primary-pink: #d47087;
-  --primary-purple: #d47087;
+  --border: #222c42;
+  --primary-blue: #3b82f6;
+  --primary-blue-hover: #60a5fa;
+  --primary-pink: #fb7185;
+  --primary-pink-subtle: rgba(244, 63, 94, 0.12);
+  --primary-purple: #3b82f6;
 }
 
 @theme inline {
@@ -76,11 +82,11 @@ input, textarea, [contenteditable="true"], .selectable-text {
 
 /* Background Subtle Dot-Grid Pattern */
 .bg-grid-pattern {
-  background-image: radial-gradient(rgba(224, 107, 136, 0.08) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(0, 102, 246, 0.05) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 .dark .bg-grid-pattern {
-  background-image: radial-gradient(rgba(224, 107, 136, 0.08) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(59, 130, 246, 0.07) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -93,7 +99,7 @@ input::-ms-clear {
 /* Custom Sleek Scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(224, 107, 136, 0.35) transparent;
+  scrollbar-color: rgba(0, 102, 246, 0.25) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -104,11 +110,11 @@ input::-ms-clear {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(224, 107, 136, 0.25);
+  background: rgba(0, 102, 246, 0.2);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(224, 107, 136, 0.6);
+  background: rgba(0, 102, 246, 0.5);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -122,11 +128,11 @@ input::-ms-clear {
   background: rgba(255, 255, 255, 0.02);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(224, 107, 136, 0.35);
+  background: rgba(0, 102, 246, 0.25);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(224, 107, 136, 0.65);
+  background: rgba(0, 102, 246, 0.55);
 }
 
 /* ======================================================
@@ -173,9 +179,9 @@ input::-ms-clear {
 .shimmer-gradient {
   background: linear-gradient(
     90deg,
-    rgba(224, 107, 136, 0.8) 0%,
-    rgba(240, 130, 153, 1) 50%,
-    rgba(224, 107, 136, 0.8) 100%
+    rgba(0, 102, 246, 0.8) 0%,
+    rgba(96, 165, 250, 1) 50%,
+    rgba(0, 102, 246, 0.8) 100%
   );
   background-size: 200% 100%;
   animation: shimmerSweep 3.5s linear infinite;
@@ -185,15 +191,15 @@ input::-ms-clear {
 @keyframes radarPulse {
   0% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(224, 107, 136, 0.6);
+    box-shadow: 0 0 0 0 rgba(0, 102, 246, 0.6);
   }
   70% {
     transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(224, 107, 136, 0);
+    box-shadow: 0 0 0 10px rgba(0, 102, 246, 0);
   }
   100% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(224, 107, 136, 0);
+    box-shadow: 0 0 0 0 rgba(0, 102, 246, 0);
   }
 }
 
@@ -222,8 +228,8 @@ input::-ms-clear {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #e06b88, transparent);
-  box-shadow: 0 0 12px 2px rgba(224, 107, 136, 0.8);
+  background: linear-gradient(90deg, transparent, #0066f6, transparent);
+  box-shadow: 0 0 12px 2px rgba(0, 102, 246, 0.8);
   animation: scanLaser 2.2s ease-in-out infinite;
 }
 
@@ -238,33 +244,33 @@ input::-ms-clear {
   animation: bellShake 0.6s ease-in-out;
 }
 
-/* Ultra-Smooth Pastel Elevation & Clean Dark Depth */
+/* Ultra-Smooth Clean Travel Elevation (Trip.com / Apple Style) */
 .card-elevation {
-  box-shadow: 0 4px 20px -2px rgba(224, 107, 136, 0.06), 0 2px 8px -1px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.05), 0 1px 4px -1px rgba(0, 0, 0, 0.02);
 }
 
 .card-elevation:hover {
-  box-shadow: 0 8px 24px -3px rgba(224, 107, 136, 0.12), 0 3px 10px -2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 20px -3px rgba(0, 102, 246, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
 }
 
 .dark .card-elevation {
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .dark .card-elevation:hover {
-  box-shadow: 0 8px 26px -3px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(224, 107, 136, 0.25);
+  box-shadow: 0 8px 24px -3px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 102, 246, 0.3);
 }
 
 .glow-pink-purple {
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(212, 112, 135, 0.2);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 102, 246, 0.25);
 }
 
 .glow-purple {
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(148, 163, 184, 0.15);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(59, 130, 246, 0.2);
 }
 
 .glow-pink {
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(212, 112, 135, 0.18);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(244, 63, 94, 0.2);
 }
 
 /* Print Optimization */

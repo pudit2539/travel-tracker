@@ -35,9 +35,9 @@ function ExpenseCardComponent({
     (expense.payer_name && expense.payer_name.toLowerCase() === userDisplayName.toLowerCase());
 
   return (
-    <div className="p-3.5 sm:p-4 flex justify-between items-center hover:bg-rose-50/40 dark:hover:bg-[#2a2f45]/50 transition-all duration-200 gap-2">
+    <div className="p-3.5 sm:p-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-[#1c2438]/50 transition-all duration-200 gap-2">
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-        <div className="text-lg sm:text-xl p-2 sm:p-2.5 rounded-2xl bg-rose-50/70 dark:bg-[#2a2f45] border border-rose-200/70 dark:border-[#323850] shadow-2xs shrink-0">
+        <div className="text-lg sm:text-xl p-2 sm:p-2.5 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs shrink-0">
           {catMeta.icon}
         </div>
         <div className="min-w-0">
@@ -47,19 +47,19 @@ function ExpenseCardComponent({
               <button
                 type="button"
                 onClick={() => onOpenReceiptPreview(expense)}
-                className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-lg bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/25 dark:text-[#fbc2cf] border border-rose-200/80 dark:border-[#e06b88]/40 hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0 shadow-2xs"
+                className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0 shadow-2xs"
                 title="ดูรูปใบเสร็จ"
               >
                 <ImageIcon className="h-3 w-3" /> ใบเสร็จ
               </button>
             )}
           </div>
-          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-200 flex flex-wrap items-center gap-2 mt-1 font-medium">
+          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-2 mt-1 font-medium">
             <span
               className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
                 isMyExpense
-                  ? 'bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/25 dark:text-[#fbc2cf] border-rose-200/80 dark:border-[#e06b88]/40 shadow-xs'
-                  : 'bg-slate-100 text-slate-700 dark:bg-[#2a2f45] dark:text-slate-200 border-slate-200 dark:border-[#323850]'
+                  ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 shadow-xs'
+                  : 'bg-slate-100 text-slate-700 dark:bg-[#1c2438] dark:text-slate-200 border border-slate-200 dark:border-[#222c42]'
               }`}
             >
               <span>{payerCat.emoji}</span>
@@ -77,15 +77,15 @@ function ExpenseCardComponent({
       </div>
 
       <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
-        <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white text-right">
+        <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white text-right font-mono">
           <div>
             {Number(expense.amount).toLocaleString()}{' '}
-            <span className="text-xs text-slate-400 dark:text-slate-400">
+            <span className="text-xs text-slate-400 dark:text-slate-400 font-sans">
               {expense.currency}
             </span>
           </div>
           {(expense.currency || 'JPY') !== 'THB' && (
-            <span className="text-xs font-bold text-[#e06b88] dark:text-[#fbc2cf] block">
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block font-sans">
               ≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
             </span>
           )}
