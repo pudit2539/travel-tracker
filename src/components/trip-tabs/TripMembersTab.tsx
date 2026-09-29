@@ -25,11 +25,11 @@ export function TripMembersTab({
 }: TripMembersTabProps) {
   return (
     <div className="space-y-4">
-      <div className="p-4 sm:p-6 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4">
         <div className="flex flex-wrap justify-between items-center gap-2">
           <div>
             <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-rose-400" />
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
               <span>สมาชิกในทริปนี้ ({members.length})</span>
             </h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
@@ -39,13 +39,13 @@ export function TripMembersTab({
 
           <button
             onClick={() => setShowShareModal(true)}
-            className="px-3.5 py-1.5 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-md shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
           >
             <Share2 className="h-3.5 w-3.5" /> ชวนเพื่อนเข้าทริป
           </button>
         </div>
 
-        <div className="divide-y divide-rose-50 dark:divide-[#323850]/80">
+        <div className="divide-y divide-slate-100 dark:divide-[#222c42]">
           {members.map((m) => {
             const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
             const mCat = getCatAvatar(m.profiles?.avatar_id);
@@ -62,7 +62,7 @@ export function TripMembersTab({
                     <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                       <span>{mName}</span>
                       {isCurrent && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200/80 dark:border-[#e06b88]/35">
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-50 text-[#f43f5e] dark:bg-rose-950/40 dark:text-[#fb7185] border border-rose-200/80 dark:border-rose-900/60">
                           ฉัน
                         </span>
                       )}
@@ -79,7 +79,7 @@ export function TripMembersTab({
                       <select
                         value={m.role}
                         onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as any)}
-                        className="px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-300 dark:border-[#323850] bg-slate-50 dark:bg-[#2a2f45] text-slate-900 dark:text-white outline-none cursor-pointer"
+                        className="px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-600"
                       >
                         <option value="editor">✏️ ผู้แก้ไข (Editor)</option>
                         <option value="viewer">👁️ ผู้เข้าชม (Viewer)</option>
@@ -93,7 +93,7 @@ export function TripMembersTab({
                       </button>
                     </div>
                   ) : (
-                    <span className="text-xs font-bold text-rose-600 dark:text-rose-300">
+                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
                       {isTripOwner ? 'Owner' : m.role === 'editor' ? 'Editor' : 'Viewer'}
                     </span>
                   )}

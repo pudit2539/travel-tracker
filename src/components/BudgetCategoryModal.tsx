@@ -243,42 +243,42 @@ export default function BudgetCategoryModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200 dark:border-purple-800/60 glow-pink-purple max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+      <div className="w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
         {/* Mobile Sheet Handle */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
         
         {/* Header */}
-        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
+        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-md shadow-pink-500/25">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
               <Sliders className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white">
                 จัดการงบประมาณ & หมวดหมู่ 🎯
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 เชื่อมโยงงบรวมทริป, งบส่วนตัวรายคน, จัดสรรตามหมวด และคำนวณยอดคงเหลือ
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Sub Navigation Pills */}
-        <div className="flex p-2 gap-1.5 bg-slate-50 dark:bg-purple-950/40 border-b border-slate-100 dark:border-purple-900/40 overflow-x-auto">
+        <div className="flex p-2 gap-1.5 bg-slate-50/70 dark:bg-[#111726] border-b border-slate-100 dark:border-[#222c42] overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveSubTab('budget')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
               activeSubTab === 'budget'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900/40'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c2438]'
             }`}
           >
             <DollarSign className="h-3.5 w-3.5" /> งบรวมทริป
@@ -289,8 +289,8 @@ export default function BudgetCategoryModal({
             onClick={() => setActiveSubTab('members')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
               activeSubTab === 'members'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900/40'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c2438]'
             }`}
           >
             <Users className="h-3.5 w-3.5" /> งบส่วนตัวรายคน
@@ -301,8 +301,8 @@ export default function BudgetCategoryModal({
             onClick={() => setActiveSubTab('categories')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
               activeSubTab === 'categories'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900/40'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c2438]'
             }`}
           >
             <PieChart className="h-3.5 w-3.5" /> จัดสรรงบหมวดหมู่
@@ -313,8 +313,8 @@ export default function BudgetCategoryModal({
             onClick={() => setActiveSubTab('custom')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
               activeSubTab === 'custom'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-900/40'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c2438]'
             }`}
           >
             <Tag className="h-3.5 w-3.5" /> หมวดหมู่ ({categories.length})
@@ -327,37 +327,37 @@ export default function BudgetCategoryModal({
           {/* TAB 1: งบประมาณรวมทริป (Total Budget) */}
           {activeSubTab === 'budget' && (
             <div className="space-y-4 animate-in fade-in">
-              <form onSubmit={handleSaveTotalBudget} className="p-5 rounded-2xl bg-pink-50/50 dark:bg-purple-950/30 border border-pink-200 dark:border-purple-900/40 space-y-4">
+              <form onSubmit={handleSaveTotalBudget} className="p-5 rounded-2xl bg-blue-50/30 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Coins className="h-4 w-4 text-pink-500" /> งบประมาณรวมทั้งทริป (Total Trip Budget)
+                    <Coins className="h-4 w-4 text-blue-600 dark:text-blue-400" /> งบประมาณรวมทั้งทริป (Total Trip Budget)
                   </span>
-                  <span className="text-[10px] text-pink-600 dark:text-pink-400 font-bold">
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
                     บันทึกตรงสู่ฐานข้อมูล
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2">
-                    <label className="block text-[11px] font-bold mb-1 text-slate-700 dark:text-purple-200">
+                    <label className="block text-[11px] font-bold mb-1 text-slate-700 dark:text-slate-200">
                       จำนวนเงินงบประมาณ
                     </label>
                     <input
                       type="number"
                       required
                       placeholder="เช่น 100000"
-                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1c1328] text-slate-900 dark:text-white text-sm font-black outline-none focus:border-pink-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-sm font-black outline-none focus:border-blue-500"
                       value={totalBudget}
                       onChange={(e) => setTotalBudget(e.target.value)}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold mb-1 text-slate-700 dark:text-purple-200">
+                    <label className="block text-[11px] font-bold mb-1 text-slate-700 dark:text-slate-200">
                       สกุลเงินหลัก
                     </label>
                     <select
-                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs font-bold outline-none focus:border-pink-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs font-bold outline-none focus:border-blue-500"
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value)}
                     >
@@ -372,7 +372,7 @@ export default function BudgetCategoryModal({
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
-                  <div className="text-[11px] font-bold text-slate-500 dark:text-purple-300">
+                  <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                     {currency !== 'THB' ? (
                       <>≈ ฿{Math.round(convertToThb(Number(totalBudget || 0), currency, fxRate)).toLocaleString()} THB</>
                     ) : (
@@ -383,7 +383,7 @@ export default function BudgetCategoryModal({
                   <button
                     type="submit"
                     disabled={savingTotal}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-pink-500/25 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 transition-all"
+                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 transition-all"
                   >
                     {savingTotal ? 'กำลังบันทึก...' : <><Check className="h-3.5 w-3.5" /> บันทึกงบรวม</>}
                   </button>
@@ -391,7 +391,7 @@ export default function BudgetCategoryModal({
               </form>
 
               {totalSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 border border-emerald-200 dark:border-emerald-900 animate-in fade-in">
+                <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 border border-emerald-200 dark:border-emerald-900 animate-in fade-in">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
                   <span>บันทึกงบประมาณรวมทริปเรียบร้อยแล้ว</span>
                 </div>
@@ -404,20 +404,20 @@ export default function BudgetCategoryModal({
             <form onSubmit={handleSaveMemberBudgets} className="space-y-4 animate-in fade-in">
               
               {/* Real-time Relation Banner */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 border border-purple-200 dark:border-purple-900/50 space-y-2">
+              <div className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-black text-slate-900 dark:text-white">
                   <span>งบรวมทริปตั้งไว้: {Number(totalBudget || 0).toLocaleString()} {trip?.currency || 'JPY'}</span>
                   <button
                     type="button"
                     onClick={handleAutoSplitMembers}
-                    className="px-2.5 py-1 rounded-xl bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300 hover:bg-pink-200 border border-pink-300 dark:border-pink-800 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105"
+                    className="px-2.5 py-1 rounded-xl bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 hover:bg-blue-200 border border-blue-300 dark:border-blue-800 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105"
                   >
                     <Divide className="h-3 w-3" /> หารเฉลี่ยให้ทุกคนเท่ากัน ({Math.floor(Number(totalBudget || 0) / (allMembersList.length || 1)).toLocaleString()} {trip?.currency})
                   </button>
                 </div>
 
-                <div className="flex justify-between items-center text-[11px] font-bold pt-1 border-t border-purple-200/60 dark:border-purple-900/40">
-                  <span className="text-slate-600 dark:text-purple-300">
+                <div className="flex justify-between items-center text-[11px] font-bold pt-1 border-t border-slate-200/80 dark:border-[#222c42]">
+                  <span className="text-slate-600 dark:text-slate-300">
                     รวมงบรายคน: {totalMemberAllocated.toLocaleString()} {trip?.currency}
                   </span>
                   <span className={remainingMemberBudget < 0 ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}>
@@ -437,17 +437,17 @@ export default function BudgetCategoryModal({
                   return (
                     <div
                       key={m.key}
-                      className="p-3 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-slate-50/60 dark:bg-purple-950/20 flex items-center justify-between gap-3 hover:border-pink-300 transition-all"
+                      className="p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70 flex items-center justify-between gap-3 hover:border-blue-300 dark:hover:border-blue-700 transition-all"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-sm shadow-xs shrink-0`}>
+                        <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-sm shadow-2xs shrink-0`}>
                           {mCat.emoji}
                         </div>
                         <div className="min-w-0">
                           <span className="text-xs font-black text-slate-900 dark:text-white truncate block">
                             {m.name}
                           </span>
-                          <span className="text-[10px] text-slate-500 dark:text-purple-400 truncate block">
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block">
                             {memberShare > 0 ? `${memberShare.toFixed(1)}% ของงบรวมทริป` : 'ยังไม่ระบุงบ'}
                           </span>
                         </div>
@@ -457,18 +457,18 @@ export default function BudgetCategoryModal({
                         <input
                           type="number"
                           placeholder="0"
-                          className="w-28 p-2 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs font-black text-right outline-none focus:border-pink-500"
+                          className="w-28 p-2 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs font-black text-right outline-none focus:border-blue-500"
                           value={currentVal}
                           onChange={(e) => handleMemberBudgetChange(m.key, e.target.value)}
                         />
-                        <span className="text-xs font-bold text-slate-500 dark:text-purple-400">{trip?.currency || 'JPY'}</span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{trip?.currency || 'JPY'}</span>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-purple-900/40">
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#222c42]">
                 {budgetSuccess && (
                   <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
                     <CheckCircle2 className="h-4 w-4" /> บันทึกงบรายคนแล้ว
@@ -476,7 +476,7 @@ export default function BudgetCategoryModal({
                 )}
                 <button
                   type="submit"
-                  className="ml-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-pink-500/25 flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-all"
+                  className="ml-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-all"
                 >
                   <Check className="h-3.5 w-3.5" /> บันทึกงบรายบุคคล
                 </button>
@@ -487,8 +487,8 @@ export default function BudgetCategoryModal({
           {/* TAB 3: จัดสรรงบหมวดหมู่ (Category Budgets) */}
           {activeSubTab === 'categories' && (
             <form onSubmit={handleSaveCategoryBudgets} className="space-y-4 animate-in fade-in">
-              <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/40 space-y-1.5">
-                <div className="flex justify-between items-center text-xs font-black text-purple-950 dark:text-purple-200">
+              <div className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-1.5">
+                <div className="flex justify-between items-center text-xs font-black text-slate-900 dark:text-white">
                   <span>จัดสรรไปแล้ว: {totalCatAllocated.toLocaleString()} {trip?.currency || 'JPY'}</span>
                   <span className={remainingCatBudget < 0 ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}>
                     {remainingCatBudget >= 0 ? `คงเหลือจัดสรร: ${remainingCatBudget.toLocaleString()} ${trip?.currency}` : `⚠️ เกินงบรวม: +${Math.abs(remainingCatBudget).toLocaleString()} ${trip?.currency}`}
@@ -502,10 +502,10 @@ export default function BudgetCategoryModal({
                   return (
                     <div
                       key={cat.id}
-                      className="p-3 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-slate-50/60 dark:bg-purple-950/20 flex items-center justify-between gap-3"
+                      className="p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70 flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xl p-1.5 rounded-xl bg-white dark:bg-[#1c1328] shadow-2xs">
+                        <span className="text-xl p-1.5 rounded-xl bg-white dark:bg-[#151b2b] shadow-2xs">
                           {cat.icon}
                         </span>
                         <div>
@@ -513,7 +513,7 @@ export default function BudgetCategoryModal({
                             {cat.label}
                           </span>
                           {cat.isCustom && (
-                            <span className="text-[10px] text-pink-600 dark:text-pink-400 font-bold">หมวดหมู่กำหนดเอง</span>
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">หมวดหมู่กำหนดเอง</span>
                           )}
                         </div>
                       </div>
@@ -522,18 +522,18 @@ export default function BudgetCategoryModal({
                         <input
                           type="number"
                           placeholder="0"
-                          className="w-28 p-2 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs font-black text-right outline-none focus:border-pink-500"
+                          className="w-28 p-2 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs font-black text-right outline-none focus:border-blue-500"
                           value={currentVal}
                           onChange={(e) => handleBudgetChange(cat.id, e.target.value)}
                         />
-                        <span className="text-xs font-bold text-slate-500 dark:text-purple-400">{trip?.currency || 'JPY'}</span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{trip?.currency || 'JPY'}</span>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-purple-900/40">
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#222c42]">
                 {budgetSuccess && (
                   <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
                     <CheckCircle2 className="h-4 w-4" /> บันทึกงบหมวดหมู่แล้ว
@@ -541,7 +541,7 @@ export default function BudgetCategoryModal({
                 )}
                 <button
                   type="submit"
-                  className="ml-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-pink-500/25 flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-all"
+                  className="ml-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-all"
                 >
                   <Check className="h-3.5 w-3.5" /> บันทึกงบหมวดหมู่
                 </button>
@@ -559,30 +559,30 @@ export default function BudgetCategoryModal({
                 <button
                   type="button"
                   onClick={() => setShowAddCatForm(!showAddCatForm)}
-                  className="px-3 py-1.5 rounded-xl bg-pink-50 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-300 dark:border-pink-800 text-xs font-bold flex items-center gap-1 hover:scale-105 transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-300 dark:border-blue-800 text-xs font-bold flex items-center gap-1 hover:scale-105 transition-all cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" /> เพิ่มหมวดใหม่
                 </button>
               </div>
 
               {showAddCatForm && (
-                <form onSubmit={handleAddCustomCategory} className="p-4 rounded-2xl bg-pink-50/60 dark:bg-purple-950/40 border border-pink-200 dark:border-purple-900/50 space-y-3">
+                <form onSubmit={handleAddCustomCategory} className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-800 dark:text-purple-200 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
                       ชื่อหมวดหมู่ *
                     </label>
                     <input
                       type="text"
                       required
                       placeholder="เช่น ของฝาก, ค่าเข้า USJ, โอมากาเสะ"
-                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs font-bold outline-none focus:border-pink-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs font-bold outline-none focus:border-blue-500"
                       value={newCatLabel}
                       onChange={(e) => setNewCatLabel(e.target.value)}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-800 dark:text-purple-200 mb-1.5">
+                    <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                       เลือกไอคอน Emoji
                     </label>
                     <div className="flex flex-wrap gap-1.5">
@@ -593,8 +593,8 @@ export default function BudgetCategoryModal({
                           onClick={() => setNewCatIcon(emoji)}
                           className={`w-8 h-8 rounded-xl text-base flex items-center justify-center transition-all cursor-pointer ${
                             newCatIcon === emoji
-                              ? 'bg-pink-500 text-white scale-110 shadow-sm'
-                              : 'bg-white dark:bg-[#1c1328] border border-slate-200 dark:border-purple-900 hover:bg-slate-100'
+                              ? 'bg-blue-600 text-white scale-110 shadow-sm'
+                              : 'bg-white dark:bg-[#151b2b] border border-slate-200 dark:border-[#222c42] hover:bg-slate-100 dark:hover:bg-[#1c2438]'
                           }`}
                         >
                           {emoji}
@@ -607,13 +607,13 @@ export default function BudgetCategoryModal({
                     <button
                       type="button"
                       onClick={() => setShowAddCatForm(false)}
-                      className="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-600 dark:text-purple-300 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer hover:bg-slate-100 dark:hover:bg-[#1c2438]"
                     >
                       ยกเลิก
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-bold shadow-sm hover:scale-105 transition-all cursor-pointer"
+                      className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm hover:scale-105 transition-all cursor-pointer"
                     >
                       สร้างหมวดหมู่
                     </button>
@@ -625,10 +625,10 @@ export default function BudgetCategoryModal({
                 {categories.map((cat) => (
                   <div
                     key={cat.id}
-                    className="p-3 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-slate-50/50 dark:bg-purple-950/20 flex items-center justify-between"
+                    className="p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438]/70 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xl p-1.5 rounded-xl bg-white dark:bg-[#1c1328] shadow-2xs">
+                      <span className="text-xl p-1.5 rounded-xl bg-white dark:bg-[#151b2b] shadow-2xs">
                         {cat.icon}
                       </span>
                       <div>
@@ -645,7 +645,7 @@ export default function BudgetCategoryModal({
                       <button
                         type="button"
                         onClick={() => handleDeleteCustomCategory(cat.id)}
-                        className="p-1.5 text-slate-400 hover:text-[#e06b88] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                         title="ลบหมวดหมู่นี้"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -661,7 +661,7 @@ export default function BudgetCategoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 pt-3 border-t border-slate-100 dark:border-purple-900/40 flex items-center justify-between">
+        <div className="p-6 pt-3 border-t border-slate-100 dark:border-[#222c42] flex items-center justify-between">
           {onOpenRollback ? (
             <button
               type="button"
@@ -669,7 +669,7 @@ export default function BudgetCategoryModal({
                 onClose();
                 onOpenRollback();
               }}
-              className="text-[11px] font-bold text-slate-500 hover:text-purple-600 dark:text-purple-400 dark:hover:text-purple-300 flex items-center gap-1.5 cursor-pointer hover:underline"
+              className="text-[11px] font-bold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 flex items-center gap-1.5 cursor-pointer hover:underline"
             >
               <History className="h-3.5 w-3.5" />
               <span>ประวัติเวอร์ชัน & สำรองไฟล์ JSON (Rollback)</span>
@@ -679,7 +679,7 @@ export default function BudgetCategoryModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+            className="px-5 py-2 rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
           >
             เสร็จสิ้น
           </button>

@@ -269,26 +269,26 @@ export default function TravelHubModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+      <div className="relative w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
         {/* Mobile Sheet Handle */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
         
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-purple-900/40 bg-slate-50/50 dark:bg-[#11101d]/50">
+        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#111726]/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 flex items-center justify-center text-white text-base shadow-sm shrink-0">
+            <div className="w-9 h-9 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-base shadow-sm shrink-0">
               🧰
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="text-sm sm:text-base font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                   Travel Command Center
                 </h2>
-                <span className="text-[9px] font-bold px-2 py-0.2 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300">
+                <span className="text-[9px] font-bold px-2 py-0.2 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300">
                   5-in-1 Hub
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 กล่องเครื่องมืออัจฉริยะสำหรับนักเดินทางท่องเที่ยว
               </p>
             </div>
@@ -298,14 +298,14 @@ export default function TravelHubModal({
             {activeTab !== 'bento' && (
               <button
                 onClick={() => setActiveTab('bento')}
-                className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 text-[11px] font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[11px] font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 🏠 เมนูหลัก
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -318,18 +318,18 @@ export default function TravelHubModal({
           {/* ==================== VIEW 1: BENTO COMMAND DASHBOARD ==================== */}
           {activeTab === 'bento' && (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-pink-500/10 via-purple-600/10 to-indigo-600/10 border border-pink-200/80 dark:border-purple-800/60 flex items-center justify-between gap-3">
+              <div className="p-3.5 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/80 dark:border-[#222c42] flex items-center justify-between gap-3">
                 <div className="text-left">
                   <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-pink-500" />
+                    <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <span>ทริป: {trip?.name || trip?.title || 'Japan Adventure'}</span>
                   </span>
-                  <p className="text-[10px] text-slate-500 dark:text-purple-300/80 font-medium mt-0.5">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                     รวมทุกเครื่องมือเดินทางที่จำเป็นไว้ในที่เดียว ไม่รกหน้าจอ
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-pink-600 dark:text-pink-400 block">
+                  <span className="text-xs font-black text-blue-600 dark:text-blue-400 block">
                     {expenses.length} รายจ่าย • {itinerary.length} กิจกรรม
                   </span>
                 </div>
@@ -341,21 +341,21 @@ export default function TravelHubModal({
                 {/* 1. Japanese Survival Phrasebook */}
                 <div
                   onClick={() => setActiveTab('phrases')}
-                  className="group p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-purple-900/50 bg-slate-50/70 dark:bg-purple-950/20 hover:border-pink-500 hover:bg-pink-50/40 dark:hover:bg-purple-950/40 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex flex-col justify-between space-y-3"
+                  className="group p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#1c2438]/70 hover:border-blue-400 hover:bg-blue-50/40 dark:hover:bg-[#1c2438] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex flex-col justify-between space-y-3"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-xl bg-pink-100 dark:bg-pink-950/80 text-pink-600 dark:text-pink-400 flex items-center justify-center text-lg shadow-2xs group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg shadow-2xs group-hover:scale-110 transition-transform">
                       🇯🇵
                     </div>
-                    <span className="text-[9px] font-bold text-pink-600 dark:text-pink-400 bg-pink-100/80 dark:bg-pink-950 px-1.5 py-0.2 rounded-md">
+                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100/80 dark:bg-blue-950/70 px-1.5 py-0.2 rounded-md">
                       พูดได้
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       ประโยคญี่ปุ่นเอาตัวรอด
                     </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-purple-300/70 font-medium mt-0.5">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                       พร้อมเสียงอ่าน & โหมดโชว์หน้าจอใหญ่
                     </p>
                   </div>

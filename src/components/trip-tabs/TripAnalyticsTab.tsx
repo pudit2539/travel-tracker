@@ -38,15 +38,15 @@ export function TripAnalyticsTab({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* สรุปยอดจ่ายแยกตามรายคน */}
-      <div className="p-4 sm:p-6 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-[#e06b88]" /> 
+            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" /> 
             <span>สรุปยอดจ่ายแยกตามรายคน (Who Paid)</span>
           </h2>
           <button
             onClick={() => setShowSettlementModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-[#e06b88] hover:bg-[#d25875] text-white text-xs font-bold shadow-sm shadow-[#e06b88]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
           >
             <Calculator className="h-3.5 w-3.5" /> ดูการโอนเงินเคลียร์บิล
           </button>
@@ -66,7 +66,7 @@ export function TripAnalyticsTab({
             const pOver = pBudget > 0 && p.total > pBudget ? p.total - pBudget : 0;
 
             return (
-              <div key={p.key} className="p-3.5 rounded-2xl bg-rose-50/40 dark:bg-[#2a2f45] border border-rose-100/70 dark:border-[#323850]/80 space-y-2">
+              <div key={p.key} className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{pCat.emoji}</span>
@@ -76,19 +76,19 @@ export function TripAnalyticsTab({
                     <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white">
                       {p.total.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}
                     </span>
-                    <span className="text-[10px] text-rose-600 dark:text-rose-300 block font-bold">
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 block font-bold">
                       ({sharePercent.toFixed(1)}% ของทริป)
                     </span>
                   </div>
                 </div>
 
                 {pBudget > 0 && (
-                  <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex justify-between border-t border-rose-100/60 dark:border-[#323850]/60 pt-1.5">
+                  <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex justify-between border-t border-slate-200/60 dark:border-[#222c42] pt-1.5">
                     <span>งบตั้งไว้: {pBudget.toLocaleString()} {tripBaseCurrency}</span>
                     {pOver > 0 ? (
-                      <span className="text-rose-600 font-bold">เกินงบ +{pOver.toLocaleString()}</span>
+                      <span className="text-rose-600 dark:text-rose-400 font-bold">เกินงบ +{pOver.toLocaleString()}</span>
                     ) : (
-                      <span className="text-emerald-600 font-bold">เหลือ {pRemaining.toLocaleString()}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">เหลือ {pRemaining.toLocaleString()}</span>
                     )}
                   </div>
                 )}
@@ -99,15 +99,15 @@ export function TripAnalyticsTab({
       </div>
 
       {/* หมวดหมู่ค่าใช้จ่าย */}
-      <div className="p-4 sm:p-6 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
+            <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
             <span>สัดส่วนค่าใช้จ่ายตามหมวดหมู่</span>
           </h2>
           <button
             onClick={() => setShowBudgetCategoryModal(true)}
-            className="text-xs font-bold text-rose-600 dark:text-rose-300 hover:underline cursor-pointer"
+            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
           >
             แก้ไขงบหมวดหมู่
           </button>
@@ -124,23 +124,23 @@ export function TripAnalyticsTab({
             const catPercent = totalSpent > 0 ? (spentInCat / totalSpent) * 100 : 0;
 
             return (
-              <div key={cat.id} className="space-y-1">
+              <div key={cat.id} className="space-y-1.5">
                 <div className="flex justify-between text-xs font-bold">
-                  <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-300">
+                  <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
                     <span>{cat.icon}</span>
                     <span>{cat.label}</span>
                   </span>
                   <div className="text-right">
-                    <span className="text-slate-900 dark:text-white">
+                    <span className="text-slate-900 dark:text-white font-black">
                       {spentInCat.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}
                     </span>
                     <span className="text-[10px] text-slate-400 ml-1">({catPercent.toFixed(0)}%)</span>
                   </div>
                 </div>
 
-                <div className="w-full bg-slate-100 dark:bg-[#2a2f45] rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-[#1c2438] rounded-full h-2 overflow-hidden">
                   <div
-                    className="h-full bg-[#e06b88] rounded-full"
+                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded-full transition-all"
                     style={{ width: `${Math.min(catPercent, 100)}%` }}
                   />
                 </div>

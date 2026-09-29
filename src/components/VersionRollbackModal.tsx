@@ -166,28 +166,28 @@ export default function VersionRollbackModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200 dark:border-purple-800/60 glow-purple max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+      <div className="w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
         {/* Mobile Sheet Handle */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
         
         {/* Header */}
-        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
+        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-lg shadow-md shadow-purple-500/25">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
               <History className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white">
                 Version Rollback & Disaster Recovery 🔄
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 ระบบจัดการเวอร์ชัน ย้อนสถานะทริปเมื่อเจอบัค และสำรองไฟล์ JSON
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -201,7 +201,7 @@ export default function VersionRollbackModal({
             <div className={`p-3 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in ${
               statusMessage.type === 'success' 
                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900' 
-                : 'bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/20 dark:text-[#f7a1b5] border border-rose-200 dark:border-[#e06b88]/35'
+                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
             }`}>
               {statusMessage.type === 'success' ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
               <span>{statusMessage.text}</span>
@@ -209,17 +209,17 @@ export default function VersionRollbackModal({
           )}
 
           {/* Quick Snapshot Creator */}
-          <div className="p-4 rounded-2xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/40 space-y-2.5">
+          <div className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-pink-500" /> บันทึก Snapshot เวอร์ชันปัจจุบัน (Create Restore Point)
+              <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" /> บันทึก Snapshot เวอร์ชันปัจจุบัน (Create Restore Point)
               </span>
             </div>
             <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="ชื่อจุดบันทึก เช่น ก่อนเพิ่มแผนเกียวโต, ก่อนแก้ค่าใช้จ่าย"
-                className="flex-1 p-2.5 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1c1328] text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
+                className="flex-1 p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
                 value={newSnapshotLabel}
                 onChange={(e) => setNewSnapshotLabel(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateSnapshot()}
@@ -228,7 +228,7 @@ export default function VersionRollbackModal({
                 type="button"
                 onClick={handleCreateSnapshot}
                 disabled={creating}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 transition-all shrink-0"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 transition-all shrink-0"
               >
                 {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                 <span>บันทึกจุดถอย</span>
@@ -242,11 +242,11 @@ export default function VersionRollbackModal({
               <span className="text-xs font-black text-slate-900 dark:text-white">
                 ประวัติ Snapshot ที่สามารถถอยเวอร์ชันกลับได้ ({snapshots.length})
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-purple-400">เก็บประวัติล่าสุด 10 จุด</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">เก็บประวัติล่าสุด 10 จุด</span>
             </div>
 
             {snapshots.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-purple-900/40 rounded-2xl text-xs text-slate-400 dark:text-purple-400">
+              <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-[#222c42] rounded-2xl text-xs text-slate-400 dark:text-slate-500">
                 ยังไม่มีการบันทึก Snapshot ไว้ (กดบันทึกจุดถอยด้านบนเพื่อสร้าง)
               </div>
             ) : (
@@ -254,18 +254,18 @@ export default function VersionRollbackModal({
                 {snapshots.map((snap) => (
                   <div
                     key={snap.id}
-                    className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-slate-50/60 dark:bg-purple-950/20 flex items-center justify-between gap-3 hover:border-pink-300 transition-all"
+                    className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70 flex items-center justify-between gap-3 hover:border-blue-300 dark:hover:border-blue-700 transition-all"
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 text-[10px] font-mono font-bold">
+                        <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[10px] font-mono font-bold">
                           {snap.version}
                         </span>
                         <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
                           {snap.label}
                         </h4>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-purple-400 mt-1 font-medium">
+                      <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
                         <Clock className="h-3 w-3" />
                         <span>{new Date(snap.created_at).toLocaleString('th-TH')}</span>
                         <span>•</span>
@@ -280,7 +280,7 @@ export default function VersionRollbackModal({
                         type="button"
                         onClick={() => handleRestore(snap)}
                         disabled={restoringId === snap.id}
-                        className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs flex items-center gap-1 cursor-pointer hover:scale-105 transition-all disabled:opacity-50"
+                        className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs flex items-center gap-1 cursor-pointer hover:scale-105 transition-all disabled:opacity-50"
                         title="ถอยเวอร์ชันกลับไปจุดนี้"
                       >
                         {restoringId === snap.id ? (
@@ -294,7 +294,7 @@ export default function VersionRollbackModal({
                       <button
                         type="button"
                         onClick={() => handleDelete(snap.id)}
-                        className="p-1.5 text-slate-400 hover:text-[#e06b88] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 rounded-lg cursor-pointer transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg cursor-pointer transition-colors"
                         title="ลบ Snapshot"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -307,12 +307,12 @@ export default function VersionRollbackModal({
           </div>
 
           {/* Disaster Recovery JSON Export & Import */}
-          <div className="p-4 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-slate-50/50 dark:bg-[#180f28]/80 space-y-2.5">
+          <div className="p-4 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70 space-y-2.5">
             <div>
               <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                <FileJson className="h-4 w-4 text-indigo-500" /> สำรองข้อมูลทั้งทริปเป็นไฟล์ JSON (Disaster Recovery)
+                <FileJson className="h-4 w-4 text-blue-600 dark:text-blue-400" /> สำรองข้อมูลทั้งทริปเป็นไฟล์ JSON (Disaster Recovery)
               </span>
-              <p className="text-[10px] text-slate-500 dark:text-purple-400">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
                 ดาวน์โหลดไฟล์ Backup เก็บไว้ในเครื่องคอมพิวเตอร์ หรือนำเข้าไฟล์เดิมเพื่อกู้คืนเมื่อเกิดเหตุฉุกเฉิน
               </p>
             </div>
@@ -321,13 +321,13 @@ export default function VersionRollbackModal({
               <button
                 type="button"
                 onClick={handleExportBackup}
-                className="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#120c1e] text-slate-800 dark:text-purple-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:border-pink-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer"
+                className="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:border-blue-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer"
               >
-                <Download className="h-3.5 w-3.5 text-pink-500" /> ดาวน์โหลด JSON Backup
+                <Download className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> ดาวน์โหลด JSON Backup
               </button>
 
-              <label className="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#120c1e] text-slate-800 dark:text-purple-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:border-pink-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer">
-                <Upload className="h-3.5 w-3.5 text-indigo-500" /> นำเข้ากู้คืน JSON
+              <label className="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:border-blue-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer">
+                <Upload className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> นำเข้ากู้คืน JSON
                 <input type="file" accept=".json" className="hidden" onChange={handleImportBackup} />
               </label>
             </div>
@@ -336,11 +336,11 @@ export default function VersionRollbackModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 pt-3 border-t border-slate-100 dark:border-purple-900/40 flex justify-end">
+        <div className="p-6 pt-3 border-t border-slate-100 dark:border-[#222c42] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-slate-300 dark:border-purple-800 text-xs font-bold text-slate-700 dark:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+            className="px-5 py-2 rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
           >
             ปิดหน้าต่าง
           </button>

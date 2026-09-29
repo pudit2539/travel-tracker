@@ -107,31 +107,31 @@ export default function QuickCurrencyCalculator({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#1a182d] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+      <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Mobile Sheet Handle */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-2 sm:hidden shrink-0" />
         
         {/* Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-purple-900/40">
+        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#222c42]">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-pink-500/25">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
               <Coins className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>เครื่องคิดเลขแปลงเงินด่วน</span>
-                <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-100 dark:bg-pink-950 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/70 px-2 py-0.5 rounded-full">
                   Real-time
                 </span>
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-purple-300 font-medium">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 แปลงสกุลเงินต่างประเทศ ⇄ บาทไทย ทันใจ
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -153,8 +153,8 @@ export default function QuickCurrencyCalculator({
               }}
               className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                 foreignCurrency === c.code
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-purple-950/50 text-slate-600 dark:text-purple-300 hover:bg-slate-200 border border-slate-200/60 dark:border-purple-900/40'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300 hover:bg-slate-200 border border-slate-200/60 dark:border-[#222c42]'
               }`}
             >
               <span>{c.symbol} {c.code}</span>
@@ -163,21 +163,21 @@ export default function QuickCurrencyCalculator({
         </div>
 
         {/* Exchange Rate Badge & Direction Switcher */}
-        <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100 dark:bg-purple-950/50 border border-slate-200/80 dark:border-purple-900/50">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-purple-200">
+        <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42]">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
             <span>เรท:</span>
             {foreignCurrency === 'JPY' && editingRate ? (
               <div className="flex items-center gap-1">
                 <input
                   type="number"
                   step="0.01"
-                  className="w-16 p-1 text-xs rounded border border-pink-500 bg-white dark:bg-[#130d22] font-black text-center"
+                  className="w-16 p-1 text-xs rounded border border-blue-500 bg-white dark:bg-[#151b2b] font-black text-center"
                   value={tempRate}
                   onChange={(e) => setTempRate(e.target.value)}
                 />
                 <button
                   onClick={handleSaveRate}
-                  className="p-1 bg-pink-500 text-white rounded text-[10px] font-bold cursor-pointer"
+                  className="p-1 bg-blue-600 text-white rounded text-[10px] font-bold cursor-pointer"
                 >
                   บันทึก
                 </button>
@@ -185,7 +185,7 @@ export default function QuickCurrencyCalculator({
             ) : foreignCurrency === 'JPY' ? (
               <button
                 onClick={() => setEditingRate(true)}
-                className="underline hover:text-pink-600 dark:hover:text-pink-400 cursor-pointer font-black"
+                className="underline hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer font-black"
                 title="คลิกเพื่อแก้ไขเรทแลกเปลี่ยน"
               >
                 100 JPY = {(fxRate * 100).toFixed(2)} THB ✏️
@@ -199,7 +199,7 @@ export default function QuickCurrencyCalculator({
 
           <button
             onClick={() => setDirection(direction === 'foreign_to_thb' ? 'thb_to_foreign' : 'foreign_to_thb')}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-[#1a182d] text-pink-600 dark:text-pink-400 text-xs font-black shadow-2xs hover:scale-105 transition-transform cursor-pointer border border-pink-200 dark:border-pink-900/60"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 text-xs font-black shadow-2xs hover:scale-105 transition-transform cursor-pointer border border-blue-200 dark:border-[#222c42]"
           >
             <ArrowRightLeft className="h-3 w-3" />
             <span>{direction === 'foreign_to_thb' ? `${activeMeta.code} ➔ THB` : `THB ➔ ${activeMeta.code}`}</span>
@@ -208,7 +208,7 @@ export default function QuickCurrencyCalculator({
 
         {/* Main Input Box */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 dark:text-purple-200 flex justify-between">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex justify-between">
             <span>{direction === 'foreign_to_thb' ? `ยอดเงิน (${activeMeta.code} ${activeMeta.symbol})` : 'ยอดเงินบาท (THB ฿)'}</span>
             {foreignCurrency === 'JPY' && (
               <button
@@ -216,7 +216,7 @@ export default function QuickCurrencyCalculator({
                 className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full border transition-all cursor-pointer ${
                   isTaxFree
                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300'
-                    : 'bg-slate-100 text-slate-600 dark:bg-purple-950 dark:text-purple-400 border-slate-300'
+                    : 'bg-slate-100 text-slate-600 dark:bg-[#1c2438] dark:text-slate-400 border-slate-300 dark:border-[#222c42]'
                 }`}
               >
                 <Percent className="h-2.5 w-2.5" />
@@ -232,9 +232,9 @@ export default function QuickCurrencyCalculator({
               placeholder="0"
               value={inputAmount}
               onChange={(e) => setInputAmount(e.target.value)}
-              className="w-full text-2xl sm:text-3xl font-black p-3.5 rounded-2xl border-2 border-pink-400/80 dark:border-pink-500/80 bg-slate-50 dark:bg-[#11101d] text-slate-900 dark:text-white outline-none focus:ring-4 focus:ring-pink-500/20 shadow-inner"
+              className="w-full text-2xl sm:text-3xl font-black p-3.5 rounded-2xl border-2 border-blue-500/70 dark:border-blue-500/80 bg-slate-50 dark:bg-[#111726] text-slate-900 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/20 shadow-inner"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-pink-600 dark:text-pink-400">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-blue-600 dark:text-blue-400">
               {direction === 'foreign_to_thb' ? `${activeMeta.symbol} ${activeMeta.code}` : '฿ THB'}
             </span>
           </div>
@@ -243,7 +243,7 @@ export default function QuickCurrencyCalculator({
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
             <button
               onClick={() => setInputAmount('0')}
-              className="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-purple-950 text-slate-700 dark:text-purple-300 text-xs font-bold shrink-0 hover:bg-slate-300 cursor-pointer"
+              className="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold shrink-0 hover:bg-slate-300 cursor-pointer"
             >
               C
             </button>
@@ -251,31 +251,31 @@ export default function QuickCurrencyCalculator({
               <>
                 <button
                   onClick={() => addPreset(10)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +10
                 </button>
                 <button
                   onClick={() => addPreset(50)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +50
                 </button>
                 <button
                   onClick={() => addPreset(100)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +100
                 </button>
                 <button
                   onClick={() => addPreset(500)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +500
                 </button>
                 <button
                   onClick={() => addPreset(1000)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +1,000
                 </button>
@@ -284,31 +284,31 @@ export default function QuickCurrencyCalculator({
               <>
                 <button
                   onClick={() => addPreset(100)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +100
                 </button>
                 <button
                   onClick={() => addPreset(500)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +500
                 </button>
                 <button
                   onClick={() => addPreset(1000)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +1,000
                 </button>
                 <button
                   onClick={() => addPreset(5000)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +5,000
                 </button>
                 <button
                   onClick={() => addPreset(10000)}
-                  className="px-2.5 py-1 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-xs font-bold shrink-0 hover:scale-105 transition-transform cursor-pointer"
                 >
                   +10,000
                 </button>
@@ -318,11 +318,11 @@ export default function QuickCurrencyCalculator({
         </div>
 
         {/* Converted Result Display Box */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 border border-pink-300/80 dark:border-purple-800/80 space-y-1 text-center">
-          <span className="text-xs font-bold text-slate-500 dark:text-purple-300">
+        <div className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/80 dark:border-[#222c42] space-y-1 text-center">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
             {direction === 'foreign_to_thb' ? 'คิดเป็นเงินไทยประมาณ' : `คิดเป็นเงิน${activeMeta.name}ประมาณ`}
           </span>
-          <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+          <div className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400">
             {direction === 'foreign_to_thb' ? '฿' : activeMeta.symbol}
             {convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
@@ -339,7 +339,7 @@ export default function QuickCurrencyCalculator({
             <button
               onClick={handleTransferToExpense}
               disabled={numInput <= 0}
-              className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-pink-500/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               <span>บันทึกเป็นรายจ่ายในทริป</span>
@@ -347,7 +347,7 @@ export default function QuickCurrencyCalculator({
           )}
           <button
             onClick={onClose}
-            className="px-5 py-3 rounded-2xl border border-slate-300 dark:border-purple-800 text-slate-700 dark:text-purple-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+            className="px-5 py-3 rounded-2xl border border-slate-300 dark:border-[#222c42] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
           >
             ปิด
           </button>
