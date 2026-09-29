@@ -3,6 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { getCatAvatar } from '@/lib/avatars';
+import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { 
   Plus, Trash2, Users, Check, AlertCircle, Sparkles, 
   Utensils, Calculator, ChevronRight, UserCheck
@@ -266,7 +267,7 @@ export default function ItemizedReceiptSplitter({
                       }`}
                       title={`${member.name} ${isAssigned ? '(เลือกหารรายการนี้)' : '(ไม่ได้หารรายการนี้)'}`}
                     >
-                      <span>{cat.emoji}</span>
+                      <CatAvatarBadge cat={cat} size="xs" />
                       <span className="truncate max-w-[80px] sm:max-w-none">{member.name}</span>
                       {isAssigned && <Check className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />}
                     </button>
@@ -333,7 +334,7 @@ export default function ItemizedReceiptSplitter({
               >
                 <div className="flex items-center justify-between gap-1">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-sm">{cat.emoji}</span>
+                    <CatAvatarBadge cat={cat} size="xs" />
                     <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                       {member.name}
                     </span>

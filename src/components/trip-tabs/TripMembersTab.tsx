@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Users, Share2, Trash2 } from 'lucide-react';
-import { getCatAvatar } from '@/lib/avatars';
+import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 
 interface TripMembersTabProps {
   members: any[];
@@ -47,17 +47,19 @@ export function TripMembersTab({
 
         <div className="divide-y divide-slate-100 dark:divide-[#222c42]">
           {members.map((m) => {
-            const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก';
-            const mCat = getCatAvatar(m.profiles?.avatar_id);
             const isCurrent = m.user_id === currentUser?.id;
+            const mName = isCurrent
+              ? (currentUser?.user_metadata?.display_name || m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก')
+              : (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก');
+            const avatarId = isCurrent
+              ? (currentUser?.user_metadata?.avatar_id || m.profiles?.avatar_id)
+              : m.profiles?.avatar_id;
             const isTripOwner = m.role === 'owner' || m.user_id === trip?.created_by;
 
             return (
               <div key={m.id} className="py-3 flex justify-between items-center gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-base shadow-2xs`}>
-                    {mCat.emoji}
-                  </div>
+                  <CatAvatarBadge avatarId={avatarId} size="lg" />
                   <div>
                     <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                       <span>{mName}</span>

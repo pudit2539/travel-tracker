@@ -10,6 +10,7 @@ import AnimatedNumber from '@/components/AnimatedNumber';
 import { CategoryItem } from '@/lib/categories';
 import { convertCurrency, convertToThb } from '@/lib/currency';
 import { getCatAvatar } from '@/lib/avatars';
+import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 
 interface TripExpensesTabProps {
   trip: any;
@@ -50,6 +51,8 @@ interface TripExpensesTabProps {
   handleOpenReceiptPreview: (exp: any) => void;
   handleDeleteExpense: (id: string, receiptUrl?: string) => void;
   exportExpensesToExcel: () => void;
+  onSelectExpense?: (exp: any) => void;
+  onEditExpense?: (exp: any) => void;
 }
 
 export function TripExpensesTab({
@@ -82,6 +85,8 @@ export function TripExpensesTab({
   handleOpenReceiptPreview,
   handleDeleteExpense,
   exportExpensesToExcel,
+  onSelectExpense,
+  onEditExpense,
 }: TripExpensesTabProps) {
   const totalFilteredAmount = filteredExpenses.reduce(
     (acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate),
@@ -143,7 +148,7 @@ export function TripExpensesTab({
                 : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#222c42]'
             }`}
           >
-            <span>{userCat.emoji}</span>
+            <CatAvatarBadge cat={userCat} size="xs" />
             <span>ของฉัน ({userDisplayName})</span>
           </button>
 
@@ -163,7 +168,7 @@ export function TripExpensesTab({
                     : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#222c42]'
                 }`}
               >
-                <span>{mCat.emoji}</span>
+                <CatAvatarBadge cat={mCat} size="xs" />
                 <span>{mName}</span>
               </button>
             );
@@ -334,7 +339,7 @@ export function TripExpensesTab({
                 : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#222c42]'
             }`}
           >
-            <span>{userCat.emoji}</span>
+            <CatAvatarBadge cat={userCat} size="xs" />
             <span>ของฉัน ({userDisplayName})</span>
           </button>
 
@@ -353,7 +358,7 @@ export function TripExpensesTab({
                     : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#222c42]'
                 }`}
               >
-                <span>{pCat.emoji}</span>
+                <CatAvatarBadge cat={pCat} size="xs" />
                 <span>{p.name}</span>
               </button>
             );
@@ -420,6 +425,8 @@ export function TripExpensesTab({
               canAddExpense={canAddExpense}
               onOpenReceiptPreview={handleOpenReceiptPreview}
               onDeleteExpense={handleDeleteExpense}
+              onSelectExpense={onSelectExpense}
+              onEditExpense={onEditExpense}
             />
           ))}
         </div>

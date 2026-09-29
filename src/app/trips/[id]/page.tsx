@@ -18,6 +18,7 @@ import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
+import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCustomJpyToThbRate, formatCurrencyWithThb, convertCurrency, convertToThb } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
 import { 
@@ -50,6 +51,7 @@ const VersionRollbackModal = dynamic(() => import('@/components/VersionRollbackM
 const QuickCurrencyCalculator = dynamic(() => import('@/components/QuickCurrencyCalculator'), { ssr: false });
 const PackingChecklistModal = dynamic(() => import('@/components/PackingChecklistModal'), { ssr: false });
 const TravelHubModal = dynamic(() => import('@/components/TravelHubModal'), { ssr: false });
+const ExpenseDetailModal = dynamic(() => import('@/components/ExpenseDetailModal'), { ssr: false });
 import { 
   Camera, Upload, MapPin, Utensils, ShieldAlert, 
   Plus, Download, Moon, Sun, ExternalLink, ChevronDown, 
@@ -126,6 +128,8 @@ export default function TripDetailPage() {
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('');
   const [hasSavedGeminiKey, setHasSavedGeminiKey] = useState(false);
   const [splitAsSeparateExpenses, setSplitAsSeparateExpenses] = useState(false);
+  const [selectedExpenseForDetail, setSelectedExpenseForDetail] = useState<any | null>(null);
+  const [startInExpenseEditMode, setStartInExpenseEditMode] = useState<boolean>(false);
 
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
@@ -857,7 +861,52 @@ export default function TripDetailPage() {
       } catch {}
     }
     const { error } = await supabase.from('expenses').delete().eq('id', id);
-    if (!error) fetchTripData();
+    if (!error) {
+      setSelectedExpenseForDetail(null);
+      fetchTripData();
+    }
+  };
+
+  const handleSelectExpense = (exp: any) => {
+    setSelectedExpenseForDetail(exp);
+    setStartInExpenseEditMode(false);
+  };
+
+  const handleEditExpense = (exp: any) => {
+    setSelectedExpenseForDetail(exp);
+    setStartInExpenseEditMode(true);
+  };
+
+  const handleSaveUpdatedExpense = async (updatedExpense: any) => {
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .update({
+          title: updatedExpense.title,
+          amount: Number(updatedExpense.amount),
+          currency: updatedExpense.currency || tripBaseCurrency,
+          category: updatedExpense.category,
+          spent_at: updatedExpense.spent_at,
+          payer_id: updatedExpense.payer_id,
+          payer_name: updatedExpense.payer_name,
+          payer_avatar: updatedExpense.payer_avatar,
+          receipt_url: updatedExpense.receipt_url,
+        })
+        .eq('id', updatedExpense.id);
+
+      if (error) throw error;
+
+      // Update in-memory state immediately for instant feedback
+      setExpenses((prev) =>
+        prev.map((e) => (e.id === updatedExpense.id ? { ...e, ...updatedExpense } : e))
+      );
+      setSelectedExpenseForDetail(updatedExpense);
+      fetchTripData();
+      triggerConfetti();
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาดในการบันทึกการแก้ไข: ' + (err?.message || err));
+      throw err;
+    }
   };
 
   // ส่งออก Excel
@@ -1323,9 +1372,7 @@ export default function TripDetailPage() {
                 className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] hover:border-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
                 title="ตั้งค่าโปรไฟล์"
               >
-                <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-sm group-hover:scale-110 transition-transform overflow-hidden`}>
-                  {userCat.emoji}
-                </div>
+                <CatAvatarBadge cat={userCat} size="xs" className="group-hover:scale-110 transition-transform shadow-xs" />
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-200 hidden sm:inline max-w-[80px] truncate">
                   {userDisplayName}
                 </span>
@@ -1577,6 +1624,8 @@ export default function TripDetailPage() {
                 handleOpenReceiptPreview={handleOpenReceiptPreview}
                 handleDeleteExpense={handleDeleteExpense}
                 exportExpensesToExcel={exportExpensesToExcel}
+                onSelectExpense={handleSelectExpense}
+                onEditExpense={handleEditExpense}
               />
             </motion.div>
           )}
@@ -1790,7 +1839,23 @@ export default function TripDetailPage() {
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
         user={currentUser}
-        onProfileUpdated={(updated) => setUserProfile((prev: any) => ({ ...prev, ...updated }))}
+        onProfileUpdated={(updated) => {
+          setUserProfile((prev: any) => ({ ...prev, ...updated }));
+          setCurrentUser((prev: any) => ({
+            ...prev,
+            user_metadata: { ...(prev?.user_metadata || {}), ...updated },
+          }));
+          setMembers((prev) =>
+            prev.map((m) =>
+              m.user_id === currentUser?.id
+                ? {
+                    ...m,
+                    profiles: { ...(m.profiles || {}), ...updated },
+                  }
+                : m
+            )
+          );
+        }}
       />
 
       {/* Travel Command Center Hub Modal (5-in-1) */}
@@ -1875,6 +1940,24 @@ export default function TripDetailPage() {
         onRestored={fetchTripData}
       />
 
+      {/* Expense Detail & Edit Modal */}
+      <ExpenseDetailModal
+        isOpen={!!selectedExpenseForDetail}
+        onClose={() => setSelectedExpenseForDetail(null)}
+        expense={selectedExpenseForDetail}
+        categories={categories}
+        members={members}
+        currentUser={currentUser}
+        userDisplayName={userDisplayName}
+        tripBaseCurrency={tripBaseCurrency}
+        fxRate={fxRate}
+        canEdit={canAddExpense}
+        startInEditMode={startInExpenseEditMode}
+        onSaveExpense={handleSaveUpdatedExpense}
+        onDeleteExpense={handleDeleteExpense}
+        onOpenReceiptFullscreen={(img) => setPreviewImage(img)}
+      />
+
       {/* 10. Scan / Add Expense Modal with Itemized Split */}
       {/* 10. Scan / Add Expense Modal (Unified Single Clean Form) */}
       {showScanModal && (
@@ -1886,9 +1969,7 @@ export default function TripDetailPage() {
             {/* Modal Header */}
             <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42]">
               <div className="flex items-center gap-2.5">
-                <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-sm shadow-xs`}>
-                  {userCat.emoji}
-                </div>
+                <CatAvatarBadge cat={userCat} size="lg" />
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                     บันทึกค่าใช้จ่าย 🧾

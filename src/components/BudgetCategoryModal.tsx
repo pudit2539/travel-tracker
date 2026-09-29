@@ -22,6 +22,7 @@ import {
 } from '@/lib/categories';
 import { supabase } from '@/lib/supabase';
 import { getCatAvatar } from '@/lib/avatars';
+import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { convertToThb } from '@/lib/currency';
 
 interface BudgetCategoryModalProps {
@@ -440,9 +441,7 @@ export default function BudgetCategoryModal({
                       className="p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70 flex items-center justify-between gap-3 hover:border-blue-300 dark:hover:border-blue-700 transition-all"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${mCat.bgGradient} flex items-center justify-center text-sm shadow-2xs shrink-0`}>
-                          {mCat.emoji}
-                        </div>
+                        <CatAvatarBadge cat={mCat} size="md" />
                         <div className="min-w-0">
                           <span className="text-xs font-black text-slate-900 dark:text-white truncate block">
                             {m.name}

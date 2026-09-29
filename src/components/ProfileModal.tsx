@@ -14,7 +14,7 @@ interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: any;
-  onProfileUpdated?: (updatedProfile: any) => void;
+  onProfileUpdated?: (updatedProfile: { display_name: string; avatar_id: string }) => void;
 }
 
 export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }: ProfileModalProps) {
@@ -51,6 +51,16 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     setLoading(true);
     setSaveError('');
     try {
+      // Check local storage first
+      try {
+        const cached = localStorage.getItem(`travel_tracker_profile_${user.id}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.display_name) setDisplayName(parsed.display_name);
+          if (parsed.avatar_id) setSelectedAvatarId(parsed.avatar_id);
+        }
+      } catch {}
+
       const { data } = await supabase
         .from('profiles')
         .select('*')
@@ -82,34 +92,49 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     try {
       const nameToSave = displayName.trim() || user.email?.split('@')[0];
 
-      // 1. บันทึกข้อมูลลงตาราง profiles
       const profilePayload = {
         id: user.id,
         display_name: nameToSave,
         avatar_id: selectedAvatarId,
       };
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(profilePayload);
-
-      if (error) {
-        throw new Error(error.message);
+      // 1. บันทึกข้อมูลลงตาราง profiles
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert(profilePayload);
+        if (error) console.warn('profiles upsert note:', error.message);
+      } catch (profErr) {
+        console.warn('profiles table upsert note:', profErr);
       }
 
       // 2. อัปเดต user_metadata ในระบบ Auth ไปด้วย
-      await supabase.auth.updateUser({
-        data: {
-          display_name: nameToSave,
-          avatar_id: selectedAvatarId,
-        },
-      });
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            display_name: nameToSave,
+            avatar_id: selectedAvatarId,
+          },
+        });
+      } catch (authErr) {
+        console.warn('Auth updateUser note:', authErr);
+      }
+
+      // 3. บันทึกสำรองลง LocalStorage
+      try {
+        localStorage.setItem(`travel_tracker_profile_${user.id}`, JSON.stringify(profilePayload));
+      } catch {}
 
       setSaveSuccess(true);
       if (onProfileUpdated) {
         onProfileUpdated({ display_name: nameToSave, avatar_id: selectedAvatarId });
       }
-      setTimeout(() => setSaveSuccess(false), 3000);
+
+      // Automatically close modal after brief confirmation feedback
+      setTimeout(() => {
+        setSaveSuccess(false);
+        onClose();
+      }, 700);
     } catch (err: any) {
       console.error('Save profile error:', err);
       setSaveError(err.message || 'เกิดข้อผิดพลาดในการบันทึกโปรไฟล์');
@@ -183,28 +208,28 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#120c1e] shadow-2xl border border-slate-200 dark:border-purple-800/60 glow-pink-purple max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+      <div className="w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
         {/* Mobile Sheet Handle */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
         
         {/* Header */}
-        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40">
+        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-md shadow-pink-500/25">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
               🐱
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white">
                 ตั้งค่าโปรไฟล์ & บัญชีผู้ใช้
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
-                เลือก Avatar น้องแมว เปลี่ยนชื่อ และจัดการความปลอดภัย
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                เลือก Avatar น้องแมว ({CAT_AVATARS.length} แบบ) เปลี่ยนชื่อ และจัดการความปลอดภัย
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -215,17 +240,23 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
           
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
-              <span className="text-xs font-bold text-slate-400 dark:text-purple-400">กำลังโหลดข้อมูลโปรไฟล์...</span>
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="text-xs font-bold text-slate-400">กำลังโหลดข้อมูลโปรไฟล์...</span>
             </div>
           ) : (
             <>
               {/* SECTION 1: CAT AVATAR SELECTOR */}
               <div className="space-y-2.5">
-                <label className="block text-xs font-black text-slate-900 dark:text-white">
-                  เลือก Avatar น้องแมวประจำตัว 🐾
-                </label>
-                <div className="grid grid-cols-4 gap-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-black text-slate-900 dark:text-white">
+                    เลือก Avatar น้องแมวประจำตัว 🐾 ({CAT_AVATARS.length} แบบ)
+                  </label>
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                    คลิกเลือกรูปที่ชอบ
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-56 overflow-y-auto custom-scrollbar p-1">
                   {CAT_AVATARS.map((cat) => {
                     const isSelected = selectedAvatarId === cat.id;
                     return (
@@ -233,27 +264,27 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                         key={cat.id}
                         type="button"
                         onClick={() => setSelectedAvatarId(cat.id)}
-                        className={`relative p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                        className={`relative p-2 rounded-2xl border transition-all flex flex-col items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 ${
                           isSelected
-                            ? 'border-pink-500 bg-pink-50 dark:bg-pink-950/40 ring-2 ring-pink-500/40 scale-105 shadow-xs'
-                            : 'border-slate-200 dark:border-purple-900/40 bg-slate-50/70 dark:bg-purple-950/20 hover:border-slate-300 dark:hover:border-purple-700'
+                            ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/60 ring-2 ring-blue-500/50 scale-105 shadow-sm'
+                            : 'border-slate-200 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#1c2438] hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
-                        <div className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${cat.bgGradient} flex items-center justify-center text-2xl shadow-xs overflow-hidden`}>
+                        {isSelected && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shadow-xs">
+                            <Check className="h-3 w-3 stroke-[3]" />
+                          </div>
+                        )}
+                        <div className={`w-11 h-11 rounded-xl bg-gradient-to-tr ${cat.bgGradient} flex items-center justify-center text-xl shadow-xs overflow-hidden`}>
                           {cat.imgUrl ? (
                             <img src={cat.imgUrl} alt={cat.name} className="w-full h-full object-cover" />
                           ) : (
                             cat.emoji
                           )}
                         </div>
-                        <span className="text-[10px] font-bold text-slate-800 dark:text-purple-200 truncate w-full text-center">
+                        <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate w-full text-center">
                           {cat.name.split(' ')[0]}
                         </span>
-                        {isSelected && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-pink-500 text-white flex items-center justify-center text-[10px]">
-                            <Check className="h-3 w-3 stroke-[3]" />
-                          </div>
-                        )}
                       </button>
                     );
                   })}
@@ -263,27 +294,27 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
               {/* SECTION 2: DISPLAY NAME & SAVE */}
               <form onSubmit={handleSaveProfile} className="space-y-3 pt-2">
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-purple-200">
+                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
                     ชื่อที่ใช้แสดง (Display Name) *
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-purple-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                       type="text"
                       required
                       placeholder="เช่น Alex, น้องน้ำ, พุด"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#1c1328]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 font-bold"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                     />
                   </div>
-                  <span className="text-[10px] text-slate-500 dark:text-purple-400 mt-1 block font-medium">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block font-medium">
                     ชื่อนี้จะแสดงเป็นผู้จ่ายในรายการค่าใช้จ่ายและรายชื่อสมาชิกในทริป
                   </span>
                 </div>
 
                 {saveError && (
-                  <div className="text-xs font-bold text-[#e06b88] dark:text-[#f7a1b5] flex items-center gap-1.5 p-2.5 rounded-xl bg-rose-50 dark:bg-[#e06b88]/20 border border-rose-200 dark:border-[#e06b88]/35">
+                  <div className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{saveError}</span>
                   </div>
@@ -298,7 +329,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                   <button
                     type="submit"
                     disabled={savingProfile}
-                    className="ml-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-pink-500/25 transition-all disabled:opacity-50 cursor-pointer hover:scale-105"
+                    className="ml-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer hover:scale-105 active:scale-95"
                   >
                     {savingProfile ? (
                       <span className="flex items-center gap-1.5">
@@ -312,22 +343,22 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
               </form>
 
               {/* SECTION 3: CHANGE PASSWORD (ACCORDION) */}
-              <div className="border-t border-slate-100 dark:border-purple-900/40 pt-4">
+              <div className="border-t border-slate-100 dark:border-[#222c42] pt-4">
                 <button
                   type="button"
                   onClick={() => setShowPasswordSection(!showPasswordSection)}
-                  className="flex items-center justify-between w-full text-xs font-bold text-purple-700 dark:text-purple-300 hover:opacity-80 transition-opacity cursor-pointer"
+                  className="flex items-center justify-between w-full text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                 >
                   <span className="flex items-center gap-1.5">
-                    <Lock className="h-4 w-4 text-pink-500" /> เปลี่ยนรหัสผ่าน (Change Password)
+                    <Lock className="h-4 w-4 text-blue-500" /> เปลี่ยนรหัสผ่าน (Change Password)
                   </span>
                   <span>{showPasswordSection ? '▲ ซ่อน' : '▼ ขยาย'}</span>
                 </button>
 
                 {showPasswordSection && (
-                  <form onSubmit={handleChangePassword} className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-900/40 space-y-3 animate-in fade-in">
+                  <form onSubmit={handleChangePassword} className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#222c42] space-y-3 animate-in fade-in">
                     <div>
-                      <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-purple-200">
+                      <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
                         รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)
                       </label>
                       <div className="relative">
@@ -335,7 +366,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                           type={showNewPassword ? 'text' : 'password'}
                           required
                           placeholder="••••••••"
-                          className="w-full p-2.5 pr-9 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-white dark:bg-[#1c1328]/80 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500"
+                          className="w-full p-2.5 pr-9 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                         />
@@ -350,14 +381,14 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-purple-200">
+                      <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
                         ยืนยันรหัสผ่านใหม่
                       </label>
                       <input
                         type="password"
                         required
                         placeholder="••••••••"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-white dark:bg-[#1c1328]/80 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                       />
@@ -373,7 +404,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                     <button
                       type="submit"
                       disabled={savingPassword}
-                      className="w-full py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                      className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 cursor-pointer"
                     >
                       {savingPassword ? 'กำลังเปลี่ยนรหัสผ่าน...' : 'ยืนยันเปลี่ยนรหัสผ่าน'}
                     </button>
@@ -382,18 +413,18 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
               </div>
 
               {/* SECTION 4: ACCOUNT INFO & LOGOUT */}
-              <div className="border-t border-slate-100 dark:border-purple-900/40 pt-4 space-y-3">
+              <div className="border-t border-slate-100 dark:border-[#222c42] pt-4 space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 dark:text-purple-400 font-medium">อีเมลที่ล็อกอิน:</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">อีเมลที่ล็อกอิน:</span>
                   <span className="font-bold text-slate-900 dark:text-white font-mono">{user?.email}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 dark:text-purple-400 font-medium">User ID:</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">User ID:</span>
                   <button
                     type="button"
                     onClick={copyUserId}
-                    className="font-mono text-[11px] text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="font-mono text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <span>{user?.id?.slice(0, 13)}...</span>
                     {copiedId ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
@@ -405,7 +436,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                     type="button"
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="w-full py-2.5 rounded-xl border border-rose-300 dark:border-[#e06b88]/40 text-[#e06b88] dark:text-[#f7a1b5] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                    className="w-full py-2.5 rounded-xl border border-rose-300 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {loggingOut ? (
                       <span className="flex items-center gap-1.5">

@@ -4,6 +4,7 @@ import React from 'react';
 import { Wallet, Calculator, PieChart } from 'lucide-react';
 import { CategoryItem, CategoryBudgetMap, MemberBudgetMap } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
+import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { convertCurrency } from '@/lib/currency';
 
 interface TripAnalyticsTabProps {
@@ -69,7 +70,7 @@ export function TripAnalyticsTab({
               <div key={p.key} className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{pCat.emoji}</span>
+                    <CatAvatarBadge cat={pCat} size="sm" />
                     <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">{p.name}</span>
                   </div>
                   <div className="text-right">

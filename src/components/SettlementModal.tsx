@@ -4,6 +4,7 @@
 import { useState, useMemo } from 'react';
 import { calculateSettlement, TransferPlan, MemberBalance } from '@/lib/settlement';
 import { getCatAvatar } from '@/lib/avatars';
+import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency } from '@/lib/currency';
 import { 
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
@@ -240,9 +241,7 @@ export default function SettlementModal({
                     >
                       {/* From (Debtor) */}
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${fromCat.bgGradient} flex items-center justify-center text-sm shrink-0`}>
-                          {fromCat.emoji}
-                        </div>
+                        <CatAvatarBadge cat={fromCat} size="md" />
                         <div className="min-w-0">
                           <span className="font-bold text-xs text-slate-900 dark:text-white truncate block">
                             {t.from}
@@ -258,9 +257,7 @@ export default function SettlementModal({
 
                       {/* To (Creditor) */}
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${toCat.bgGradient} flex items-center justify-center text-sm shrink-0`}>
-                          {toCat.emoji}
-                        </div>
+                        <CatAvatarBadge cat={toCat} size="md" />
                         <div className="min-w-0">
                           <span className="font-bold text-xs text-slate-900 dark:text-white truncate block">
                             {t.to}
@@ -301,9 +298,7 @@ export default function SettlementModal({
                 return (
                   <div key={idx} className="py-2.5 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-7 h-7 rounded-xl bg-gradient-to-tr ${bCat.bgGradient} flex items-center justify-center text-xs`}>
-                        {bCat.emoji}
-                      </div>
+                      <CatAvatarBadge cat={bCat} size="sm" />
                       <div>
                         <span className="font-bold text-slate-900 dark:text-white block">{b.name}</span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">จ่ายไป {b.totalPaid.toLocaleString()} {currency}</span>
