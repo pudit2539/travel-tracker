@@ -86,9 +86,9 @@ export function TripAnalyticsTab({
                   <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex justify-between border-t border-slate-200/60 dark:border-[#222c42] pt-1.5">
                     <span>งบตั้งไว้: {pBudget.toLocaleString()} {tripBaseCurrency}</span>
                     {pOver > 0 ? (
-                      <span className="text-rose-600 dark:text-rose-400 font-bold">เกินงบ +{pOver.toLocaleString()}</span>
+                      <span className="text-rose-600 font-bold">เกินงบ +{pOver.toLocaleString()}</span>
                     ) : (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">เหลือ {pRemaining.toLocaleString()}</span>
+                      <span className="text-emerald-600 font-bold">เหลือ {pRemaining.toLocaleString()}</span>
                     )}
                   </div>
                 )}
@@ -124,14 +124,14 @@ export function TripAnalyticsTab({
             const catPercent = totalSpent > 0 ? (spentInCat / totalSpent) * 100 : 0;
 
             return (
-              <div key={cat.id} className="space-y-1.5">
+              <div key={cat.id} className="space-y-1">
                 <div className="flex justify-between text-xs font-bold">
-                  <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                  <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-300">
                     <span>{cat.icon}</span>
                     <span>{cat.label}</span>
                   </span>
                   <div className="text-right">
-                    <span className="text-slate-900 dark:text-white font-black">
+                    <span className="text-slate-900 dark:text-white">
                       {spentInCat.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}
                     </span>
                     <span className="text-[10px] text-slate-400 ml-1">({catPercent.toFixed(0)}%)</span>
@@ -140,7 +140,7 @@ export function TripAnalyticsTab({
 
                 <div className="w-full bg-slate-100 dark:bg-[#1c2438] rounded-full h-2 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded-full transition-all"
+                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded-full"
                     style={{ width: `${Math.min(catPercent, 100)}%` }}
                   />
                 </div>
@@ -154,4 +154,3 @@ export function TripAnalyticsTab({
 }
 
 export default TripAnalyticsTab;
-
