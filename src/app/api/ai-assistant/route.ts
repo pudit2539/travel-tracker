@@ -64,7 +64,8 @@ Respond ONLY with a valid JSON array of max 3 items matching this schema:
 ]
 No other text, markdown blocks only if standard JSON.`;
 
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+    // Ultra-fast, highly cost-efficient Haiku model (costs < 0.01 THB per call)
+    let anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -72,11 +73,28 @@ No other text, markdown blocks only if standard JSON.`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 350,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
+
+    // Fallback to claude-3-haiku if 3.5 is not available on key tier
+    if (!anthropicRes.ok) {
+      anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 350,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+    }
 
     const anthropicData = await anthropicRes.json();
     const rawText = anthropicData?.content?.[0]?.text || '';
