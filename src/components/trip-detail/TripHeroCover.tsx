@@ -124,7 +124,7 @@ export function TripHeroCover({ trip, itineraryCount = 0, totalSpent = 0, curren
   }, []);
 
   return (
-    <div className="relative rounded-3xl overflow-hidden shadow-lg border border-rose-100/80 dark:border-[#323850]/80 group">
+    <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 dark:border-[#262c3d] group">
       {/* Background Cover Image with Gradient Scrim */}
       <div className="h-44 sm:h-52 w-full relative overflow-hidden bg-slate-900">
         <img
@@ -171,15 +171,15 @@ export function TripHeroCover({ trip, itineraryCount = 0, totalSpent = 0, curren
       </div>
 
       {/* Cat Companion Mood Banner directly below cover */}
-      <div className="p-3 sm:p-3.5 bg-gradient-to-r from-rose-50/90 via-purple-50/60 to-white/95 dark:from-[#1b1f30] dark:via-[#222638] dark:to-[#1b1f30] border-t border-rose-100/60 dark:border-[#323850]/60 flex items-center justify-between gap-3 text-xs">
+      <div className="p-3 sm:p-3.5 bg-slate-50/90 dark:bg-[#171a23] border-t border-slate-200/80 dark:border-[#262c3d] flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#2a2f45] shadow-xs flex items-center justify-center text-base shrink-0 border border-rose-200/60 dark:border-[#323850]">
+          <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#1f2433] shadow-xs flex items-center justify-center text-base shrink-0 border border-slate-200/80 dark:border-[#2d3448]">
             {catMoodGreeting.icon}
           </div>
           <div>
             <div className="flex items-center gap-1.5 font-black text-slate-900 dark:text-white">
               <span>{catMoodGreeting.mood}</span>
-              <span className="text-[10px] text-[#e06b88] dark:text-[#f7a1b5] bg-rose-100/60 dark:bg-[#e06b88]/20 px-2 py-0.2 rounded-full font-bold">
+              <span className="text-[10px] text-[#c25872] dark:text-[#d47087] bg-rose-50 dark:bg-[#d47087]/15 px-2 py-0.2 rounded-full font-bold border border-rose-200/60 dark:border-[#d47087]/30">
                 Cat AI Companion
               </span>
             </div>

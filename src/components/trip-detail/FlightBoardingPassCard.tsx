@@ -70,14 +70,14 @@ export function FlightBoardingPassCard({ tripId, defaultDestination }: FlightBoa
   };
 
   return (
-    <div className="rounded-3xl border border-rose-200/90 dark:border-[#323850] bg-gradient-to-br from-rose-50/70 via-purple-50/40 to-slate-50/60 dark:from-[#1b1f30] dark:via-[#222638] dark:to-[#1b1f30] shadow-sm overflow-hidden transition-all">
+    <div className="rounded-3xl border border-slate-200/90 dark:border-[#262c3d] bg-white dark:bg-[#171a23] shadow-sm overflow-hidden transition-all">
       {/* Collapsed Header / Accordion trigger */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-rose-50/50 dark:hover:bg-[#2a2f45]/50 transition-colors"
+        className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1e2230]/70 transition-colors"
       >
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#e06b88] to-purple-600 flex items-center justify-center text-white shadow-xs shrink-0">
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#c25872] to-[#8b5cf6] dark:from-[#d47087] dark:to-[#7c3aed] flex items-center justify-center text-white shadow-xs shrink-0">
             <Plane className="h-4 w-4" />
           </div>
           <div>
@@ -85,7 +85,7 @@ export function FlightBoardingPassCard({ tripId, defaultDestination }: FlightBoa
               <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                 ตั๋วเครื่องบิน & Boarding Pass ✈️
               </span>
-              <span className="text-[10px] font-extrabold px-2 py-0.2 rounded-full bg-[#e06b88]/15 text-[#e06b88] dark:text-[#f7a1b5] border border-[#e06b88]/30">
+              <span className="text-[10px] font-extrabold px-2 py-0.2 rounded-full bg-rose-50 dark:bg-[#d47087]/15 text-[#c25872] dark:text-[#d47087] border border-rose-200 dark:border-[#d47087]/30">
                 {flight.airline} • {flight.flightNo}
               </span>
             </div>
@@ -99,7 +99,7 @@ export function FlightBoardingPassCard({ tripId, defaultDestination }: FlightBoa
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400 hidden sm:inline">
             {isOpen ? 'ซ่อน' : 'เปิดดูตั๋ว'}
           </span>
-          <div className="p-1.5 rounded-xl bg-white dark:bg-[#222638] text-slate-400 dark:text-slate-300 border border-slate-200/80 dark:border-[#323850]">
+          <div className="p-1.5 rounded-xl bg-white dark:bg-[#1f2433] text-slate-400 dark:text-slate-300 border border-slate-200/80 dark:border-[#262c3d]">
             {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
         </div>
@@ -107,13 +107,13 @@ export function FlightBoardingPassCard({ tripId, defaultDestination }: FlightBoa
 
       {/* Expanded Apple Wallet Boarding Pass Card */}
       {isOpen && (
-        <div className="p-4 sm:p-6 pt-0 border-t border-rose-100/80 dark:border-[#323850]/80 space-y-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="p-4 sm:p-6 pt-0 border-t border-slate-100 dark:border-[#262c3d] space-y-4 animate-in slide-in-from-top-2 duration-200">
           {!isEditing ? (
-            <div className="relative rounded-3xl bg-white dark:bg-[#1a182d] border border-slate-200/90 dark:border-purple-900/60 shadow-xl overflow-hidden mt-3 max-w-xl mx-auto">
+            <div className="relative rounded-3xl bg-white dark:bg-[#13161f] border border-slate-200/90 dark:border-[#262c3d] shadow-xl overflow-hidden mt-3 max-w-xl mx-auto">
               {/* Ticket Top Ribbon */}
-              <div className="p-4 bg-gradient-to-r from-[#e06b88] via-purple-600 to-indigo-600 text-white flex justify-between items-center">
+              <div className="p-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-[#1c212e] dark:via-[#222838] dark:to-[#1c212e] border-b border-slate-700/40 text-white flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Plane className="h-4 w-4" />
+                  <Plane className="h-4 w-4 text-[#d47087]" />
                   <span className="text-xs font-black tracking-wider uppercase">{flight.airline}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -166,26 +166,26 @@ export function FlightBoardingPassCard({ tripId, defaultDestination }: FlightBoa
 
                 {/* Perforated Divider Line */}
                 <div className="relative py-2 flex items-center">
-                  <div className="absolute -left-8 w-6 h-6 rounded-full bg-rose-50 dark:bg-[#1b1f30] border-r border-slate-200 dark:border-purple-900/60" />
-                  <div className="w-full border-t-2 border-dashed border-slate-200 dark:border-purple-900/60" />
-                  <div className="absolute -right-8 w-6 h-6 rounded-full bg-rose-50 dark:bg-[#1b1f30] border-l border-slate-200 dark:border-purple-900/60" />
+                  <div className="absolute -left-8 w-6 h-6 rounded-full bg-slate-50 dark:bg-[#171a23] border-r border-slate-200 dark:border-[#262c3d]" />
+                  <div className="w-full border-t-2 border-dashed border-slate-200 dark:border-[#262c3d]" />
+                  <div className="absolute -right-8 w-6 h-6 rounded-full bg-slate-50 dark:bg-[#171a23] border-l border-slate-200 dark:border-[#262c3d]" />
                 </div>
 
                 {/* Flight Metadata Grid */}
                 <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#222638] border border-slate-100 dark:border-purple-900/40">
+                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#1a1e2b] border border-slate-200/70 dark:border-[#262c3d]">
                     <span className="text-[9px] uppercase font-bold text-slate-400 block">Terminal</span>
                     <span className="font-mono font-black text-slate-800 dark:text-white text-sm">{flight.terminal}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#222638] border border-slate-100 dark:border-purple-900/40">
+                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#1a1e2b] border border-slate-200/70 dark:border-[#262c3d]">
                     <span className="text-[9px] uppercase font-bold text-slate-400 block">Gate</span>
-                    <span className="font-mono font-black text-[#e06b88] text-sm">{flight.gate}</span>
+                    <span className="font-mono font-black text-[#c25872] dark:text-[#d47087] text-sm">{flight.gate}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#222638] border border-slate-100 dark:border-purple-900/40">
+                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#1a1e2b] border border-slate-200/70 dark:border-[#262c3d]">
                     <span className="text-[9px] uppercase font-bold text-slate-400 block">Seat</span>
-                    <span className="font-mono font-black text-purple-600 dark:text-purple-400 text-sm">{flight.seat}</span>
+                    <span className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-sm">{flight.seat}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#222638] border border-slate-100 dark:border-purple-900/40">
+                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#1a1e2b] border border-slate-200/70 dark:border-[#262c3d]">
                     <span className="text-[9px] uppercase font-bold text-slate-400 block">Dep Time</span>
                     <span className="font-mono font-black text-slate-800 dark:text-white text-sm">{flight.departureTime}</span>
                   </div>
@@ -209,8 +209,8 @@ export function FlightBoardingPassCard({ tripId, defaultDestination }: FlightBoa
             </div>
           ) : (
             /* Edit Flight Form */
-            <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#1a182d] border border-rose-200 dark:border-[#323850] space-y-3 max-w-xl mx-auto shadow-lg">
-              <div className="flex justify-between items-center pb-2 border-b border-rose-100 dark:border-[#323850]">
+            <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#171a23] border border-slate-200 dark:border-[#262c3d] space-y-3 max-w-xl mx-auto shadow-lg">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262c3d]">
                 <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                   แก้ไขข้อมูลเที่ยวบิน ✏️
                 </h4>

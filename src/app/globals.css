@@ -4,24 +4,24 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #faf7f8;
-  --foreground: #2d3748;
+  --background: #f9f9fb;
+  --foreground: #1e293b;
   --card: #ffffff;
-  --card-foreground: #2d3748;
-  --border: #f5e6ea;
-  --primary-pink: #e06b88;
-  --primary-purple: #e06b88;
-  --primary-black: #181b2a;
+  --card-foreground: #1e293b;
+  --border: #e8ebf0;
+  --primary-pink: #c25872;
+  --primary-purple: #c25872;
+  --primary-black: #0f1117;
 }
 
 .dark {
-  --background: #181b2a;
-  --foreground: #f1f5f9;
-  --card: #222638;
+  --background: #0f1117;
+  --foreground: #e2e8f0;
+  --card: #171a23;
   --card-foreground: #f8fafc;
-  --border: #323850;
-  --primary-pink: #e2748f;
-  --primary-purple: #e2748f;
+  --border: #262c3d;
+  --primary-pink: #d47087;
+  --primary-purple: #d47087;
 }
 
 @theme inline {
@@ -256,15 +256,15 @@ input::-ms-clear {
 }
 
 .glow-pink-purple {
-  box-shadow: 0 0 20px -4px rgba(224, 107, 136, 0.25);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(212, 112, 135, 0.2);
 }
 
 .glow-purple {
-  box-shadow: 0 0 16px -3px rgba(224, 107, 136, 0.22);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(148, 163, 184, 0.15);
 }
 
 .glow-pink {
-  box-shadow: 0 0 16px -3px rgba(224, 107, 136, 0.22);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(212, 112, 135, 0.18);
 }
 
 /* Print Optimization */

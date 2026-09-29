@@ -1,12 +1,10 @@
-// src/components/trip-detail/ItineraryStopCard.tsx
-'use client';
-
 import React from 'react';
 import { 
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
   Navigation
 } from 'lucide-react';
+import { parseTransitInfo } from '@/lib/transitGuide';
 
 interface ItineraryStopCardProps {
   item: any;
@@ -50,6 +48,8 @@ function ItineraryStopCardComponent({
     }
   };
 
+  const transitGuide = parseTransitInfo(item.transport_info);
+
   const mainPlaceMapsUrl =
     item.main_place_links && item.main_place_links[0]
       ? item.main_place_links[0]
@@ -79,14 +79,14 @@ function ItineraryStopCardComponent({
   return (
     <div className={`group p-4 sm:p-5 rounded-3xl border ${
       visited 
-        ? 'border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/30 dark:bg-emerald-950/20' 
-        : 'border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95'
-    } card-elevation hover:border-[#e06b88]/50 dark:hover:border-[#e06b88]/50 transition-all duration-300 space-y-3 relative overflow-hidden`}>
+        ? 'border-emerald-300/70 dark:border-emerald-800/50 bg-emerald-50/20 dark:bg-emerald-950/20' 
+        : 'border-slate-200/80 dark:border-[#262c3d] bg-white dark:bg-[#171a23]'
+    } card-elevation hover:border-[#c25872]/40 dark:hover:border-[#d47087]/40 transition-all duration-300 space-y-3 relative overflow-hidden`}>
       
       {/* Top Row: Date Badge, Time slot, City, Paw Stamp & Reorder/Edit tools */}
       <div className="flex justify-between items-center gap-2">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <span className="px-3 py-1 rounded-xl text-xs font-black bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/25 dark:text-[#fbc2cf] border border-rose-200/80 dark:border-[#e06b88]/40 whitespace-nowrap shrink-0 shadow-xs">
+          <span className="px-3 py-1 rounded-xl text-xs font-black bg-slate-100/90 text-slate-700 dark:bg-[#222738] dark:text-slate-200 border border-slate-200/80 dark:border-[#2d3448] whitespace-nowrap shrink-0 shadow-2xs">
             {item.date_label || `Day ${idx + 1}`}
           </span>
 
@@ -223,29 +223,68 @@ function ItineraryStopCardComponent({
           </div>
         )}
 
-        {/* Transportation Details */}
-        {item.transport_info && (
-          <div className="text-sm text-slate-700 dark:text-slate-200 flex items-center gap-2.5 font-medium leading-relaxed">
-            <Bus className="h-4 w-4 text-[#e06b88] dark:text-[#fbc2cf] shrink-0" />
-            <span><b className="text-slate-900 dark:text-white font-bold">การเดินทาง:</b> {item.transport_info}</span>
+        {/* Transit & Train Guide: Platform, Best Route & Boarding Position */}
+        {transitGuide.hasGuide && (
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/90 dark:bg-[#1f2433] border border-slate-200/80 dark:border-[#2d3448] space-y-2 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800/40 font-black">
+                  <Bus className="h-3.5 w-3.5 text-indigo-500" />
+                  <span>การเดินทางรถไฟ / รถบัส</span>
+                </span>
+
+                {transitGuide.platform && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-850 dark:bg-amber-950/60 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/50 font-black">
+                    <span>🚉</span>
+                    <span>{transitGuide.platform}</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Direct Transit Realtime Google Maps Button */}
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.main_place + ' ' + (item.city || 'Japan'))}&travelmode=transit`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white dark:bg-[#282f42] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#384157] font-bold text-[11px] hover:text-[#c25872] dark:hover:text-[#d47087] transition-all cursor-pointer shadow-2xs"
+                title="เช็กชานชาลาและเวลารถไฟแบบ Real-time บน Google Maps"
+              >
+                <Navigation className="h-3 w-3 text-indigo-500" />
+                <span>เช็กชานชาลาสดใน Google Maps</span>
+                <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+              </a>
+            </div>
+
+            {transitGuide.details && (
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium pl-0.5">
+                {transitGuide.details}
+              </p>
+            )}
+
+            {transitGuide.bestTip && (
+              <div className="flex items-start gap-1.5 p-2 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
+                <span className="shrink-0">💡</span>
+                <span><b>ทางเลือกที่ดีที่สุด:</b> {transitGuide.bestTip}</span>
+              </div>
+            )}
           </div>
         )}
 
         {/* Backup Plan (Plan B) */}
         {item.backup_plan && (
-          <div className="mt-2.5 pt-2.5 border-t border-dashed border-rose-100/80 dark:border-[#323850]">
+          <div className="mt-2.5 pt-2.5 border-t border-dashed border-slate-200/80 dark:border-[#2d3448]">
             <button
               type="button"
               onClick={() => onTogglePlanB(item.id)}
-              className="text-xs sm:text-sm font-bold text-[#e06b88] dark:text-[#fbc2cf] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50/80 dark:bg-[#2a2f45] border border-rose-200/70 dark:border-[#323850] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shadow-2xs"
+              className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-[#222738] border border-slate-200/70 dark:border-[#2d3448] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shadow-2xs"
             >
-              <Shield className="h-3.5 w-3.5" />
+              <Shield className="h-3.5 w-3.5 text-indigo-500" />
               <span>แผนสำรอง (Plan B)</span>
               {isPlanBOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             </button>
             {isPlanBOpen && (
-              <div className="p-3.5 mt-2.5 rounded-2xl bg-rose-50/60 dark:bg-[#2a2f45] text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-2.5 border border-rose-200/60 dark:border-[#323850] shadow-xs">
-                <div className="font-black text-xs text-[#e06b88] dark:text-[#fbc2cf] flex items-center gap-1.5">
+              <div className="p-3.5 mt-2.5 rounded-2xl bg-slate-50/70 dark:bg-[#1f2433] text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-2.5 border border-slate-200/70 dark:border-[#2d3448] shadow-xs">
+                <div className="font-black text-xs text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
                   <Shield className="h-3.5 w-3.5" />
                   <span>รายการสถานที่ & ร้านอาหารสำรอง (แตะเพื่อเปิดพิกัด):</span>
                 </div>

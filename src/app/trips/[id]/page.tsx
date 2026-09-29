@@ -37,6 +37,7 @@ import {
 } from '@/lib/localReceipts';
 import { compressReceiptImage } from '@/lib/imageCompressor';
 import ItemizedReceiptSplitter, { ItemizedDish } from '@/components/ItemizedReceiptSplitter';
+import { parseTransitInfo, formatTransitInfo } from '@/lib/transitGuide';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
@@ -185,6 +186,8 @@ export default function TripDetailPage() {
     food_recommendations: [{ name: '', link: '' }],
     backup_plans: [{ text: '', link: '' }],
     transport_info: '',
+    platform: '',
+    best_route_tip: '',
     insert_after_order: null as number | null,
   });
   const [savingActivity, setSavingActivity] = useState(false);
@@ -457,6 +460,12 @@ export default function TripDetailPage() {
       .filter((l) => l.length > 0);
 
     try {
+      const fullTransport = formatTransitInfo(
+        activityForm.platform,
+        activityForm.best_route_tip,
+        activityForm.transport_info
+      );
+
       if (editingActivity) {
         const { error } = await supabase
           .from('itinerary_items')
@@ -468,7 +477,7 @@ export default function TripDetailPage() {
             main_place_links: placeLinksFiltered,
             food_recommendation: foodFormatted,
             food_links: foodLinksFiltered,
-            transport_info: activityForm.transport_info,
+            transport_info: fullTransport,
             backup_plan: backupFormatted,
             backup_links: backupLinksFiltered,
           })
@@ -496,7 +505,7 @@ export default function TripDetailPage() {
             main_place_links: placeLinksFiltered,
             food_recommendation: foodFormatted,
             food_links: foodLinksFiltered,
-            transport_info: activityForm.transport_info,
+            transport_info: fullTransport,
             backup_plan: backupFormatted,
             backup_links: backupLinksFiltered,
             sort_order: nextOrder,
@@ -544,6 +553,8 @@ export default function TripDetailPage() {
       backupItems = [{ text: item.backup_plan || '', link: backupLinks[0] || '' }];
     }
 
+    const transit = parseTransitInfo(item.transport_info);
+
     setActivityForm({
       date_label: item.date_label || '',
       time_slot: item.time_slot || '',
@@ -552,7 +563,9 @@ export default function TripDetailPage() {
       main_place_links: placeLinks,
       food_recommendations: foodItems,
       backup_plans: backupItems,
-      transport_info: item.transport_info || '',
+      transport_info: transit.details,
+      platform: transit.platform,
+      best_route_tip: transit.bestTip,
       insert_after_order: null,
     });
     setShowActivityModal(true);
@@ -574,6 +587,8 @@ export default function TripDetailPage() {
       food_recommendations: [{ name: '', link: '' }],
       backup_plans: [{ text: '', link: '' }],
       transport_info: '',
+      platform: '',
+      best_route_tip: '',
       insert_after_order: null,
     });
   };
@@ -2283,15 +2298,52 @@ export default function TripDetailPage() {
                 ))}
               </div>
 
-              <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">การเดินทาง (Transport Info)</label>
-                <input
-                  type="text"
-                  placeholder="เช่น นั่งสาย Midosuji Line ลงสถานี Namba ทางออก 14"
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#323850] bg-slate-50/50 dark:bg-[#2a2f45] text-slate-900 dark:text-white text-xs outline-none focus:border-rose-400 font-medium"
-                  value={activityForm.transport_info}
-                  onChange={(e) => setActivityForm({ ...activityForm, transport_info: e.target.value })}
-                />
+              {/* Transit & Train Guide: Platform & Best Recommendation */}
+              <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#1a1e2b] border border-slate-200/80 dark:border-[#2a3147] space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-white">
+                  <Bus className="h-4 w-4 text-indigo-500" />
+                  <span>ข้อมูลการเดินทาง รถไฟ & ชานชาลา (Transit Guide)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
+                      🚉 ชานชาลา / ประตูทางออก (Platform / Exit)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="เช่น ชานชาลา 3 (Track 3) / ทางออก 14"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#2a3147] bg-white dark:bg-[#222738] text-slate-900 dark:text-white text-xs outline-none focus:border-[#c25872] font-medium"
+                      value={activityForm.platform}
+                      onChange={(e) => setActivityForm({ ...activityForm, platform: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
+                      💡 ทางเลือกที่ดีที่สุด & จุดขึ้นรถ
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="เช่น ขึ้นตู้ที่ 4-5 เดินใกล้บันไดเลื่อน / เร็วสุด"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#2a3147] bg-white dark:bg-[#222738] text-slate-900 dark:text-white text-xs outline-none focus:border-[#c25872] font-medium"
+                      value={activityForm.best_route_tip}
+                      onChange={(e) => setActivityForm({ ...activityForm, best_route_tip: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
+                    สายรถไฟ / รายละเอียดการเดินทาง (Transport Info)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="เช่น นั่งสาย Midosuji Line ลงสถานี Namba"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#2a3147] bg-white dark:bg-[#222738] text-slate-900 dark:text-white text-xs outline-none focus:border-[#c25872] font-medium"
+                    value={activityForm.transport_info}
+                    onChange={(e) => setActivityForm({ ...activityForm, transport_info: e.target.value })}
+                  />
+                </div>
               </div>
 
             </form>

@@ -94,9 +94,9 @@ export default function InteractiveTripMap({
 
   if (displayItems.length === 0) {
     return (
-      <div className="p-8 text-center rounded-3xl border border-slate-200/80 dark:border-purple-900/40 bg-white/95 dark:bg-[#1a182d]/95">
-        <Map className="h-8 w-8 text-pink-500 mx-auto mb-2 opacity-60" />
-        <p className="text-xs text-slate-500 dark:text-purple-300 font-bold">ไม่มีสถานที่ในวันที่เลือก</p>
+      <div className="p-8 text-center rounded-3xl border border-slate-200/80 dark:border-[#262c3d] bg-white/95 dark:bg-[#171a23]/95">
+        <Map className="h-8 w-8 text-rose-500 mx-auto mb-2 opacity-60" />
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">ไม่มีสถานที่ในวันที่เลือก</p>
       </div>
     );
   }
@@ -105,17 +105,17 @@ export default function InteractiveTripMap({
     <div className="space-y-4">
       
       {/* Route Header Banner */}
-      <div className="p-4 sm:p-5 rounded-3xl border border-purple-200/80 dark:border-purple-800/60 bg-gradient-to-br from-pink-500/10 via-purple-600/10 to-indigo-600/10 bg-white/95 dark:bg-[#1a182d]/95 card-elevation space-y-3">
+      <div className="p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#262c3d] bg-white/95 dark:bg-[#171a23]/95 card-elevation space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-slate-800 dark:bg-slate-700 flex items-center justify-center text-white text-xs font-black shadow-xs">
               <Compass className="h-4 w-4" />
             </div>
             <div>
               <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                 เส้นทางท่องเที่ยว {selectedDay !== 'all' ? selectedDay : 'ภาพรวม'} ({displayItems.length} จุดหมาย)
               </h3>
-              <p className="text-[10px] text-slate-500 dark:text-purple-300 font-medium">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                 คลิกที่หมุดแต่ละจุดเพื่อดูรายละเอียด & แตะนำทางด้วย Google Maps
               </p>
             </div>
@@ -126,7 +126,7 @@ export default function InteractiveTripMap({
               href={multiStopMapsUrl}
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-[#c25872] hover:bg-[#b04a63] dark:bg-[#d47087] dark:hover:bg-[#c25872] text-white font-bold text-xs shadow-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Navigation className="h-3.5 w-3.5" />
               <span>เปิดเส้นทางรวมใน Google Maps</span>
@@ -148,12 +148,12 @@ export default function InteractiveTripMap({
                   onClick={() => setSelectedStopIdx(idx)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-500 shadow-md shadow-pink-500/25 scale-105'
-                      : 'bg-white/80 dark:bg-[#11101d]/80 text-slate-800 dark:text-purple-200 border-slate-200 dark:border-purple-900/50 hover:border-pink-400'
+                      ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-xs scale-105'
+                      : 'bg-white/80 dark:bg-[#11131a]/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-[#262c3d] hover:border-slate-400'
                   }`}
                 >
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                    isSelected ? 'bg-white text-pink-600' : 'bg-pink-100 dark:bg-purple-950 text-pink-600 dark:text-pink-400'
+                    isSelected ? 'bg-white text-slate-900 dark:bg-slate-900 dark:text-white' : 'bg-rose-50 dark:bg-slate-800 text-rose-600 dark:text-rose-300'
                   }`}>
                     {idx + 1}
                   </div>
@@ -168,7 +168,7 @@ export default function InteractiveTripMap({
                 </button>
 
                 {idx < displayItems.length - 1 && (
-                  <ChevronRight className="h-4 w-4 text-slate-400 dark:text-purple-600 shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-slate-400 dark:text-slate-600 shrink-0" />
                 )}
               </div>
             );
@@ -178,24 +178,24 @@ export default function InteractiveTripMap({
 
       {/* Active Selected Stop Detail Spotlight Card */}
       {activeStop && (
-        <div className="p-5 rounded-3xl border border-slate-200/90 dark:border-purple-800/60 bg-white/95 dark:bg-[#1a182d]/95 card-elevation space-y-4 animate-in fade-in duration-200">
+        <div className="p-5 rounded-3xl border border-slate-200/90 dark:border-[#262c3d] bg-white/95 dark:bg-[#171a23]/95 card-elevation space-y-4 animate-in fade-in duration-200">
           <div className="flex justify-between items-start gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white flex items-center justify-center text-base font-black shadow-md shadow-pink-500/20">
+              <div className="w-10 h-10 rounded-2xl bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center text-base font-black shadow-xs">
                 {selectedStopIdx + 1}
               </div>
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-900">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                     {activeStop.date_label || 'Day Plan'}
                   </span>
                   {activeStop.time_slot && (
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-purple-300 flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-pink-500" /> {activeStop.time_slot}
+                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-rose-500" /> {activeStop.time_slot}
                     </span>
                   )}
                   {activeStop.city && (
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-purple-400">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
                       📍 {activeStop.city}
                     </span>
                   )}
@@ -215,7 +215,7 @@ export default function InteractiveTripMap({
               }
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+              className="px-3.5 py-2 rounded-2xl bg-[#c25872] hover:bg-[#b04a63] dark:bg-[#d47087] dark:hover:bg-[#c25872] text-white font-bold text-xs shadow-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
             >
               <Navigation className="h-3.5 w-3.5" />
               <span>นำทางจุดนี้ 📍</span>
@@ -224,7 +224,7 @@ export default function InteractiveTripMap({
           </div>
 
           {/* Embedded Interactive Google Map Window */}
-          <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 dark:border-[#323850] shadow-inner bg-slate-100 dark:bg-[#11101d] h-[280px] sm:h-[360px]">
+          <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 dark:border-[#262c3d] shadow-inner bg-slate-100 dark:bg-[#11131a] h-[280px] sm:h-[360px]">
             <iframe
               title={`Google Map - ${activeCleanPlace}`}
               width="100%"
@@ -239,15 +239,15 @@ export default function InteractiveTripMap({
             
             {/* Top-Right Badge: Google Maps Active */}
             <div className="absolute top-2.5 right-2.5 flex items-center gap-2 pointer-events-none">
-              <span className="px-2.5 py-1 rounded-xl bg-white/95 dark:bg-[#1a182d]/95 text-[10px] font-black text-slate-800 dark:text-white shadow-md border border-slate-200/80 dark:border-[#323850] flex items-center gap-1 backdrop-blur-xs">
+              <span className="px-2.5 py-1 rounded-xl bg-white/95 dark:bg-[#171a23]/95 text-[10px] font-black text-slate-800 dark:text-white shadow-md border border-slate-200/80 dark:border-[#262c3d] flex items-center gap-1 backdrop-blur-xs">
                 <span>🗺️ Google Maps Live</span>
               </span>
             </div>
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-purple-900/30 text-xs">
+          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#262c3d] text-xs">
             {activeStop.food_recommendation && (
-              <div className="flex items-start gap-2 text-slate-700 dark:text-purple-200">
+              <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
                 <Utensils className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <span className="font-bold text-slate-900 dark:text-white">ร้านอาหารแนะนำ: </span>
@@ -266,16 +266,16 @@ export default function InteractiveTripMap({
             )}
 
             {activeStop.transport_info && (
-              <div className="flex items-center gap-2 text-slate-600 dark:text-purple-300 font-medium">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-medium">
                 <Bus className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
                 <span>การเดินทาง: {activeStop.transport_info}</span>
               </div>
             )}
 
             {activeStop.backup_plan && (
-              <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/40 space-y-2">
-                <div className="flex items-center gap-1.5 font-bold text-purple-700 dark:text-purple-300">
-                  <Sparkles className="h-3.5 w-3.5 text-pink-500" />
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1a1e2b] border border-slate-200/80 dark:border-[#262c3d] space-y-2">
+                <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                  <Sparkles className="h-3.5 w-3.5 text-rose-500" />
                   <span>แผนสำรอง (Plan B):</span>
                 </div>
                 <div className="space-y-1.5">
@@ -289,15 +289,15 @@ export default function InteractiveTripMap({
                       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanName + ' ' + (activeStop.city || 'Japan'))}`;
 
                     return (
-                      <div key={lineIdx} className="p-2 rounded-xl bg-white dark:bg-[#11101d] border border-purple-100 dark:border-purple-900/50 flex items-center justify-between gap-2 shadow-2xs">
-                        <span className="font-medium text-slate-800 dark:text-purple-200 leading-snug">
+                      <div key={lineIdx} className="p-2 rounded-xl bg-white dark:bg-[#11131a] border border-slate-200/80 dark:border-[#262c3d] flex items-center justify-between gap-2 shadow-2xs">
+                        <span className="font-medium text-slate-800 dark:text-slate-200 leading-snug">
                           {line}
                         </span>
                         <a
                           href={lineMapsUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 hover:bg-pink-500 hover:text-white transition-all shrink-0 cursor-pointer"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 hover:bg-[#c25872] hover:text-white dark:hover:bg-[#d47087] transition-all shrink-0 cursor-pointer"
                           title="เปิด Google Maps สำหรับรายการนี้"
                         >
                           <span>แผนที่ 📍</span>
