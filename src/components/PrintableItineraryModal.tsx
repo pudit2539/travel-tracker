@@ -42,10 +42,12 @@ export default function PrintableItineraryModal({
   const totalSpent = expenses.reduce((a, b) => a + Number(b.amount || 0), 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-2 sm:p-4 animate-in fade-in duration-200 print:p-0 print:static print:bg-white">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 animate-in fade-in duration-200 print:p-0 print:static print:bg-white">
       
       {/* Modal Container (Scrollable Preview on screen, Clean Page on Print) */}
-      <div className="w-full max-w-4xl rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200 dark:border-purple-800/60 max-h-[95vh] flex flex-col overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black">
+      <div className="w-full max-w-4xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200 dark:border-purple-800/60 max-h-[85vh] sm:max-h-[95vh] flex flex-col overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in slide-in-from-bottom duration-200">
+        {/* Mobile Sheet Handle */}
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0 print:hidden" />
         
         {/* Screen Header (Hidden on print) */}
         <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40 bg-slate-50 dark:bg-purple-950/40 print:hidden">

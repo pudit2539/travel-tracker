@@ -354,7 +354,7 @@ function LoginForm() {
 
       {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 animate-in fade-in">
           <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#130d22] p-6 shadow-2xl border border-slate-200 dark:border-purple-800/70 space-y-4">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white">
               <KeyRound className="h-5 w-5 text-pink-500" />

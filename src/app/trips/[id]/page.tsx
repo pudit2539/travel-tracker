@@ -1461,7 +1461,7 @@ export default function TripDetailPage() {
 
         {/* Guest Preview & Join Invitation Banner */}
         {!currentUser && (
-          <div className="p-3.5 sm:p-4 rounded-3xl bg-rose-50/80 dark:bg-[#222638] border border-rose-200/80 dark:border-[#323850] backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md animate-in fade-in">
+          <div className="p-3.5 sm:p-4 rounded-3xl bg-rose-50/95 dark:bg-[#222638] border border-rose-200/80 dark:border-[#323850] flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md animate-in fade-in">
             <div className="flex items-center gap-3 text-left">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#e06b88] flex items-center justify-center text-white text-base sm:text-lg shadow-sm shrink-0">
                 👋
@@ -1848,8 +1848,10 @@ export default function TripDetailPage() {
       {/* 10. Scan / Add Expense Modal with Itemized Split */}
       {/* 10. Scan / Add Expense Modal (Unified Single Clean Form) */}
       {showScanModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-pink-purple max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-pink-purple max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+            {/* Mobile Sheet Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
             
             {/* Modal Header */}
             <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
@@ -2181,10 +2183,12 @@ export default function TripDetailPage() {
 
       {/* 11. Activity Modal */}
       {showActivityModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-purple max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] glow-purple max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+            {/* Mobile Sheet Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
             
-            <div className="p-6 pb-3 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
+            <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
               <div>
                 <h2 className="text-base font-black text-slate-900 dark:text-slate-100">
                   {editingActivity ? 'แก้ไขกิจกรรม ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยว 🗺️'}
@@ -2317,7 +2321,7 @@ export default function TripDetailPage() {
       {/* 12. Preview Receipt Image */}
       {previewImage && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-200"
           onClick={() => setPreviewImage(null)}
         >
           <div className="relative max-w-lg w-full bg-white dark:bg-[#222638] p-4 sm:p-5 rounded-3xl border border-rose-100 dark:border-[#323850] shadow-2xl space-y-3 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
@@ -2361,8 +2365,11 @@ export default function TripDetailPage() {
 
       {/* 13. Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] p-6 shadow-2xl border border-rose-100 dark:border-[#323850] glow-pink animate-in zoom-in-95 duration-200 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#222638] p-5 sm:p-6 shadow-2xl border border-rose-100 dark:border-[#323850] glow-pink animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+            {/* Mobile Sheet Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-2 sm:hidden shrink-0" />
+            
             <div className="flex justify-between items-center pb-3 border-b border-rose-100 dark:border-[#323850]/80">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-[#e06b88] flex items-center justify-center text-white shadow-md shadow-[#e06b88]/20">
@@ -2445,8 +2452,10 @@ export default function TripDetailPage() {
 
       {/* Modal: ตั้งค่า Gemini API Key สำหรับ AI Vision สแกนใบเสร็จจริง */}
       {showAiKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-3xl bg-white dark:bg-[#1c2032] border border-rose-200 dark:border-[#323850] shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#1c2032] border border-rose-200 dark:border-[#323850] shadow-2xl p-5 sm:p-6 space-y-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+            {/* Mobile Sheet Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-2 sm:hidden shrink-0" />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-base">
                 <div className="w-8 h-8 rounded-xl bg-[#e06b88] text-white flex items-center justify-center shadow-xs">

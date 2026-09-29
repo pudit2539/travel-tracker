@@ -18,12 +18,13 @@ export default function PullToRefreshIndicator({
 
   return (
     <div 
-      className="fixed top-2 inset-x-0 z-50 flex justify-center pointer-events-none transition-transform duration-100"
+      className="fixed inset-x-0 z-50 flex justify-center pointer-events-none transition-transform duration-100"
       style={{
+        top: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1rem)',
         transform: `translateY(${Math.min(pullDistance * 0.7, 48)}px)`,
       }}
     >
-      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/95 dark:bg-[#130d22]/95 border border-pink-300 dark:border-purple-800 shadow-xl backdrop-blur-md animate-in fade-in zoom-in-90 duration-150">
+      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-[#130d22] border border-pink-300 dark:border-purple-800 shadow-xl animate-in fade-in zoom-in-90 duration-150">
         {isRefreshing ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin text-pink-500" />

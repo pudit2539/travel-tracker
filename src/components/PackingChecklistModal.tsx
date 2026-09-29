@@ -131,8 +131,10 @@ export default function PackingChecklistModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#1a182d] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#1a182d] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-purple max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 space-y-4">
+        {/* Mobile Sheet Handle */}
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-1 sm:hidden shrink-0" />
         
         {/* Header */}
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-purple-900/40 shrink-0">

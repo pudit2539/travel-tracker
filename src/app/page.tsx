@@ -641,11 +641,13 @@ export default function HomePage() {
 
       {/* ==================== CREATE TRIP MODAL ==================== */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+            {/* Mobile Sheet Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
             
             {/* Modal Header */}
-            <div className="p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#e06b88] flex items-center justify-center text-white text-lg shadow-md shadow-[#e06b88]/20">
                   ✈️
@@ -803,7 +805,7 @@ export default function HomePage() {
 
       {/* ==================== CREATE SUCCESS MODAL TOAST ==================== */}
       {createdTripSuccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-400/50 glow-pink p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
             <div className="w-16 h-16 rounded-3xl bg-[#e06b88] text-white text-3xl flex items-center justify-center mx-auto shadow-lg shadow-[#e06b88]/30 animate-bounce">
               🎉
@@ -844,9 +846,12 @@ export default function HomePage() {
 
       {/* ==================== EDIT TRIP MODAL ==================== */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+            {/* Mobile Sheet Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
+            
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#e06b88] flex items-center justify-center text-white text-lg shadow-md shadow-[#e06b88]/20">
                   ✏️
@@ -955,9 +960,12 @@ export default function HomePage() {
 
       {/* ==================== JOIN TRIP MODAL ==================== */}
       {showJoinModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-100 dark:border-[#323850] max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+            {/* Mobile Sheet Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
+            
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-rose-100 dark:border-[#323850]/80">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#e06b88] flex items-center justify-center text-white text-lg shadow-md shadow-[#e06b88]/20">
                   🔑
@@ -980,7 +988,7 @@ export default function HomePage() {
               </button>
             </div>
 
-            <form onSubmit={handleJoinTrip} className="p-6 pt-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+            <form onSubmit={handleJoinTrip} className="p-4 sm:p-6 pt-4 sm:pt-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">
                   รหัสเชิญเข้าร่วมทริป (Trip ID) *
@@ -1033,7 +1041,7 @@ export default function HomePage() {
 
       {/* ==================== DELETE TRIP MODAL ==================== */}
       {showDeleteModal && selectedTrip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#222638] shadow-2xl border border-rose-500/40 glow-rose p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
             <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-[#e06b88]/20 text-[#e06b88] dark:text-[#f7a1b5] border border-rose-200 dark:border-[#e06b88]/35 flex items-center justify-center text-2xl mx-auto shadow-md">
               <Trash2 className="h-7 w-7" />

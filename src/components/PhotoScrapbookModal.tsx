@@ -93,11 +93,13 @@ export default function PhotoScrapbookModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-4xl rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-4xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+        {/* Mobile Sheet Handle */}
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
         
         {/* Header */}
-        <div className="p-5 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40 shrink-0">
+        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40 shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center text-white text-lg shadow-md shadow-pink-500/25">
               📸
@@ -287,7 +289,7 @@ export default function PhotoScrapbookModal({
         {/* Lightbox Photo Preview Modal */}
         {selectedPhoto && (
           <div 
-            className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in"
+            className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4 animate-in fade-in"
             onClick={() => setSelectedPhoto(null)}
           >
             <div 

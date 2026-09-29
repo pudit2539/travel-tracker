@@ -268,8 +268,10 @@ export default function TravelHubModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 glow-pink-purple max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+        {/* Mobile Sheet Handle */}
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
         
         {/* Modal Header */}
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-purple-900/40 bg-slate-50/50 dark:bg-[#11101d]/50">
