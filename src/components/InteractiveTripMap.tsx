@@ -223,6 +223,28 @@ export default function InteractiveTripMap({
             </a>
           </div>
 
+          {/* Embedded Interactive Google Map Window */}
+          <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 dark:border-[#323850] shadow-inner bg-slate-100 dark:bg-[#11101d] h-[280px] sm:h-[360px]">
+            <iframe
+              title={`Google Map - ${activeCleanPlace}`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(activeCleanPlace)}&output=embed`}
+              className="w-full h-full"
+            />
+            
+            {/* Top-Right Badge: Google Maps Active */}
+            <div className="absolute top-2.5 right-2.5 flex items-center gap-2 pointer-events-none">
+              <span className="px-2.5 py-1 rounded-xl bg-white/95 dark:bg-[#1a182d]/95 text-[10px] font-black text-slate-800 dark:text-white shadow-md border border-slate-200/80 dark:border-[#323850] flex items-center gap-1 backdrop-blur-xs">
+                <span>🗺️ Google Maps Live</span>
+              </span>
+            </div>
+          </div>
+
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-purple-900/30 text-xs">
             {activeStop.food_recommendation && (
               <div className="flex items-start gap-2 text-slate-700 dark:text-purple-200">

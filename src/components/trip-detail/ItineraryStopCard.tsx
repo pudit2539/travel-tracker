@@ -33,6 +33,23 @@ function ItineraryStopCardComponent({
   onOpenEditActivity,
   onDeleteActivity,
 }: ItineraryStopCardProps) {
+  const [visited, setVisited] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && item?.id) {
+      const saved = localStorage.getItem(`visited_activity_${item.id}`);
+      if (saved === 'true') setVisited(true);
+    }
+  }, [item?.id]);
+
+  const toggleVisited = () => {
+    const next = !visited;
+    setVisited(next);
+    if (typeof window !== 'undefined' && item?.id) {
+      localStorage.setItem(`visited_activity_${item.id}`, next ? 'true' : 'false');
+    }
+  };
+
   const mainPlaceMapsUrl =
     item.main_place_links && item.main_place_links[0]
       ? item.main_place_links[0]
@@ -60,13 +77,34 @@ function ItineraryStopCardComponent({
     : '';
 
   return (
-    <div className="group p-4 sm:p-5 rounded-3xl border border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95 card-elevation hover:border-[#e06b88]/50 dark:hover:border-[#e06b88]/50 transition-all duration-300 space-y-3">
-      {/* Top Row: Date Badge, Time slot, City & Reorder/Edit tools */}
+    <div className={`group p-4 sm:p-5 rounded-3xl border ${
+      visited 
+        ? 'border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/30 dark:bg-emerald-950/20' 
+        : 'border-rose-100/80 dark:border-[#323850]/80 bg-white/95 dark:bg-[#222638]/95'
+    } card-elevation hover:border-[#e06b88]/50 dark:hover:border-[#e06b88]/50 transition-all duration-300 space-y-3 relative overflow-hidden`}>
+      
+      {/* Top Row: Date Badge, Time slot, City, Paw Stamp & Reorder/Edit tools */}
       <div className="flex justify-between items-center gap-2">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
           <span className="px-3 py-1 rounded-xl text-xs font-black bg-rose-50 text-[#e06b88] dark:bg-[#e06b88]/25 dark:text-[#fbc2cf] border border-rose-200/80 dark:border-[#e06b88]/40 whitespace-nowrap shrink-0 shadow-xs">
             {item.date_label || `Day ${idx + 1}`}
           </span>
+
+          {/* Cat Paw Stamp Visited Button */}
+          <button
+            type="button"
+            onClick={toggleVisited}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              visited
+                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs scale-102'
+                : 'bg-slate-100/80 dark:bg-[#2a2f45] text-slate-500 dark:text-slate-400 hover:text-pink-600 hover:bg-rose-50 border border-slate-200/60 dark:border-[#323850]'
+            }`}
+            title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน' : 'คลิกเพื่อประทับรอยเท้าน้องแมวว่าไปถึงแล้ว 🐾'}
+          >
+            <span className={visited ? 'animate-bounce' : ''}>🐾</span>
+            <span>{visited ? 'แวะแล้ว เมี๊ยว!' : 'เช็กอิน'}</span>
+          </button>
+
           {item.time_slot && (
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-100/90 dark:bg-[#2a2f45] px-2.5 py-1 rounded-xl border border-slate-200/70 dark:border-[#323850] whitespace-nowrap shrink-0">
               <Clock className="h-3.5 w-3.5 text-[#e06b88] dark:text-[#fbc2cf] shrink-0" />

@@ -9,6 +9,9 @@ import WeatherWidget from '@/components/WeatherWidget';
 import RouteVisualizer from '@/components/RouteVisualizer';
 import InteractiveTripMap from '@/components/InteractiveTripMap';
 import { ItineraryStopCard } from '@/components/trip-detail/ItineraryStopCard';
+import { TransitConnector } from '@/components/trip-detail/TransitConnector';
+import { FlightBoardingPassCard } from '@/components/trip-detail/FlightBoardingPassCard';
+import { TripHeroCover } from '@/components/trip-detail/TripHeroCover';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { convertCurrency, convertToThb } from '@/lib/currency';
 
@@ -82,6 +85,20 @@ export function TripPlanTab({
 }: TripPlanTabProps) {
   return (
     <div className="space-y-3.5 sm:space-y-4">
+      {/* 1. Trip Hero Cover Banner with Countdown & Cat AI Companion Greeting */}
+      <TripHeroCover 
+        trip={trip} 
+        itineraryCount={itinerary.length} 
+        totalSpent={heroDisplayData.spent} 
+        currency={tripBaseCurrency} 
+      />
+
+      {/* 2. Apple Wallet Style Flight Boarding Pass */}
+      <FlightBoardingPassCard 
+        tripId={trip?.id || ''} 
+        defaultDestination={trip?.destination || 'Tokyo'} 
+      />
+
       {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub */}
       <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-[#222638]/95 border border-rose-100/80 dark:border-[#323850]/80 card-elevation">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -357,21 +374,34 @@ export function TripPlanTab({
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredItinerary.map((item, idx) => (
-              <ItineraryStopCard
-                key={item.id || idx}
-                item={item}
-                idx={idx}
-                totalItems={itinerary.length}
-                canEditPlan={canEditPlan}
-                reordering={reordering}
-                isPlanBOpen={expandedPlanB[item.id] || false}
-                onTogglePlanB={(id) => setExpandedPlanB((prev) => ({ ...prev, [id]: !prev[id] }))}
-                onMoveActivity={handleMoveActivity}
-                onOpenEditActivity={handleOpenEditActivity}
-                onDeleteActivity={handleDeleteActivity}
-              />
-            ))}
+            {filteredItinerary.map((item, idx) => {
+              const nextItem = filteredItinerary[idx + 1];
+              return (
+                <React.Fragment key={item.id || idx}>
+                  <ItineraryStopCard
+                    item={item}
+                    idx={idx}
+                    totalItems={itinerary.length}
+                    canEditPlan={canEditPlan}
+                    reordering={reordering}
+                    isPlanBOpen={expandedPlanB[item.id] || false}
+                    onTogglePlanB={(id) => setExpandedPlanB((prev) => ({ ...prev, [id]: !prev[id] }))}
+                    onMoveActivity={handleMoveActivity}
+                    onOpenEditActivity={handleOpenEditActivity}
+                    onDeleteActivity={handleDeleteActivity}
+                  />
+                  {nextItem && (
+                    <TransitConnector
+                      fromPlace={item.main_place}
+                      toPlace={nextItem.main_place}
+                      fromCity={item.city}
+                      toCity={nextItem.city}
+                      isSameDay={item.date_label === nextItem.date_label}
+                    />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         )
       )}
