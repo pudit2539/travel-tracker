@@ -18,7 +18,7 @@ import NotificationBell from '@/components/NotificationBell';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb, convertToThb } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
 
 export default function HomePage() {
@@ -499,8 +499,8 @@ export default function HomePage() {
 
           <div className="p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation flex flex-col justify-between space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800 mb-2">
-                100 JPY = {(fxRate * 100).toFixed(2)} THB
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800 mb-2 font-mono">
+                {formatExchangeRateDisplay('JPY', fxRate)}
               </div>
               <h3 className="font-black text-sm text-slate-900 dark:text-slate-100">
                 Smart Travel Tools

@@ -13,7 +13,7 @@ import { TransitConnector } from '@/components/trip-detail/TransitConnector';
 import { FlightBoardingPassCard } from '@/components/trip-detail/FlightBoardingPassCard';
 import { TripHeroCover } from '@/components/trip-detail/TripHeroCover';
 import AnimatedNumber from '@/components/AnimatedNumber';
-import { convertCurrency, convertToThb } from '@/lib/currency';
+import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
 
 interface TripPlanTabProps {
   trip: any;
@@ -105,12 +105,8 @@ export function TripPlanTab({
           <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs">
             {tripBaseCurrency} Workspace
           </span>
-          <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1c2438] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#222c42]">
-            {tripBaseCurrency === 'CNY'
-              ? `1 CNY ≈ ${convertCurrency(1, 'CNY', 'THB', fxRate).toFixed(2)} THB`
-              : tripBaseCurrency === 'USD'
-              ? `1 USD ≈ ${convertCurrency(1, 'USD', 'THB', fxRate).toFixed(2)} THB`
-              : `100 JPY = ${(fxRate * 100).toFixed(2)} THB`}
+          <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1c2438] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#222c42] font-mono">
+            {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
           </span>
         </div>
 

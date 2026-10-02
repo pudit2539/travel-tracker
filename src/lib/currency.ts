@@ -127,7 +127,7 @@ export function formatCurrencyWithThb(
 }
 
 /**
- * Format exchange rate string in standard pair format (e.g. JPY/THB = 0.210)
+ * Format exchange rate stringเทียบเป็น 1 หน่วย (เช่น 1 JPY = 0.210 THB)
  */
 export function formatExchangeRateDisplay(
   currency: string = 'JPY',
@@ -136,8 +136,8 @@ export function formatExchangeRateDisplay(
   const rate = customRate ?? getCustomJpyToThbRate();
   const cur = (currency || 'JPY').toUpperCase();
   if (cur === 'JPY' || cur === 'THB') {
-    return `JPY/THB = ${rate.toFixed(3)}`;
+    return `1 JPY = ${rate.toFixed(3)} THB`;
   }
   const perThb = convertCurrency(1, cur, 'THB', rate);
-  return `${cur}/THB = ${perThb.toFixed(3)}`;
+  return `1 ${cur} = ${perThb.toFixed(3)} THB`;
 }
