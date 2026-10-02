@@ -1583,6 +1583,9 @@ export default function TripDetailPage() {
                 handleOpenEditActivity={handleOpenEditActivity}
                 handleDeleteActivity={handleDeleteActivity}
                 onSwitchTab={handleSwitchTab}
+                members={members}
+                currentUser={currentUser}
+                onRefreshTrip={fetchTripData}
               />
             </motion.div>
           )}

@@ -89,7 +89,7 @@ const NEARBY_PRESETS: NearbyPreset[] = [
 interface TicketPass {
   id: string;
   title: string;
-  category: 'flight' | 'train' | 'vjw' | 'attraction' | 'other';
+  category: 'flight' | 'train' | 'vjw' | 'attraction' | 'hotel' | 'other';
   imageStorageKey: string;
   imageUrl?: string;
   note?: string;
@@ -692,6 +692,7 @@ export default function TravelHubModal({
                     className="p-2 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1a182d] text-xs font-bold cursor-pointer"
                   >
                     <option value="vjw">🇯🇵 Visit Japan Web</option>
+                    <option value="hotel">🏨 ใบจองที่พัก / Hotel Voucher</option>
                     <option value="flight">✈️ ตั๋วเครื่องบิน</option>
                     <option value="train">🚅 Shinkansen / JR</option>
                     <option value="attraction">🎟️ USJ / บัตรสวนสนุก</option>

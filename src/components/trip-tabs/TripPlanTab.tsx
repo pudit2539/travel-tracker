@@ -1,16 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
-  FileText, Upload, Download, Plus, Navigation 
+  FileText, Upload, Download, Plus, Navigation, MapPin 
 } from 'lucide-react';
+import { getAccommodations, getGoogleMapsUrl } from '@/lib/accommodations';
 import WeatherWidget from '@/components/WeatherWidget';
 import RouteVisualizer from '@/components/RouteVisualizer';
 import InteractiveTripMap from '@/components/InteractiveTripMap';
 import { ItineraryStopCard } from '@/components/trip-detail/ItineraryStopCard';
 import { TransitConnector } from '@/components/trip-detail/TransitConnector';
 import { FlightBoardingPassCard } from '@/components/trip-detail/FlightBoardingPassCard';
+import { AccommodationsCard } from '@/components/trip-detail/AccommodationsCard';
 import { TripHeroCover } from '@/components/trip-detail/TripHeroCover';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
@@ -52,6 +54,9 @@ interface TripPlanTabProps {
   handleOpenEditActivity: (item: any) => void;
   handleDeleteActivity: (id: string) => void;
   onSwitchTab: (tab: 'plan' | 'expenses' | 'analytics' | 'members') => void;
+  members?: any[];
+  currentUser?: any;
+  onRefreshTrip?: () => void;
 }
 
 export function TripPlanTab({
@@ -82,7 +87,26 @@ export function TripPlanTab({
   handleOpenEditActivity,
   handleDeleteActivity,
   onSwitchTab,
+  members = [],
+  currentUser,
+  onRefreshTrip,
 }: TripPlanTabProps) {
+  // Check if any accommodation is for this day
+  const stays = useMemo(() => (trip?.id ? getAccommodations(trip.id) : []), [trip?.id]);
+  const activeStayForSelectedDay = useMemo(() => {
+    if (selectedDayFilter === 'all' || stays.length === 0) return null;
+    const filterLower = selectedDayFilter.toLowerCase();
+    return (
+      stays.find(
+        (s) =>
+          s.checkInDate?.toLowerCase().includes(filterLower) ||
+          s.checkOutDate?.toLowerCase().includes(filterLower) ||
+          filterLower.includes(s.checkInDate?.toLowerCase() || '') ||
+          (s.notes && s.notes.toLowerCase().includes(filterLower))
+      ) || null
+    );
+  }, [selectedDayFilter, stays]);
+
   return (
     <div className="space-y-3.5 sm:space-y-4">
       {/* 1. Trip Hero Cover Banner with Countdown & Cat AI Companion Greeting */}
@@ -97,6 +121,16 @@ export function TripPlanTab({
       <FlightBoardingPassCard 
         tripId={trip?.id || ''} 
         defaultDestination={trip?.destination || 'Tokyo'} 
+      />
+
+      {/* 3. Accommodations / Hotels Card */}
+      <AccommodationsCard
+        tripId={trip?.id || ''}
+        tripCurrency={tripBaseCurrency}
+        fxRate={fxRate}
+        members={members}
+        currentUser={currentUser}
+        onExpenseCreated={onRefreshTrip}
       />
 
       {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub */}
@@ -350,6 +384,33 @@ export function TripPlanTab({
           )}
         </div>
       </div>
+
+      {/* Active Stay Banner for selected day if applicable */}
+      {activeStayForSelectedDay && (
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-xl">🏨</span>
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block uppercase">
+                ที่พักของวันนี้ ({selectedDayFilter})
+              </span>
+              <span className="font-black text-slate-900 dark:text-white truncate block">
+                {activeStayForSelectedDay.name}
+                {activeStayForSelectedDay.city ? ` • ${activeStayForSelectedDay.city}` : ''}
+              </span>
+            </div>
+          </div>
+          <a
+            href={getGoogleMapsUrl(activeStayForSelectedDay)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#151b2b] text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:bg-emerald-50 flex items-center gap-1 shrink-0 cursor-pointer"
+          >
+            <MapPin className="h-3 w-3 text-rose-500" />
+            <span>เปิดแผนที่</span>
+          </a>
+        </div>
+      )}
 
       {itineraryViewMode === 'map' ? (
         <InteractiveTripMap itinerary={itinerary} selectedDay={selectedDayFilter} />
