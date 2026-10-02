@@ -136,11 +136,33 @@ export function AccommodationsCard({
   const [formNotes, setFormNotes] = useState('');
   const [formAutoCreateExpense, setFormAutoCreateExpense] = useState(true);
 
-  // Load accommodations from storage
+  // Load accommodations from storage and sync from Supabase
   useEffect(() => {
     if (tripId) {
       const data = getAccommodations(tripId);
-      setStays(data);
+      if (data && data.length > 0) {
+        setStays(data);
+      }
+      // Always fetch latest from Supabase metadata row to ensure PC & Mobile sync
+      supabase
+        .from('itinerary_items')
+        .select('backup_plan')
+        .eq('trip_id', tripId)
+        .eq('date_label', '__meta_trip_data__')
+        .maybeSingle()
+        .then(({ data: metaRow }) => {
+          if (metaRow?.backup_plan) {
+            try {
+              const parsed = JSON.parse(metaRow.backup_plan);
+              if (parsed.accommodations && Array.isArray(parsed.accommodations) && parsed.accommodations.length > 0) {
+                setStays(parsed.accommodations);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem(`travel_tracker_accommodations_${tripId}`, JSON.stringify(parsed.accommodations));
+                }
+              }
+            } catch (e) {}
+          }
+        });
     }
   }, [tripId]);
 

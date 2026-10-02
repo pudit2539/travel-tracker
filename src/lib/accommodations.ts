@@ -20,7 +20,48 @@ export interface AccommodationStay {
   createdAt: number;
 }
 
+import { supabase } from '@/lib/supabase';
+
 const STORAGE_PREFIX = 'travel_tracker_accommodations_';
+
+export async function syncAccommodationsToSupabase(tripId: string, stays: AccommodationStay[]): Promise<void> {
+  if (!tripId) return;
+  try {
+    const { data: existing } = await supabase
+      .from('itinerary_items')
+      .select('id, backup_plan')
+      .eq('trip_id', tripId)
+      .eq('date_label', '__meta_trip_data__')
+      .maybeSingle();
+
+    let payload: any = {};
+    if (existing?.backup_plan) {
+      try {
+        payload = JSON.parse(existing.backup_plan);
+      } catch (e) {}
+    }
+    payload.accommodations = stays;
+
+    if (existing?.id) {
+      await supabase
+        .from('itinerary_items')
+        .update({ backup_plan: JSON.stringify(payload) })
+        .eq('id', existing.id);
+    } else {
+      await supabase
+        .from('itinerary_items')
+        .insert([{
+          trip_id: tripId,
+          date_label: '__meta_trip_data__',
+          main_place: 'SYSTEM_TRIP_METADATA',
+          backup_plan: JSON.stringify(payload),
+          sort_order: -9999
+        }]);
+    }
+  } catch (err) {
+    console.warn('Failed to sync accommodations to Supabase:', err);
+  }
+}
 
 export function getAccommodations(tripId: string): AccommodationStay[] {
   if (typeof window === 'undefined' || !tripId) return [];
@@ -35,12 +76,16 @@ export function getAccommodations(tripId: string): AccommodationStay[] {
 }
 
 export function saveAccommodations(tripId: string, stays: AccommodationStay[]): void {
-  if (typeof window === 'undefined' || !tripId) return;
-  try {
-    localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(stays));
-  } catch (err) {
-    console.error('Failed to save accommodations:', err);
+  if (!tripId) return;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(stays));
+    } catch (err) {
+      console.error('Failed to save accommodations:', err);
+    }
   }
+  // Async sync to Supabase for multi-device cross-platform availability
+  syncAccommodationsToSupabase(tripId, stays).catch(() => {});
 }
 
 export function addAccommodation(

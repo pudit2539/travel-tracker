@@ -290,7 +290,31 @@ export default function TripDetailPage() {
         setScannedData((prev: any) => ({ ...prev, currency: tripData.currency || 'JPY' }));
       }
 
-      if (planData) setItinerary(planData);
+      let cleanPlanData: any[] = [];
+      if (planData) {
+        const metaItem = planData.find((item: any) => item.date_label === '__meta_trip_data__');
+        cleanPlanData = planData.filter((item: any) => item.date_label !== '__meta_trip_data__');
+        setItinerary(cleanPlanData);
+
+        if (metaItem?.backup_plan) {
+          try {
+            const parsed = JSON.parse(metaItem.backup_plan);
+            if (parsed.accommodations && Array.isArray(parsed.accommodations) && parsed.accommodations.length > 0) {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(`travel_tracker_accommodations_${tripId}`, JSON.stringify(parsed.accommodations));
+              }
+            }
+            if (parsed.flight && typeof window !== 'undefined') {
+              localStorage.setItem(`flight_pass_${tripId}`, JSON.stringify(parsed.flight));
+            }
+            if (parsed.splits && typeof window !== 'undefined') {
+              localStorage.setItem(`travel_tracker_expense_splits_${tripId}`, JSON.stringify(parsed.splits));
+            }
+          } catch (e) {
+            console.warn('Trip meta parse error:', e);
+          }
+        }
+      }
 
       let uniqueExpList: any[] = [];
       if (expData) {
@@ -337,7 +361,7 @@ export default function TripDetailPage() {
       // Cache offline
       cacheTripOffline({
         trip: tripData,
-        itinerary: planData || [],
+        itinerary: cleanPlanData || [],
         expenses: uniqueExpList || [],
         categories: cats,
         categoryBudgets: cBudgets,

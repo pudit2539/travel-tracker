@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plane, QrCode, Clock, MapPin, ChevronDown, ChevronUp, Edit3, Check, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface FlightBoardingPassCardProps {
   tripId: string;
@@ -45,7 +46,7 @@ export function FlightBoardingPassCard({ tripId, defaultDestination }: FlightBoa
   const [flight, setFlight] = useState<FlightData>(DEFAULT_FLIGHT);
   const [editForm, setEditForm] = useState<FlightData>(DEFAULT_FLIGHT);
 
-  // Load from localStorage for persistent flight storage per trip
+  // Load from localStorage or sync from Supabase
   useEffect(() => {
     if (typeof window !== 'undefined' && tripId) {
       const saved = localStorage.getItem(`flight_pass_${tripId}`);
@@ -54,19 +55,75 @@ export function FlightBoardingPassCard({ tripId, defaultDestination }: FlightBoa
           const parsed = JSON.parse(saved);
           setFlight(parsed);
           setEditForm(parsed);
-        } catch (e) {
-          // ignore error
-        }
+        } catch (e) {}
+      } else {
+        supabase
+          .from('itinerary_items')
+          .select('backup_plan')
+          .eq('trip_id', tripId)
+          .eq('date_label', '__meta_trip_data__')
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.backup_plan) {
+              try {
+                const parsed = JSON.parse(data.backup_plan);
+                if (parsed.flight) {
+                  setFlight(parsed.flight);
+                  setEditForm(parsed.flight);
+                  localStorage.setItem(`flight_pass_${tripId}`, JSON.stringify(parsed.flight));
+                }
+              } catch (e) {}
+            }
+          });
       }
     }
   }, [tripId]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setFlight(editForm);
     if (typeof window !== 'undefined' && tripId) {
       localStorage.setItem(`flight_pass_${tripId}`, JSON.stringify(editForm));
     }
     setIsEditing(false);
+
+    // Sync to Supabase metadata row
+    if (tripId) {
+      try {
+        const { data: existing } = await supabase
+          .from('itinerary_items')
+          .select('id, backup_plan')
+          .eq('trip_id', tripId)
+          .eq('date_label', '__meta_trip_data__')
+          .maybeSingle();
+
+        let payload: any = {};
+        if (existing?.backup_plan) {
+          try {
+            payload = JSON.parse(existing.backup_plan);
+          } catch (e) {}
+        }
+        payload.flight = editForm;
+
+        if (existing?.id) {
+          await supabase
+            .from('itinerary_items')
+            .update({ backup_plan: JSON.stringify(payload) })
+            .eq('id', existing.id);
+        } else {
+          await supabase
+            .from('itinerary_items')
+            .insert([{
+              trip_id: tripId,
+              date_label: '__meta_trip_data__',
+              main_place: 'SYSTEM_TRIP_METADATA',
+              backup_plan: JSON.stringify(payload),
+              sort_order: -9999
+            }]);
+        }
+      } catch (err) {
+        console.warn('Flight sync warn:', err);
+      }
+    }
   };
 
   return (
