@@ -127,11 +127,16 @@ function ExpenseCardComponent({
           {isSplit && perPersonAmount !== null && (
             <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 font-mono">
               คนละ ≈ {perPersonAmount.toLocaleString()} {expense.currency}
+              {(expense.currency || 'JPY') !== 'THB' && (
+                <span className="font-medium text-[10px] ml-1 text-blue-500/90 dark:text-blue-300">
+                  (≈ ฿{Math.round(convertToThb(perPersonAmount, expense.currency || 'JPY', fxRate)).toLocaleString()})
+                </span>
+              )}
             </div>
           )}
           {(expense.currency || 'JPY') !== 'THB' && (
             <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-sans">
-              ≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
+              {isSplit ? 'ยอดรวมบิล ' : ''}≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
             </span>
           )}
         </div>

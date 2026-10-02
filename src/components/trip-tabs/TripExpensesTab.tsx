@@ -89,11 +89,6 @@ export function TripExpensesTab({
   onSelectExpense,
   onEditExpense,
 }: TripExpensesTabProps) {
-  const totalFilteredAmount = filteredExpenses.reduce(
-    (acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate),
-    0
-  );
-
   const splitsMap = React.useMemo(() => getTripExpenseSplits(trip?.id), [trip?.id, expenses]);
 
   // Build unified member list & lookup map to resolve split member names and avatars
@@ -171,6 +166,61 @@ export function TripExpensesTab({
       };
     });
   }, [otherPayers, expenses, splitsMap]);
+
+  // Total amount of full bills in current filtered list
+  const fullTripAmount = React.useMemo(() => {
+    return filteredExpenses.reduce(
+      (acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate),
+      0
+    );
+  }, [filteredExpenses, tripBaseCurrency, fxRate]);
+
+  // When filtering by a member, sum only THAT member's shared portion
+  const totalFilteredAmount = React.useMemo(() => {
+    if (expensePayerFilter === 'all') {
+      return fullTripAmount;
+    }
+
+    const myId = currentUser?.id?.toLowerCase();
+    const myName = userDisplayName?.toLowerCase();
+    const filterKey = expensePayerFilter.toLowerCase();
+
+    return filteredExpenses.reduce((acc, curr) => {
+      const fullAmt = convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
+      const splits = splitsMap[curr.id];
+
+      // If no custom split, default is divided equally among all trip members
+      const splitCount = splits && splits.length > 0 ? splits.length : Math.max(1, allMembersList.length);
+      const perPersonAmt = fullAmt / splitCount;
+
+      if (!splits || splits.length === 0) {
+        return acc + perPersonAmt;
+      }
+
+      // Check if selected member participates
+      const participates = splits.some((k) => {
+        const lk = (k || '').toLowerCase().trim();
+        if (filterKey === 'me') {
+          return lk === 'me' || (myId && lk === myId) || (myName && lk === myName) || lk.includes('ฉัน');
+        }
+        return lk === filterKey || lk === filterKey.replace(' (ฉัน)', '');
+      });
+
+      if (participates) {
+        return acc + perPersonAmt;
+      }
+      return acc;
+    }, 0);
+  }, [filteredExpenses, expensePayerFilter, fullTripAmount, splitsMap, currentUser, userDisplayName, allMembersList, tripBaseCurrency, fxRate]);
+
+  const selectedFilterName = React.useMemo(() => {
+    if (expensePayerFilter === 'all') return 'ทุกคน';
+    if (expensePayerFilter === 'me') return userDisplayName || 'ของฉัน';
+    const found = otherPayersWithCounts.find(
+      (p) => p.key?.toLowerCase() === expensePayerFilter.toLowerCase() || p.name?.toLowerCase() === expensePayerFilter.toLowerCase()
+    );
+    return found?.name || expensePayerFilter;
+  }, [expensePayerFilter, userDisplayName, otherPayersWithCounts]);
 
   return (
     <div className="space-y-4">
@@ -392,8 +442,19 @@ export function TripExpensesTab({
             </span>
           </div>
 
-          <div className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">
-            ยอดรวม: {totalFilteredAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })} {tripBaseCurrency}
+          <div className="text-right font-mono">
+            <div className="text-xs font-black text-blue-600 dark:text-blue-400">
+              {expensePayerFilter === 'all' ? (
+                <>ยอดรวมทั้งทริป: {Math.round(totalFilteredAmount).toLocaleString()} {tripBaseCurrency}</>
+              ) : (
+                <>ยอดแชร์ของ {selectedFilterName}: {Math.round(totalFilteredAmount).toLocaleString()} {tripBaseCurrency}</>
+              )}
+            </div>
+            {expensePayerFilter !== 'all' && (
+              <div className="text-[10px] text-slate-400 font-sans">
+                (ยอดบิลเต็มรวม {Math.round(fullTripAmount).toLocaleString()} {tripBaseCurrency})
+              </div>
+            )}
           </div>
         </div>
 
