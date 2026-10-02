@@ -6,7 +6,7 @@ import {
   Calculator, X, ArrowRightLeft, Sparkles, Plus, 
   Coins, DollarSign, Check, Percent, ArrowDown, ChevronRight
 } from 'lucide-react';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
 
 interface QuickCurrencyCalculatorProps {
   isOpen: boolean;
@@ -39,7 +39,7 @@ export default function QuickCurrencyCalculator({
   const [fxRate, setFxRate] = useState<number>(() => propFxRate ?? getCustomJpyToThbRate());
   const [isTaxFree, setIsTaxFree] = useState<boolean>(false);
   const [editingRate, setEditingRate] = useState(false);
-  const [tempRate, setTempRate] = useState(String((getCustomJpyToThbRate() * 100).toFixed(2)));
+  const [tempRate, setTempRate] = useState(String(getCustomJpyToThbRate().toFixed(3)));
 
   useEffect(() => {
     if (defaultCurrency && defaultCurrency !== 'THB') {
@@ -78,9 +78,10 @@ export default function QuickCurrencyCalculator({
   };
 
   const handleSaveRate = () => {
-    const ratePer100 = parseFloat(tempRate);
-    if (!isNaN(ratePer100) && ratePer100 > 0) {
-      const newRate = ratePer100 / 100;
+    const entered = parseFloat(tempRate);
+    if (!isNaN(entered) && entered > 0) {
+      // If entered > 1 (e.g. 21.0), user meant per 100 JPY -> divide by 100
+      const newRate = entered > 1 ? entered / 100 : entered;
       setFxRate(newRate);
       setCustomJpyToThbRate(newRate);
     }
@@ -188,11 +189,11 @@ export default function QuickCurrencyCalculator({
                 className="underline hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer font-black"
                 title="คลิกเพื่อแก้ไขเรทแลกเปลี่ยน"
               >
-                100 JPY = {(fxRate * 100).toFixed(2)} THB ✏️
+                {formatExchangeRateDisplay('JPY', fxRate)} ✏️
               </button>
             ) : (
               <span className="font-black">
-                1 {foreignCurrency} ≈ {convertCurrency(1, foreignCurrency, 'THB', fxRate).toFixed(2)} THB
+                {formatExchangeRateDisplay(foreignCurrency, fxRate)}
               </span>
             )}
           </div>

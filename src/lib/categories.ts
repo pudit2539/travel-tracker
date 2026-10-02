@@ -9,12 +9,13 @@ export interface CategoryItem {
 }
 
 export const DEFAULT_CATEGORIES: CategoryItem[] = [
+  { id: 'hotel', label: 'ที่พัก / โรงแรม', icon: '🏨', color: 'emerald' },
+  { id: 'flight', label: 'ตั๋วเครื่องบิน / เดินทางหลัก', icon: '✈️', color: 'sky' },
+  { id: 'ticket', label: 'ตั๋วเข้าชม / บัตรกิจกรรม', icon: '🎟️', color: 'purple' },
   { id: 'food', label: 'อาหาร & คาเฟ่', icon: '🍱', color: 'amber' },
-  { id: 'transport', label: 'การเดินทาง', icon: '🚅', color: 'indigo' },
-  { id: 'shopping', label: 'ชอปปิง', icon: '🛍️', color: 'pink' },
-  { id: 'hotel', label: 'ที่พัก', icon: '🏨', color: 'emerald' },
-  { id: 'ticket', label: 'บัตรเข้าชม / กิจกรรม', icon: '🎟️', color: 'purple' },
-  { id: 'other', label: 'อื่นๆ', icon: '📦', color: 'slate' },
+  { id: 'transport', label: 'การเดินทางในเมือง / รถไฟ', icon: '🚅', color: 'indigo' },
+  { id: 'shopping', label: 'ชอปปิง & ของฝาก', icon: '🛍️', color: 'pink' },
+  { id: 'other', label: 'อื่นๆ / สำรองฉุกเฉิน', icon: '📦', color: 'slate' },
 ];
 
 export interface CategoryBudgetMap {

@@ -16,8 +16,8 @@ export interface ExchangeRates {
  */
 const DEFAULT_RATES: { [key: string]: number } = {
   JPY: 1,
-  THB: 0.235,   // 1 JPY = ~0.235 THB  (100 JPY ≈ 23.5 THB)
-  CNY: 0.048,   // 1 JPY = ~0.048 CNY  (1 CNY ≈ 4.9 THB)
+  THB: 0.210,   // 1 JPY = 0.210 THB (JPY/THB = 0.210)
+  CNY: 0.048,   // 1 JPY = ~0.048 CNY
   USD: 0.0066,  // 1 JPY = ~0.0066 USD
   EUR: 0.0061,
   KRW: 9.12,
@@ -124,4 +124,20 @@ export function formatCurrencyWithThb(
   }
 
   return `${formattedMain} (≈ ฿${Math.round(thb).toLocaleString()})`;
+}
+
+/**
+ * Format exchange rate string in standard pair format (e.g. JPY/THB = 0.210)
+ */
+export function formatExchangeRateDisplay(
+  currency: string = 'JPY',
+  customRate?: number
+): string {
+  const rate = customRate ?? getCustomJpyToThbRate();
+  const cur = (currency || 'JPY').toUpperCase();
+  if (cur === 'JPY' || cur === 'THB') {
+    return `JPY/THB = ${rate.toFixed(3)}`;
+  }
+  const perThb = convertCurrency(1, cur, 'THB', rate);
+  return `${cur}/THB = ${perThb.toFixed(3)}`;
 }

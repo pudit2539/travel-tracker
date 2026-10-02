@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { calculateSettlement, TransferPlan, MemberBalance } from '@/lib/settlement';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
 import { 
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
   Users, DollarSign, Calculator, ChevronRight, SlidersHorizontal
@@ -178,12 +178,8 @@ export default function SettlementModal({
           {/* Rate setting toggle */}
           <div className="flex justify-between items-center text-xs">
             <span className="text-slate-600 dark:text-slate-300 font-medium">
-              อัตราแลกเปลี่ยน: <b className="text-slate-900 dark:text-white">
-                {currency === 'CNY'
-                  ? `1 CNY ≈ ${convertCurrency(1, 'CNY', 'THB', fxRate).toFixed(2)} THB`
-                  : currency === 'USD'
-                  ? `1 USD ≈ ${convertCurrency(1, 'USD', 'THB', fxRate).toFixed(2)} THB`
-                  : `100 JPY = ${(fxRate * 100).toFixed(2)} THB`}
+              อัตราแลกเปลี่ยน: <b className="text-slate-900 dark:text-white font-mono font-bold">
+                {formatExchangeRateDisplay(currency, fxRate)}
               </b>
             </span>
             <button
@@ -197,22 +193,29 @@ export default function SettlementModal({
           {showRateSettings && (
             <div className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438] border border-slate-200 dark:border-[#222c42] space-y-2 animate-in fade-in">
               <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                กำหนดเรตแลกเงินที่คุณแลกมา (บาท ต่อ 100 เยน)
+                กำหนดเรตแลกเงินที่คุณแลกมา (1 เยน = กี่บาท เช่น 0.210)
               </label>
               <div className="flex gap-2">
                 <input
                   type="number"
-                  step="0.01"
+                  step="0.001"
                   className="flex-1 p-2 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-mono font-bold"
-                  value={(fxRate * 100).toFixed(2)}
-                  onChange={(e) => handleRateChange(parseFloat(e.target.value) / 100 || 0.235)}
+                  value={fxRate.toFixed(3)}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val) && val > 0) {
+                      // If user entered 21.0 -> 0.210
+                      const rate = val > 1 ? val / 100 : val;
+                      handleRateChange(rate);
+                    }
+                  }}
                 />
                 <button
                   type="button"
-                  onClick={() => handleRateChange(0.235)}
+                  onClick={() => handleRateChange(0.210)}
                   className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#2a3650] text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#151b2b]"
                 >
-                  เรตมาตรฐาน (23.50)
+                  เรตมาตรฐาน (0.210)
                 </button>
               </div>
             </div>

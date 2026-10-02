@@ -10,7 +10,7 @@ import {
 import { CategoryItem, CategoryBudgetMap, MemberBudgetMap } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
-import { convertCurrency, convertToThb } from '@/lib/currency';
+import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
 import { SUPPORTED_CURRENCIES } from '@/components/BudgetCategoryModal';
 
 interface TripAnalyticsTabProps {
@@ -71,6 +71,12 @@ export function TripAnalyticsTab({
   const overBudget = convertedTotalBudget > 0 && convertedTotalSpent > convertedTotalBudget ? convertedTotalSpent - convertedTotalBudget : 0;
   const budgetProgress = convertedTotalBudget > 0 ? Math.min(Math.round((convertedTotalSpent / convertedTotalBudget) * 100), 100) : 0;
 
+  // Sum of category budgets (Accommodation, Ticket, etc.)
+  const totalCatBudgetsInSelected = useMemo(() => {
+    const rawSum = Object.values(categoryBudgets).reduce((acc, b) => acc + (Number(b) || 0), 0);
+    return convertCurrency(rawSum, tripBaseCurrency, selectedCurrency, fxRate);
+  }, [categoryBudgets, tripBaseCurrency, selectedCurrency, fxRate]);
+
   // Secondary currency preview helper (shows THB if viewing in JPY, or JPY if viewing in THB)
   const formatSecondary = (val: number, cur: string) => {
     if (!val || isNaN(val) || val <= 0) return null;
@@ -107,8 +113,8 @@ export function TripAnalyticsTab({
               แสดงสถิติและงบในสกุลเงิน (Currency View):
             </span>
           </div>
-          <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
-            เรท 100 JPY ≈ {(fxRate * 100).toFixed(2)} THB
+          <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-xl border border-blue-200 dark:border-blue-900 font-mono">
+            {formatExchangeRateDisplay(selectedCurrency, fxRate)}
           </span>
         </div>
 
@@ -170,7 +176,7 @@ export function TripAnalyticsTab({
           {/* Target Budget */}
           <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#151b2b]/80 border border-slate-200/80 dark:border-[#222c42] space-y-0.5">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              งบประมาณตั้งไว้
+              {convertedTotalBudget > 0 ? 'งบประมาณรวมตั้งไว้' : 'งบรวมทริป'}
             </span>
             <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono">
               {convertedTotalBudget > 0 ? (
@@ -178,15 +184,27 @@ export function TripAnalyticsTab({
                   {convertedTotalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
                   <span className="text-xs font-sans text-slate-500">{selectedCurrency}</span>
                 </>
+              ) : totalCatBudgetsInSelected > 0 ? (
+                <div>
+                  <div className="text-base sm:text-lg text-blue-600 dark:text-blue-400 font-bold">
+                    ≈ {totalCatBudgetsInSelected.toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
+                    <span className="text-xs font-sans text-slate-500">{selectedCurrency}</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-sans block font-medium">ตามรายการที่พัก/ตั๋ว</span>
+                </div>
               ) : (
-                <span className="text-sm text-slate-400 font-sans">ยังไม่ได้ตั้งงบ</span>
+                <span className="text-xs font-bold text-slate-400 font-sans">ยังไม่ได้ตั้งงบ (ไม่บังคับ)</span>
               )}
             </div>
-            {convertedTotalBudget > 0 && (
+            {convertedTotalBudget > 0 ? (
               <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 block font-mono">
                 {formatSecondary(convertedTotalBudget, selectedCurrency)}
               </span>
-            )}
+            ) : totalCatBudgetsInSelected > 0 ? (
+              <span className="text-[10px] font-bold text-slate-400 block font-mono">
+                {formatSecondary(totalCatBudgetsInSelected, selectedCurrency)}
+              </span>
+            ) : null}
           </div>
 
           {/* Total Spent */}
@@ -208,18 +226,22 @@ export function TripAnalyticsTab({
           {/* Remaining / Over */}
           <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#151b2b]/80 border border-slate-200/80 dark:border-[#222c42] space-y-0.5">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              {overBudget > 0 ? 'เกินงบประมาณ' : 'งบคงเหลือ'}
+              {convertedTotalBudget > 0 ? (overBudget > 0 ? 'เกินงบประมาณ' : 'งบคงเหลือ') : 'สถานะงบทริป'}
             </span>
             <div className={`text-lg sm:text-xl font-black font-mono ${
-              overBudget > 0 ? 'text-rose-600' : 'text-emerald-600'
+              convertedTotalBudget > 0 ? (overBudget > 0 ? 'text-rose-600' : 'text-emerald-600') : 'text-slate-700 dark:text-slate-300'
             }`}>
               {convertedTotalBudget > 0 ? (
                 <>
                   {overBudget > 0 ? `+${overBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : remainingBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
                   <span className="text-xs font-sans text-slate-500">{selectedCurrency}</span>
                 </>
+              ) : totalCatBudgetsInSelected > 0 ? (
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 font-sans">
+                  คุมตามหมวดหมู่ ✨
+                </span>
               ) : (
-                <span className="text-sm text-slate-400 font-sans">-</span>
+                <span className="text-xs font-bold text-slate-400 font-sans">ทริปยืดหยุ่น ✨</span>
               )}
             </div>
             {convertedTotalBudget > 0 && (
