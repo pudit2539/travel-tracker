@@ -19,8 +19,7 @@ interface ExpenseCardProps {
   onDeleteExpense: (id: string, receiptUrl?: string) => void;
   onSelectExpense?: (exp: any) => void;
   onEditExpense?: (exp: any) => void;
-  splitCount?: number;
-  totalMembersCount?: number;
+  splitMembers?: Array<{ id: string; name: string; avatar?: string }>;
 }
 
 function ExpenseCardComponent({
@@ -34,14 +33,17 @@ function ExpenseCardComponent({
   onDeleteExpense,
   onSelectExpense,
   onEditExpense,
-  splitCount,
-  totalMembersCount,
+  splitMembers,
 }: ExpenseCardProps) {
   const catMeta = getCategoryMeta(categories, expense.category);
   const payerCat = getCatAvatar(expense.payer_avatar);
   const isMyExpense =
     (expense.payer_id && expense.payer_id === currentUserId) ||
     (expense.payer_name && expense.payer_name.toLowerCase() === userDisplayName.toLowerCase());
+
+  const isSplit = splitMembers && splitMembers.length > 1;
+  const isSingle = splitMembers && splitMembers.length === 1;
+  const perPersonAmount = isSplit ? Math.round(Number(expense.amount || 0) / splitMembers.length) : null;
 
   return (
     <div 
@@ -71,38 +73,42 @@ function ExpenseCardComponent({
             )}
           </div>
           <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-2 mt-1 font-medium">
-            <span
-              className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
-                isMyExpense
-                  ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 shadow-xs'
-                  : 'bg-slate-100 text-slate-700 dark:bg-[#1c2438] dark:text-slate-200 border border-slate-200 dark:border-[#222c42]'
-              }`}
-            >
-              <CatAvatarBadge cat={payerCat} size="xs" />
-              <span className="truncate max-w-[90px] sm:max-w-none">
-                {expense.payer_name || 'สมาชิก'} {isMyExpense ? '(ฉัน)' : ''}
+            {isSplit ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-lg border bg-blue-50/80 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/80 dark:border-blue-900/50 shadow-2xs">
+                <span className="flex -space-x-1.5 overflow-hidden shrink-0">
+                  {splitMembers.map((m, mIdx) => (
+                    <CatAvatarBadge key={mIdx} cat={getCatAvatar(m.avatar)} size="xs" className="ring-1 ring-white dark:ring-[#151b2b]" />
+                  ))}
+                </span>
+                <span className="truncate max-w-[150px] sm:max-w-none">
+                  👥 {splitMembers.map((m) => m.name.replace(' (ฉัน)', '')).join(' & ')}
+                </span>
               </span>
-            </span>
+            ) : (
+              <span
+                className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
+                  isMyExpense
+                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 shadow-xs'
+                    : 'bg-slate-100 text-slate-700 dark:bg-[#1c2438] dark:text-slate-200 border border-slate-200 dark:border-[#222c42]'
+                }`}
+              >
+                <CatAvatarBadge cat={payerCat} size="xs" />
+                <span className="truncate max-w-[90px] sm:max-w-none">
+                  {expense.payer_name || 'สมาชิก'} {isMyExpense ? '(ฉัน)' : ''}
+                </span>
+              </span>
+            )}
 
             <span className="text-slate-300 dark:text-slate-600">•</span>
             <span className="font-semibold text-slate-800 dark:text-slate-200">{catMeta.label}</span>
             <span className="text-slate-300 dark:text-slate-600">•</span>
             <span className="text-slate-500 dark:text-slate-400">{new Date(expense.spent_at).toLocaleDateString('th-TH')}</span>
 
-            {splitCount !== undefined && splitCount === 1 && (
+            {isSingle && (
               <>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-900/60">
                   👤 จ่ายคนเดียว
-                </span>
-              </>
-            )}
-
-            {splitCount !== undefined && totalMembersCount && splitCount > 1 && splitCount < totalMembersCount && (
-              <>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border border-purple-200/80 dark:border-purple-900/60">
-                  👥 หาร {splitCount} คน
                 </span>
               </>
             )}
@@ -118,8 +124,13 @@ function ExpenseCardComponent({
               {expense.currency}
             </span>
           </div>
+          {isSplit && perPersonAmount !== null && (
+            <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 font-mono">
+              คนละ ≈ {perPersonAmount.toLocaleString()} {expense.currency}
+            </div>
+          )}
           {(expense.currency || 'JPY') !== 'THB' && (
-            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block font-sans">
+            <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-sans">
               ≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
             </span>
           )}

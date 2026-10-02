@@ -54,8 +54,6 @@ interface TripExpensesTabProps {
   exportExpensesToExcel: () => void;
   onSelectExpense?: (exp: any) => void;
   onEditExpense?: (exp: any) => void;
-  expenseFilterMode?: 'payer' | 'shared';
-  setExpenseFilterMode?: (mode: 'payer' | 'shared') => void;
 }
 
 export function TripExpensesTab({
@@ -90,8 +88,6 @@ export function TripExpensesTab({
   exportExpensesToExcel,
   onSelectExpense,
   onEditExpense,
-  expenseFilterMode = 'payer',
-  setExpenseFilterMode,
 }: TripExpensesTabProps) {
   const totalFilteredAmount = filteredExpenses.reduce(
     (acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate),
@@ -100,20 +96,48 @@ export function TripExpensesTab({
 
   const splitsMap = React.useMemo(() => getTripExpenseSplits(trip?.id), [trip?.id, expenses]);
 
-  // Pre-calculate counts for each filter chip
-  const isPayerMode = expenseFilterMode === 'payer';
+  // Build unified member list & lookup map to resolve split member names and avatars
+  const allMembersList = React.useMemo(() => {
+    const list: Array<{ id: string; name: string; avatar?: string }> = [
+      {
+        id: currentUser?.id || 'me',
+        name: userDisplayName || 'ฉัน',
+        avatar: userCat?.id || 'orange',
+      },
+    ];
+    if (otherMembers && Array.isArray(otherMembers)) {
+      otherMembers.forEach((m) => {
+        const uid = m.user_id || m.id || m.key;
+        const uname = m.profiles?.display_name || m.display_name || m.name || 'เพื่อน';
+        const uavatar = m.profiles?.avatar_id || m.cat_avatar || m.avatar || 'calico';
+        list.push({ id: uid, name: uname, avatar: uavatar });
+      });
+    }
+    return list;
+  }, [currentUser, userDisplayName, userCat, otherMembers]);
 
-  // Current user counts
-  const myPayerCount = React.useMemo(() => {
-    const myId = currentUser?.id?.toLowerCase();
-    const myName = userDisplayName?.toLowerCase();
-    return expenses.filter((e) => {
-      const pId = e.payer_id?.toLowerCase();
-      const pName = e.payer_name?.toLowerCase();
-      return (myId && pId === myId) || (myName && pName === myName) || pId === 'me';
-    }).length;
-  }, [expenses, currentUser, userDisplayName]);
+  const allMembersMap = React.useMemo(() => {
+    const map = new Map<string, { id: string; name: string; avatar?: string }>();
+    allMembersList.forEach((m) => {
+      map.set(m.id.toLowerCase(), m);
+      map.set(m.name.toLowerCase(), m);
+    });
+    // Add default aliases
+    map.set('me', allMembersList[0]);
+    map.set('ฉัน', allMembersList[0]);
+    return map;
+  }, [allMembersList]);
 
+  const getSplitMembersForExp = (expId: string) => {
+    const custom = splitsMap[expId];
+    if (custom && custom.length > 0) {
+      return custom.map((k) => allMembersMap.get(k.toLowerCase().trim()) || { id: k, name: k });
+    }
+    // Default: all members share equally
+    return allMembersList;
+  };
+
+  // Pre-calculate counts of shared expenses for each filter chip
   const mySharedCount = React.useMemo(() => {
     const myId = currentUser?.id?.toLowerCase();
     const myName = userDisplayName?.toLowerCase();
@@ -127,17 +151,10 @@ export function TripExpensesTab({
     }).length;
   }, [expenses, splitsMap, currentUser, userDisplayName]);
 
-  // Map otherPayers counts
   const otherPayersWithCounts = React.useMemo(() => {
     return otherPayers.map((p) => {
-      const targetKey = p.key.toLowerCase();
-      const targetName = p.name.toLowerCase();
-
-      const paidCount = expenses.filter((e) => {
-        const pId = e.payer_id?.toLowerCase();
-        const pName = e.payer_name?.toLowerCase();
-        return pId === targetKey || pName === targetName;
-      }).length;
+      const targetKey = p.key?.toLowerCase();
+      const targetName = p.name?.toLowerCase();
 
       const sharedCount = expenses.filter((e) => {
         const splits = splitsMap[e.id];
@@ -150,7 +167,6 @@ export function TripExpensesTab({
 
       return {
         ...p,
-        paidCount,
         sharedCount,
       };
     });
@@ -366,37 +382,14 @@ export function TripExpensesTab({
       {/* Horizontal Filter Row (Trip.com style) */}
       <div className="p-3.5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             <div className="text-xs font-black text-slate-900 dark:text-slate-200 flex items-center gap-1.5">
-              <Filter className="h-3.5 w-3.5 text-blue-500" />
-              <span>กรองรายการ:</span>
+              <Users className="h-3.5 w-3.5 text-blue-500" />
+              <span>กรองตามคนร่วมหาร:</span>
             </div>
-
-            {/* Mode switch */}
-            <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#111726] border border-slate-200/70 dark:border-[#222c42]">
-              <button
-                type="button"
-                onClick={() => setExpenseFilterMode?.('payer')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                  isPayerMode
-                    ? 'bg-white dark:bg-[#1c2438] text-blue-600 dark:text-blue-400 shadow-2xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                💳 คนออกเงิน (Payer)
-              </button>
-              <button
-                type="button"
-                onClick={() => setExpenseFilterMode?.('shared')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                  !isPayerMode
-                    ? 'bg-white dark:bg-[#1c2438] text-blue-600 dark:text-blue-400 shadow-2xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                👥 คนร่วมหาร (Shared)
-              </button>
-            </div>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              (ดูรายการที่แต่ละคนร่วมแชร์)
+            </span>
           </div>
 
           <div className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">
@@ -428,13 +421,12 @@ export function TripExpensesTab({
             }`}
           >
             <CatAvatarBadge cat={userCat} size="xs" />
-            <span>ของฉัน ({userDisplayName}) ({isPayerMode ? myPayerCount : mySharedCount})</span>
+            <span>ของฉัน ({userDisplayName}) ({mySharedCount})</span>
           </button>
 
           {otherPayersWithCounts.map((p) => {
             const pCat = getCatAvatar(p.avatar);
             const isSelected = expensePayerFilter.toLowerCase() === p.key.toLowerCase() || expensePayerFilter.toLowerCase() === p.name.toLowerCase();
-            const count = isPayerMode ? p.paidCount : p.sharedCount;
 
             return (
               <button
@@ -448,7 +440,7 @@ export function TripExpensesTab({
                 }`}
               >
                 <CatAvatarBadge cat={pCat} size="xs" />
-                <span>{p.name} ({count})</span>
+                <span>{p.name} ({p.sharedCount})</span>
               </button>
             );
           })}
@@ -485,69 +477,35 @@ export function TripExpensesTab({
       {/* Expenses List */}
       {filteredExpenses.length === 0 ? (
         <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-[#222c42] rounded-3xl p-6 bg-white dark:bg-[#151b2b]">
-          {expensePayerFilter !== 'all' && isPayerMode ? (
-            <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-xl shadow-xs">
-                💡
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                  สมาชิกท่านนี้ยังไม่ได้สำรองจ่ายรายการใดในทริป
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                  รายการค่าใช้จ่ายส่วนใหญ่ถูกสำรองจ่ายโดยเพื่อนร่วมทริป คุณสามารถกดสลับไปดู <strong>"คนร่วมหาร"</strong> เพื่อดูรายการที่แชร์ร่วมกันได้
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setExpenseFilterMode?.('shared')}
-                  className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer active:scale-95"
-                >
-                  👥 ดูรายการที่คนนี้ร่วมหารแทน
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setExpensePayerFilter('all')}
-                  className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
-                >
-                  📋 แสดงรายการทั้งหมด
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่ายที่ตรงกับเงื่อนไข</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
-                กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกน และบันทึกรายจ่าย หรือล้างตัวกรอง
-              </p>
-              <div className="flex items-center justify-center gap-2">
-                {expensePayerFilter !== 'all' || expenseCategoryFilter !== 'all' ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setExpensePayerFilter('all');
-                      setExpenseCategoryFilter('all');
-                    }}
-                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
-                  >
-                    ล้างตัวกรองทั้งหมด
-                  </button>
-                ) : null}
-                {canAddExpense && (
-                  <button
-                    onClick={() => {
-                      setOcrSuccessToast(null);
-                      setShowScanModal(true);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Camera className="h-4 w-4" /> บันทึกรายจ่ายแรก
-                  </button>
-                )}
-              </div>
-            </>
-          )}
+          <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่ายที่ตรงกับเงื่อนไข</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
+            กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกน และบันทึกรายจ่าย หรือล้างตัวกรอง
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            {expensePayerFilter !== 'all' || expenseCategoryFilter !== 'all' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setExpensePayerFilter('all');
+                  setExpenseCategoryFilter('all');
+                }}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
+              >
+                ล้างตัวกรองทั้งหมด
+              </button>
+            ) : null}
+            {canAddExpense && (
+              <button
+                onClick={() => {
+                  setOcrSuccessToast(null);
+                  setShowScanModal(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              >
+                <Camera className="h-4 w-4" /> บันทึกรายจ่ายแรก
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="divide-y divide-slate-100 dark:divide-[#222c42] rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] overflow-hidden card-elevation">
@@ -564,8 +522,7 @@ export function TripExpensesTab({
               onDeleteExpense={handleDeleteExpense}
               onSelectExpense={onSelectExpense}
               onEditExpense={onEditExpense}
-              splitCount={splitsMap[exp.id] ? splitsMap[exp.id].length : undefined}
-              totalMembersCount={(otherMembers?.length || 0) + 1}
+              splitMembers={getSplitMembersForExp(exp.id)}
             />
           ))}
         </div>

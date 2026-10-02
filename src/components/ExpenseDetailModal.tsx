@@ -810,14 +810,26 @@ export function ExpenseDetailModal({
         <div className="p-4 sm:p-5 pt-3 border-t border-slate-200/90 dark:border-[#222c42] flex gap-2.5">
           {isEditing ? (
             <>
+              {canEdit && (
+                <button
+                  type="button"
+                  key="edit-delete-btn"
+                  onClick={handleDelete}
+                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                  title="ลบรายการนี้"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">ลบ</span>
+                </button>
+              )}
               <button
                 type="button"
                 key="edit-cancel-btn"
-                onClick={() => setIsEditing(false)}
+                onClick={onClose}
                 disabled={saving}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
               >
-                ยกเลิก
+                ปิด
               </button>
               <button
                 type="button"

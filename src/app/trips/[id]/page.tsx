@@ -894,7 +894,7 @@ export default function TripDetailPage() {
 
   const handleSelectExpense = (exp: any) => {
     setSelectedExpenseForDetail(exp);
-    setStartInExpenseEditMode(false);
+    setStartInExpenseEditMode(true);
   };
 
   const handleEditExpense = (exp: any) => {
@@ -1107,22 +1107,37 @@ export default function TripDetailPage() {
         viewName: 'รวมทุกคน',
       };
     } else if (heroBudgetView === 'me') {
-      const mySpent = expenses
-        .filter((e) => (e.payer_id && e.payer_id === currentUser?.id) || (e.payer_name && e.payer_name.toLowerCase() === userDisplayName.toLowerCase()))
-        .reduce((acc, curr) => {
-          const amt = Number(curr.amount || 0);
-          return acc + convertCurrency(amt, curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
-        }, 0);
+      const splitsMap = getTripExpenseSplits(tripId);
+      const totalMembersCount = Math.max(1, members.length + 1);
+      const myId = currentUser?.id?.toLowerCase();
+      const myName = userDisplayName?.trim().toLowerCase();
 
+      const mySpent = expenses.reduce((acc, curr) => {
+        const amt = convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
+        const splits = splitsMap[curr.id];
+        if (!splits || splits.length === 0) {
+          return acc + (amt / totalMembersCount);
+        }
+        const participates = splits.some((k) => {
+          const lk = (k || '').toLowerCase().trim();
+          return lk === 'me' || (myId && lk === myId) || (myName && lk === myName) || lk.includes('ฉัน');
+        });
+        if (participates) {
+          return acc + (amt / Math.max(1, splits.length));
+        }
+        return acc;
+      }, 0);
+
+      const roundedMySpent = Math.round(mySpent);
       const myBudget = memberBudgets['me'] || (targetBudget > 0 && members.length > 0 ? Math.round(targetBudget / (members.length + 1)) : 0);
-      const progress = myBudget > 0 ? Math.min(Math.round((mySpent / myBudget) * 100), 100) : 0;
-      const remaining = myBudget > mySpent ? myBudget - mySpent : 0;
-      const isOver = myBudget > 0 && mySpent > myBudget;
-      const diff = Math.abs(mySpent - myBudget);
+      const progress = myBudget > 0 ? Math.min(Math.round((roundedMySpent / myBudget) * 100), 100) : 0;
+      const remaining = myBudget > roundedMySpent ? myBudget - roundedMySpent : 0;
+      const isOver = myBudget > 0 && roundedMySpent > myBudget;
+      const diff = Math.abs(roundedMySpent - myBudget);
 
       return {
         title: `ยอดค่าใช้จ่ายของฉัน (${userDisplayName})`,
-        spent: mySpent,
+        spent: roundedMySpent,
         targetBudget: myBudget,
         budgetLabel: 'งบส่วนตัวของฉัน',
         progress,
@@ -1132,25 +1147,40 @@ export default function TripDetailPage() {
         viewName: 'ของฉัน',
       };
     } else {
+      const splitsMap = getTripExpenseSplits(tripId);
+      const totalMembersCount = Math.max(1, members.length + 1);
       const targetMember = members.find((m) => m.user_id === heroBudgetView || m.id === heroBudgetView);
       const mName = targetMember?.profiles?.display_name || targetMember?.profiles?.email?.split('@')[0] || 'สมาชิก';
-      
-      const memberSpent = expenses
-        .filter((e) => (e.payer_id && e.payer_id === targetMember?.user_id) || (e.payer_name && e.payer_name.toLowerCase() === mName.toLowerCase()))
-        .reduce((acc, curr) => {
-          const amt = Number(curr.amount || 0);
-          return acc + convertCurrency(amt, curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
-        }, 0);
+      const targetUserId = (targetMember?.user_id || '').toLowerCase();
+      const targetId = (targetMember?.id || '').toLowerCase();
+      const targetName = mName.toLowerCase();
 
+      const memberSpent = expenses.reduce((acc, curr) => {
+        const amt = convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
+        const splits = splitsMap[curr.id];
+        if (!splits || splits.length === 0) {
+          return acc + (amt / totalMembersCount);
+        }
+        const participates = splits.some((k) => {
+          const lk = (k || '').toLowerCase().trim();
+          return lk === targetUserId || lk === targetId || lk === targetName;
+        });
+        if (participates) {
+          return acc + (amt / Math.max(1, splits.length));
+        }
+        return acc;
+      }, 0);
+
+      const roundedMemberSpent = Math.round(memberSpent);
       const mBudget = memberBudgets[heroBudgetView] || 0;
-      const progress = mBudget > 0 ? Math.min(Math.round((memberSpent / mBudget) * 100), 100) : 0;
-      const remaining = mBudget > memberSpent ? mBudget - memberSpent : 0;
-      const isOver = mBudget > 0 && memberSpent > mBudget;
-      const diff = Math.abs(memberSpent - mBudget);
+      const progress = mBudget > 0 ? Math.min(Math.round((roundedMemberSpent / mBudget) * 100), 100) : 0;
+      const remaining = mBudget > roundedMemberSpent ? mBudget - roundedMemberSpent : 0;
+      const isOver = mBudget > 0 && roundedMemberSpent > mBudget;
+      const diff = Math.abs(roundedMemberSpent - mBudget);
 
       return {
         title: `ยอดค่าใช้จ่ายของ ${mName}`,
-        spent: memberSpent,
+        spent: roundedMemberSpent,
         targetBudget: mBudget,
         budgetLabel: `งบเฉพาะบุคคล (${mName})`,
         progress,
@@ -1160,7 +1190,7 @@ export default function TripDetailPage() {
         viewName: mName,
       };
     }
-  }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members, tripBaseCurrency, fxRate]);
+  }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members, tripBaseCurrency, fxRate, tripId]);
 
   // สมาชิกคนอื่นๆ (กรองตัวฉันเองออกอย่างเข้มงวด และตัดชื่อซ้ำ)
   const otherMembers = useMemo(() => {
@@ -1283,39 +1313,25 @@ export default function TripDetailPage() {
       if (expenseCategoryFilter !== 'all' && e.category !== expenseCategoryFilter) return false;
       
       if (expensePayerFilter !== 'all') {
-        if (expenseFilterMode === 'shared') {
-          const splits = splitsMap[e.id];
-          // If no custom split is recorded, everyone participates by default
-          if (splits && splits.length > 0) {
-            if (expensePayerFilter === 'me') {
-              const participates = splits.some((k) => {
-                const lk = (k || '').toLowerCase().trim();
-                return lk === 'me' || (myId && lk === myId) || (myName && lk === myName) || lk.includes('ฉัน');
-              });
-              if (!participates) return false;
-            } else {
-              const target = expensePayerFilter.trim().toLowerCase();
-              const participates = splits.some((k) => {
-                const lk = (k || '').toLowerCase().trim();
-                return lk === target;
-              });
-              if (!participates) return false;
-            }
-          }
-        } else {
-          const isMe = (myId && e.payer_id?.toLowerCase() === myId) ||
-                       (myName && e.payer_name && e.payer_name.trim().toLowerCase() === myName);
-
+        const splits = splitsMap[e.id];
+        // If a custom split is recorded, check if the selected member participates:
+        if (splits && splits.length > 0) {
           if (expensePayerFilter === 'me') {
-            if (!isMe) return false;
+            const participates = splits.some((k) => {
+              const lk = (k || '').toLowerCase().trim();
+              return lk === 'me' || (myId && lk === myId) || (myName && lk === myName) || lk.includes('ฉัน');
+            });
+            if (!participates) return false;
           } else {
-            if (isMe) return false;
             const target = expensePayerFilter.trim().toLowerCase();
-            const matchesId = e.payer_id && e.payer_id.trim().toLowerCase() === target;
-            const matchesName = e.payer_name && e.payer_name.trim().toLowerCase() === target;
-            if (!matchesId && !matchesName) return false;
+            const participates = splits.some((k) => {
+              const lk = (k || '').toLowerCase().trim();
+              return lk === target;
+            });
+            if (!participates) return false;
           }
         }
+        // If no custom split is recorded, everyone in the trip shares it, so it is included!
       }
 
       if (deferredExpenseSearch.trim()) {
@@ -1679,8 +1695,6 @@ export default function TripDetailPage() {
                 exportExpensesToExcel={exportExpensesToExcel}
                 onSelectExpense={handleSelectExpense}
                 onEditExpense={handleEditExpense}
-                expenseFilterMode={expenseFilterMode}
-                setExpenseFilterMode={setExpenseFilterMode}
               />
             </motion.div>
           )}
