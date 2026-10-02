@@ -25,6 +25,7 @@ import { supabase } from '@/lib/supabase';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { convertToThb, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
+import { triggerConfetti } from '@/lib/confetti';
 
 export const SUPPORTED_CURRENCIES = [
   { code: 'JPY', symbol: '¥', name: 'เยนญี่ปุ่น (JPY)', flag: '🇯🇵' },
@@ -49,6 +50,7 @@ interface BudgetCategoryModalProps {
   initialTab?: 'budget' | 'members' | 'categories' | 'custom';
   onUpdated: () => void;
   onOpenRollback?: () => void;
+  onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 const EMOJI_PRESETS = ['🍱', '🚅', '🛍️', '🏨', '🎟️', '📦', '🎢', '🎁', '☕', '🏮', '✈️', '🎮', '🍣', '🍫', '⛩️', '💊'];
@@ -65,6 +67,7 @@ export default function BudgetCategoryModal({
   initialTab = 'categories',
   onUpdated,
   onOpenRollback,
+  onShowToast,
 }: BudgetCategoryModalProps) {
   const [activeSubTab, setActiveSubTab] = useState<'categories' | 'budget' | 'members' | 'custom'>(
     initialTab === 'budget' ? 'budget' : initialTab === 'members' ? 'members' : initialTab === 'custom' ? 'custom' : 'categories'
@@ -213,8 +216,13 @@ export default function BudgetCategoryModal({
 
       if (!error) {
         setTotalSuccess(true);
+        triggerConfetti();
         onUpdated();
-        setTimeout(() => setTotalSuccess(false), 2500);
+        onShowToast?.('บันทึกงบประมาณรวมทริปเรียบร้อยแล้ว ✨', 'success');
+        setTimeout(() => {
+          setTotalSuccess(false);
+          onClose();
+        }, 500);
       } else {
         alert('เกิดข้อผิดพลาด: ' + error.message);
       }
@@ -234,8 +242,13 @@ export default function BudgetCategoryModal({
       await supabase.from('trips').update({ currency }).eq('id', trip.id);
     }
     setBudgetSuccess(true);
+    triggerConfetti();
     onUpdated();
-    setTimeout(() => setBudgetSuccess(false), 2500);
+    onShowToast?.('บันทึกงบประมาณแยกหมวดเรียบร้อยแล้ว ✨', 'success');
+    setTimeout(() => {
+      setBudgetSuccess(false);
+      onClose();
+    }, 500);
   };
 
   // 3. Adopt sum of category budgets as the trip total budget
@@ -252,8 +265,13 @@ export default function BudgetCategoryModal({
       await supabase.from('trips').update({ total_budget: sum, currency }).eq('id', trip.id);
       saveCategoryBudgets(trip.id, categoryBudgets);
       setBudgetSuccess(true);
+      triggerConfetti();
       onUpdated();
-      setTimeout(() => setBudgetSuccess(false), 2500);
+      onShowToast?.('นำผลรวมหมวดหมูไปตั้งเป็นงบรวมแล้ว 🎯', 'success');
+      setTimeout(() => {
+        setBudgetSuccess(false);
+        onClose();
+      }, 500);
     } catch (err: any) {
       alert('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
@@ -270,8 +288,13 @@ export default function BudgetCategoryModal({
       await supabase.from('trips').update({ currency }).eq('id', trip.id);
     }
     setBudgetSuccess(true);
+    triggerConfetti();
     onUpdated();
-    setTimeout(() => setBudgetSuccess(false), 2500);
+    onShowToast?.('บันทึกงบประมาณรายบุคคลเรียบร้อยแล้ว 👥', 'success');
+    setTimeout(() => {
+      setBudgetSuccess(false);
+      onClose();
+    }, 500);
   };
 
   // Auto Split Evenly from Total Trip Budget (if set) or Category Sum
@@ -302,6 +325,7 @@ export default function BudgetCategoryModal({
     setNewCatLabel('');
     setShowAddCatForm(false);
     onUpdated();
+    onShowToast?.('เพิ่มหมวดหมู่ใหม่เรียบร้อยแล้ว 🏷️', 'success');
   };
 
   // 6. Delete Custom Category
@@ -316,6 +340,7 @@ export default function BudgetCategoryModal({
       setCategoryBudgets(newBudgets);
       saveCategoryBudgets(trip.id, newBudgets);
       onUpdated();
+      onShowToast?.('ลบหมวดหมู่ออกจากทริปแล้ว 🗑️', 'info');
     }
   };
 
@@ -347,8 +372,8 @@ export default function BudgetCategoryModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[88vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-black/60 p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-2xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[88vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out">
         {/* Mobile Sheet Handle */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
         

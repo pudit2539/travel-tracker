@@ -57,6 +57,7 @@ interface TripPlanTabProps {
   members?: any[];
   currentUser?: any;
   onRefreshTrip?: () => void;
+  onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 export function TripPlanTab({
@@ -90,6 +91,7 @@ export function TripPlanTab({
   members = [],
   currentUser,
   onRefreshTrip,
+  onShowToast,
 }: TripPlanTabProps) {
   // Check if any accommodation is for this day
   const stays = useMemo(() => (trip?.id ? getAccommodations(trip.id) : []), [trip?.id]);
@@ -139,6 +141,7 @@ export function TripPlanTab({
         members={members}
         currentUser={currentUser}
         onExpenseCreated={onRefreshTrip}
+        onShowToast={onShowToast}
       />
 
       {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub */}

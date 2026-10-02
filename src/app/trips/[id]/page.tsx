@@ -39,6 +39,7 @@ import {
 import { compressReceiptImage } from '@/lib/imageCompressor';
 import ItemizedReceiptSplitter, { ItemizedDish } from '@/components/ItemizedReceiptSplitter';
 import { parseTransitInfo, formatTransitInfo } from '@/lib/transitGuide';
+import { getTripExpenseSplits } from '@/lib/expenseSplits';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
@@ -104,8 +105,24 @@ export default function TripDetailPage() {
   const [selectedDayFilter, setSelectedDayFilter] = useState<string>('all');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState<string>('all');
   const [expensePayerFilter, setExpensePayerFilter] = useState<string>('all');
+  const [expenseFilterMode, setExpenseFilterMode] = useState<'payer' | 'shared'>('payer');
   const [expenseSearchQuery, setExpenseSearchQuery] = useState<string>('');
   const deferredExpenseSearch = useDeferredValue(expenseSearchQuery);
+
+  // Global Toast State
+  const [globalToast, setGlobalToast] = useState<{
+    id: number;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now();
+    setGlobalToast({ id, message, type });
+    setTimeout(() => {
+      setGlobalToast((curr) => (curr?.id === id ? null : curr));
+    }, 3200);
+  }, []);
 
   // Modals state
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -491,6 +508,7 @@ export default function TripDetailPage() {
         if (!error) {
           setShowActivityModal(false);
           fetchTripData();
+          showToast(editingActivity ? 'แก้ไขกิจกรรมเรียบร้อยแล้ว ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยวแล้ว 🗺️', 'success');
         } else {
           alert('เกิดข้อผิดพลาดในการแก้ไข: ' + error.message);
         }
@@ -520,6 +538,7 @@ export default function TripDetailPage() {
         if (!error) {
           setShowActivityModal(false);
           fetchTripData();
+          showToast('เพิ่มกิจกรรมในแผนเที่ยวแล้ว 🗺️', 'success');
         } else {
           alert('เกิดข้อผิดพลาดในการเพิ่มกิจกรรม: ' + error.message);
         }
@@ -579,7 +598,10 @@ export default function TripDetailPage() {
   const handleDeleteActivity = async (id: string) => {
     if (!confirm('ต้องการลบกิจกรรมนี้ออกจากแผนเที่ยวใช่หรือไม่?')) return;
     const { error } = await supabase.from('itinerary_items').delete().eq('id', id);
-    if (!error) fetchTripData();
+    if (!error) {
+      fetchTripData();
+      showToast('ลบกิจกรรมออกจากแผนเที่ยวแล้ว 🗑️', 'info');
+    }
   };
 
   const resetActivityForm = () => {
@@ -824,6 +846,7 @@ export default function TripDetailPage() {
         items: [] as ItemizedDish[],
       });
       fetchTripData();
+      showToast('บันทึกค่าใช้จ่ายใหม่เรียบร้อยแล้ว! 🎉', 'success');
     } catch (err: any) {
       alert('เกิดข้อผิดพลาดในการบันทึกค่าใช้จ่าย: ' + (err?.message || err));
     } finally {
@@ -865,6 +888,7 @@ export default function TripDetailPage() {
     if (!error) {
       setSelectedExpenseForDetail(null);
       fetchTripData();
+      showToast('ลบรายการค่าใช้จ่ายเรียบร้อยแล้ว 🗑️', 'info');
     }
   };
 
@@ -901,9 +925,10 @@ export default function TripDetailPage() {
       setExpenses((prev) =>
         prev.map((e) => (e.id === updatedExpense.id ? { ...e, ...updatedExpense } : e))
       );
-      setSelectedExpenseForDetail(updatedExpense);
+      setSelectedExpenseForDetail(null);
       fetchTripData();
       triggerConfetti();
+      showToast('บันทึกการแก้ไขค่าใช้จ่ายเรียบร้อยแล้ว ✨', 'success');
     } catch (err: any) {
       alert('เกิดข้อผิดพลาดในการบันทึกการแก้ไข: ' + (err?.message || err));
       throw err;
@@ -1250,23 +1275,46 @@ export default function TripDetailPage() {
 
   // Filtered expenses
   const filteredExpenses = useMemo(() => {
+    const splitsMap = getTripExpenseSplits(tripId);
+    const myId = currentUser?.id?.toLowerCase();
+    const myName = userDisplayName?.trim().toLowerCase();
+
     return expenses.filter((e) => {
       if (expenseCategoryFilter !== 'all' && e.category !== expenseCategoryFilter) return false;
       
       if (expensePayerFilter !== 'all') {
-        const myId = currentUser?.id?.toLowerCase();
-        const myName = userDisplayName?.trim().toLowerCase();
-        const isMe = (myId && e.payer_id?.toLowerCase() === myId) ||
-                     (myName && e.payer_name && e.payer_name.trim().toLowerCase() === myName);
-
-        if (expensePayerFilter === 'me') {
-          if (!isMe) return false;
+        if (expenseFilterMode === 'shared') {
+          const splits = splitsMap[e.id];
+          // If no custom split is recorded, everyone participates by default
+          if (splits && splits.length > 0) {
+            if (expensePayerFilter === 'me') {
+              const participates = splits.some((k) => {
+                const lk = (k || '').toLowerCase().trim();
+                return lk === 'me' || (myId && lk === myId) || (myName && lk === myName) || lk.includes('ฉัน');
+              });
+              if (!participates) return false;
+            } else {
+              const target = expensePayerFilter.trim().toLowerCase();
+              const participates = splits.some((k) => {
+                const lk = (k || '').toLowerCase().trim();
+                return lk === target;
+              });
+              if (!participates) return false;
+            }
+          }
         } else {
-          if (isMe) return false;
-          const target = expensePayerFilter.trim().toLowerCase();
-          const matchesId = e.payer_id && e.payer_id.trim().toLowerCase() === target;
-          const matchesName = e.payer_name && e.payer_name.trim().toLowerCase() === target;
-          if (!matchesId && !matchesName) return false;
+          const isMe = (myId && e.payer_id?.toLowerCase() === myId) ||
+                       (myName && e.payer_name && e.payer_name.trim().toLowerCase() === myName);
+
+          if (expensePayerFilter === 'me') {
+            if (!isMe) return false;
+          } else {
+            if (isMe) return false;
+            const target = expensePayerFilter.trim().toLowerCase();
+            const matchesId = e.payer_id && e.payer_id.trim().toLowerCase() === target;
+            const matchesName = e.payer_name && e.payer_name.trim().toLowerCase() === target;
+            if (!matchesId && !matchesName) return false;
+          }
         }
       }
 
@@ -1278,7 +1326,7 @@ export default function TripDetailPage() {
       }
       return true;
     });
-  }, [expenses, expenseCategoryFilter, expensePayerFilter, deferredExpenseSearch, currentUser, userDisplayName]);
+  }, [expenses, expenseCategoryFilter, expensePayerFilter, expenseFilterMode, deferredExpenseSearch, currentUser, userDisplayName, tripId]);
 
   // วันทั้งหมดที่มีใน Itinerary
   const availableDays = useMemo(() => {
@@ -1586,6 +1634,7 @@ export default function TripDetailPage() {
                 members={members}
                 currentUser={currentUser}
                 onRefreshTrip={fetchTripData}
+                onShowToast={showToast}
               />
             </motion.div>
           )}
@@ -1630,6 +1679,8 @@ export default function TripDetailPage() {
                 exportExpensesToExcel={exportExpensesToExcel}
                 onSelectExpense={handleSelectExpense}
                 onEditExpense={handleEditExpense}
+                expenseFilterMode={expenseFilterMode}
+                setExpenseFilterMode={setExpenseFilterMode}
               />
             </motion.div>
           )}
@@ -1914,6 +1965,7 @@ export default function TripDetailPage() {
         initialTab={budgetModalInitialTab}
         onUpdated={fetchTripData}
         onOpenRollback={() => setShowRollbackModal(true)}
+        onShowToast={showToast}
       />
 
       {/* 7. Printable PDF Itinerary Modal */}
@@ -2689,6 +2741,46 @@ export default function TripDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Global Success / Feedback Floating Toast */}
+      <AnimatePresence>
+        {globalToast && (
+          <motion.div
+            key={globalToast.id}
+            initial={{ opacity: 0, y: -24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            className="fixed top-4 inset-x-0 mx-auto max-w-sm z-50 px-4 pointer-events-none"
+          >
+            <div className={`p-3.5 rounded-2xl shadow-2xl backdrop-blur-md border flex items-center gap-2.5 pointer-events-auto ${
+              globalToast.type === 'error'
+                ? 'bg-rose-500/95 text-white border-rose-400'
+                : globalToast.type === 'info'
+                ? 'bg-slate-900/95 dark:bg-slate-800/95 text-white border-slate-700'
+                : 'bg-emerald-600/95 text-white border-emerald-400'
+            }`}>
+              {globalToast.type === 'error' ? (
+                <AlertCircle className="h-5 w-5 shrink-0 text-white animate-bounce" />
+              ) : globalToast.type === 'info' ? (
+                <Sparkles className="h-5 w-5 shrink-0 text-amber-300" />
+              ) : (
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-white" />
+              )}
+              <span className="text-xs sm:text-sm font-bold flex-1">
+                {globalToast.message}
+              </span>
+              <button
+                type="button"
+                onClick={() => setGlobalToast(null)}
+                className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

@@ -245,6 +245,7 @@ export function ExpenseDetailModal({
       }
 
       setIsEditing(false);
+      onClose();
     } catch (err: any) {
       alert('เกิดข้อผิดพลาดในการบันทึก: ' + (err?.message || err));
     } finally {
@@ -265,11 +266,11 @@ export function ExpenseDetailModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-black/60 p-0 sm:p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200"
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Drag Indicator */}
@@ -794,7 +795,10 @@ export function ExpenseDetailModal({
                   </>
                 ) : (
                   <>
-                    <Check className="h-4 w-4" /> บันทึกการแก้ไข
+                    <Check className="h-4 w-4" />
+                    <span>
+                      บันทึกการแก้ไข ({splitWith.length === memberOptions.length ? `หารทุกคน ${splitWith.length} คน` : splitWith.length === 1 ? 'จ่ายคนเดียว' : `หาร ${splitWith.length} คน`})
+                    </span>
                   </>
                 )}
               </button>

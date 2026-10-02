@@ -28,6 +28,7 @@ interface AccommodationsCardProps {
   members?: any[];
   currentUser?: any;
   onExpenseCreated?: () => void;
+  onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 /**
@@ -109,6 +110,7 @@ export function AccommodationsCard({
   members = [],
   currentUser,
   onExpenseCreated,
+  onShowToast,
 }: AccommodationsCardProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [stays, setStays] = useState<AccommodationStay[]>([]);
@@ -224,6 +226,7 @@ export function AccommodationsCard({
     if (confirm(`ต้องการลบข้อมูลที่พัก "${stayName}" ใช่หรือไม่?`)) {
       const updated = deleteAccommodation(tripId, stayId);
       setStays(updated);
+      onShowToast?.(`ลบข้อมูลที่พัก "${stayName}" เรียบร้อยแล้ว 🗑️`, 'info');
     }
   };
 
@@ -232,6 +235,7 @@ export function AccommodationsCard({
     if (typeof window !== 'undefined' && ref) {
       navigator.clipboard.writeText(ref);
       setCopiedId(id);
+      onShowToast?.('คัดลอกรหัสการจองเรียบร้อยแล้ว! 📋', 'success');
       setTimeout(() => setCopiedId(null), 2000);
     }
   };
@@ -275,7 +279,7 @@ export function AccommodationsCard({
       if (onExpenseCreated) {
         onExpenseCreated();
       }
-      alert('✓ บันทึกค่าที่พักลงในแท็บรายการใช้จ่ายเรียบร้อยแล้ว!');
+      onShowToast?.('บันทึกค่าที่พักลงในรายการค่าใช้จ่ายเรียบร้อยแล้ว! 💰', 'success');
     } catch (err: any) {
       alert('เกิดข้อผิดพลาดในการบันทึกรายจ่าย: ' + err.message);
     }
@@ -361,6 +365,7 @@ export function AccommodationsCard({
 
       triggerConfetti();
       setShowModal(false);
+      onShowToast?.(editingStay ? 'แก้ไขข้อมูลที่พักเรียบร้อยแล้ว ✨' : 'บันทึกที่พักใหม่เรียบร้อยแล้ว 🏨', 'success');
       if (onExpenseCreated) {
         onExpenseCreated();
       }
@@ -646,8 +651,8 @@ export function AccommodationsCard({
 
       {/* ==================== ADD / EDIT MODAL ==================== */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[88vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-black/60 p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[88vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42]">
               <div className="flex items-center gap-2">
