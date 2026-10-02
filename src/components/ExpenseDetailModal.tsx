@@ -59,6 +59,7 @@ export function ExpenseDetailModal({
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const editSwitchTimeRef = React.useRef<number>(0);
 
   // Split state
   const [splitWith, setSplitWith] = useState<string[]>([]);
@@ -194,8 +195,6 @@ export function ExpenseDetailModal({
       setUploadingReceipt(false);
     }
   };
-
-  const editSwitchTimeRef = React.useRef<number>(0);
 
   const handleSwitchToEdit = (e?: React.MouseEvent) => {
     if (e) {
