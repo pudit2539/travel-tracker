@@ -30,6 +30,78 @@ interface AccommodationsCardProps {
   onExpenseCreated?: () => void;
 }
 
+/**
+ * Safely parse date into ISO YYYY-MM-DD format for PostgreSQL timestamp with time zone
+ */
+export function sanitizeSpentAtDate(dateStr?: string): string {
+  if (!dateStr || !dateStr.trim()) {
+    return new Date().toISOString().split('T')[0];
+  }
+  const trimmed = dateStr.trim();
+  // 1. If already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+  // 2. Try standard Date parse
+  const parsed = new Date(trimmed);
+  if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 2000) {
+    return parsed.toISOString().split('T')[0];
+  }
+  // 3. If "05-Dec" or "5-Dec" or "Dec 5"
+  const currentYear = new Date().getFullYear();
+  const withYear = new Date(`${trimmed} ${currentYear}`);
+  if (!isNaN(withYear.getTime())) {
+    return withYear.toISOString().split('T')[0];
+  }
+  // 4. Try month matching (e.g. 05-Dec)
+  const monthMap: Record<string, string> = {
+    jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+    jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+    'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04', 'พ.ค.': '05', 'มิ.ย.': '06',
+    'ก.ค.': '07', 'ส.ค.': '08', 'ก.ย.': '09', 'ต.ค.': '10', 'พ.ย.': '11', 'ธ.ค.': '12'
+  };
+  const match = trimmed.match(/^(\d{1,2})[-/ ]([A-Za-zก-๙.]+)/i);
+  if (match) {
+    const day = match[1].padStart(2, '0');
+    const monKey = match[2].toLowerCase().substring(0, 3);
+    const mm = monthMap[monKey] || '12';
+    return `${currentYear}-${mm}-${day}`;
+  }
+  return new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Format string for <input type="date" />
+ */
+export function toInputDateFormat(dateStr?: string): string {
+  if (!dateStr) return '';
+  const trimmed = dateStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+  return sanitizeSpentAtDate(trimmed);
+}
+
+/**
+ * Friendly display format (e.g. 05-Dec-2026)
+ */
+export function formatStayDateDisplay(dateStr?: string): string {
+  if (!dateStr) return '-';
+  const trimmed = dateStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const parts = trimmed.split('-');
+    const year = parts[0];
+    const month = parts[1];
+    const day = parts[2];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const mIdx = parseInt(month, 10) - 1;
+    if (mIdx >= 0 && mIdx < 12) {
+      return `${day}-${months[mIdx]}-${year}`;
+    }
+  }
+  return trimmed;
+}
+
 export function AccommodationsCard({
   tripId,
   tripCurrency,
@@ -81,13 +153,41 @@ export function AccommodationsCard({
     }, 0);
   }, [stays, tripCurrency, fxRate]);
 
+  // Handle date change and calculate nights automatically
+  const handleCheckInChange = (val: string) => {
+    setFormCheckIn(val);
+    if (val && formCheckOut) {
+      const dIn = new Date(val).getTime();
+      const dOut = new Date(formCheckOut).getTime();
+      if (!isNaN(dIn) && !isNaN(dOut) && dOut > dIn) {
+        const diffDays = Math.round((dOut - dIn) / (1000 * 60 * 60 * 24));
+        setFormNights(String(diffDays));
+      }
+    }
+  };
+
+  const handleCheckOutChange = (val: string) => {
+    setFormCheckOut(val);
+    if (formCheckIn && val) {
+      const dIn = new Date(formCheckIn).getTime();
+      const dOut = new Date(val).getTime();
+      if (!isNaN(dIn) && !isNaN(dOut) && dOut > dIn) {
+        const diffDays = Math.round((dOut - dIn) / (1000 * 60 * 60 * 24));
+        setFormNights(String(diffDays));
+      }
+    }
+  };
+
   // Open modal for new stay
   const handleOpenAdd = () => {
     setEditingStay(null);
     setFormName('');
     setFormCity('');
-    setFormCheckIn('');
-    setFormCheckOut('');
+    // Default to today
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    setFormCheckIn(today);
+    setFormCheckOut(tomorrow);
     setFormNights('1');
     setFormRoomType('');
     setFormBookingRef('');
@@ -105,8 +205,8 @@ export function AccommodationsCard({
     setEditingStay(stay);
     setFormName(stay.name);
     setFormCity(stay.city || '');
-    setFormCheckIn(stay.checkInDate || '');
-    setFormCheckOut(stay.checkOutDate || '');
+    setFormCheckIn(toInputDateFormat(stay.checkInDate));
+    setFormCheckOut(toInputDateFormat(stay.checkOutDate));
     setFormNights(String(stay.nights || 1));
     setFormRoomType(stay.roomType || '');
     setFormBookingRef(stay.bookingRef || '');
@@ -136,7 +236,7 @@ export function AccommodationsCard({
     }
   };
 
-  // Create an expense for a stay
+  // Create an expense for a stay (Safe date parsing)
   const handleCreateExpenseForStay = async (stay: AccommodationStay) => {
     if (!stay.price || stay.price <= 0) {
       alert('ที่พักนี้ยังไม่ได้ระบุราคา กรุณาแก้ไขเพื่อใส่ราคาก่อนบันทึกเป็นรายจ่าย');
@@ -145,6 +245,8 @@ export function AccommodationsCard({
     try {
       const priceNum = Number(stay.price);
       const title = `ค่าที่พัก: ${stay.name}${stay.nights ? ` (${stay.nights} คืน)` : ''}`;
+      // Sanitize spent_at to valid ISO date string
+      const validSpentAt = sanitizeSpentAtDate(stay.checkInDate);
       
       const { data, error } = await supabase.from('expenses').insert([
         {
@@ -153,7 +255,7 @@ export function AccommodationsCard({
           amount: priceNum,
           currency: stay.currency || tripCurrency || 'JPY',
           category: 'hotel',
-          spent_at: stay.checkInDate || new Date().toISOString().split('T')[0],
+          spent_at: validSpentAt,
           payer_id: currentUser?.id || null,
           payer_name: currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน',
         },
@@ -191,6 +293,7 @@ export function AccommodationsCard({
     try {
       const priceNum = formPrice ? parseFloat(formPrice) : undefined;
       const nightsNum = parseInt(formNights) || 1;
+      const validSpentAt = sanitizeSpentAtDate(formCheckIn);
 
       let createdExpenseId: string | undefined = editingStay?.expenseId;
 
@@ -204,7 +307,7 @@ export function AccommodationsCard({
               amount: priceNum,
               currency: formCurrency || tripCurrency || 'JPY',
               category: 'hotel',
-              spent_at: formCheckIn || new Date().toISOString().split('T')[0],
+              spent_at: validSpentAt,
               payer_id: currentUser?.id || null,
               payer_name: currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน',
             },
@@ -427,18 +530,18 @@ export function AccommodationsCard({
                       </div>
                     </div>
 
-                    {/* Timeline: Check-in / Nights / Check-out */}
+                    {/* Timeline: Check-in / Nights / Check-out with friendly formatted dates */}
                     <div className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#171f30] border border-slate-100 dark:border-[#222c42] space-y-1.5 text-xs">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="text-slate-500 dark:text-slate-400 font-medium">เข้าพัก:</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {stay.checkInDate || '-'}
+                          {formatStayDateDisplay(stay.checkInDate)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="text-slate-500 dark:text-slate-400 font-medium">ออก:</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {stay.checkOutDate || '-'}
+                          {formatStayDateDisplay(stay.checkOutDate)}
                         </span>
                       </div>
                       <div className="pt-1 border-t border-slate-200/50 dark:border-[#222c42] flex items-center justify-between text-[10px] font-bold">
@@ -556,7 +659,7 @@ export function AccommodationsCard({
                     {editingStay ? 'แก้ไขข้อมูลที่พัก 🏨' : 'เพิ่มที่พักใหม่ในทริป 🏨'}
                   </h3>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    ใส่รายละเอียดโรงแรม วันเข้าพัก และราคา
+                    ใส่วันเข้าพักผ่านปฏิทิน (Date Picker) เพื่อคำนวณคืนและบันทึกรายจ่ายอัตโนมัติ
                   </p>
                 </div>
               </div>
@@ -615,44 +718,47 @@ export function AccommodationsCard({
                 </div>
               </div>
 
-              {/* Check-in, Check-out & Nights */}
-              <div className="grid grid-cols-3 gap-2">
+              {/* Check-in, Check-out & Nights with Date Pickers */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
                   <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
-                    วันเช็คอิน
+                    วันเช็คอิน (Check-in) *
                   </label>
                   <input
-                    type="text"
-                    placeholder="เช่น 04-Dec หรือ Day 1"
+                    type="date"
+                    required
                     value={formCheckIn}
-                    onChange={(e) => setFormCheckIn(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    onChange={(e) => handleCheckInChange(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
-                    วันเช็คเอาท์
+                    วันเช็คเอาท์ (Check-out) *
                   </label>
                   <input
-                    type="text"
-                    placeholder="เช่น 07-Dec หรือ Day 4"
+                    type="date"
+                    required
                     value={formCheckOut}
-                    onChange={(e) => setFormCheckOut(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    onChange={(e) => handleCheckOutChange(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                     จำนวนคืน *
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={formNights}
-                    onChange={(e) => setFormNights(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={formNights}
+                      onChange={(e) => setFormNights(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    />
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">คืน</span>
+                  </div>
                 </div>
               </div>
 

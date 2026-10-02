@@ -12,7 +12,7 @@ import InteractiveTripMap from '@/components/InteractiveTripMap';
 import { ItineraryStopCard } from '@/components/trip-detail/ItineraryStopCard';
 import { TransitConnector } from '@/components/trip-detail/TransitConnector';
 import { FlightBoardingPassCard } from '@/components/trip-detail/FlightBoardingPassCard';
-import { AccommodationsCard } from '@/components/trip-detail/AccommodationsCard';
+import { AccommodationsCard, formatStayDateDisplay } from '@/components/trip-detail/AccommodationsCard';
 import { TripHeroCover } from '@/components/trip-detail/TripHeroCover';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
@@ -97,13 +97,21 @@ export function TripPlanTab({
     if (selectedDayFilter === 'all' || stays.length === 0) return null;
     const filterLower = selectedDayFilter.toLowerCase();
     return (
-      stays.find(
-        (s) =>
-          s.checkInDate?.toLowerCase().includes(filterLower) ||
-          s.checkOutDate?.toLowerCase().includes(filterLower) ||
-          filterLower.includes(s.checkInDate?.toLowerCase() || '') ||
+      stays.find((s) => {
+        const inStr = (s.checkInDate || '').toLowerCase();
+        const outStr = (s.checkOutDate || '').toLowerCase();
+        const inFormatted = formatStayDateDisplay(s.checkInDate).toLowerCase();
+        const outFormatted = formatStayDateDisplay(s.checkOutDate).toLowerCase();
+        return (
+          inStr.includes(filterLower) ||
+          outStr.includes(filterLower) ||
+          filterLower.includes(inStr) ||
+          inFormatted.includes(filterLower) ||
+          outFormatted.includes(filterLower) ||
+          filterLower.includes(inFormatted) ||
           (s.notes && s.notes.toLowerCase().includes(filterLower))
-      ) || null
+        );
+      }) || null
     );
   }, [selectedDayFilter, stays]);
 
