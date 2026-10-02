@@ -195,9 +195,27 @@ export function ExpenseDetailModal({
     }
   };
 
+  const editSwitchTimeRef = React.useRef<number>(0);
+
+  const handleSwitchToEdit = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    editSwitchTimeRef.current = Date.now();
+    setIsEditing(true);
+  };
+
   // Handle Save
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    // Prevent ghost click / accidental instant submit within 450ms of switching to edit mode
+    if (Date.now() - editSwitchTimeRef.current < 450) {
+      return;
+    }
     if (!form.title.trim()) {
       alert('กรุณากรอกชื่อรายการ / ร้านค้า');
       return;
@@ -296,7 +314,8 @@ export function ExpenseDetailModal({
             {!isEditing && canEdit && (
               <button
                 type="button"
-                onClick={() => setIsEditing(true)}
+                key="header-edit-btn"
+                onClick={handleSwitchToEdit}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold transition-all cursor-pointer"
                 title="แก้ไขข้อมูล"
               >
@@ -662,11 +681,20 @@ export function ExpenseDetailModal({
               </div>
 
               {/* Split Info Card in View Mode */}
-              <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] space-y-2">
+              <div 
+                onClick={canEdit ? handleSwitchToEdit : undefined}
+                className={`p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] space-y-2.5 ${canEdit ? 'cursor-pointer hover:border-blue-400 transition-all group' : ''}`}
+                title={canEdit ? 'คลิกเพื่อแก้ไขคนร่วมหาร' : undefined}
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                     <Users className="h-3.5 w-3.5 text-blue-500" />
                     <span>การหารค่าใช้จ่าย (Split)</span>
+                    {canEdit && (
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold group-hover:underline">
+                        (แตะเพื่อแก้ไข ✎)
+                      </span>
+                    )}
                   </span>
                   <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
                     splitWith.length === 1
@@ -697,6 +725,13 @@ export function ExpenseDetailModal({
                     );
                   })}
                 </div>
+
+                {splitWith.length === memberOptions.length && memberOptions.length > 1 && (
+                  <div className="p-2 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                    <span>รายการนี้หารเท่ากัน {memberOptions.length} คน ({memberOptions.map(m => m.name.replace(' (ฉัน)', '')).join(' และ ')}) แล้ว</span>
+                  </div>
+                )}
 
                 <div className="pt-2 border-t border-slate-200/70 dark:border-[#222c42] flex items-center justify-between text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-medium">ยอดแชร์ต่อคน:</span>
@@ -777,6 +812,7 @@ export function ExpenseDetailModal({
             <>
               <button
                 type="button"
+                key="edit-cancel-btn"
                 onClick={() => setIsEditing(false)}
                 disabled={saving}
                 className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
@@ -784,8 +820,9 @@ export function ExpenseDetailModal({
                 ยกเลิก
               </button>
               <button
-                type="submit"
-                form="edit-expense-form"
+                type="button"
+                key="edit-save-btn"
+                onClick={handleSave}
                 disabled={saving}
                 className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95"
               >
@@ -808,6 +845,7 @@ export function ExpenseDetailModal({
               {canEdit && (
                 <button
                   type="button"
+                  key="view-delete-btn"
                   onClick={handleDelete}
                   className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
                   title="ลบรายการนี้"
@@ -819,7 +857,8 @@ export function ExpenseDetailModal({
               {canEdit && (
                 <button
                   type="button"
-                  onClick={() => setIsEditing(true)}
+                  key="view-edit-btn"
+                  onClick={handleSwitchToEdit}
                   className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.01] active:scale-95"
                 >
                   <Edit3 className="h-4 w-4" />
@@ -828,6 +867,7 @@ export function ExpenseDetailModal({
               )}
               <button
                 type="button"
+                key="view-close-btn"
                 onClick={onClose}
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
               >
