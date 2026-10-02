@@ -112,6 +112,7 @@ export default function TripDetailPage() {
   const [showSettlementModal, setShowSettlementModal] = useState(false);
   const [showAIAssistantModal, setShowAIAssistantModal] = useState(false);
   const [showBudgetCategoryModal, setShowBudgetCategoryModal] = useState(false);
+  const [budgetModalInitialTab, setBudgetModalInitialTab] = useState<'budget' | 'members' | 'categories' | 'custom'>('budget');
   const [showPrintableModal, setShowPrintableModal] = useState(false);
   const [showScrapbookModal, setShowScrapbookModal] = useState(false);
   const [showRollbackModal, setShowRollbackModal] = useState(false);
@@ -1651,6 +1652,11 @@ export default function TripDetailPage() {
                 fxRate={fxRate}
                 setShowSettlementModal={setShowSettlementModal}
                 setShowBudgetCategoryModal={setShowBudgetCategoryModal}
+                targetBudget={targetBudget}
+                onOpenBudgetModalWithTab={(tab) => {
+                  setBudgetModalInitialTab(tab);
+                  setShowBudgetCategoryModal(true);
+                }}
               />
             </motion.div>
           )}
@@ -1901,6 +1907,7 @@ export default function TripDetailPage() {
         currentUser={currentUser}
         userDisplayName={userDisplayName}
         fxRate={fxRate}
+        initialTab={budgetModalInitialTab}
         onUpdated={fetchTripData}
         onOpenRollback={() => setShowRollbackModal(true)}
       />

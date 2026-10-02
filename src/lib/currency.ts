@@ -22,6 +22,7 @@ const DEFAULT_RATES: { [key: string]: number } = {
   EUR: 0.0061,
   KRW: 9.12,
   SGD: 0.0089,
+  GBP: 0.0052,
 };
 
 const STORAGE_KEY = 'travel_tracker_custom_fx_rate';
