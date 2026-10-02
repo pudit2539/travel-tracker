@@ -37,7 +37,8 @@ export function calculateSettlement(
   expenses: any[],
   membersList: { name: string; avatar: string; id?: string }[],
   currency: string = 'THB',
-  jpyThbRate?: number
+  jpyThbRate?: number,
+  expenseSplitsMap?: Record<string, string[]>
 ): SettlementSummary {
   if (!membersList || membersList.length === 0) {
     return {
@@ -51,10 +52,14 @@ export function calculateSettlement(
 
   const baseCurrency = (currency || 'THB').toUpperCase();
 
-  // 1. Initialize total paid per member (using normalized member key)
+  // 1. Initialize total paid and fair share per member (using normalized member key)
   const paidMap = new Map<string, number>();
+  const shareMap = new Map<string, number>();
+
   membersList.forEach((m) => {
-    paidMap.set(cleanMemberName(m.name), 0);
+    const key = cleanMemberName(m.name);
+    paidMap.set(key, 0);
+    shareMap.set(key, 0);
   });
 
   let totalSpent = 0;
@@ -79,6 +84,38 @@ export function calculateSettlement(
 
     const payerKey = matchedMember ? cleanMemberName(matchedMember.name) : (eName || 'สมาชิก');
     paidMap.set(payerKey, (paidMap.get(payerKey) || 0) + normalizedAmount);
+
+    // Who shares this expense?
+    const customSplitKeys = expenseSplitsMap && expenseSplitsMap[e.id];
+    let sharingMembers: { name: string; avatar: string; id?: string }[] = [];
+
+    if (customSplitKeys && Array.isArray(customSplitKeys) && customSplitKeys.length > 0) {
+      sharingMembers = membersList.filter((m) => {
+        const key = cleanMemberName(m.name);
+        const mId = (m.id || '').toLowerCase();
+        const mRaw = (m.name || '').toLowerCase();
+        return customSplitKeys.some((rawK) => {
+          const k = (rawK || '').toLowerCase().trim();
+          if (!k) return false;
+          if (k === 'me' && (mRaw.includes('(ฉัน)') || mId === e.payer_id?.toLowerCase())) return true;
+          if (mId && k === mId) return true;
+          if (key && (k === key || cleanMemberName(k) === key)) return true;
+          if (mRaw && k === mRaw) return true;
+          return false;
+        });
+      });
+    }
+
+    // Default: If no custom split is assigned or all members matched, everyone in the trip shares it
+    if (sharingMembers.length === 0) {
+      sharingMembers = membersList;
+    }
+
+    const perPersonShare = normalizedAmount / sharingMembers.length;
+    sharingMembers.forEach((m) => {
+      const key = cleanMemberName(m.name);
+      shareMap.set(key, (shareMap.get(key) || 0) + perPersonShare);
+    });
   });
 
   const memberCount = membersList.length;
@@ -88,13 +125,14 @@ export function calculateSettlement(
   const balances: MemberBalance[] = membersList.map((m) => {
     const key = cleanMemberName(m.name);
     const totalPaid = paidMap.get(key) || 0;
-    const netBalance = totalPaid - averagePerPerson;
+    const fairShare = shareMap.get(key) || 0;
+    const netBalance = totalPaid - fairShare;
     return {
       name: m.name.replace(/\s*\(ฉัน\)\s*/gi, ''),
       avatar: m.avatar || 'cat_pink',
       id: m.id,
       totalPaid: Math.round(totalPaid),
-      fairShare: Math.round(averagePerPerson),
+      fairShare: Math.round(fairShare),
       netBalance,
     };
   });

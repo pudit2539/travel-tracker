@@ -6,6 +6,7 @@ import { calculateSettlement, TransferPlan, MemberBalance } from '@/lib/settleme
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
+import { getTripExpenseSplits } from '@/lib/expenseSplits';
 import { 
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
   Users, DollarSign, Calculator, ChevronRight, SlidersHorizontal
@@ -20,6 +21,7 @@ interface SettlementModalProps {
   userDisplayName?: string;
   currency: string;
   fxRate?: number;
+  tripId?: string;
 }
 
 export default function SettlementModal({
@@ -31,6 +33,7 @@ export default function SettlementModal({
   userDisplayName,
   currency = 'THB',
   fxRate: propFxRate,
+  tripId,
 }: SettlementModalProps) {
   const [fxRate, setFxRate] = useState<number>(() => propFxRate ?? getCustomJpyToThbRate());
   const [showRateSettings, setShowRateSettings] = useState(false);
@@ -90,8 +93,10 @@ export default function SettlementModal({
 
   // Calculate settlement
   const settlement = useMemo(() => {
-    return calculateSettlement(expenses, membersList, currency, fxRate);
-  }, [expenses, membersList, currency, fxRate]);
+    const tId = tripId || (expenses && expenses[0]?.trip_id) || '';
+    const expenseSplitsMap = tId ? getTripExpenseSplits(tId) : {};
+    return calculateSettlement(expenses, membersList, currency, fxRate, expenseSplitsMap);
+  }, [expenses, membersList, currency, fxRate, tripId]);
 
   const handleRateChange = (newRate: number) => {
     setFxRate(newRate);

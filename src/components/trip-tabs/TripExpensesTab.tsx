@@ -11,6 +11,7 @@ import { CategoryItem } from '@/lib/categories';
 import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
+import { getTripExpenseSplits } from '@/lib/expenseSplits';
 
 interface TripExpensesTabProps {
   trip: any;
@@ -92,6 +93,8 @@ export function TripExpensesTab({
     (acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate),
     0
   );
+
+  const splitsMap = React.useMemo(() => getTripExpenseSplits(trip?.id), [trip?.id, expenses]);
 
   return (
     <div className="space-y-4">
@@ -423,6 +426,8 @@ export function TripExpensesTab({
               onDeleteExpense={handleDeleteExpense}
               onSelectExpense={onSelectExpense}
               onEditExpense={onEditExpense}
+              splitCount={splitsMap[exp.id] ? splitsMap[exp.id].length : undefined}
+              totalMembersCount={(otherMembers?.length || 0) + 1}
             />
           ))}
         </div>

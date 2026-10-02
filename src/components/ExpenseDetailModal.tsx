@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Edit3, Trash2, Camera, Check, CheckCircle2, 
   Image as ImageIcon, Calendar, DollarSign, Wallet, 
-  Tag, Loader2, ZoomIn, ArrowRight
+  Tag, Loader2, ZoomIn, ArrowRight, Users, UserCheck
 } from 'lucide-react';
 import { CategoryItem, getCategoryMeta } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
@@ -13,6 +13,11 @@ import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { convertToThb } from '@/lib/currency';
 import { getLocalReceiptPhoto, saveLocalReceiptPhoto } from '@/lib/localReceipts';
 import { compressReceiptImage } from '@/lib/imageCompressor';
+import { 
+  getExpenseSplitMembers, 
+  setExpenseSplitMembers, 
+  deleteExpenseSplit 
+} from '@/lib/expenseSplits';
 
 interface ExpenseDetailModalProps {
   isOpen: boolean;
@@ -26,6 +31,7 @@ interface ExpenseDetailModalProps {
   fxRate: number;
   canEdit: boolean;
   startInEditMode?: boolean;
+  tripId?: string;
   onSaveExpense: (updatedExpense: any) => Promise<void>;
   onDeleteExpense: (id: string, receiptUrl?: string) => Promise<void> | void;
   onOpenReceiptFullscreen?: (imgUrl: string) => void;
@@ -43,6 +49,7 @@ export function ExpenseDetailModal({
   fxRate,
   canEdit,
   startInEditMode = false,
+  tripId,
   onSaveExpense,
   onDeleteExpense,
   onOpenReceiptFullscreen,
@@ -52,6 +59,32 @@ export function ExpenseDetailModal({
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
+
+  // Split state
+  const [splitWith, setSplitWith] = useState<string[]>([]);
+  const [splitMode, setSplitMode] = useState<'all' | 'single' | 'custom'>('all');
+
+  // Build member options for payer selection & split
+  const myId = currentUser?.id || 'me';
+  const memberOptions: Array<{ id: string; name: string; avatar: string }> = [
+    {
+      id: myId,
+      name: `${userDisplayName} (ฉัน)`,
+      avatar: currentUser?.user_metadata?.avatar_id || 'cat_trio',
+    },
+  ];
+  members.forEach((m) => {
+    const isMe =
+      (m.user_id && currentUser && m.user_id === currentUser.id) ||
+      (m.id && currentUser && m.id === currentUser.id);
+    if (!isMe) {
+      memberOptions.push({
+        id: m.user_id || m.id,
+        name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
+        avatar: m.profiles?.avatar_id || 'cat_trio',
+      });
+    }
+  });
 
   // Form State for editing
   const [form, setForm] = useState({
@@ -68,15 +101,51 @@ export function ExpenseDetailModal({
   useEffect(() => {
     if (expense && isOpen) {
       setIsEditing(startInEditMode);
+      const initialPayerId =
+        expense.payer_id === 'me' || (currentUser && expense.payer_id === currentUser.id)
+          ? myId
+          : expense.payer_id || myId;
+
       setForm({
         title: expense.title || '',
         amount: String(expense.amount || ''),
         currency: expense.currency || tripBaseCurrency || 'THB',
         category: expense.category || 'shopping',
         spent_at: expense.spent_at ? expense.spent_at.split('T')[0] : new Date().toISOString().split('T')[0],
-        payer_id: expense.payer_id || 'me',
+        payer_id: initialPayerId,
         receipt_url: expense.receipt_url || '',
       });
+
+      // Split initialization
+      const effectiveTripId = tripId || expense.trip_id || '';
+      const allIds = memberOptions.map((m) => m.id);
+      if (effectiveTripId && expense.id) {
+        const savedSplits = getExpenseSplitMembers(effectiveTripId, expense.id);
+        if (savedSplits && savedSplits.length > 0) {
+          // Normalize saved IDs ('me' -> myId)
+          const normalized = savedSplits.map((id) => (id === 'me' ? myId : id));
+          const valid = normalized.filter((id) => allIds.includes(id));
+          if (valid.length > 0) {
+            setSplitWith(valid);
+            if (valid.length === 1 && valid[0] === initialPayerId) {
+              setSplitMode('single');
+            } else if (valid.length === allIds.length) {
+              setSplitMode('all');
+            } else {
+              setSplitMode('custom');
+            }
+          } else {
+            setSplitWith(allIds);
+            setSplitMode('all');
+          }
+        } else {
+          setSplitWith(allIds);
+          setSplitMode('all');
+        }
+      } else {
+        setSplitWith(allIds);
+        setSplitMode('all');
+      }
 
       // Load receipt photo if exists
       if (expense.receipt_url) {
@@ -94,28 +163,9 @@ export function ExpenseDetailModal({
         setReceiptImage(null);
       }
     }
-  }, [expense, isOpen, startInEditMode, tripBaseCurrency]);
+  }, [expense, isOpen, startInEditMode, tripBaseCurrency, tripId]);
 
   if (!isOpen || !expense) return null;
-
-  // Build member options for payer selection
-  const memberOptions: Array<{ id: string; name: string; avatar: string }> = [
-    {
-      id: 'me',
-      name: `${userDisplayName} (ฉัน)`,
-      avatar: currentUser?.user_metadata?.avatar_id || 'cat_trio',
-    },
-  ];
-  members.forEach((m) => {
-    const isMe = m.user_id && currentUser && m.user_id === currentUser.id;
-    if (!isMe) {
-      memberOptions.push({
-        id: m.user_id || m.id,
-        name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
-        avatar: m.profiles?.avatar_id || 'cat_trio',
-      });
-    }
-  });
 
   // Current category & payer metadata
   const currentCategoryMeta = getCategoryMeta(categories, isEditing ? form.category : expense.category);
@@ -123,7 +173,8 @@ export function ExpenseDetailModal({
   const isMyExpense =
     (expense.payer_id && currentUser && expense.payer_id === currentUser.id) ||
     (expense.payer_name && expense.payer_name.toLowerCase() === userDisplayName.toLowerCase()) ||
-    expense.payer_id === 'me';
+    expense.payer_id === 'me' ||
+    expense.payer_id === myId;
 
   // Handle uploading/replacing receipt image in edit mode
   const handleReceiptChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,9 +213,9 @@ export function ExpenseDetailModal({
       // Resolve selected payer info
       let selectedPayerName = userDisplayName;
       let selectedPayerAvatar = currentUser?.user_metadata?.avatar_id || 'cat_trio';
-      let selectedPayerId = currentUser?.id || 'me';
+      let selectedPayerId = myId;
 
-      if (form.payer_id !== 'me') {
+      if (form.payer_id !== 'me' && form.payer_id !== myId) {
         const found = memberOptions.find((m) => m.id === form.payer_id);
         if (found) {
           selectedPayerName = found.name;
@@ -186,6 +237,13 @@ export function ExpenseDetailModal({
         receipt_url: form.receipt_url,
       });
 
+      // Save custom split configuration
+      const effectiveTripId = tripId || expense.trip_id || '';
+      if (effectiveTripId && expense.id) {
+        const finalSplit = splitWith.length > 0 ? splitWith : memberOptions.map((m) => m.id);
+        setExpenseSplitMembers(effectiveTripId, expense.id, finalSplit);
+      }
+
       setIsEditing(false);
     } catch (err: any) {
       alert('เกิดข้อผิดพลาดในการบันทึก: ' + (err?.message || err));
@@ -197,6 +255,10 @@ export function ExpenseDetailModal({
   // Handle Delete
   const handleDelete = async () => {
     if (!confirm(`คุณต้องการลบรายการ "${expense.title}" ใช่หรือไม่?`)) return;
+    const effectiveTripId = tripId || expense.trip_id || '';
+    if (effectiveTripId && expense.id) {
+      deleteExpenseSplit(effectiveTripId, expense.id);
+    }
     await onDeleteExpense(expense.id, expense.receipt_url);
     onClose();
   };
@@ -358,6 +420,112 @@ export function ExpenseDetailModal({
                 </select>
               </div>
 
+              {/* Split With Section */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                    👥 ใครร่วมหารรายการนี้บ้าง? (Split With)
+                  </label>
+                  <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
+                    {splitWith.length} คน
+                  </span>
+                </div>
+
+                {/* Preset Buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSplitMode('all');
+                      setSplitWith(memberOptions.map((m) => m.id));
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                      splitWith.length === memberOptions.length
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:border-blue-300'
+                    }`}
+                  >
+                    <span>👥 หารทุกคน ({memberOptions.length} คน)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSplitMode('single');
+                      setSplitWith([form.payer_id || myId]);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                      splitWith.length === 1 && splitWith[0] === (form.payer_id || myId)
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:border-amber-300'
+                    }`}
+                  >
+                    <span>👤 จ่ายคนเดียว (ไม่หาร)</span>
+                  </button>
+                </div>
+
+                {/* Member Toggle Pills */}
+                <div className="p-2.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438]/50 space-y-2">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
+                    แตะเลือกสมาชิกที่ร่วมหาร:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {memberOptions.map((m) => {
+                      const isSelected = splitWith.includes(m.id);
+                      const cat = getCatAvatar(m.avatar);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            setSplitMode('custom');
+                            if (isSelected) {
+                              if (splitWith.length > 1) {
+                                setSplitWith(splitWith.filter((id) => id !== m.id));
+                              }
+                            } else {
+                              setSplitWith([...splitWith, m.id]);
+                            }
+                          }}
+                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            isSelected
+                              ? 'bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 shadow-2xs'
+                              : 'bg-white dark:bg-[#151b2b] text-slate-400 dark:text-slate-500 border-slate-200 dark:border-[#222c42] opacity-60 hover:opacity-90'
+                          }`}
+                        >
+                          <div
+                            className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] transition-colors ${
+                              isSelected ? 'bg-blue-600 text-white' : 'border border-slate-300 dark:border-slate-600'
+                            }`}
+                          >
+                            {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                          </div>
+                          <CatAvatarBadge cat={cat} size="xs" />
+                          <span>{m.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Live split calculation preview */}
+                  <div className="pt-2 border-t border-slate-200/70 dark:border-[#222c42] flex items-center justify-between text-xs">
+                    <span className="text-slate-600 dark:text-slate-300 font-medium">
+                      ยอดหารเฉลี่ย ({splitWith.length} คน):
+                    </span>
+                    <div className="text-right">
+                      <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm">
+                        คนละ ≈ {Math.round((Number(form.amount || 0) / Math.max(1, splitWith.length))).toLocaleString()}{' '}
+                        {form.currency}
+                      </span>
+                      {form.currency !== 'THB' && (
+                        <span className="text-[10px] text-slate-400 block font-mono">
+                          (≈ ฿{Math.round(convertToThb(Number(form.amount || 0) / Math.max(1, splitWith.length), form.currency, fxRate)).toLocaleString()})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Receipt Image in Edit Mode */}
               <div className="space-y-1.5 pt-1">
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -489,6 +657,58 @@ export function ExpenseDetailModal({
                   <span className="text-[10px] font-medium text-slate-400">
                     {expense.spent_at?.split('T')[0]}
                   </span>
+                </div>
+              </div>
+
+              {/* Split Info Card in View Mode */}
+              <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-blue-500" />
+                    <span>การหารค่าใช้จ่าย (Split)</span>
+                  </span>
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                    splitWith.length === 1
+                      ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200/80 dark:border-amber-900/60'
+                      : 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60'
+                  }`}>
+                    {splitWith.length === 1
+                      ? '👤 จ่ายคนเดียว (ไม่หารใคร)'
+                      : splitWith.length === memberOptions.length
+                      ? `👥 หารทุกคน (${splitWith.length} คน)`
+                      : `👥 หาร ${splitWith.length} คน`}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  {splitWith.map((id) => {
+                    const m = memberOptions.find((opt) => opt.id === id);
+                    if (!m) return null;
+                    const cat = getCatAvatar(m.avatar);
+                    return (
+                      <span
+                        key={id}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white dark:bg-[#151b2b] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#222c42] shadow-2xs"
+                      >
+                        <CatAvatarBadge cat={cat} size="xs" />
+                        <span>{m.name}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/70 dark:border-[#222c42] flex items-center justify-between text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">ยอดแชร์ต่อคน:</span>
+                  <div className="text-right">
+                    <span className="font-mono font-black text-blue-600 dark:text-blue-400">
+                      คนละ ≈ {Math.round(Number(expense.amount || 0) / Math.max(1, splitWith.length)).toLocaleString()} {expense.currency}
+                    </span>
+                    {(expense.currency || 'JPY') !== 'THB' && (
+                      <span className="text-[10px] text-slate-400 block font-mono">
+                        (≈ ฿{Math.round(convertToThb(Number(expense.amount || 0) / Math.max(1, splitWith.length), expense.currency || 'JPY', fxRate)).toLocaleString()})
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 

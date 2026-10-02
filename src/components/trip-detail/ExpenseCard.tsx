@@ -19,6 +19,8 @@ interface ExpenseCardProps {
   onDeleteExpense: (id: string, receiptUrl?: string) => void;
   onSelectExpense?: (exp: any) => void;
   onEditExpense?: (exp: any) => void;
+  splitCount?: number;
+  totalMembersCount?: number;
 }
 
 function ExpenseCardComponent({
@@ -32,6 +34,8 @@ function ExpenseCardComponent({
   onDeleteExpense,
   onSelectExpense,
   onEditExpense,
+  splitCount,
+  totalMembersCount,
 }: ExpenseCardProps) {
   const catMeta = getCategoryMeta(categories, expense.category);
   const payerCat = getCatAvatar(expense.payer_avatar);
@@ -84,6 +88,24 @@ function ExpenseCardComponent({
             <span className="font-semibold text-slate-800 dark:text-slate-200">{catMeta.label}</span>
             <span className="text-slate-300 dark:text-slate-600">•</span>
             <span className="text-slate-500 dark:text-slate-400">{new Date(expense.spent_at).toLocaleDateString('th-TH')}</span>
+
+            {splitCount !== undefined && splitCount === 1 && (
+              <>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-900/60">
+                  👤 จ่ายคนเดียว
+                </span>
+              </>
+            )}
+
+            {splitCount !== undefined && totalMembersCount && splitCount > 1 && splitCount < totalMembersCount && (
+              <>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border border-purple-200/80 dark:border-purple-900/60">
+                  👥 หาร {splitCount} คน
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>

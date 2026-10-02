@@ -1891,6 +1891,7 @@ export default function TripDetailPage() {
         userDisplayName={userDisplayName}
         currency={trip?.currency || 'THB'}
         fxRate={fxRate}
+        tripId={tripId}
       />
 
       {/* 5. AI Assistant Modal */}
@@ -1963,6 +1964,7 @@ export default function TripDetailPage() {
         fxRate={fxRate}
         canEdit={canAddExpense}
         startInEditMode={startInExpenseEditMode}
+        tripId={tripId}
         onSaveExpense={handleSaveUpdatedExpense}
         onDeleteExpense={handleDeleteExpense}
         onOpenReceiptFullscreen={(img) => setPreviewImage(img)}
