@@ -1777,17 +1777,17 @@ export default function TripDetailPage() {
       </main>
 
       {/* ==================== FLOATING CAT AI ASSISTANT PILL (TRIP.COM STYLE) ==================== */}
-      <div className="fixed bottom-20 left-3 sm:bottom-6 sm:left-6 z-40">
+      <div className="fixed bottom-20 left-4 sm:bottom-6 sm:left-6 z-40">
         <button
           type="button"
           onClick={() => setShowAIAssistantModal(true)}
-          className="group flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4.5 sm:py-3 rounded-full bg-white/95 dark:bg-[#151b2b]/95 border border-slate-200/90 dark:border-[#222c42] shadow-xl shadow-blue-900/10 hover:shadow-blue-500/20 text-slate-800 dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
+          className="group flex items-center gap-2 px-3.5 py-2.5 sm:px-4.5 sm:py-3 rounded-full bg-white/95 dark:bg-[#151b2b]/95 border border-slate-200/90 dark:border-[#222c42] shadow-xl shadow-blue-900/10 hover:shadow-blue-500/20 text-slate-800 dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
           title="ถาม Cat AI ผู้ช่วยทริป"
         >
-          <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-rose-500/15 dark:bg-rose-500/25 text-[#f43f5e] flex items-center justify-center text-xs animate-bounce shadow-xs">🐱</span>
-          <span className="text-[11px] sm:text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1">
-            <span className="hidden xs:inline">ถาม </span><span className="text-blue-600 dark:text-blue-400">Cat AI</span>
-            <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-500 animate-pulse" />
+          <span className="w-6 h-6 rounded-full bg-rose-500/15 dark:bg-rose-500/25 text-[#f43f5e] flex items-center justify-center text-xs animate-bounce shadow-xs">🐱</span>
+          <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            ถาม <span className="text-blue-600 dark:text-blue-400">Cat AI</span>
+            <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
           </span>
         </button>
       </div>
@@ -1796,11 +1796,11 @@ export default function TripDetailPage() {
       <button
         type="button"
         onClick={() => setShowCurrencyCalculator(true)}
-        className="fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-40 px-3 py-2 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-[11px] sm:text-sm shadow-xl shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer glow-blue"
+        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-xl shadow-blue-500/25 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer glow-blue"
         title={`เครื่องคิดเลขแปลงเงินด่วน (${tripBaseCurrency} ⇄ THB)`}
       >
         <Coins className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse text-amber-300" />
-        <span className="text-[11px] sm:text-sm font-black">
+        <span className="text-xs sm:text-sm font-black">
           {tripBaseCurrency === 'CNY'
             ? '元 ⇄ ฿'
             : tripBaseCurrency === 'USD'
@@ -2780,16 +2780,16 @@ export default function TripDetailPage() {
         </div>
       )}
 
-      {/* Global Success / Feedback Floating Toast (Redesigned for iPhone Safe Zone) */}
+      {/* Global Success / Feedback Floating Toast (Positioned at bottom for iPhone 17 Pro Max Safe Zone) */}
       <AnimatePresence>
         {globalToast && (
           <motion.div
             key={globalToast.id}
-            initial={{ opacity: 0, y: 28, scale: 0.94 }}
+            initial={{ opacity: 0, y: 32, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.94 }}
+            exit={{ opacity: 0, y: 24, scale: 0.94 }}
             transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-            className="fixed bottom-24 sm:bottom-8 inset-x-4 sm:inset-x-auto sm:right-6 sm:left-auto sm:max-w-sm z-50 pointer-events-none"
+            className="fixed bottom-26 sm:bottom-8 inset-x-4 sm:inset-x-auto sm:right-6 sm:left-auto sm:max-w-sm z-50 pointer-events-none"
           >
             <div className={`p-3.5 sm:p-4 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-center gap-3 pointer-events-auto ${
               globalToast.type === 'error'
@@ -2820,6 +2820,7 @@ export default function TripDetailPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
 
     </div>
   );

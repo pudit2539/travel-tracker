@@ -67,7 +67,7 @@ input, textarea, [contenteditable="true"], .selectable-text {
 
 /* Mobile Safe Area Inset Support (Notch, Dynamic Island, Android Status Bar) */
 .safe-top-nav {
-  padding-top: max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 2.75rem);
+  padding-top: max(calc(env(safe-area-inset-top, 0px) + 0.95rem), 3.5rem);
 }
 
 @media (min-width: 640px) {
