@@ -20,7 +20,7 @@ export default function PullToRefreshIndicator({
     <div 
       className="fixed inset-x-0 z-50 flex justify-center pointer-events-none transition-transform duration-100"
       style={{
-        top: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1rem)',
+        top: 'max(calc(env(safe-area-inset-top, 0px) + 0.85rem), 2.5rem)',
         transform: `translateY(${Math.min(pullDistance * 0.7, 48)}px)`,
       }}
     >
