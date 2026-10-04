@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, Check, CheckCheck, Trash2, X, Sparkles, 
   Receipt, CloudSun, MapPin, Calculator, AlertCircle, 
@@ -237,172 +238,191 @@ export default function NotificationBell({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bell Button */}
+      {/* Luxury Bell Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 sm:p-2.5 rounded-2xl border border-slate-200/80 dark:border-purple-800/80 bg-white/90 dark:bg-[#1a182d]/90 text-slate-700 dark:text-purple-200 hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer"
+        className={`relative p-2 sm:p-2.5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-2xs backdrop-blur-md ${
+          isOpen
+            ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-400 text-blue-600 dark:text-blue-400 scale-105 shadow-md shadow-blue-500/20'
+            : 'bg-white/90 dark:bg-[#151b2b]/90 border-slate-200/90 dark:border-[#222c42] text-slate-700 dark:text-slate-200 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95'
+        } ${unreadCount > 0 ? 'hover-bell-shake' : ''}`}
         title="การแจ้งเตือน"
       >
         <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
         
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-1 text-[9px] font-black text-white shadow-md animate-pulse">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-red-600 px-1 text-[9px] font-black text-white shadow-md shadow-rose-500/40 ring-2 ring-white dark:ring-[#151b2b] animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
-      {/* Popover / Dropdown Drawer */}
-      {isOpen && (
-        <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 z-50 w-auto sm:w-96 rounded-3xl bg-white dark:bg-[#1a182d] border border-slate-200/90 dark:border-purple-800/60 shadow-2xl glow-pink-purple overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-          
-          {/* Header */}
-          <div className="p-4 pb-3 border-b border-slate-100 dark:border-purple-900/40 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-xs">
-                <Bell className="h-4 w-4" />
+      {/* Popover / Dropdown Drawer with Framer Motion */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+            className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 z-50 w-auto sm:w-96 rounded-3xl bg-white/98 dark:bg-[#151b2b]/98 backdrop-blur-2xl border border-slate-200/90 dark:border-[#222c42] shadow-2xl shadow-blue-950/20 overflow-hidden"
+          >
+            {/* Header */}
+            <div className="p-4 pb-3 border-b border-slate-100 dark:border-[#222c42] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
+                  <Bell className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>การแจ้งเตือน</span>
+                    {unreadCount > 0 && (
+                      <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-900/60 px-2 py-0.5 rounded-full shadow-2xs">
+                        {unreadCount} ใหม่
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                    {tripTitle ? `ทริป: ${tripTitle}` : 'ความเคลื่อนไหวล่าสุด'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <span>การแจ้งเตือน</span>
-                  {unreadCount > 0 && (
-                    <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-100 dark:bg-pink-950 px-1.5 py-0.2 rounded-full">
-                      {unreadCount} ใหม่
-                    </span>
-                  )}
-                </h3>
-                <p className="text-[10px] text-slate-500 dark:text-purple-300/70 font-medium">
-                  {tripTitle ? `ทริป: ${tripTitle}` : 'ความเคลื่อนไหวล่าสุด'}
-                </p>
+
+              <div className="flex items-center gap-1">
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllAsRead}
+                    className="px-2.5 py-1 text-[10px] font-black text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded-xl transition-all cursor-pointer flex items-center gap-1 border border-blue-200/60 dark:border-blue-900/40 shadow-2xs"
+                    title="อ่านทั้งหมด"
+                  >
+                    <CheckCheck className="h-3 w-3" />
+                    <span>อ่านหมด</span>
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearAllNotifications}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
+                    title="ล้างทั้งหมด"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] rounded-xl transition-colors cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              {unreadCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
-                  className="p-1.5 text-[10px] font-bold text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-purple-950/50 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
-                  title="อ่านทั้งหมด"
-                >
-                  <CheckCheck className="h-3.5 w-3.5" />
-                  <span className="hidden xs:inline">อ่านหมด</span>
-                </button>
-              )}
-              {notifications.length > 0 && (
-                <button
-                  onClick={clearAllNotifications}
-                  className="p-1.5 text-slate-400 hover:text-[#e06b88] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 rounded-xl transition-colors cursor-pointer"
-                  title="ล้างทั้งหมด"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1 px-4 py-2 bg-slate-50/70 dark:bg-[#111624]/60 border-b border-slate-100 dark:border-[#222c42] overflow-x-auto custom-scrollbar">
               <button
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 hover:bg-slate-100 dark:hover:bg-purple-950/50 rounded-xl transition-colors cursor-pointer"
+                type="button"
+                onClick={() => setActiveFilter('all')}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-black shrink-0 transition-all cursor-pointer ${
+                  activeFilter === 'all'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs shadow-blue-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1c2438]'
+                }`}
               >
-                <X className="h-4 w-4" />
+                ทั้งหมด ({notifications.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('member')}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
+                  activeFilter === 'member'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs shadow-blue-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1c2438]'
+                }`}
+              >
+                👥 สมาชิก
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('expense')}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
+                  activeFilter === 'expense'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs shadow-blue-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1c2438]'
+                }`}
+              >
+                🧾 รายจ่าย
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('itinerary')}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
+                  activeFilter === 'itinerary'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs shadow-blue-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1c2438]'
+                }`}
+              >
+                🗺️ แผนเที่ยว
               </button>
             </div>
-          </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1 px-4 py-2 bg-slate-50/50 dark:bg-[#11101d]/50 border-b border-slate-100 dark:border-purple-900/30 overflow-x-auto custom-scrollbar">
-            <button
-              onClick={() => setActiveFilter('all')}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
-                activeFilter === 'all'
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-950'
-              }`}
-            >
-              ทั้งหมด ({notifications.length})
-            </button>
-            <button
-              onClick={() => setActiveFilter('member')}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
-                activeFilter === 'member'
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-950'
-              }`}
-            >
-              👥 สมาชิก
-            </button>
-            <button
-              onClick={() => setActiveFilter('expense')}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
-                activeFilter === 'expense'
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-950'
-              }`}
-            >
-              🧾 รายจ่าย
-            </button>
-            <button
-              onClick={() => setActiveFilter('itinerary')}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
-                activeFilter === 'itinerary'
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-purple-300 hover:bg-slate-200 dark:hover:bg-purple-950'
-              }`}
-            >
-              🗺️ แผนเที่ยว
-            </button>
-          </div>
-
-          {/* Notifications List */}
-          <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-purple-900/30">
-            {filteredNotifications.length === 0 ? (
-              <div className="p-8 text-center space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-pink-50 dark:bg-purple-950/60 flex items-center justify-center text-pink-500 mx-auto">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <p className="text-xs font-bold text-slate-800 dark:text-white">ไม่มีการแจ้งเตือนใหม่</p>
-                <p className="text-[10px] text-slate-400 dark:text-purple-300">
-                  ระบบจะแจ้งเตือนเมื่อมีเพื่อนเข้ากลุ่ม, บันทึกค่าใช้จ่าย, หรืออัปเดตแผนเที่ยว
-                </p>
-              </div>
-            ) : (
-              filteredNotifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  onClick={() => markSingleAsRead(notif.id)}
-                  className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer group ${
-                    !notif.read
-                      ? 'bg-pink-50/40 dark:bg-purple-950/40 hover:bg-pink-50/70 dark:hover:bg-purple-950/60'
-                      : 'hover:bg-slate-50 dark:hover:bg-[#11101d]/40'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#11101d] border border-slate-200/80 dark:border-purple-900/60 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-110 transition-transform">
-                    {getIcon(notif.type)}
+            {/* Notifications List */}
+            <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-[#222c42]">
+              {filteredNotifications.length === 0 ? (
+                <div className="p-8 text-center space-y-2">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-500 mx-auto shadow-2xs">
+                    <Sparkles className="h-6 w-6 animate-pulse" />
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                        {notif.title}
-                      </h4>
-                      <span className="text-[9px] font-semibold text-slate-400 shrink-0 flex items-center gap-0.5">
-                        <Clock className="h-2.5 w-2.5" />
-                        {notif.time}
-                      </span>
+                  <p className="text-xs font-bold text-slate-800 dark:text-white">ไม่มีการแจ้งเตือนใหม่</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-400">
+                    ระบบจะแจ้งเตือนเมื่อมีเพื่อนเข้ากลุ่ม, บันทึกค่าใช้จ่าย, หรืออัปเดตแผนเที่ยว
+                  </p>
+                </div>
+              ) : (
+                filteredNotifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    onClick={() => markSingleAsRead(notif.id)}
+                    className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer group ${
+                      !notif.read
+                        ? 'bg-blue-50/40 dark:bg-blue-950/30 border-l-3 border-blue-500 hover:bg-blue-50/70 dark:hover:bg-blue-950/50'
+                        : 'hover:bg-slate-50 dark:hover:bg-[#1c2438]/50'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#111624] border border-slate-200/80 dark:border-[#222c42] flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-110 transition-transform">
+                      {getIcon(notif.type)}
                     </div>
 
-                    <p className="text-[11px] text-slate-600 dark:text-purple-200 mt-0.5 leading-snug line-clamp-2">
-                      {notif.message}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                          {notif.title}
+                        </h4>
+                        <span className="text-[9px] font-semibold text-slate-400 shrink-0 flex items-center gap-0.5">
+                          <Clock className="h-2.5 w-2.5" />
+                          {notif.time}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 leading-snug line-clamp-2">
+                        {notif.message}
+                      </p>
+                    </div>
+
+                    {!notif.read && (
+                      <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 shadow-sm shadow-blue-500/50 shrink-0 mt-1.5 animate-pulse" />
+                    )}
                   </div>
+                ))
+              )}
+            </div>
 
-                  {!notif.read && (
-                    <div className="w-2 h-2 rounded-full bg-pink-500 shrink-0 mt-1.5 animate-pulse" />
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

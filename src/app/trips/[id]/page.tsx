@@ -1512,71 +1512,79 @@ export default function TripDetailPage() {
           </div>
 
           {/* Row 2: The 4 Tabs (Trip.com Pill Selector) */}
-          <div className="grid grid-cols-4 gap-1 sm:gap-2 p-1 sm:p-1.5 bg-slate-100 dark:bg-[#111624] border border-slate-200/80 dark:border-[#222c42] rounded-2xl sm:rounded-3xl shadow-xs">
+          <div className="grid grid-cols-4 gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100/90 dark:bg-[#111624]/90 backdrop-blur-xl border border-slate-200/90 dark:border-[#222c42] rounded-2xl sm:rounded-3xl shadow-inner">
             <button
               type="button"
               onClick={() => handleSwitchTab('plan')}
-              className={`relative py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
                 activeTab === 'plan' 
                   ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#1c2438]/50'
               }`}
             >
               {activeTab === 'plan' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-blue-600 rounded-xl sm:rounded-2xl shadow-sm shadow-blue-500/30"
-                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 border border-white/25 ring-1 ring-black/5"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
               <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <span>🗺️</span>
+                <span className="text-sm">🗺️</span>
                 <span className="truncate">แผนเที่ยว</span>
-                <span className="text-[10px] opacity-85 hidden md:inline">({itinerary.length})</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden md:inline transition-colors ${
+                  activeTab === 'plan' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#1c2438] text-slate-500 dark:text-slate-400'
+                }`}>
+                  {itinerary.length}
+                </span>
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSwitchTab('expenses')}
-              className={`relative py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
                 activeTab === 'expenses' 
                   ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#1c2438]/50'
               }`}
             >
               {activeTab === 'expenses' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-blue-600 rounded-xl sm:rounded-2xl shadow-sm shadow-blue-500/30"
-                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 border border-white/25 ring-1 ring-black/5"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
               <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <span>💰</span>
+                <span className="text-sm">💰</span>
                 <span className="truncate">รายจ่าย</span>
-                <span className="text-[10px] opacity-85 hidden md:inline">({expenses.length})</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden md:inline transition-colors ${
+                  activeTab === 'expenses' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#1c2438] text-slate-500 dark:text-slate-400'
+                }`}>
+                  {expenses.length}
+                </span>
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSwitchTab('analytics')}
-              className={`relative py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
                 activeTab === 'analytics' 
                   ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#1c2438]/50'
               }`}
             >
               {activeTab === 'analytics' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-blue-600 rounded-xl sm:rounded-2xl shadow-sm shadow-blue-500/30"
-                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 border border-white/25 ring-1 ring-black/5"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
               <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <span>📊</span>
+                <span className="text-sm">📊</span>
                 <span className="truncate">สถิติ & งบ</span>
               </span>
             </button>
@@ -1584,23 +1592,27 @@ export default function TripDetailPage() {
             <button
               type="button"
               onClick={() => handleSwitchTab('members')}
-              className={`relative py-1.5 sm:py-2 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
+              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
                 activeTab === 'members' 
                   ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#1c2438]/50'
               }`}
             >
               {activeTab === 'members' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-blue-600 rounded-xl sm:rounded-2xl shadow-sm shadow-blue-500/30"
-                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 border border-white/25 ring-1 ring-black/5"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
               <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <span>👥</span>
+                <span className="text-sm">👥</span>
                 <span className="truncate">สมาชิก</span>
-                <span className="text-[10px] opacity-85 hidden md:inline">({members.length})</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden md:inline transition-colors ${
+                  activeTab === 'members' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#1c2438] text-slate-500 dark:text-slate-400'
+                }`}>
+                  {members.length}
+                </span>
               </span>
             </button>
           </div>

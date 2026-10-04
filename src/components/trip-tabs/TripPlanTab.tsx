@@ -360,7 +360,7 @@ export function TripPlanTab({
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={() => setShowPrintableModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-blue-400 transition-all cursor-pointer shadow-2xs"
+            className="btn-luxury-glass inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-2xs active:scale-95"
             title="พิมพ์ / เซฟเป็น PDF"
           >
             <FileText className="h-3.5 w-3.5 text-blue-500" />
@@ -368,7 +368,7 @@ export function TripPlanTab({
           </button>
 
           {canImportExcel && (
-            <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/80 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-bold hover:border-blue-400 cursor-pointer transition-all shadow-2xs">
+            <label className="btn-luxury-glass inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-blue-700 dark:text-blue-300 text-xs font-bold cursor-pointer transition-all shadow-2xs active:scale-95">
               <Upload className="h-3.5 w-3.5 text-blue-500" />
               <span className="hidden sm:inline">Import Excel</span>
               <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
@@ -377,7 +377,7 @@ export function TripPlanTab({
 
           <button
             onClick={exportToExcel}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 transition-all cursor-pointer shadow-2xs"
+            className="btn-luxury-glass inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs active:scale-95"
             title="ดาวน์โหลดไฟล์ Excel"
           >
             <Download className="h-3.5 w-3.5 text-emerald-500" />
@@ -387,7 +387,7 @@ export function TripPlanTab({
           {canEditPlan && (
             <button
               onClick={() => handleOpenAddActivity(null, selectedDayFilter !== 'all' ? selectedDayFilter : undefined)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="btn-luxury-primary inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>เพิ่มกิจกรรม</span>

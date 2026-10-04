@@ -48,17 +48,17 @@ function ExpenseCardComponent({
   return (
     <div 
       onClick={() => onSelectExpense?.(expense)}
-      className="p-3.5 sm:p-4 hover:bg-blue-50/40 dark:hover:bg-[#1c2438]/70 active:bg-blue-100/30 dark:active:bg-[#1c2438] transition-all duration-150 cursor-pointer group space-y-2.5"
+      className="p-4 sm:p-4.5 hover:bg-gradient-to-r hover:from-blue-50/60 hover:via-indigo-50/25 hover:to-white dark:hover:from-[#1c2438] dark:hover:to-[#151b2b] active:bg-blue-100/30 dark:active:bg-[#1c2438] transition-all duration-200 cursor-pointer group space-y-2.5 relative"
       title="คลิกเพื่อดูรายละเอียดและแก้ไข"
     >
       {/* Top Row: Icon + Title on Left, Total Amount + Actions on Right */}
       <div className="flex items-start justify-between gap-2.5">
-        <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
-          <div className="text-lg sm:text-xl p-2 sm:p-2.5 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs shrink-0 group-hover:scale-105 transition-transform mt-0.5">
+        <div className="flex items-start gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+          <div className="text-lg sm:text-xl p-2.5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-blue-600/15 border border-blue-200/80 dark:border-blue-800/60 shadow-xs shrink-0 group-hover:scale-105 group-hover:shadow-md group-hover:shadow-blue-500/15 transition-all mt-0.5">
             {catMeta.icon}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+            <div className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
               <span className="break-words line-clamp-2 sm:line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
                 {expense.title}
               </span>
@@ -69,7 +69,7 @@ function ExpenseCardComponent({
                     e.stopPropagation();
                     onOpenReceiptPreview(expense);
                   }}
-                  className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0 shadow-2xs"
+                  className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/70 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs"
                   title="ดูรูปใบเสร็จ"
                 >
                   <ImageIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> ใบเสร็จ
@@ -80,20 +80,20 @@ function ExpenseCardComponent({
         </div>
 
         {/* Right: Full Amount & Action Buttons */}
-        <div className="flex items-start gap-1 sm:gap-2 shrink-0 text-right">
-          <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white font-mono leading-tight">
-            <div>
+        <div className="flex items-start gap-1.5 sm:gap-2.5 shrink-0 text-right">
+          <div className="font-black text-slate-900 dark:text-white font-mono leading-tight">
+            <div className="text-base sm:text-lg tracking-tight">
               {Number(expense.amount).toLocaleString()}{' '}
-              <span className="text-xs text-slate-400 dark:text-slate-400 font-sans font-normal">
+              <span className="text-xs text-slate-400 dark:text-slate-400 font-sans font-bold">
                 {expense.currency}
               </span>
             </div>
             {expense.currency === 'THB' ? (
-              <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-sans font-normal">
+              <span className="text-[11px] text-slate-400 dark:text-slate-400 block font-sans font-normal mt-0.5">
                 {isSplit ? 'ยอดรวมบิล ' : ''}≈ ¥{Math.round(fxRate > 0 ? Number(expense.amount) / fxRate : 0).toLocaleString()}
               </span>
             ) : (
-              <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-sans font-normal">
+              <span className="text-[11px] text-slate-400 dark:text-slate-400 block font-sans font-normal mt-0.5">
                 {isSplit ? 'ยอดรวมบิล ' : ''}≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
               </span>
             )}
@@ -108,7 +108,7 @@ function ExpenseCardComponent({
                   if (onEditExpense) onEditExpense(expense);
                   else onSelectExpense?.(expense);
                 }}
-                className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 p-1 sm:p-1.5 transition-colors cursor-pointer hover:scale-110 active:scale-95"
+                className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 p-1 sm:p-1.5 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-all cursor-pointer hover:scale-110 active:scale-95"
                 title="แก้ไขรายการ"
               >
                 <Edit3 className="h-3.5 w-3.5" />
@@ -119,7 +119,7 @@ function ExpenseCardComponent({
                   e.stopPropagation();
                   onDeleteExpense(expense.id, expense.receipt_url);
                 }}
-                className="text-slate-400 hover:text-rose-600 p-1 sm:p-1.5 transition-colors cursor-pointer hover:scale-110 active:scale-95"
+                className="text-slate-400 hover:text-rose-600 p-1 sm:p-1.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-all cursor-pointer hover:scale-110 active:scale-95"
                 title="ลบรายการ"
               >
                 <Trash2 className="h-3.5 w-3.5" />
