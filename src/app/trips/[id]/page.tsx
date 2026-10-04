@@ -220,10 +220,14 @@ export default function TripDetailPage() {
   const fetchTripData = useCallback(async () => {
     if (!tripId) return;
     
+    let hasCachedTrip = false;
     try {
       const offlineCached = getOfflineTripCache();
       if (offlineCached?.data) {
-        if (offlineCached.data.trip) setTrip(offlineCached.data.trip);
+        if (offlineCached.data.trip) {
+          setTrip(offlineCached.data.trip);
+          hasCachedTrip = true;
+        }
         if (offlineCached.data.itinerary) setItinerary(offlineCached.data.itinerary);
         if (offlineCached.data.expenses) setExpenses(offlineCached.data.expenses);
       } else {
@@ -233,13 +237,16 @@ export default function TripDetailPage() {
           const found = list.find((t: any) => t.id === tripId);
           if (found) {
             setTrip(found);
+            hasCachedTrip = true;
             setScannedData((prev: any) => ({ ...prev, currency: found.currency || 'JPY' }));
           }
         }
       }
     } catch {}
 
-    setLoading(true);
+    if (!hasCachedTrip) {
+      setLoading(true);
+    }
     try {
       setFxRate(getCustomJpyToThbRate());
 
@@ -257,33 +264,37 @@ export default function TripDetailPage() {
         return;
       }
 
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setCurrentUser(session.user);
-          const { data: prof } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-          if (prof) setUserProfile(prof);
-        }
-      } catch (e) {
-        console.warn('Session profile fetch warn:', e);
-      }
-
-      // Parallelize all 4 database queries for 3-4x faster response!
+      // Parallelize auth session + all 4 database queries simultaneously for instant load!
       const [
+        sessionRes,
         { data: tripData },
         { data: planData },
         { data: expData },
         { data: memberData, error: memErr }
       ] = await Promise.all([
+        supabase.auth.getSession(),
         supabase.from('trips').select('*').eq('id', tripId).maybeSingle(),
         supabase.from('itinerary_items').select('*').eq('trip_id', tripId).order('sort_order', { ascending: true }),
         supabase.from('expenses').select('*').eq('trip_id', tripId).order('spent_at', { ascending: false }),
         supabase.from('trip_members').select('*, profiles(*)').eq('trip_id', tripId)
       ]);
+
+      const session = sessionRes.data?.session;
+      if (session?.user) {
+        setCurrentUser(session.user);
+        // Resolve profile instantly from memberData without extra roundtrip query
+        const matchedMember = memberData?.find((m: any) => m.user_id === session.user.id);
+        if (matchedMember?.profiles) {
+          setUserProfile(matchedMember.profiles);
+        } else {
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle()
+            .then(({ data: prof }) => { if (prof) setUserProfile(prof); });
+        }
+      }
 
       if (tripData) {
         setTrip(tripData);

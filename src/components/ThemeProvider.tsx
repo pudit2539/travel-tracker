@@ -24,7 +24,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
     return 'system';
   });
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark') return 'dark';
+      if (saved === 'light') return 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
+  });
 
   useEffect(() => {
     const root = document.documentElement;

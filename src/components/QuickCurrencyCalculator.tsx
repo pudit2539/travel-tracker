@@ -82,8 +82,9 @@ export default function QuickCurrencyCalculator({
     if (!isNaN(entered) && entered > 0) {
       // If entered > 1 (e.g. 21.0), user meant per 100 JPY -> divide by 100
       const newRate = entered > 1 ? entered / 100 : entered;
-      setFxRate(newRate);
-      setCustomJpyToThbRate(newRate);
+      const rounded = parseFloat(newRate.toFixed(3));
+      setFxRate(rounded);
+      setCustomJpyToThbRate(rounded);
     }
     setEditingRate(false);
   };
@@ -96,7 +97,7 @@ export default function QuickCurrencyCalculator({
       onApplyExpense(
         appliedAmount,
         appliedCurrency,
-        `แปลงเงิน ${appliedAmount.toLocaleString()} ${appliedCurrency} (≈ ฿${thbEquiv.toFixed(2)})`
+        `แปลงเงิน ${appliedAmount.toLocaleString()} ${appliedCurrency} (≈ ฿${thbEquiv.toFixed(3)})`
       );
       onClose();
     }
@@ -121,12 +122,12 @@ export default function QuickCurrencyCalculator({
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>เครื่องคิดเลขแปลงเงินด่วน</span>
-                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/70 px-2 py-0.5 rounded-full">
-                  Real-time
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/70 px-2 py-0.5 rounded-full font-mono">
+                  3 Digits
                 </span>
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                แปลงสกุลเงินต่างประเทศ ⇄ บาทไทย ทันใจ
+                แปลงสกุลเงินต่างประเทศ ⇄ บาทไทย ทศนิยม 3 หลักแม่นยำ
               </p>
             </div>
           </div>
@@ -171,14 +172,14 @@ export default function QuickCurrencyCalculator({
               <div className="flex items-center gap-1">
                 <input
                   type="number"
-                  step="0.01"
-                  className="w-16 p-1 text-xs rounded border border-blue-500 bg-white dark:bg-[#151b2b] font-black text-center"
+                  step="0.001"
+                  className="w-20 p-1 text-xs rounded border border-blue-500 bg-white dark:bg-[#151b2b] font-black text-center font-mono"
                   value={tempRate}
                   onChange={(e) => setTempRate(e.target.value)}
                 />
                 <button
                   onClick={handleSaveRate}
-                  className="p-1 bg-blue-600 text-white rounded text-[10px] font-bold cursor-pointer"
+                  className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-bold cursor-pointer"
                 >
                   บันทึก
                 </button>
@@ -186,13 +187,13 @@ export default function QuickCurrencyCalculator({
             ) : foreignCurrency === 'JPY' ? (
               <button
                 onClick={() => setEditingRate(true)}
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer font-black"
-                title="คลิกเพื่อแก้ไขเรทแลกเปลี่ยน"
+                className="underline hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer font-black font-mono"
+                title="คลิกเพื่อแก้ไขเรทแลกเปลี่ยน (ทศนิยม 3 ตำแหน่ง)"
               >
                 {formatExchangeRateDisplay('JPY', fxRate)} ✏️
               </button>
             ) : (
-              <span className="font-black">
+              <span className="font-black font-mono">
                 {formatExchangeRateDisplay(foreignCurrency, fxRate)}
               </span>
             )}
@@ -323,13 +324,13 @@ export default function QuickCurrencyCalculator({
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
             {direction === 'foreign_to_thb' ? 'คิดเป็นเงินไทยประมาณ' : `คิดเป็นเงิน${activeMeta.name}ประมาณ`}
           </span>
-          <div className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400">
+          <div className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
             {direction === 'foreign_to_thb' ? '฿' : activeMeta.symbol}
-            {convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
           </div>
           {isTaxFree && foreignCurrency === 'JPY' && (
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">
-              ✨ ประหยัดภาษีไปได้ {(numInput - adjustedInput).toLocaleString()} JPY (≈ ฿{((numInput - adjustedInput) * fxRate).toFixed(2)})
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block font-mono">
+              ✨ ประหยัดภาษีไปได้ {(numInput - adjustedInput).toLocaleString()} JPY (≈ ฿{((numInput - adjustedInput) * fxRate).toFixed(3)})
             </span>
           )}
         </div>

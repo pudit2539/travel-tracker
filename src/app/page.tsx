@@ -28,9 +28,33 @@ export default function HomePage() {
   const { theme, setTheme } = useTheme();
   
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [trips, setTrips] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const p = localStorage.getItem('travel_tracker_cached_profile');
+        if (p) return JSON.parse(p);
+      } catch {}
+    }
+    return null;
+  });
+  const [trips, setTrips] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('travel_tracker_home_trips_cache');
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('travel_tracker_home_trips_cache');
+        if (cached && JSON.parse(cached).length > 0) return false;
+      } catch {}
+    }
+    return true;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [fxRate, setFxRate] = useState<number>(0.235);
@@ -59,21 +83,11 @@ export default function HomePage() {
 
   useEffect(() => {
     setFxRate(getCustomJpyToThbRate());
-    
-    // Load local cache immediately to prevent blank/hanging state
-    try {
-      const cached = localStorage.getItem('travel_tracker_home_trips_cache');
-      if (cached) {
-        setTrips(JSON.parse(cached));
-      }
-    } catch {}
-
     checkUserAndFetchTrips();
   }, []);
 
   const checkUserAndFetchTrips = async () => {
     try {
-      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push('/login');
@@ -81,28 +95,30 @@ export default function HomePage() {
       }
       setUser(session.user);
 
-      // 1. ดึงโปรไฟล์ผู้ใช้อย่างปลอดภัย
-      try {
-        const { data: prof } = await supabase
+      // Parallelize profile & trips queries for 2x faster load!
+      const [profRes, tripsRes] = await Promise.allSettled([
+        supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .maybeSingle();
-        if (prof) setProfile(prof);
-      } catch (e) {
-        console.warn('Profile fetch warning', e);
+          .maybeSingle(),
+        supabase
+          .from('trips')
+          .select('*')
+          .order('created_at', { ascending: false })
+      ]);
+
+      if (profRes.status === 'fulfilled' && profRes.value.data) {
+        setProfile(profRes.value.data);
+        try {
+          localStorage.setItem('travel_tracker_cached_profile', JSON.stringify(profRes.value.data));
+        } catch {}
       }
 
-      // 2. ดึงทริปทั้งหมด
-      const { data, error } = await supabase
-        .from('trips')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (data) {
-        setTrips(data);
+      if (tripsRes.status === 'fulfilled' && tripsRes.value.data) {
+        setTrips(tripsRes.value.data);
         try {
-          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(data));
+          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(tripsRes.value.data));
         } catch {}
       }
     } catch (err) {
@@ -603,7 +619,7 @@ export default function HomePage() {
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Live FX Radar</span>
                 </div>
-                <span className="text-[10px] text-slate-400 font-mono font-medium">1 JPY = {fxRate} THB</span>
+                <span className="text-[10px] text-slate-400 font-mono font-medium">1 JPY = {Number(fxRate).toFixed(3)} THB</span>
               </div>
 
               <h3 className="font-black text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
@@ -611,7 +627,7 @@ export default function HomePage() {
                 <span>คำนวณแปลงเงินด่วน</span>
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                แตะเลือกสกุลเงินและพิมพ์ยอดเพื่อแปลงเป็นเงินบาททันที
+                แตะเลือกสกุลเงินและพิมพ์ยอดเพื่อแปลงเป็นเงินบาททันที (ทศนิยม 3 หลัก)
               </p>
 
               {/* Currency Selector Pills */}
@@ -651,7 +667,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-[#222c42]">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">เทียบเท่าเงินบาท:</span>
                   <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-base">
-                    ≈ ฿{Math.round((Number(quickCalcAmount) || 0) * (quickRates[quickCalcCurr]?.rate || 1)).toLocaleString()} THB
+                    ≈ ฿{((Number(quickCalcAmount) || 0) * (quickRates[quickCalcCurr]?.rate || 1)).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} THB
                   </span>
                 </div>
               </div>

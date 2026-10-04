@@ -106,8 +106,17 @@ function LoginForm() {
 
         if (session?.user) {
           await autoJoinTripIfInvited(session.user.id);
+          try {
+            const userMeta = session.user.user_metadata;
+            if (userMeta) {
+              localStorage.setItem('travel_tracker_cached_profile', JSON.stringify({
+                id: session.user.id,
+                display_name: userMeta.display_name || session.user.email?.split('@')[0],
+                avatar_id: userMeta.avatar_id || 'cat_pink'
+              }));
+            }
+          } catch {}
           router.push(returnUrl);
-          router.refresh();
         }
       } else {
         // เข้าสู่ระบบ
@@ -127,10 +136,19 @@ function LoginForm() {
 
         if (data.session?.user) {
           await autoJoinTripIfInvited(data.session.user.id);
+          try {
+            const userMeta = data.session.user.user_metadata;
+            if (userMeta) {
+              localStorage.setItem('travel_tracker_cached_profile', JSON.stringify({
+                id: data.session.user.id,
+                display_name: userMeta.display_name || data.session.user.email?.split('@')[0],
+                avatar_id: userMeta.avatar_id || 'cat_pink'
+              }));
+            }
+          } catch {}
         }
 
         router.push(returnUrl);
-        router.refresh();
       }
     } catch (err: any) {
       if (err.message === 'ALREADY_REGISTERED') {
