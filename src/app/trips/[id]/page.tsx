@@ -39,7 +39,7 @@ import {
 import { compressReceiptImage } from '@/lib/imageCompressor';
 import ItemizedReceiptSplitter, { ItemizedDish } from '@/components/ItemizedReceiptSplitter';
 import { parseTransitInfo, formatTransitInfo } from '@/lib/transitGuide';
-import { getTripExpenseSplits } from '@/lib/expenseSplits';
+import { getTripExpenseSplits, setExpenseSplitMembers } from '@/lib/expenseSplits';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
@@ -146,6 +146,7 @@ export default function TripDetailPage() {
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('');
   const [hasSavedGeminiKey, setHasSavedGeminiKey] = useState(false);
   const [splitAsSeparateExpenses, setSplitAsSeparateExpenses] = useState(false);
+  const [scanSplitWith, setScanSplitWith] = useState<string[]>([]);
   const [selectedExpenseForDetail, setSelectedExpenseForDetail] = useState<any | null>(null);
   const [startInExpenseEditMode, setStartInExpenseEditMode] = useState<boolean>(false);
 
@@ -838,7 +839,7 @@ export default function TripDetailPage() {
         }
       } else {
         // บันทึกเป็นบิลรวม 1 รายการ
-        const { error } = await supabase.from('expenses').insert([
+        const { data: insertedExp, error } = await supabase.from('expenses').insert([
           {
             trip_id: tripId,
             title: finalTitle,
@@ -851,14 +852,21 @@ export default function TripDetailPage() {
             payer_name: payerName,
             payer_avatar: payerAvatar,
           },
-        ]);
+        ]).select('id').single();
         if (error) throw error;
+
+        // บันทึกการเลือกหารค่าใช้จ่าย (Split) ทันที
+        if (insertedExp?.id) {
+          const finalSplit = scanSplitWith.length > 0 ? scanSplitWith : allMembersForSplit.map((m) => m.id);
+          setExpenseSplitMembers(tripId, insertedExp.id, finalSplit);
+        }
       }
 
       triggerConfetti();
       setShowScanModal(false);
       setOcrSuccessToast(null);
       setSplitAsSeparateExpenses(false);
+      setScanSplitWith([]);
       setScannedData({
         title: '',
         amount: '',
@@ -1303,6 +1311,13 @@ export default function TripDetailPage() {
 
     return list;
   }, [currentUser, userDisplayName, userProfile, otherPayers]);
+
+  // เมื่อเปิด modal สแกน/บันทึกรายจ่าย ให้กำหนดคนหารเป็นทุกคนเป็นค่าเริ่มต้นถ้ายังไม่ได้เลือก
+  useEffect(() => {
+    if (showScanModal && allMembersForSplit.length > 0) {
+      setScanSplitWith((prev) => (prev.length === 0 ? allMembersForSplit.map((m) => m.id) : prev));
+    }
+  }, [showScanModal, allMembersForSplit]);
 
   // สรุปยอดจ่ายแยกตามรายคน (ตัดชื่อซ้ำ)
   const distinctPayers = useMemo(() => {
@@ -2250,7 +2265,13 @@ export default function TripDetailPage() {
                   <select
                     className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
                     value={scannedData.payer_id || 'me'}
-                    onChange={(e) => setScannedData({ ...scannedData, payer_id: e.target.value })}
+                    onChange={(e) => {
+                      const newPayer = e.target.value;
+                      setScannedData({ ...scannedData, payer_id: newPayer });
+                      if (scanSplitWith.length === 1) {
+                        setScanSplitWith([newPayer]);
+                      }
+                    }}
                   >
                     {allMembersForSplit.map((m) => (
                       <option key={m.id} value={m.id}>
@@ -2261,51 +2282,136 @@ export default function TripDetailPage() {
                 </div>
               </div>
 
-              {/* 3. Itemized Split Section (แยกรายชิ้น / เลือกคนหาร) */}
-              <div className="space-y-3 pt-1">
+              {/* 3. Split Configuration (เลือกหาร / จ่ายคนเดียว) */}
+              <div className="space-y-2.5 pt-1">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Utensils className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                      แยกรายการสินค้า / สมาชิกที่ร่วมหาร
-                    </h3>
-                    {scannedData.items && scannedData.items.length > 0 && (
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-600 text-white">
-                        {scannedData.items.length} รายการ
-                      </span>
-                    )}
-                  </div>
-
-                  {(!scannedData.items || scannedData.items.length === 0) && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const defaultItem: ItemizedDish = {
-                          id: `item_${Date.now()}`,
-                          name: scannedData.title || 'รายการที่ 1',
-                          amount: Number(scannedData.amount) || 0,
-                          qty: 1,
-                          assignedMemberIds: allMembersForSplit.map((m) => m.id),
-                        };
-                        setScannedData((prev: any) => ({
-                          ...prev,
-                          items: [defaultItem],
-                        }));
-                        setSplitAsSeparateExpenses(true);
-                      }}
-                      className="text-xs font-black text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1 cursor-pointer active:scale-95"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span>+ เพิ่มรายการแยกคนหาร</span>
-                    </button>
-                  )}
+                  <label className="block text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span>การหารค่าใช้จ่าย (Split)</span>
+                  </label>
+                  <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-200/70 dark:border-blue-900/50">
+                    {scanSplitWith.length === allMembersForSplit.length
+                      ? `หารทุกคน (${allMembersForSplit.length} คน)`
+                      : scanSplitWith.length === 1
+                      ? 'จ่ายคนเดียว'
+                      : `หาร ${scanSplitWith.length} คน`}
+                  </span>
                 </div>
 
-                {/* If items exist */}
-                {scannedData.items && scannedData.items.length > 0 ? (
-                  <div className="space-y-3">
+                {/* Quick Preset Buttons: หารทุกคน vs จ่ายคนเดียว */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScanSplitWith(allMembersForSplit.map((m) => m.id));
+                      setSplitAsSeparateExpenses(false);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                      scanSplitWith.length === allMembersForSplit.length && !splitAsSeparateExpenses
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:border-blue-300'
+                    }`}
+                  >
+                    <span>👥 หารทุกคน ({allMembersForSplit.length} คน)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentPayer = scannedData.payer_id || allMembersForSplit[0]?.id || 'me';
+                      setScanSplitWith([currentPayer]);
+                      setSplitAsSeparateExpenses(false);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                      scanSplitWith.length === 1 && !splitAsSeparateExpenses
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:border-amber-300'
+                    }`}
+                  >
+                    <span>👤 จ่ายคนเดียว (ไม่หาร)</span>
+                  </button>
+                </div>
+
+                {/* Member Toggle Chips */}
+                <div className="p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438]/50 space-y-2.5">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
+                    แตะเลือกสมาชิกที่ร่วมหาร:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {allMembersForSplit.map((m) => {
+                      const isSelected = scanSplitWith.includes(m.id);
+                      const cat = getCatAvatar(m.avatar);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            setSplitAsSeparateExpenses(false);
+                            if (isSelected) {
+                              if (scanSplitWith.length > 1) {
+                                setScanSplitWith(scanSplitWith.filter((id) => id !== m.id));
+                              }
+                            } else {
+                              setScanSplitWith([...scanSplitWith, m.id]);
+                            }
+                          }}
+                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            isSelected
+                              ? 'bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 shadow-2xs'
+                              : 'bg-white dark:bg-[#151b2b] text-slate-400 dark:text-slate-500 border-slate-200 dark:border-[#222c42] opacity-60 hover:opacity-90'
+                          }`}
+                        >
+                          <div
+                            className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] transition-colors ${
+                              isSelected ? 'bg-blue-600 text-white' : 'border border-slate-300 dark:border-slate-600'
+                            }`}
+                          >
+                            {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                          </div>
+                          <CatAvatarBadge cat={cat} size="xs" />
+                          <span>{m.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Live split calculation preview */}
+                  <div className="pt-2 border-t border-slate-200/70 dark:border-[#222c42] flex items-center justify-between text-xs">
+                    <span className="text-slate-600 dark:text-slate-300 font-medium">
+                      {scanSplitWith.length === 1 ? 'ยอดที่ต้องจ่ายคนเดียว:' : `ยอดหารเฉลี่ย (${scanSplitWith.length} คน):`}
+                    </span>
+                    <div className="text-right">
+                      <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm">
+                        {scanSplitWith.length === 1 ? '' : 'คนละ ≈ '}
+                        {Math.round(Number(scannedData.amount || 0) / Math.max(1, scanSplitWith.length)).toLocaleString()}{' '}
+                        {scannedData.currency || 'THB'}
+                      </span>
+                      {scannedData.currency !== 'THB' && (
+                        <span className="text-[10px] text-slate-400 block font-mono">
+                          (≈ ฿{Math.round(convertToThb(Number(scannedData.amount || 0) / Math.max(1, scanSplitWith.length), scannedData.currency || 'THB', fxRate)).toLocaleString()})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optional Collapsible: แยกตามจาน/เมนูอาหาร (ตัวเลือกขั้นสูง) */}
+                <details className="rounded-2xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] p-3 text-xs group">
+                  <summary className="font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between cursor-pointer list-none select-none">
+                    <span className="flex items-center gap-1.5">
+                      <Utensils className="h-3.5 w-3.5 text-blue-500" />
+                      <span>🍽️ แยกตามจาน / เมนูอาหาร (ตัวเลือกขั้นสูง)</span>
+                      {scannedData.items && scannedData.items.length > 0 && (
+                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-blue-600 text-white">
+                          {scannedData.items.length} รายการ
+                        </span>
+                      )}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-slate-400 group-open:rotate-180 transition-transform" />
+                  </summary>
+
+                  <div className="mt-3 space-y-3 pt-2 border-t border-slate-100 dark:border-[#222c42]">
                     <ItemizedReceiptSplitter
-                      items={scannedData.items}
+                      items={scannedData.items || []}
                       onChangeItems={(newItems) => {
                         setScannedData((prev: any) => {
                           const newSum = newItems.reduce((sum, it) => sum + Number(it.amount || 0), 0);
@@ -2322,8 +2428,7 @@ export default function TripDetailPage() {
                       onUpdateTotalAmount={(newTotal) => setScannedData((prev: any) => ({ ...prev, amount: String(newTotal) }))}
                     />
 
-                    {/* Separate Expenses Checkbox Toggle */}
-                    <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-blue-50/20 dark:bg-[#1c2438] border border-blue-100 dark:border-[#222c42] cursor-pointer hover:border-blue-400 transition-all shadow-2xs">
+                    <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-blue-50/30 dark:bg-[#1c2438] border border-blue-100 dark:border-[#222c42] cursor-pointer">
                       <input
                         type="checkbox"
                         checked={splitAsSeparateExpenses}
@@ -2331,38 +2436,16 @@ export default function TripDetailPage() {
                         className="w-4 h-4 mt-0.5 rounded text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
                       />
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs font-black text-slate-900 dark:text-white block">
-                          แยกบันทึกเป็นรายการของแต่ละคนอัตโนมัติ 🪄
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                          แยกบันทึกเป็นบิลของแต่ละคนอัตโนมัติ 🪄
                         </span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-300 block font-medium mt-0.5">
-                          ระบบจะสร้างรายการค่าใช้จ่ายแยกชื่อตามยอดที่แต่ละคนกิน/ใช้จริง เพื่อให้เห็นสถิติชัดเจนในกราฟ
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                          ระบบจะสร้างรายการค่าใช้จ่ายแยกชื่อตามยอดที่แต่ละคนกินจริง เพื่อให้เห็นสถิติแยกคน
                         </span>
                       </div>
                     </label>
                   </div>
-                ) : (
-                  <div className="p-3.5 rounded-2xl border border-dashed border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438]/40 text-center space-y-1">
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                      💡 บิลนี้จะบันทึกเป็นยอดรวมก้อนเดียว ({scannedData.amount || '0'} {scannedData.currency || 'THB'})
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      หรือกด <button type="button" onClick={() => {
-                        const defaultItem: ItemizedDish = {
-                          id: `item_${Date.now()}`,
-                          name: scannedData.title || 'รายการที่ 1',
-                          amount: Number(scannedData.amount) || 0,
-                          qty: 1,
-                          assignedMemberIds: allMembersForSplit.map((m) => m.id),
-                        };
-                        setScannedData((prev: any) => ({
-                          ...prev,
-                          items: [defaultItem],
-                        }));
-                        setSplitAsSeparateExpenses(true);
-                      }} className="text-blue-600 dark:text-blue-400 font-bold underline cursor-pointer">+ เพิ่มรายการย่อย</button> เพื่อเลือกว่าเมนูไหนใครกินบ้าง
-                    </p>
-                  </div>
-                )}
+                </details>
               </div>
             </div>
 
@@ -2385,11 +2468,18 @@ export default function TripDetailPage() {
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" /> กำลังบันทึก...
                   </>
+                ) : splitAsSeparateExpenses && scannedData.items?.length > 0 ? (
+                  'แยกบันทึกรายคน ✨'
+                ) : scanSplitWith.length === 1 ? (
+                  '✓ บันทึกรายการ (จ่ายคนเดียว)'
+                ) : scanSplitWith.length === allMembersForSplit.length ? (
+                  `✓ บันทึกรายการ (หารทุกคน ${scanSplitWith.length} คน)`
                 ) : (
-                  splitAsSeparateExpenses && scannedData.items?.length > 0 ? 'แยกบันทึกรายคน ✨' : 'บันทึกรายการ'
+                  `✓ บันทึกรายการ (หาร ${scanSplitWith.length} คน)`
                 )}
               </button>
             </div>
+
           </div>
         </div>
       )}
