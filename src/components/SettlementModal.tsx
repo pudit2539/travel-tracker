@@ -114,8 +114,10 @@ export default function SettlementModal({
       msg += `✨ สมาชิกทุกคนจ่ายเท่ากันเรียบร้อยแล้ว ไม่มียอดค้างโอน!\n`;
     } else {
       settlement.transfers.forEach((t, i) => {
-        const thbText = currency !== 'THB' ? ` (≈ ฿${t.amountTHB.toLocaleString()})` : '';
-        msg += `${i + 1}. ${t.from} ➔ โอนให้ ${t.to}: ${t.amount.toLocaleString()} ${currency}${thbText}\n`;
+        const altText = currency === 'THB'
+          ? ` (≈ ¥${Math.round(fxRate > 0 ? t.amount / fxRate : 0).toLocaleString()} JPY)`
+          : ` (≈ ฿${t.amountTHB.toLocaleString()})`;
+        msg += `${i + 1}. ${t.from} ➔ โอนให้ ${t.to}: ${t.amount.toLocaleString()} ${currency}${altText}\n`;
       });
     }
 
@@ -165,6 +167,15 @@ export default function SettlementModal({
               <span className="text-base font-black text-slate-900 dark:text-white">
                 {settlement.totalSpent.toLocaleString()} {currency}
               </span>
+              {currency === 'THB' ? (
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
+                  ≈ ¥{Math.round(fxRate > 0 ? settlement.totalSpent / fxRate : 0).toLocaleString()} JPY
+                </span>
+              ) : (
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
+                  ≈ ฿{Math.round(settlement.totalSpent * fxRate).toLocaleString()} THB
+                </span>
+              )}
             </div>
             <div>
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">สมาชิก</span>
@@ -177,6 +188,15 @@ export default function SettlementModal({
               <span className="text-base font-black text-blue-600 dark:text-blue-400">
                 {Math.round(settlement.averagePerPerson).toLocaleString()} {currency}
               </span>
+              {currency === 'THB' ? (
+                <span className="text-[10px] text-blue-500/80 dark:text-blue-400/80 block font-mono">
+                  ≈ ¥{Math.round(fxRate > 0 ? settlement.averagePerPerson / fxRate : 0).toLocaleString()} JPY
+                </span>
+              ) : (
+                <span className="text-[10px] text-blue-500/80 dark:text-blue-400/80 block font-mono">
+                  ≈ ฿{Math.round(settlement.averagePerPerson * fxRate).toLocaleString()} THB
+                </span>
+              )}
             </div>
           </div>
 
@@ -279,8 +299,12 @@ export default function SettlementModal({
                         <div className="text-xs font-black text-slate-900 dark:text-white">
                           {t.amount.toLocaleString()} {currency}
                         </div>
-                        {currency !== 'THB' && (
-                          <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 block">
+                        {currency === 'THB' ? (
+                          <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 block font-mono">
+                            ≈ ¥{Math.round(fxRate > 0 ? t.amount / fxRate : 0).toLocaleString()} JPY
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 block font-mono">
                             ≈ ฿{t.amountTHB.toLocaleString()}
                           </span>
                         )}

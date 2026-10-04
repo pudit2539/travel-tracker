@@ -1111,8 +1111,36 @@ export default function TripDetailPage() {
 
   const targetBudget = Number(trip?.total_budget ?? trip?.budget ?? 0);
 
+  // สมาชิกคนอื่นๆ (กรองตัวฉันเองออกอย่างเข้มงวด และตัดชื่อซ้ำ)
+  const otherMembers = useMemo(() => {
+    const myId = currentUser?.id?.toLowerCase();
+    const myName = userDisplayName?.trim().toLowerCase();
+    const myEmail = currentUser?.email?.trim().toLowerCase();
+    const seen = new Set<string>();
+
+    return members.filter((m) => {
+      const mUserId = m.user_id?.toLowerCase();
+      const mName = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || '').trim().toLowerCase();
+      const mEmail = m.profiles?.email?.trim().toLowerCase();
+
+      const isMe = (myId && mUserId === myId) ||
+                   (myName && mName === myName) ||
+                   (myEmail && mEmail === myEmail);
+      if (isMe) return false;
+
+      const uniqueKey = mUserId || mName || m.id;
+      if (seen.has(uniqueKey)) return false;
+      seen.add(uniqueKey);
+
+      return true;
+    });
+  }, [members, currentUser, userDisplayName]);
+
   // ข้อมูล Hero Budget Display
   const heroDisplayData = useMemo(() => {
+    // จำนวนสมาชิกทั้งหมดในทริป (ตัวฉัน + สมาชิกคนอื่นๆ) ป้องกันปัญหาหารซ้ำ
+    const totalMembersCount = Math.max(1, 1 + otherMembers.length);
+
     if (heroBudgetView === 'all') {
       const progress = targetBudget > 0 ? Math.min(Math.round((totalSpent / targetBudget) * 100), 100) : 0;
       const remaining = targetBudget > totalSpent ? targetBudget - totalSpent : 0;
@@ -1132,7 +1160,6 @@ export default function TripDetailPage() {
       };
     } else if (heroBudgetView === 'me') {
       const splitsMap = getTripExpenseSplits(tripId);
-      const totalMembersCount = Math.max(1, members.length + 1);
       const myId = currentUser?.id?.toLowerCase();
       const myName = userDisplayName?.trim().toLowerCase();
 
@@ -1153,7 +1180,7 @@ export default function TripDetailPage() {
       }, 0);
 
       const roundedMySpent = Math.round(mySpent);
-      const myBudget = memberBudgets['me'] || (targetBudget > 0 && members.length > 0 ? Math.round(targetBudget / (members.length + 1)) : 0);
+      const myBudget = memberBudgets['me'] || (targetBudget > 0 && totalMembersCount > 0 ? Math.round(targetBudget / totalMembersCount) : 0);
       const progress = myBudget > 0 ? Math.min(Math.round((roundedMySpent / myBudget) * 100), 100) : 0;
       const remaining = myBudget > roundedMySpent ? myBudget - roundedMySpent : 0;
       const isOver = myBudget > 0 && roundedMySpent > myBudget;
@@ -1172,7 +1199,6 @@ export default function TripDetailPage() {
       };
     } else {
       const splitsMap = getTripExpenseSplits(tripId);
-      const totalMembersCount = Math.max(1, members.length + 1);
       const targetMember = members.find((m) => m.user_id === heroBudgetView || m.id === heroBudgetView);
       const mName = targetMember?.profiles?.display_name || targetMember?.profiles?.email?.split('@')[0] || 'สมาชิก';
       const targetUserId = (targetMember?.user_id || '').toLowerCase();
@@ -1214,32 +1240,7 @@ export default function TripDetailPage() {
         viewName: mName,
       };
     }
-  }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members, tripBaseCurrency, fxRate, tripId]);
-
-  // สมาชิกคนอื่นๆ (กรองตัวฉันเองออกอย่างเข้มงวด และตัดชื่อซ้ำ)
-  const otherMembers = useMemo(() => {
-    const myId = currentUser?.id?.toLowerCase();
-    const myName = userDisplayName?.trim().toLowerCase();
-    const myEmail = currentUser?.email?.trim().toLowerCase();
-    const seen = new Set<string>();
-
-    return members.filter((m) => {
-      const mUserId = m.user_id?.toLowerCase();
-      const mName = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || '').trim().toLowerCase();
-      const mEmail = m.profiles?.email?.trim().toLowerCase();
-
-      const isMe = (myId && mUserId === myId) ||
-                   (myName && mName === myName) ||
-                   (myEmail && mEmail === myEmail);
-      if (isMe) return false;
-
-      const uniqueKey = mUserId || mName || m.id;
-      if (seen.has(uniqueKey)) return false;
-      seen.add(uniqueKey);
-
-      return true;
-    });
-  }, [members, currentUser, userDisplayName]);
+  }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members, otherMembers, tripBaseCurrency, fxRate, tripId]);
 
   // รายชื่อผู้จ่ายคนอื่นๆ ทั้งหมด (สำหรับแท็บตัวกรองรายจ่าย กรองตัวฉันเองออกอย่างสมบูรณ์)
   const otherPayers = useMemo(() => {

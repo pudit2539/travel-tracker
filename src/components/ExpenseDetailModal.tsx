@@ -535,7 +535,11 @@ export function ExpenseDetailModal({
                         คนละ ≈ {Math.round((Number(form.amount || 0) / Math.max(1, splitWith.length))).toLocaleString()}{' '}
                         {form.currency}
                       </span>
-                      {form.currency !== 'THB' && (
+                      {form.currency === 'THB' ? (
+                        <span className="text-[10px] text-slate-400 block font-mono">
+                          (≈ ¥{Math.round(fxRate > 0 ? (Number(form.amount || 0) / Math.max(1, splitWith.length)) / fxRate : 0).toLocaleString()} JPY)
+                        </span>
+                      ) : (
                         <span className="text-[10px] text-slate-400 block font-mono">
                           (≈ ฿{Math.round(convertToThb(Number(form.amount || 0) / Math.max(1, splitWith.length), form.currency, fxRate)).toLocaleString()})
                         </span>
@@ -612,11 +616,18 @@ export function ExpenseDetailModal({
                     </div>
                   </div>
 
-                  {(expense.currency || 'JPY') !== 'THB' && (
+                  {(expense.currency || 'JPY') !== 'THB' ? (
                     <div className="text-right">
                       <span className="text-[11px] font-bold text-blue-100 block mb-0.5">เทียบเท่าเงินบาท</span>
                       <span className="text-lg sm:text-xl font-black text-amber-300 font-mono">
                         ≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-right">
+                      <span className="text-[11px] font-bold text-blue-100 block mb-0.5">เทียบเท่าเงินเยน</span>
+                      <span className="text-lg sm:text-xl font-black text-amber-300 font-mono">
+                        ≈ ¥{Math.round(fxRate > 0 ? Number(expense.amount) / fxRate : 0).toLocaleString()}
                       </span>
                     </div>
                   )}
@@ -738,9 +749,13 @@ export function ExpenseDetailModal({
                     <span className="font-mono font-black text-blue-600 dark:text-blue-400">
                       คนละ ≈ {Math.round(Number(expense.amount || 0) / Math.max(1, splitWith.length)).toLocaleString()} {expense.currency}
                     </span>
-                    {(expense.currency || 'JPY') !== 'THB' && (
+                    {(expense.currency || 'JPY') !== 'THB' ? (
                       <span className="text-[10px] text-slate-400 block font-mono">
                         (≈ ฿{Math.round(convertToThb(Number(expense.amount || 0) / Math.max(1, splitWith.length), expense.currency || 'JPY', fxRate)).toLocaleString()})
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 block font-mono">
+                        (≈ ¥{Math.round(fxRate > 0 ? (Number(expense.amount || 0) / Math.max(1, splitWith.length)) / fxRate : 0).toLocaleString()} JPY)
                       </span>
                     )}
                   </div>

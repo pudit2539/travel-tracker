@@ -88,7 +88,11 @@ function ExpenseCardComponent({
                 {expense.currency}
               </span>
             </div>
-            {(expense.currency || 'JPY') !== 'THB' && (
+            {expense.currency === 'THB' ? (
+              <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-sans font-normal">
+                {isSplit ? 'ยอดรวมบิล ' : ''}≈ ¥{Math.round(fxRate > 0 ? Number(expense.amount) / fxRate : 0).toLocaleString()}
+              </span>
+            ) : (
               <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-sans font-normal">
                 {isSplit ? 'ยอดรวมบิล ' : ''}≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
               </span>
@@ -174,7 +178,11 @@ function ExpenseCardComponent({
           <div className="shrink-0 text-right ml-auto">
             <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 font-mono shadow-2xs">
               คนละ ≈ {perPersonAmount.toLocaleString()} {expense.currency}
-              {(expense.currency || 'JPY') !== 'THB' && (
+              {expense.currency === 'THB' ? (
+                <span className="font-normal text-[10px] opacity-90 font-sans">
+                  (¥{Math.round(fxRate > 0 ? perPersonAmount / fxRate : 0).toLocaleString()})
+                </span>
+              ) : (
                 <span className="font-normal text-[10px] opacity-90 font-sans">
                   (฿{Math.round(convertToThb(perPersonAmount, expense.currency || 'JPY', fxRate)).toLocaleString()})
                 </span>

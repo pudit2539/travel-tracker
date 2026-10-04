@@ -253,7 +253,10 @@ export function TripExpensesTab({
         <div className="relative z-10 flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
           <button
             type="button"
-            onClick={() => setHeroBudgetView('all')}
+            onClick={() => {
+              setHeroBudgetView('all');
+              setExpensePayerFilter('all');
+            }}
             className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
               heroBudgetView === 'all'
                 ? 'bg-blue-600 text-white shadow-xs scale-102'
@@ -266,7 +269,10 @@ export function TripExpensesTab({
 
           <button
             type="button"
-            onClick={() => setHeroBudgetView('me')}
+            onClick={() => {
+              setHeroBudgetView('me');
+              setExpensePayerFilter('me');
+            }}
             className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
               heroBudgetView === 'me'
                 ? 'bg-blue-600 text-white shadow-xs scale-102'
@@ -280,13 +286,17 @@ export function TripExpensesTab({
           {otherMembers.map((m) => {
             const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'เพื่อน';
             const mCat = getCatAvatar(m.profiles?.avatar_id);
+            const mKey = m.user_id || m.id;
             const isSelected = heroBudgetView === m.user_id || heroBudgetView === m.id;
 
             return (
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setHeroBudgetView(m.user_id || m.id)}
+                onClick={() => {
+                  setHeroBudgetView(mKey);
+                  setExpensePayerFilter(mKey);
+                }}
                 className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-xs scale-102'
@@ -318,7 +328,11 @@ export function TripExpensesTab({
             <span className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-400">
               {tripBaseCurrency}
             </span>
-            {tripBaseCurrency !== 'THB' && (
+            {tripBaseCurrency === 'THB' ? (
+              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
+                (≈ ¥<AnimatedNumber value={Math.round(fxRate > 0 ? heroDisplayData.spent / fxRate : 0)} /> JPY)
+              </span>
+            ) : (
               <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
                 (≈ ฿<AnimatedNumber value={Math.round(convertToThb(heroDisplayData.spent, tripBaseCurrency, fxRate))} />)
               </span>
@@ -386,7 +400,11 @@ export function TripExpensesTab({
                 <span>
                   <AnimatedNumber value={heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining} /> {tripBaseCurrency}
                 </span>
-                {tripBaseCurrency !== 'THB' && (
+                {tripBaseCurrency === 'THB' ? (
+                  <span className="text-[10px] opacity-80 block sm:inline sm:ml-1 font-sans">
+                    (≈ ¥<AnimatedNumber value={Math.round(fxRate > 0 ? (heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining) / fxRate : 0)} /> JPY)
+                  </span>
+                ) : (
                   <span className="text-[10px] opacity-80 block sm:inline sm:ml-1 font-sans">
                     (≈ ฿<AnimatedNumber value={Math.round(convertToThb((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining), tripBaseCurrency, fxRate))} />)
                   </span>
@@ -445,14 +463,31 @@ export function TripExpensesTab({
           <div className="text-right font-mono">
             <div className="text-xs font-black text-blue-600 dark:text-blue-400">
               {expensePayerFilter === 'all' ? (
-                <>ยอดรวมทั้งทริป: {Math.round(totalFilteredAmount).toLocaleString()} {tripBaseCurrency}</>
+                <>
+                  <span>ยอดรวมทั้งทริป: {Math.round(totalFilteredAmount).toLocaleString()} {tripBaseCurrency}</span>
+                  <span className="font-normal text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ml-1">
+                    (≈ {tripBaseCurrency === 'THB' 
+                      ? `¥${Math.round(fxRate > 0 ? totalFilteredAmount / fxRate : 0).toLocaleString()}` 
+                      : `฿${Math.round(convertToThb(totalFilteredAmount, tripBaseCurrency, fxRate)).toLocaleString()}`})
+                  </span>
+                </>
               ) : (
-                <>ยอดแชร์ของ {selectedFilterName}: {Math.round(totalFilteredAmount).toLocaleString()} {tripBaseCurrency}</>
+                <>
+                  <span>ยอดแชร์ของ {selectedFilterName}: {Math.round(totalFilteredAmount).toLocaleString()} {tripBaseCurrency}</span>
+                  <span className="font-normal text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ml-1">
+                    (≈ {tripBaseCurrency === 'THB' 
+                      ? `¥${Math.round(fxRate > 0 ? totalFilteredAmount / fxRate : 0).toLocaleString()}` 
+                      : `฿${Math.round(convertToThb(totalFilteredAmount, tripBaseCurrency, fxRate)).toLocaleString()}`})
+                  </span>
+                </>
               )}
             </div>
             {expensePayerFilter !== 'all' && (
               <div className="text-[10px] text-slate-400 font-sans">
-                (ยอดบิลเต็มรวม {Math.round(fullTripAmount).toLocaleString()} {tripBaseCurrency})
+                (ยอดบิลเต็มรวม {Math.round(fullTripAmount).toLocaleString()} {tripBaseCurrency}{' '}
+                {tripBaseCurrency === 'THB' 
+                  ? `≈ ¥${Math.round(fxRate > 0 ? fullTripAmount / fxRate : 0).toLocaleString()}` 
+                  : `≈ ฿${Math.round(convertToThb(fullTripAmount, tripBaseCurrency, fxRate)).toLocaleString()}`})
               </div>
             )}
           </div>
@@ -462,7 +497,10 @@ export function TripExpensesTab({
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
           <button
             type="button"
-            onClick={() => setExpensePayerFilter('all')}
+            onClick={() => {
+              setExpensePayerFilter('all');
+              setHeroBudgetView('all');
+            }}
             className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
               expensePayerFilter === 'all'
                 ? 'bg-blue-600 text-white shadow-xs'
@@ -474,7 +512,10 @@ export function TripExpensesTab({
 
           <button
             type="button"
-            onClick={() => setExpensePayerFilter('me')}
+            onClick={() => {
+              setExpensePayerFilter('me');
+              setHeroBudgetView('me');
+            }}
             className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
               expensePayerFilter === 'me'
                 ? 'bg-blue-600 text-white shadow-xs'
@@ -493,7 +534,10 @@ export function TripExpensesTab({
               <button
                 key={p.key}
                 type="button"
-                onClick={() => setExpensePayerFilter(p.key)}
+                onClick={() => {
+                  setExpensePayerFilter(p.key);
+                  setHeroBudgetView(p.key);
+                }}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-xs'
