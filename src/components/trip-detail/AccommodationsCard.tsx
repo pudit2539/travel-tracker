@@ -27,6 +27,7 @@ interface AccommodationsCardProps {
   fxRate: number;
   members?: any[];
   currentUser?: any;
+  defaultOpen?: boolean;
   onExpenseCreated?: () => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
@@ -109,10 +110,11 @@ export function AccommodationsCard({
   fxRate,
   members = [],
   currentUser,
+  defaultOpen = false,
   onExpenseCreated,
   onShowToast,
 }: AccommodationsCardProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [stays, setStays] = useState<AccommodationStay[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
