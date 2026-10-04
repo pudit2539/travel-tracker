@@ -359,7 +359,7 @@ export default function HomePage() {
 
   // Interactive Cat Tips Widget State
   const CAT_TRAVEL_TIPS = [
-    { id: 1, tag: 'iPhone 17 Pro Max 📱', text: 'เพิ่มบัตร Suica หรือ ICOCA ลง Apple Wallet บน iPhone แตะเข้าเกต JR และรถไฟใต้ดินได้ทันที ไม่ต้องต่อคิวซื้อตั๋ว!' },
+    { id: 1, tag: 'บัตรเดินทาง & Smart Wallet 💳', text: 'เพิ่มบัตร Suica หรือ ICOCA ลงใน Apple Wallet หรือ Wallet บนมือถือ แตะเข้าเกต JR และรถไฟใต้ดินได้ทันที ไม่ต้องต่อคิวซื้อตั๋ว!' },
     { id: 2, tag: 'Tax-Free Shopping 🛍️', text: 'ช้อปปิ้งที่ดองกี้หรือห้างในญี่ปุ่นเกิน 5,000 เยน แสดง Passport รับส่วนลดภาษี 10% ทันที' },
     { id: 3, tag: 'Exchange & Cash 💴', text: 'ร้านอาหารสตรีทฟู้ดและตู้กดตั๋วราเมงยังนิยมเงินสด พกเหรียญ 100/500 เยนติดกระเป๋าไว้เสมอ' },
     { id: 4, tag: 'Offline Mode ✈️', text: 'ทริปนี้รองรับโหมดออฟไลน์เต็มรูปแบบ แม้ไม่มีเน็ตบนเครื่องบินหรือรถไฟใต้ดินก็เปิดดูแพลนได้ 100%' },
