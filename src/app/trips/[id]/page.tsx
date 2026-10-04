@@ -1954,6 +1954,9 @@ export default function TripDetailPage() {
         isOpen={showPackingModal}
         onClose={() => setShowPackingModal(false)}
         tripId={tripId}
+        tripName={trip?.name}
+        tripCountry={trip?.country}
+        tripStartDate={trip?.start_date}
       />
 
       {/* 3. Profile Modal */}
