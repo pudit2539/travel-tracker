@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
-  FileText, Upload, Download, Plus, Navigation, MapPin 
+  FileText, Upload, Download, Plus, Navigation, MapPin, Compass 
 } from 'lucide-react';
 import { getAccommodations, getGoogleMapsUrl } from '@/lib/accommodations';
 import WeatherWidget from '@/components/WeatherWidget';
@@ -144,13 +144,13 @@ export function TripPlanTab({
         onShowToast={onShowToast}
       />
 
-      {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] card-elevation">
+      {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub (Travo + TravelGo Hybrid) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#e79b71]/10 text-[#d98254] dark:text-[#f2a278] border border-[#e79b71]/25">
             {tripBaseCurrency} Workspace
           </span>
-          <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1c2438] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#222c42] font-mono">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#121316] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932] font-mono">
             {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
           </span>
         </div>
@@ -161,40 +161,40 @@ export function TripPlanTab({
             onClick={() => setShowWeatherSection(!showWeatherSection)}
             className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
               showWeatherSection 
-                ? 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-900/50' 
-                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42]'
+                ? 'bg-[#e79b71]/10 text-[#d98254] border-[#e79b71]/30 dark:bg-[#e79b71]/15 dark:text-[#f2a278]' 
+                : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
             }`}
           >
-            <span>🌤️ เส้นทาง & อากาศ</span>
+            <span>เส้นทาง & อากาศ</span>
             {showWeatherSection ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           </button>
 
           <button
             type="button"
             onClick={() => setShowTravelHubModal(true)}
-            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-xl shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-white bg-[#e79b71] hover:bg-[#d98254] px-3 py-1.5 rounded-xl shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
-            <span>🧰 Travel Hub</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <Compass className="h-3.5 w-3.5" />
+            <span>Travel Hub</span>
           </button>
         </div>
       </div>
 
-      {/* Aesthetic 3-Block Travel Budget Overview Card (Trip.com style metrics) */}
+      {/* Aesthetic 3-Block Travel Budget Overview Card (Travo Editorial Card Box) */}
       <div 
         onClick={() => onSwitchTab('expenses')}
-        className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-3 cursor-pointer hover:border-blue-400/50 dark:hover:border-blue-500/40 transition-all group"
+        className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] space-y-3 cursor-pointer hover:border-[#e79b71]/60 transition-all group shadow-2xs"
       >
         {/* Card Header */}
         <div className="flex items-center justify-between px-0.5">
-          <div className="flex items-center gap-2 text-xs font-black text-slate-900 dark:text-white">
-            <div className="p-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+            <div className="p-1 rounded-lg bg-[#e79b71]/10 text-[#e79b71]">
               <Coins className="h-4 w-4" />
             </div>
             <span>สรุปงบประมาณทริป</span>
-            <span className="text-[10px] font-semibold text-slate-400">({heroDisplayData.title})</span>
+            <span className="text-[10px] font-medium text-slate-400">({heroDisplayData.title})</span>
           </div>
-          <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-[#e79b71] group-hover:translate-x-0.5 transition-transform">
             <span>ไปหน้ารายจ่าย</span>
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
@@ -202,36 +202,34 @@ export function TripPlanTab({
 
         {/* 3 Summary Blocks */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {/* Block 1: Used / จ่ายแล้ว (Travel Blue) */}
-          <div className="rounded-2xl p-2.5 sm:p-3 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/50 flex flex-col justify-between">
-            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black text-blue-600 dark:text-blue-400">
-              <span>💸</span>
-              <span>ใช้ไปแล้ว</span>
+          {/* Block 1: Used / จ่ายแล้ว (Terracotta) */}
+          <div className="rounded-2xl p-2.5 sm:p-3 bg-[#e79b71]/10 border border-[#e79b71]/25 flex flex-col justify-between">
+            <div className="text-[10px] sm:text-[11px] font-bold text-[#d98254] dark:text-[#f2a278]">
+              ใช้ไปแล้ว
             </div>
             <div className="mt-1">
-              <div className="text-sm sm:text-base md:text-lg font-black text-blue-700 dark:text-blue-300 leading-tight">
+              <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight">
                 <AnimatedNumber value={heroDisplayData.spent} />
               </div>
               {tripBaseCurrency !== 'THB' ? (
-                <div className="text-[9px] sm:text-[10px] font-semibold text-blue-600/80 dark:text-blue-300/70 truncate">
+                <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                   ≈ ฿<AnimatedNumber value={Math.round(convertToThb(heroDisplayData.spent, tripBaseCurrency, fxRate))} />
                 </div>
               ) : (
-                <div className="text-[9px] sm:text-[10px] font-semibold text-blue-600/80 dark:text-blue-300/70 truncate">
+                <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                   {tripBaseCurrency}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Block 2: Target / ตั้งเป้า (Emerald) */}
-          <div className="rounded-2xl p-2.5 sm:p-3 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-900/50 flex flex-col justify-between">
-            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-              <span>🎯</span>
-              <span>ตั้งเป้าไว้</span>
+          {/* Block 2: Target / ตั้งเป้า (Neutral Slate) */}
+          <div className="rounded-2xl p-2.5 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
+            <div className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300">
+              ตั้งเป้าไว้
             </div>
             <div className="mt-1">
-              <div className="text-sm sm:text-base md:text-lg font-black text-emerald-700 dark:text-emerald-300 leading-tight">
+              <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight">
                 {heroDisplayData.targetBudget > 0 ? (
                   <AnimatedNumber value={heroDisplayData.targetBudget} />
                 ) : (
@@ -240,37 +238,36 @@ export function TripPlanTab({
               </div>
               {heroDisplayData.targetBudget > 0 ? (
                 tripBaseCurrency !== 'THB' ? (
-                  <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
+                  <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                     ≈ ฿<AnimatedNumber value={Math.round(convertToThb(heroDisplayData.targetBudget, tripBaseCurrency, fxRate))} />
                   </div>
                 ) : (
-                  <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
+                  <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                     {tripBaseCurrency}
                   </div>
                 )
               ) : (
-                <div className="text-[9px] sm:text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-300/70 truncate">
+                <div className="text-[9px] sm:text-[10px] font-semibold text-slate-400 truncate">
                   ยังไม่ระบุงบ
                 </div>
               )}
             </div>
           </div>
 
-          {/* Block 3: Remaining / คงเหลือ (Amber/Rose) */}
+          {/* Block 3: Remaining / คงเหลือ (Emerald or Rose) */}
           <div className={`rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
             heroDisplayData.isOver 
-              ? 'bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/70 dark:border-rose-900/50' 
-              : 'bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-900/50'
+              ? 'bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40' 
+              : 'bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40'
           }`}>
-            <div className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-black ${
-              heroDisplayData.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-amber-700 dark:text-amber-300'
+            <div className={`text-[10px] sm:text-[11px] font-bold ${
+              heroDisplayData.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-300'
             }`}>
-              <span>{heroDisplayData.isOver ? '⚠️' : '💰'}</span>
-              <span>{heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'}</span>
+              {heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'}
             </div>
             <div className="mt-1">
               <div className={`text-sm sm:text-base md:text-lg font-black leading-tight ${
-                heroDisplayData.isOver ? 'text-rose-700 dark:text-rose-300' : 'text-amber-700 dark:text-amber-300'
+                heroDisplayData.isOver ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'
               }`}>
                 <AnimatedNumber value={heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining} />
               </div>

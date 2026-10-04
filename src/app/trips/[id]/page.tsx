@@ -1423,8 +1423,8 @@ export default function TripDetailPage() {
       <div className="absolute top-20 left-10 w-80 sm:w-96 h-80 sm:h-96 bg-blue-400/6 dark:bg-blue-500/8 rounded-full blur-3xl pointer-events-none animate-float-slow" />
       <div className="absolute top-80 right-10 w-80 sm:w-96 h-80 sm:h-96 bg-indigo-500/6 dark:bg-indigo-500/8 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
-      {/* ==================== TOP NAVIGATION & STICKY APP HEADER (Trip.com / Apple Style) ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-slate-200/90 dark:border-[#222c42] bg-white/98 dark:bg-[#151b2b]/98 shadow-xs transition-colors safe-top-nav">
+      {/* ==================== TOP NAVIGATION & STICKY APP HEADER (Travo + TravelGo Hybrid) ==================== */}
+      <nav className="sticky top-0 z-40 border-b border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
         <div className="max-w-5xl mx-auto px-3.5 sm:px-4 pb-2 sm:pb-2.5 space-y-2">
           
           {/* Row 1: Back & Title & Action Icons */}
@@ -1434,7 +1434,7 @@ export default function TripDetailPage() {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <Link
                 href="/"
-                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:text-[#e79b71] dark:hover:text-[#e79b71] hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
                 title="กลับไปหน้าทริปทั้งหมด"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -1457,7 +1457,7 @@ export default function TripDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold truncate">
-                  <span>{trip?.currency || 'JPY'}</span>
+                  <span className="text-[#e79b71] font-mono font-bold">{trip?.currency || 'JPY'}</span>
                   <span>•</span>
                   <span>{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
                 </div>
@@ -1470,7 +1470,7 @@ export default function TripDetailPage() {
 
               <button
                 onClick={() => setShowProfileModal(true)}
-                className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] hover:border-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
+                className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-[#e79b71] hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
                 title="ตั้งค่าโปรไฟล์"
               >
                 <CatAvatarBadge cat={userCat} size="xs" className="group-hover:scale-110 transition-transform shadow-xs" />
@@ -1481,19 +1481,19 @@ export default function TripDetailPage() {
 
               <button
                 onClick={() => setShowShareModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:text-[#e79b71] hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
                 title="แชร์ทริป / จัดการสิทธิ์"
               >
-                <Share2 className="h-3.5 w-3.5 text-blue-500" />
+                <Share2 className="h-3.5 w-3.5 text-[#e79b71]" />
                 <span className="hidden sm:inline">แชร์</span>
               </button>
 
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 hover:border-blue-400 hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer"
                 title="สลับโหมด มืด/สว่าง"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-blue-600" />}
+                {theme === 'dark' ? <Sun className="h-4 w-4 text-[#e79b71]" /> : <Moon className="h-4 w-4 text-slate-700" />}
               </button>
 
               {currentUser && (
@@ -1513,7 +1513,7 @@ export default function TripDetailPage() {
                       }
                     }
                   }}
-                  className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:border-rose-400 shadow-2xs transition-all cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-400 hover:text-rose-500 hover:border-rose-300 shadow-2xs transition-all cursor-pointer"
                   title="ออกจากระบบ (Sign Out)"
                 >
                   <LogOut className="h-4 w-4" />
@@ -1522,29 +1522,29 @@ export default function TripDetailPage() {
             </div>
           </div>
 
-          {/* Row 2: The 4 Tabs (Trip.com Pill Selector) */}
-          <div className="grid grid-cols-4 gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100/90 dark:bg-[#111624]/90 backdrop-blur-xl border border-slate-200/90 dark:border-[#222c42] rounded-2xl sm:rounded-3xl shadow-inner">
+          {/* Row 2: The 4 Tabs (Travo & TravelGo Hybrid Pill Selector) */}
+          <div className="grid grid-cols-4 gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100/90 dark:bg-[#181a20] backdrop-blur-xl border border-slate-200/90 dark:border-[#262932] rounded-2xl sm:rounded-3xl shadow-inner">
             <button
               type="button"
               onClick={() => handleSwitchTab('plan')}
-              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
+              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
                 activeTab === 'plan' 
                   ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#1c2438]/50'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#262932]/50'
               }`}
             >
               {activeTab === 'plan' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 border border-white/25 ring-1 ring-black/5"
+                  className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
               <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <span className="text-sm">🗺️</span>
+                <MapPin className="h-3.5 w-3.5" />
                 <span className="truncate">แผนเที่ยว</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden md:inline transition-colors ${
-                  activeTab === 'plan' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#1c2438] text-slate-500 dark:text-slate-400'
+                  activeTab === 'plan' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#262932] text-slate-500 dark:text-slate-400'
                 }`}>
                   {itinerary.length}
                 </span>
@@ -1554,24 +1554,24 @@ export default function TripDetailPage() {
             <button
               type="button"
               onClick={() => handleSwitchTab('expenses')}
-              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
+              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
                 activeTab === 'expenses' 
                   ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#1c2438]/50'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#262932]/50'
               }`}
             >
               {activeTab === 'expenses' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 border border-white/25 ring-1 ring-black/5"
+                  className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
               <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <span className="text-sm">💰</span>
+                <Receipt className="h-3.5 w-3.5" />
                 <span className="truncate">รายจ่าย</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden md:inline transition-colors ${
-                  activeTab === 'expenses' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#1c2438] text-slate-500 dark:text-slate-400'
+                  activeTab === 'expenses' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#262932] text-slate-500 dark:text-slate-400'
                 }`}>
                   {expenses.length}
                 </span>
@@ -1581,21 +1581,21 @@ export default function TripDetailPage() {
             <button
               type="button"
               onClick={() => handleSwitchTab('analytics')}
-              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
+              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
                 activeTab === 'analytics' 
                   ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#1c2438]/50'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#262932]/50'
               }`}
             >
               {activeTab === 'analytics' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 border border-white/25 ring-1 ring-black/5"
+                  className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
               <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <span className="text-sm">📊</span>
+                <PieChart className="h-3.5 w-3.5" />
                 <span className="truncate">สถิติ & งบ</span>
               </span>
             </button>
@@ -1603,24 +1603,24 @@ export default function TripDetailPage() {
             <button
               type="button"
               onClick={() => handleSwitchTab('members')}
-              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
+              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
                 activeTab === 'members' 
                   ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#1c2438]/50'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#262932]/50'
               }`}
             >
               {activeTab === 'members' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 border border-white/25 ring-1 ring-black/5"
+                  className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
               <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <span className="text-sm">👥</span>
+                <Users className="h-3.5 w-3.5" />
                 <span className="truncate">สมาชิก</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden md:inline transition-colors ${
-                  activeTab === 'members' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#1c2438] text-slate-500 dark:text-slate-400'
+                  activeTab === 'members' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#262932] text-slate-500 dark:text-slate-400'
                 }`}>
                   {members.length}
                 </span>
