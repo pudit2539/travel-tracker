@@ -1,8 +1,6 @@
 import type { Viewport } from 'next';
-import Script from 'next/script';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
-import ErrorBoundary from '@/components/ErrorBoundary';
 import PWAHandler from '@/components/PWAHandler';
 
 export const viewport: Viewport = {
@@ -43,29 +41,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
       <body className="min-h-screen antialiased bg-[#faf8fd] text-[#1e293b] dark:bg-[#181b2a] dark:text-[#f1f5f9] selection:bg-rose-400 selection:text-white transition-colors duration-300">
-        {/* Anti-FOUC Synchronous Theme Detection: Prevents White Flash in Dark Mode */}
-        <Script id="theme-detector" strategy="beforeInteractive">
-          {`
-            (function() {
-              try {
-                var saved = localStorage.getItem('theme');
-                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                var isDark = saved === 'dark' || ((!saved || saved === 'system') && prefersDark);
-                if (isDark) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (e) {}
-            })();
-          `}
-        </Script>
-        <ErrorBoundary>
-          <ThemeProvider>
-            <PWAHandler />
-            {children}
-          </ThemeProvider>
-        </ErrorBoundary>
+        <ThemeProvider>
+          <PWAHandler />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

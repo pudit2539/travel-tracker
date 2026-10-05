@@ -1,7 +1,7 @@
 // src/components/ThemeProvider.tsx
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useState } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -17,6 +17,9 @@ const ThemeContext = createContext<ThemeContextType>({
   resolvedTheme: 'light',
 });
 
+// Use useLayoutEffect on client to mutate DOM before paint (prevents FOUC)
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
@@ -24,17 +27,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
     return 'system';
   });
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('theme');
-      if (saved === 'dark') return 'dark';
-      if (saved === 'light') return 'light';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return 'light';
-  });
 
-  useEffect(() => {
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('light');
+
+  useIsomorphicLayoutEffect(() => {
     const root = document.documentElement;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -50,7 +46,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     applyTheme();
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch {}
 
     const handleChange = () => {
       if (theme === 'system') applyTheme();

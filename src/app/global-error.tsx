@@ -1,0 +1,77 @@
+'use client';
+
+import React, { useEffect } from 'react';
+import { ShieldAlert, RotateCcw, Home } from 'lucide-react';
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error('Root layout global error caught:', error);
+  }, [error]);
+
+  const handleSafeReload = () => {
+    reset();
+  };
+
+  const handleResetCache = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.clear();
+      } catch {}
+      window.location.href = '/';
+    }
+  };
+
+  return (
+    <html lang="th">
+      <body className="min-h-screen bg-[#090611] text-slate-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#130d22] border border-rose-900/60 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#e06b88]/20 border border-[#e06b88]/40 text-[#f7a1b5] flex items-center justify-center mx-auto shadow-lg shadow-[#e06b88]/20">
+            <ShieldAlert className="h-8 w-8" />
+          </div>
+
+          <div>
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#f7a1b5] bg-[#e06b88]/20 px-2.5 py-0.5 rounded-full border border-[#e06b88]/40">
+              Crash Protection Safe Mode
+            </span>
+            <h1 className="text-lg font-black text-white mt-2">
+              เกิดข้อผิดพลาดในระบบ
+            </h1>
+            <p className="text-xs text-purple-300/70 mt-1 leading-relaxed">
+              ระบบเปิดโหมดป้องกันความเสียหายอัตโนมัติ ข้อมูลของคุณยังปลอดภัยอยู่ในฐานข้อมูล
+            </p>
+          </div>
+
+          {error && (
+            <div className="text-left p-3 rounded-xl bg-black/40 border border-rose-900/40 text-[11px] font-mono text-rose-300 max-h-24 overflow-y-auto">
+              {error.message || error.toString()}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <button
+              type="button"
+              onClick={handleSafeReload}
+              className="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-purple-600/20 cursor-pointer"
+            >
+              <RotateCcw className="h-4 w-4" /> โหลดหน้าเว็บใหม่
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResetCache}
+              className="py-2.5 px-3 rounded-xl border border-purple-800 bg-[#1c1328] hover:bg-purple-950 text-purple-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Home className="h-4 w-4" /> กลับหน้าหลัก
+            </button>
+          </div>
+        </div>
+      </body>
+    </html>
+  );
+}

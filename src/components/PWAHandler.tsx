@@ -34,3 +34,5 @@ export default function PWAHandler() {
 
   return null;
 }
+
+export { PWAHandler };
