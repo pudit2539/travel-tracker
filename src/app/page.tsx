@@ -28,33 +28,9 @@ export default function HomePage() {
   const { theme, setTheme } = useTheme();
   
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const p = localStorage.getItem('travel_tracker_cached_profile');
-        if (p) return JSON.parse(p);
-      } catch {}
-    }
-    return null;
-  });
-  const [trips, setTrips] = useState<any[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('travel_tracker_home_trips_cache');
-        if (cached) return JSON.parse(cached);
-      } catch {}
-    }
-    return [];
-  });
-  const [loading, setLoading] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('travel_tracker_home_trips_cache');
-        if (cached && JSON.parse(cached).length > 0) return false;
-      } catch {}
-    }
-    return true;
-  });
+  const [profile, setProfile] = useState<any>(null);
+  const [trips, setTrips] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [fxRate, setFxRate] = useState<number>(0.235);
@@ -82,6 +58,20 @@ export default function HomePage() {
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
+    // Restore cached data on client mount safely to eliminate SSR hydration mismatch
+    try {
+      const p = localStorage.getItem('travel_tracker_cached_profile');
+      if (p) setProfile(JSON.parse(p));
+      const cached = localStorage.getItem('travel_tracker_home_trips_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTrips(parsed);
+          setLoading(false);
+        }
+      }
+    } catch {}
+
     setFxRate(getCustomJpyToThbRate());
     checkUserAndFetchTrips();
   }, []);
@@ -521,15 +511,16 @@ export default function HomePage() {
               onClick={() => setShowProfileModal(true)}
               className="flex items-center gap-2 p-1.5 pr-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-[#e79b71] hover:scale-105 shadow-2xs transition-all cursor-pointer group"
               title="ตั้งค่าโปรไฟล์"
+              suppressHydrationWarning
             >
-              <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-2xs overflow-hidden`}>
+              <div suppressHydrationWarning className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-2xs overflow-hidden`}>
                 {userCat.imgUrl ? (
                   <img src={userCat.imgUrl} alt={userCat.name} className="w-full h-full object-cover" />
                 ) : (
                   userCat.emoji
                 )}
               </div>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[100px] truncate hidden sm:inline">
+              <span suppressHydrationWarning className="text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[100px] truncate hidden sm:inline">
                 {userDisplayName}
               </span>
             </button>
@@ -539,6 +530,7 @@ export default function HomePage() {
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2 rounded-xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:rotate-45 shadow-2xs transition-all duration-300 cursor-pointer"
               title="สลับโหมด มืด/สว่าง"
+              suppressHydrationWarning
             >
               {theme === 'dark' ? <Sun className="h-4 w-4 text-[#e79b71]" /> : <Moon className="h-4 w-4 text-slate-700" />}
             </button>
