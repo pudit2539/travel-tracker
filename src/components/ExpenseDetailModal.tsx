@@ -18,6 +18,7 @@ import {
   setExpenseSplitMembers, 
   deleteExpenseSplit 
 } from '@/lib/expenseSplits';
+import { setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
 
 interface ExpenseDetailModalProps {
   isOpen: boolean;
@@ -95,6 +96,7 @@ export function ExpenseDetailModal({
     category: 'shopping',
     spent_at: '',
     payer_id: 'me',
+    payment_method: 'cash' as PaymentMethod,
     receipt_url: '',
   });
 
@@ -114,6 +116,7 @@ export function ExpenseDetailModal({
         category: expense.category || 'shopping',
         spent_at: expense.spent_at ? expense.spent_at.split('T')[0] : new Date().toISOString().split('T')[0],
         payer_id: initialPayerId,
+        payment_method: (expense.payment_method || 'cash') as PaymentMethod,
         receipt_url: expense.receipt_url || '',
       });
 
@@ -252,13 +255,15 @@ export function ExpenseDetailModal({
         payer_name: selectedPayerName,
         payer_avatar: selectedPayerAvatar,
         receipt_url: form.receipt_url,
+        payment_method: form.payment_method,
       });
 
-      // Save custom split configuration
+      // Save custom split & payment method configuration
       const effectiveTripId = tripId || expense.trip_id || '';
       if (effectiveTripId && expense.id) {
         const finalSplit = splitWith.length > 0 ? splitWith : memberOptions.map((m) => m.id);
         setExpenseSplitMembers(effectiveTripId, expense.id, finalSplit);
+        setExpensePaymentMethod(effectiveTripId, expense.id, form.payment_method);
       }
 
       setIsEditing(false);
@@ -437,6 +442,53 @@ export function ExpenseDetailModal({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">
+                  👛 จ่ายด้วยวิธีไหน? (ตัดจากกระเป๋าเงิน)
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, payment_method: 'cash' })}
+                    className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
+                      form.payment_method === 'cash'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 shadow-xs'
+                        : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className="text-lg">💵</span>
+                    <span>เงินสด</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, payment_method: 'travel_card' })}
+                    className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
+                      form.payment_method === 'travel_card'
+                        ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 shadow-xs'
+                        : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className="text-lg">💳</span>
+                    <span>Travel Card</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, payment_method: 'credit_card' })}
+                    className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
+                      form.payment_method === 'credit_card'
+                        ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/20 shadow-xs'
+                        : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className="text-lg">💎</span>
+                    <span>บัตรเครดิต</span>
+                  </button>
+                </div>
               </div>
 
               {/* Split With Section */}
@@ -671,22 +723,51 @@ export function ExpenseDetailModal({
                   </div>
                 </div>
 
+                {/* Payment Method Card */}
+                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42]">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                    วิธีชำระเงิน
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {(() => {
+                      const method = expense.payment_method || 'cash';
+                      if (method === 'travel_card') {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400">
+                            <span>💳</span>
+                            <span>Travel Card</span>
+                          </span>
+                        );
+                      }
+                      if (method === 'credit_card') {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400">
+                            <span>💎</span>
+                            <span>บัตรเครดิต</span>
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                          <span>💵</span>
+                          <span>เงินสด (Cash)</span>
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+
                 {/* Date Card */}
-                <div className="col-span-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-blue-500" />
+                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                    วันที่ใช้จ่าย
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      วันที่บันทึก: {new Date(expense.spent_at).toLocaleDateString('th-TH', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        weekday: 'short',
-                      })}
+                      {expense.spent_at?.split('T')[0]}
                     </span>
                   </div>
-                  <span className="text-[10px] font-medium text-slate-400">
-                    {expense.spent_at?.split('T')[0]}
-                  </span>
                 </div>
               </div>
 

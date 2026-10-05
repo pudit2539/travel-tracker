@@ -163,6 +163,30 @@ function ExpenseCardComponent({
           <span className="text-slate-300 dark:text-slate-600">•</span>
           <span className="text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs">{new Date(expense.spent_at).toLocaleDateString('th-TH')}</span>
 
+          <span className="text-slate-300 dark:text-slate-600">•</span>
+          {(() => {
+            const method = expense.payment_method || 'cash';
+            if (method === 'travel_card') {
+              return (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60">
+                  💳 Travel Card
+                </span>
+              );
+            }
+            if (method === 'credit_card') {
+              return (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-900/60">
+                  💎 บัตรเครดิต
+                </span>
+              );
+            }
+            return (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
+                💵 เงินสด
+              </span>
+            );
+          })()}
+
           {isSingle && (
             <>
               <span className="text-slate-300 dark:text-slate-600">•</span>

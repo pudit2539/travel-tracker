@@ -40,6 +40,8 @@ import { compressReceiptImage } from '@/lib/imageCompressor';
 import ItemizedReceiptSplitter, { ItemizedDish } from '@/components/ItemizedReceiptSplitter';
 import { parseTransitInfo, formatTransitInfo } from '@/lib/transitGuide';
 import { getTripExpenseSplits } from '@/lib/expenseSplits';
+import { getTripPaymentMethods, setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
+import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
@@ -99,6 +101,7 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [reordering, setReordering] = useState(false);
   const [fxRate, setFxRate] = useState<number>(0.235);
+  const [currencyView, setCurrencyView] = useState<'foreign' | 'thb'>('foreign');
   const [showWeatherSection, setShowWeatherSection] = useState(true);
 
   // Filter states
@@ -195,6 +198,7 @@ export default function TripDetailPage() {
     receipt_url: '',
     spent_at: new Date().toISOString().split('T')[0],
     payer_id: 'me',
+    payment_method: 'cash' as PaymentMethod,
     items: [] as ItemizedDish[],
   });
 
@@ -330,12 +334,18 @@ export default function TripDetailPage() {
       let uniqueExpList: any[] = [];
       if (expData) {
         const seenExpIds = new Set<string>();
-        uniqueExpList = expData.filter((e) => {
-          if (!e.id) return true;
-          if (seenExpIds.has(e.id)) return false;
-          seenExpIds.add(e.id);
-          return true;
-        });
+        const paymentMap = getTripPaymentMethods(tripId);
+        uniqueExpList = expData
+          .filter((e) => {
+            if (!e.id) return true;
+            if (seenExpIds.has(e.id)) return false;
+            seenExpIds.add(e.id);
+            return true;
+          })
+          .map((e) => ({
+            ...e,
+            payment_method: e.payment_method || paymentMap[e.id] || 'cash',
+          }));
         setExpenses(uniqueExpList);
       }
 
@@ -840,30 +850,51 @@ export default function TripDetailPage() {
               payer_id: isMe ? (currentUser?.id || null) : (mt.member.id === mt.member.name ? null : mt.member.id),
               payer_name: mt.member.name.replace(' (ฉัน)', ''),
               payer_avatar: mt.member.avatar,
+              payment_method: scannedData.payment_method || 'cash',
             };
           });
 
         if (rowsToInsert.length > 0) {
-          const { error } = await supabase.from('expenses').insert(rowsToInsert);
-          if (error) throw error;
+          const { data: insertedRows, error } = await supabase.from('expenses').insert(rowsToInsert).select();
+          if (error) {
+            // Supabase fallback if column payment_method doesn't exist yet
+            const fallbackRows = rowsToInsert.map(({ payment_method, ...rest }) => rest);
+            const { data: fbRows, error: err2 } = await supabase.from('expenses').insert(fallbackRows).select();
+            if (err2) throw err2;
+            if (fbRows) {
+              fbRows.forEach((r: any) => setExpensePaymentMethod(tripId, r.id, scannedData.payment_method || 'cash'));
+            }
+          } else if (insertedRows) {
+            insertedRows.forEach((r: any) => setExpensePaymentMethod(tripId, r.id, scannedData.payment_method || 'cash'));
+          }
         }
       } else {
         // บันทึกเป็นบิลรวม 1 รายการ
-        const { error } = await supabase.from('expenses').insert([
-          {
-            trip_id: tripId,
-            title: finalTitle,
-            amount: calculatedAmount,
-            currency: scannedData.currency || trip?.currency || 'THB',
-            category: scannedData.category || 'shopping',
-            receipt_url: receiptStorageRef,
-            spent_at: scannedData.spent_at || new Date().toISOString().split('T')[0],
-            payer_id: payerId,
-            payer_name: payerName,
-            payer_avatar: payerAvatar,
-          },
-        ]);
-        if (error) throw error;
+        const rowToInsert = {
+          trip_id: tripId,
+          title: finalTitle,
+          amount: calculatedAmount,
+          currency: scannedData.currency || trip?.currency || 'THB',
+          category: scannedData.category || 'shopping',
+          receipt_url: receiptStorageRef,
+          spent_at: scannedData.spent_at || new Date().toISOString().split('T')[0],
+          payer_id: payerId,
+          payer_name: payerName,
+          payer_avatar: payerAvatar,
+          payment_method: scannedData.payment_method || 'cash',
+        };
+
+        const { data: insertedRows, error } = await supabase.from('expenses').insert([rowToInsert]).select();
+        if (error) {
+          const { payment_method, ...fallbackRow } = rowToInsert;
+          const { data: fbRows, error: err2 } = await supabase.from('expenses').insert([fallbackRow]).select();
+          if (err2) throw err2;
+          if (fbRows && fbRows[0]) {
+            setExpensePaymentMethod(tripId, fbRows[0].id, scannedData.payment_method || 'cash');
+          }
+        } else if (insertedRows && insertedRows[0]) {
+          setExpensePaymentMethod(tripId, insertedRows[0].id, scannedData.payment_method || 'cash');
+        }
       }
 
       triggerConfetti();
@@ -878,6 +909,7 @@ export default function TripDetailPage() {
         receipt_url: '',
         spent_at: new Date().toISOString().split('T')[0],
         payer_id: 'me',
+        payment_method: 'cash',
         items: [] as ItemizedDish[],
       });
       fetchTripData();
@@ -2286,6 +2318,53 @@ export default function TripDetailPage() {
                     ))}
                   </select>
                 </div>
+
+                {/* Payment Source Selector (Tactile Large Buttons) */}
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">
+                    👛 จ่ายด้วยวิธีไหน? (ตัดจากกระเป๋าเงิน)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setScannedData({ ...scannedData, payment_method: 'cash' })}
+                      className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
+                        (scannedData.payment_method || 'cash') === 'cash'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 shadow-xs'
+                          : 'bg-white dark:bg-[#151b2b] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      <span className="text-xl">💵</span>
+                      <span>เงินสด</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setScannedData({ ...scannedData, payment_method: 'travel_card' })}
+                      className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
+                        scannedData.payment_method === 'travel_card'
+                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 shadow-xs'
+                          : 'bg-white dark:bg-[#151b2b] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      <span className="text-xl">💳</span>
+                      <span>Travel Card</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setScannedData({ ...scannedData, payment_method: 'credit_card' })}
+                      className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
+                        scannedData.payment_method === 'credit_card'
+                          ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/20 shadow-xs'
+                          : 'bg-white dark:bg-[#151b2b] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      <span className="text-xl">💎</span>
+                      <span>บัตรเครดิต</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* 3. Itemized Split Section (แยกรายชิ้น / เลือกคนหาร) */}
@@ -2848,6 +2927,16 @@ export default function TripDetailPage() {
         )}
       </AnimatePresence>
 
+      {/* Floating Global Currency Switcher Pill (Micro-Interactions) */}
+      <CurrencyPillSwitcher
+        primaryCurrency={trip?.currency || 'JPY'}
+        activeView={currencyView}
+        onToggle={(view) => {
+          setCurrencyView(view);
+          showToast(view === 'thb' ? 'สลับดูยอดเป็นเงินบาทไทย (THB) 🇹🇭' : `สลับดูยอดเป็นสกุลเงิน ${trip?.currency || 'JPY'} 🇯🇵`, 'info');
+        }}
+        fxRate={fxRate}
+      />
 
     </div>
   );

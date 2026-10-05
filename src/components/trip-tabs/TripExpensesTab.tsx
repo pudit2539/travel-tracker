@@ -12,6 +12,7 @@ import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getTripExpenseSplits } from '@/lib/expenseSplits';
+import PocketMoneyWidget from '@/components/PocketMoneyWidget';
 
 interface TripExpensesTabProps {
   trip: any;
@@ -446,6 +447,16 @@ export function TripExpensesTab({
           </div>
         </div>
       </div>
+
+      {/* Pocket Money & Payment Source Tracker */}
+      <PocketMoneyWidget
+        tripId={trip?.id || ''}
+        currency={tripBaseCurrency}
+        fxRate={fxRate}
+        expenses={expenses}
+        onOpenAtmRadar={() => setShowTravelHubModal(true)}
+        onShowToast={(msg) => setOcrSuccessToast(msg)}
+      />
 
       {/* Horizontal Filter Row (Trip.com style) */}
       <div className="p-3.5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-3">

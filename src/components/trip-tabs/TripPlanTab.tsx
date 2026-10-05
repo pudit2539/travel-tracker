@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
-  FileText, Upload, Download, Plus, Navigation, MapPin, Compass 
+  FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
+  BookmarkCheck, Sparkles
 } from 'lucide-react';
+import LiveTripCard from '@/components/LiveTripCard';
+import WishlistDrawer from '@/components/WishlistDrawer';
 import { getAccommodations, getGoogleMapsUrl } from '@/lib/accommodations';
 import WeatherWidget from '@/components/WeatherWidget';
 import RouteVisualizer from '@/components/RouteVisualizer';
@@ -93,6 +96,8 @@ export function TripPlanTab({
   onRefreshTrip,
   onShowToast,
 }: TripPlanTabProps) {
+  const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
+
   // Check if any accommodation is for this day
   const stays = useMemo(() => (trip?.id ? getAccommodations(trip.id) : []), [trip?.id]);
   const activeStayForSelectedDay = useMemo(() => {
@@ -171,6 +176,15 @@ export function TripPlanTab({
 
           <button
             type="button"
+            onClick={() => setShowWishlistDrawer(true)}
+            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-amber-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          >
+            <BookmarkCheck className="h-3.5 w-3.5 text-amber-500" />
+            <span>Wishlist ร้านเด็ด</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setShowTravelHubModal(true)}
             className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-white bg-[#e79b71] hover:bg-[#d98254] px-3 py-1.5 rounded-xl shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
@@ -179,6 +193,17 @@ export function TripPlanTab({
           </button>
         </div>
       </div>
+
+      {/* 1. Live On-Trip Destination & Next-Up Spotlight Card */}
+      <LiveTripCard
+        trip={trip}
+        itinerary={itinerary}
+        availableDays={availableDays}
+        selectedDay={selectedDayFilter}
+        fxRate={fxRate}
+        onOpenActivityDetail={handleOpenEditActivity}
+        onShowToast={onShowToast}
+      />
 
       {/* Aesthetic 3-Block Travel Budget Overview Card (Travo Editorial Card Box) */}
       <div 
@@ -472,6 +497,23 @@ export function TripPlanTab({
           </div>
         )
       )}
+
+      {/* Wishlist Drawer Modal */}
+      <WishlistDrawer
+        isOpen={showWishlistDrawer}
+        onClose={() => setShowWishlistDrawer(false)}
+        tripId={trip?.id}
+        selectedDay={selectedDayFilter}
+        availableDays={availableDays}
+        onAddToItinerary={(item) => {
+          handleOpenAddActivity({
+            title: item.title,
+            category: item.category,
+            location: item.location,
+          }, selectedDayFilter === 'all' ? availableDays[0] : selectedDayFilter);
+        }}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 }
