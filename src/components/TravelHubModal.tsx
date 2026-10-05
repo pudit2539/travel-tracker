@@ -8,9 +8,10 @@ import {
   Smartphone, Plus, Trash2, Camera, ShieldCheck, 
   Compass, Search, ArrowRight, Eye, Store, DollarSign,
   Utensils, Train, ShoppingBag, AlertTriangle, Building,
-  FileCheck, Sparkle, RefreshCw
+  FileCheck, Sparkle, RefreshCw, Calculator, PhoneCall,
+  Percent, ArrowUpDown, ChevronRight, CheckCircle2,
+  Luggage, Info, Maximize2, ShieldAlert
 } from 'lucide-react';
-import { getCatAvatar } from '@/lib/avatars';
 import { triggerConfetti } from '@/lib/confetti';
 import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
 
@@ -18,16 +19,16 @@ interface TravelHubModalProps {
   isOpen: boolean;
   onClose: () => void;
   trip: any;
-  expenses: any[];
-  itinerary: any[];
-  members: any[];
+  expenses?: any[];
+  itinerary?: any[];
+  members?: any[];
   userDisplayName?: string;
   fxRate?: number;
   onOpenScrapbook?: () => void;
   onOpenPacking?: () => void;
 }
 
-// 1. Japanese Phrases Data
+// 1. Japanese Survival Phrases Data
 interface PhraseItem {
   id: string;
   category: 'food' | 'shopping' | 'transport' | 'emergency';
@@ -40,29 +41,30 @@ interface PhraseItem {
 const JAPANESE_PHRASES: PhraseItem[] = [
   // Food
   { id: 'f1', category: 'food', japanese: '英語のメニューはありますか？', romaji: 'Eigo no menyū wa arimasu ka?', thai: 'มีเมนูภาษาอังกฤษไหมครับ/ค่ะ?', context: 'ใช้ถามพนักงานเมื่อเข้าร้านอาหาร' },
-  { id: 'f2', category: 'food', japanese: 'おすすめは何ですか？', romaji: 'Osusume wa nan desu ka?', thai: 'มีเมนูแนะนำอะไรบ้างครับ/ค่ะ?', context: 'ให้พนักงานแนะนำของอร่อย' },
-  { id: 'f3', category: 'food', japanese: 'お会計は別々でお願いします。', romaji: 'Okaikei wa betsubetsu de onegaishimasu.', thai: 'ขอคิดเงิน/เช็คบิลแยกกันครับ/ค่ะ', context: 'ขอจ่ายเงินแยกรายคน' },
-  { id: 'f4', category: 'food', japanese: 'わさび抜きでお願いします。', romaji: 'Wasabi nuki de onegaishimasu.', thai: 'ขอไม่ใส่วาซาบิครับ/ค่ะ', context: 'สั่งซูชิแบบไม่เอาวาซาบิ' },
-  { id: 'f5', category: 'food', japanese: 'お水をください。', romaji: 'Omizu o kudasai.', thai: 'ขอน้ำเปล่าหน่อยครับ/ค่ะ', context: 'ขอน้ำดื่มฟรีในร้าน' },
-  { id: 'f6', category: 'food', japanese: 'ごちそうさまでした！', romaji: 'Gochisōsama deshita!', thai: 'ขอบคุณสำหรับอาหาร (อร่อยมาก)', context: 'พูดตอนทานเสร็จและออกจากร้าน' },
+  { id: 'f2', category: 'food', japanese: 'おすすめは何ですか？', romaji: 'Osusume wa nan desu ka?', thai: 'มีเมนูแนะนำอะไรบ้างครับ/ค่ะ?', context: 'ให้พนักงานแนะนำจานเด็ด' },
+  { id: 'f3', category: 'food', japanese: 'お会計は別々でお願いします。', romaji: 'Okaikei wa betsubetsu de onegaishimasu.', thai: 'ขอเช็คบิลแยกกันครับ/ค่ะ (หารกัน)', context: 'ขอจ่ายเงินแยกรายคน' },
+  { id: 'f4', category: 'food', japanese: 'わさび抜きでお願いします。', romaji: 'Wasabi nuki de onegaishimasu.', thai: 'ขอไม่ใส่วาซาบิครับ/ค่ะ', context: 'สั่งซูชิ/อาหารแบบไม่เอาวาซาบิ' },
+  { id: 'f5', category: 'food', japanese: 'お水をください。', romaji: 'Omizu o kudasai.', thai: 'ขอน้ำดื่มหน่อยครับ/ค่ะ', context: 'ขอน้ำดื่มฟรีในร้านอาหาร' },
+  { id: 'f6', category: 'food', japanese: 'ごちそうさまでした！', romaji: 'Gochisōsama deshita!', thai: 'ขอบคุณสำหรับอาหาร (อร่อยมากครับ/ค่ะ)', context: 'พูดกับเชฟ/พนักงานตอนทานเสร็จ' },
 
   // Shopping & Tax Free
   { id: 's1', category: 'shopping', japanese: '免税（Tax Free）できますか？', romaji: 'Menzei dekimasu ka?', thai: 'ทำเรื่องคืนภาษี (Tax Free) ได้ไหมครับ/ค่ะ?', context: 'ถามตอนจ่ายเงินในห้างหรือร้านค้า' },
-  { id: 's2', category: 'shopping', japanese: 'これの新しいものはありますか？', romaji: 'Kore no atarashii mono wa arimasu ka?', thai: 'มีของชิ้นใหม่ในสต็อกไหมครับ/ค่ะ?', context: 'ขอของใหม่ที่ไม่ใช่ตัวโชว์' },
-  { id: 's3', category: 'shopping', japanese: '試着してもいいですか？', romaji: 'Shichaku shitemo ii desu ka?', thai: 'ขอลองสวมชุดนี้ได้ไหมครับ/ค่ะ?', context: 'ขอลองเสื้อผ้าก่อนซื้อ' },
-  { id: 's4', category: 'shopping', japanese: 'クレジットカードは使えますか？', romaji: 'Kurejitto kādo wa tsukaemasu ka?', thai: 'รับบัตรเครดิตไหมครับ/ค่ะ?', context: 'ถามก่อนชำระเงิน' },
+  { id: 's2', category: 'shopping', japanese: 'これの新しいものはありますか？', romaji: 'Kore no atarashii mono wa arimasu ka?', thai: 'มีของชิ้นใหม่ในสต็อกไหมครับ/ค่ะ?', context: 'ขอของใหม่ที่ไม่ใช่ตัวโชว์หน้าร้าน' },
+  { id: 's3', category: 'shopping', japanese: '試着してもいいですか？', romaji: 'Shichaku shitemo ii desu ka?', thai: 'ขอลองสวมชุดนี้ได้ไหมครับ/ค่ะ?', context: 'ขอลองเสื้อผ้าก่อนตัดสินใจซื้อ' },
+  { id: 's4', category: 'shopping', japanese: 'クレジットカードは使えますか？', romaji: 'Kurejitto kādo wa tsukaemasu ka?', thai: 'รับบัตรเครดิต / Travel Card ไหมครับ/ค่ะ?', context: 'ถามช่องทางชำระเงิน' },
   { id: 's5', category: 'shopping', japanese: '袋は要りません。', romaji: 'Fukuro wa irimasen.', thai: 'ไม่รับถุงพลาสติกครับ/ค่ะ', context: 'ปฏิเสธถุงเพื่อประหยัดเงิน' },
 
-  // Transport
-  { id: 't1', category: 'transport', japanese: 'この電車は空港へ行きますか？', romaji: 'Kono densha wa kūkō e ikimasu ka?', thai: 'รถไฟขบวนนี้ไปสนามบินไหมครับ/ค่ะ?', context: 'ถามเพื่อความแน่ใจก่อนขึ้นรถไฟ' },
+  // Transport & Station
+  { id: 't1', category: 'transport', japanese: 'この電車は空港へ行きますか？', romaji: 'Kono densha wa kūkō e ikimasu ka?', thai: 'รถไฟขบวนนี้ไปสนามบินไหมครับ/ค่ะ?', context: 'ถามเพื่อความแน่ใจก่อนขึ้นชานชาลา' },
   { id: 't2', category: 'transport', japanese: 'コインロッカーはどこですか？', romaji: 'Koin rokkā wa doko desu ka?', thai: 'ตู้ฝากกระเป๋า (Coin Locker) อยู่ตรงไหน?', context: 'ถามหาสถานที่ฝากกระเป๋าในสถานี' },
-  { id: 't3', category: 'transport', japanese: '切符売り場はどこですか？', romaji: 'Kippu uriba wa doko desu ka?', thai: 'ที่ขายตั๋วรถไฟอยู่ทางไหนครับ/ค่ะ?', context: 'หาตู้ซื้อตั๋วหรือเคาน์เตอร์' },
-  { id: 't4', category: 'transport', japanese: 'トイレはどこですか？', romaji: 'Toire wa doko desu ka?', thai: 'ห้องน้ำอยู่ที่ไหนครับ/ค่ะ?', context: 'ถามหาห้องน้ำ' },
+  { id: 't3', category: 'transport', japanese: '切符売り場はどこですか？', romaji: 'Kippu uriba wa doko desu ka?', thai: 'เคาน์เตอร์ขายตั๋วรถไฟอยู่ทางไหนครับ/ค่ะ?', context: 'หาตู้ซื้อตั๋วหรือจุดออกตั๋ว JR' },
+  { id: 't4', category: 'transport', japanese: 'トイレはどこですか？', romaji: 'Toire wa doko desu ka?', thai: 'ห้องน้ำอยู่ที่ไหนครับ/ค่ะ?', context: 'ถามหาห้องน้ำสาธารณะ' },
 
-  // Emergency & General
-  { id: 'e1', category: 'emergency', japanese: 'すみません、助けてください。', romaji: 'Sumimasen, tasukete kudasai.', thai: 'ขอโทษนะครับ/ค่ะ ช่วยฉันหน่อยได้ไหม?', context: 'ขอความช่วยเหลือฉุกเฉิน' },
-  { id: 'e2', category: 'emergency', japanese: '日本語が分かりません。', romaji: 'Nihongo ga wakarimasen.', thai: 'ฉันไม่เข้าใจภาษาญี่ปุ่นครับ/ค่ะ', context: 'บอกเมื่อฟังไม่รู้เรื่อง' },
-  { id: 'e3', category: 'emergency', japanese: 'Wi-Fiのパスワードは何ですか？', romaji: 'Waifai no pasuwādo wa nan desu ka?', thai: 'รหัสผ่าน Wi-Fi คืออะไรครับ/ค่ะ?', context: 'ขอรหัสอินเทอร์เน็ต' },
+  // Emergency & Assistance
+  { id: 'e1', category: 'emergency', japanese: 'すみません、助けてください。', romaji: 'Sumimasen, tasukete kudasai.', thai: 'ขอโทษนะครับ/ค่ะ ช่วยฉันหน่อยได้ไหม?', context: 'ขอความช่วยเหลือเร่งด่วน' },
+  { id: 'e2', category: 'emergency', japanese: '日本語が分かりません。', romaji: 'Nihongo ga wakarimasen.', thai: 'ฉันพูดภาษาญี่ปุ่นไม่ได้ครับ/ค่ะ', context: 'บอกเมื่อฟังไม่เข้าใจ' },
+  { id: 'e3', category: 'emergency', japanese: 'Wi-Fiのパスワードは何ですか？', romaji: 'Waifai no pasuwādo wa nan desu ka?', thai: 'รหัสผ่าน Wi-Fi คืออะไรครับ/ค่ะ?', context: 'ขอรหัสเชื่อมต่ออินเทอร์เน็ต' },
+  { id: 'e4', category: 'emergency', japanese: '病院はどこですか？', romaji: 'Byōin wa doko desu ka?', thai: 'โรงพยาบาล/คลินิกที่ใกล้ที่สุดอยู่ที่ไหน?', context: 'เจ็บป่วยฉุกเฉิน' },
 ];
 
 // 2. Nearby Radar Presets
@@ -76,20 +78,38 @@ interface NearbyPreset {
 }
 
 const NEARBY_PRESETS: NearbyPreset[] = [
-  { id: 'conv-711', name: '7-Eleven / 7-Bank ATM', icon: '🏪', query: '7-Eleven', description: 'ร้านสะดวกซื้อ & ตู้กดเงินเยนฉุกเฉิน', badge: 'สะดวกซื้อ & ATM' },
-  { id: 'conv-lawson', name: 'Lawson / FamilyMart', icon: '🥪', query: 'Lawson, FamilyMart', description: 'ไก่ทอด Karaage-kun & ขนมหวาน', badge: 'ของกิน & ขนม' },
-  { id: 'donki', name: 'Don Quijote (ดองกิ)', icon: '🐧', query: 'Don Quijote', description: 'ของฝาก ขนม เครื่องสำอาง 24 ชม.', badge: 'Tax-Free ยอดฮิต' },
-  { id: 'drugstore', name: 'ร้านขายยา Matsumoto Kiyoshi', icon: '💊', query: 'Matsumoto Kiyoshi, Sundrug, Daikoku Drug', description: 'แผ่นแปะแก้ปวด ยาหยอดตา สกินแคร์', badge: 'ยา & เวชสำอาง' },
-  { id: 'toilet', name: 'ห้องน้ำสาธารณะ (Restroom)', icon: '🚻', query: 'Public Restroom, Public Toilet', description: 'ห้องน้ำสะอาดใกล้ตัวคุณ', badge: 'ด่วน' },
-  { id: 'locker', name: 'ตู้ฝากกระเป๋า (Coin Locker)', icon: '🛅', query: 'Coin Locker, Luggage Storage', description: 'จุดฝากกระเป๋าเดินทางรอบสถานี', badge: 'ฝากสัมภาระ' },
-  { id: 'mcdonald', name: 'McDonald\'s / Starbucks', icon: '☕', query: 'Starbucks, McDonald\'s', description: 'ที่นั่งพักชาร์จแบต & Wi-Fi ฟรี', badge: 'คาเฟ่ & ที่นั่งพัก' },
+  { id: 'conv-711', name: '7-Eleven & 7-Bank ATM', icon: '🏪', query: '7-Eleven', description: 'ร้านสะดวกซื้อ & ตู้กดเงินเยนฉุกเฉินรับบัตรไทย', badge: 'สะดวกซื้อ & ATM' },
+  { id: 'conv-lawson', name: 'Lawson / FamilyMart', icon: '🥪', query: 'Lawson, FamilyMart', description: 'ไก่ทอด Karaage-kun ขนมหวาน และของใช้ด่วน', badge: 'ของกิน & อาหาร' },
+  { id: 'donki', name: 'Don Quijote (ดองกิ)', icon: '🐧', query: 'Don Quijote', description: 'ของฝาก ขนม เครื่องสำอาง 24 ชม. Tax-Free', badge: 'Tax-Free 24h' },
+  { id: 'drugstore', name: 'ร้านขายยา Matsumoto Kiyoshi', icon: '💊', query: 'Matsumoto Kiyoshi, Sundrug, Daikoku Drug', description: 'แผ่นแปะแก้ปวด ยาหยอดตา สกินแคร์ & เวชภัณฑ์', badge: 'ยา & เวชสำอาง' },
+  { id: 'toilet', name: 'ห้องน้ำสาธารณะ (Restroom)', icon: '🚻', query: 'Public Restroom, Public Toilet', description: 'จุดห้องน้ำสะอาดใกล้ตัวคุณ', badge: 'ด่วน' },
+  { id: 'locker', name: 'ตู้ฝากกระเป๋า (Coin Locker)', icon: '🛅', query: 'Coin Locker, Luggage Storage', description: 'จุดฝากสัมภาระรอบสถานีรถไฟ', badge: 'ฝากสัมภาระ' },
+  { id: 'mcdonald', name: 'Starbucks / McDonald\'s', icon: '☕', query: 'Starbucks, McDonald\'s', description: 'จุดนั่งพักชาร์จแบตเตอรี่ & Wi-Fi ฟรี', badge: 'คาเฟ่ & จุดชาร์จ' },
   { id: 'supermarket', name: 'ซูเปอร์มาร์เก็ตลดราคาดึก', icon: '🍱', query: 'Supermarket, Life Supermarket', description: 'ซูชิและเบนโตะลดราคา 50% หลัง 2 ทุ่ม', badge: 'ของสด & ลดราคา' },
+];
+
+// 3. Emergency Contacts Data
+interface EmergencyContact {
+  id: string;
+  title: string;
+  tel: string;
+  detail: string;
+  icon: string;
+  badge: string;
+}
+
+const EMERGENCY_CONTACTS: EmergencyContact[] = [
+  { id: 'police', title: 'ตำรวจญี่ปุ่น (Police Emergency)', tel: '110', detail: 'แจ้งเหตุด่วนเหตุร้าย ของหาย อุบัติเหตุ', icon: '👮', badge: 'โทรฟรี 24 ชม.' },
+  { id: 'ambulance', title: 'กู้ภัย / รถพยาบาล (Ambulance & Fire)', tel: '119', detail: 'เจ็บป่วยฉุกเฉิน เรียกรถพยาบาล ไฟไหม้', icon: '🚑', badge: 'โทรฟรี 24 ชม.' },
+  { id: 'jnto', title: 'Japan Visitor Hotline (JNTO)', tel: '050-3816-2787', detail: 'ศูนย์ช่วยเหลือนักท่องเที่ยวต่างชาติ 24 ชม. (มีบริการภาษาอังกฤษ/ไทย)', icon: '🌐', badge: 'ศูนย์ท่องเที่ยว' },
+  { id: 'thai-embassy-tokyo', title: 'สถานเอกอัครราชทูตไทย ณ กรุงโตเกียว', tel: '090-4435-7812', detail: 'เบอร์ฉุกเฉินคนไทยกรณีหนังสือเดินทางหาย หรือประสบภัยพิบัติ', icon: '🇹🇭', badge: 'สายด่วนคนไทย' },
+  { id: 'thai-consulate-osaka', title: 'สถานกงสุลใหญ่ ณ นครโอซาก้า', tel: '090-1895-0987', detail: 'สายด่วนฉุกเฉินสำหรับผู้พำนัก/ท่องเที่ยวแถบคันไซ', icon: '🏯', badge: 'สายด่วนคันไซ' },
 ];
 
 interface TicketPass {
   id: string;
   title: string;
-  category: 'flight' | 'train' | 'vjw' | 'attraction' | 'hotel' | 'other';
+  category: 'vjw' | 'flight' | 'train' | 'hotel' | 'attraction' | 'other';
   imageStorageKey: string;
   imageUrl?: string;
   note?: string;
@@ -108,27 +128,83 @@ export default function TravelHubModal({
   onOpenScrapbook,
   onOpenPacking,
 }: TravelHubModalProps) {
-  const [activeTab, setActiveTab] = useState<'bento' | 'phrases' | 'radar' | 'tickets' | 'story' | 'install'>('bento');
-  
-  // Phrases State
-  const [phraseCategory, setPhraseCategory] = useState<'all' | 'food' | 'shopping' | 'transport' | 'emergency'>('all');
-  const [phraseSearch, setPhraseSearch] = useState('');
-  const deferredPhraseSearch = useDeferredValue(phraseSearch);
-  const [bigCardPhrase, setBigCardPhrase] = useState<PhraseItem | null>(null);
-  const [speakingId, setSpeakingId] = useState<string | null>(null);
-  const [copiedPhraseId, setCopiedPhraseId] = useState<string | null>(null);
+  // Navigation Tabs: 'calculator' | 'tickets' | 'phrases' | 'radar' | 'story'
+  const [activeTab, setActiveTab] = useState<'calculator' | 'tickets' | 'phrases' | 'radar' | 'story'>('calculator');
 
-  // Tickets & Passes State
+  // ==================== 1. TAX-FREE & CURRENCY CALCULATOR STATE ====================
+  const [calcInput, setCalcInput] = useState<string>('5500');
+  const [taxRateType, setTaxRateType] = useState<'10' | '8'>('10'); // 10% standard or 8% food/drink
+  const [priceMode, setPriceMode] = useState<'tax_included' | 'tax_excluded'>('tax_included');
+  const [copiedCalc, setCopiedCalc] = useState(false);
+
+  // Calculations
+  const numericInput = useMemo(() => {
+    const val = parseFloat(calcInput.replace(/,/g, ''));
+    return isNaN(val) ? 0 : val;
+  }, [calcInput]);
+
+  const taxRate = taxRateType === '10' ? 0.10 : 0.08;
+
+  // If price is Tax Included:
+  // Tax-Free price = Total / (1 + taxRate)
+  // Tax savings = Total - Tax-Free price
+  // If price is Tax Excluded:
+  // Tax-Free price = Total
+  // Tax-Included price = Total * (1 + taxRate)
+  // Tax savings = Tax-Included price - Total
+  const { taxFreePrice, taxIncludedPrice, taxSavedYen, priceInThb, taxSavedThb, isTaxFreeEligible, remainingForTaxFree } = useMemo(() => {
+    let tf = 0;
+    let ti = 0;
+    let saved = 0;
+
+    if (priceMode === 'tax_included') {
+      ti = numericInput;
+      tf = Math.round(numericInput / (1 + taxRate));
+      saved = ti - tf;
+    } else {
+      tf = numericInput;
+      ti = Math.round(numericInput * (1 + taxRate));
+      saved = ti - tf;
+    }
+
+    const thb = Math.round(tf * fxRate);
+    const savedThb = Math.round(saved * fxRate);
+
+    // Japan Tax-Free threshold: Purchases >= 5,000 JPY excluding tax
+    const eligible = tf >= 5000;
+    const remaining = eligible ? 0 : Math.max(0, 5000 - tf);
+
+    return {
+      taxFreePrice: tf,
+      taxIncludedPrice: ti,
+      taxSavedYen: saved,
+      priceInThb: thb,
+      taxSavedThb: savedThb,
+      isTaxFreeEligible: eligible,
+      remainingForTaxFree: remaining,
+    };
+  }, [numericInput, taxRate, priceMode, fxRate]);
+
+  const handleAddPreset = (amount: number) => {
+    const current = numericInput;
+    setCalcInput((current + amount).toString());
+  };
+
+  const handleCopyCalcSummary = () => {
+    if (typeof window !== 'undefined') {
+      const summary = `🛍️ ช้อปปิ้ง Tax-Free:\nยอดปลอดภาษี: ¥${taxFreePrice.toLocaleString()} (≈ ฿${priceInThb.toLocaleString()})\nประหยัดภาษี ${taxRateType}% ไปได้: ¥${taxSavedYen.toLocaleString()} (฿${taxSavedThb.toLocaleString()})\nเรท: 1 JPY = ${fxRate} THB`;
+      navigator.clipboard.writeText(summary);
+      setCopiedCalc(true);
+      setTimeout(() => setCopiedCalc(false), 2000);
+    }
+  };
+
+  // ==================== 2. TICKETS & QR VAULT STATE ====================
   const [tickets, setTickets] = useState<TicketPass[]>([]);
   const [ticketTitle, setTicketTitle] = useState('');
   const [ticketCategory, setTicketCategory] = useState<TicketPass['category']>('vjw');
-  const [ticketNote, setTicketNote] = useState('');
   const [uploadingTicket, setUploadingTicket] = useState(false);
   const [previewPassImage, setPreviewPassImage] = useState<string | null>(null);
-
-  // Story Generator State
-  const [storyBgColor, setStoryBgColor] = useState<'midnight' | 'sakura' | 'sunset' | 'fuji'>('midnight');
-  const storyCanvasRef = useRef<HTMLDivElement>(null);
 
   // Load Saved Passes from LocalStorage & LocalReceipt DB
   useEffect(() => {
@@ -142,7 +218,6 @@ export default function TravelHubModal({
       const raw = localStorage.getItem(`travel_hub_tickets_${trip?.id}`);
       if (raw) {
         const parsed: TicketPass[] = JSON.parse(raw);
-        // Load image data URLs
         const hydrated = await Promise.all(
           parsed.map(async (t) => {
             if (t.imageStorageKey) {
@@ -172,13 +247,21 @@ export default function TravelHubModal({
       
       try {
         await saveLocalReceiptPhoto(storageKey, dataUrl);
+        const defaultTitles: Record<string, string> = {
+          vjw: 'Visit Japan Web QR (ตม. & ศุลกากร)',
+          flight: 'Boarding Pass ตั๋วเครื่องบิน',
+          train: 'Shinkansen / JR Pass Ticket',
+          hotel: 'Hotel Voucher ใบจองที่พัก',
+          attraction: 'บัตรเข้าสวนสนุก / กิจกรรม',
+          other: 'เอกสารสำคัญประจำทริป',
+        };
+
         const newTicket: TicketPass = {
           id: storageKey,
-          title: ticketTitle.trim() || (ticketCategory === 'vjw' ? 'Visit Japan Web QR' : ticketCategory === 'flight' ? 'Boarding Pass' : 'ตั๋วเดินทาง'),
+          title: ticketTitle.trim() || defaultTitles[ticketCategory] || 'ตั๋วเดินทาง',
           category: ticketCategory,
           imageStorageKey: storageKey,
           imageUrl: dataUrl,
-          note: ticketNote.trim() || undefined,
           createdAt: Date.now(),
         };
 
@@ -191,7 +274,6 @@ export default function TravelHubModal({
 
         triggerConfetti();
         setTicketTitle('');
-        setTicketNote('');
       } catch (err) {
         console.error('Save pass err', err);
         alert('ไม่สามารถบันทึกตั๋วได้');
@@ -216,7 +298,14 @@ export default function TravelHubModal({
     }
   };
 
-  // Pronounce Japanese Phrase using Web Speech API
+  // ==================== 3. PHRASES & BIG DISPLAY STATE ====================
+  const [phraseCategory, setPhraseCategory] = useState<'all' | 'food' | 'shopping' | 'transport' | 'emergency'>('all');
+  const [phraseSearch, setPhraseSearch] = useState('');
+  const deferredPhraseSearch = useDeferredValue(phraseSearch);
+  const [bigCardPhrase, setBigCardPhrase] = useState<PhraseItem | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [copiedPhraseId, setCopiedPhraseId] = useState<string | null>(null);
+
   const speakJapanese = (phrase: PhraseItem) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       alert('เบราว์เซอร์ของคุณไม่รองรับระบบออกเสียง');
@@ -244,12 +333,6 @@ export default function TravelHubModal({
     }
   };
 
-  // Launch Google Maps for Nearby Queries
-  const openNearbyGoogleMaps = (query: string) => {
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-    window.open(url, '_blank');
-  };
-
   const filteredPhrases = useMemo(() => {
     return JAPANESE_PHRASES.filter((p) => {
       if (phraseCategory !== 'all' && p.category !== phraseCategory) return false;
@@ -261,6 +344,39 @@ export default function TravelHubModal({
     });
   }, [phraseCategory, deferredPhraseSearch]);
 
+  // ==================== 4. NEARBY RADAR & SOS ====================
+  const openNearbyGoogleMaps = (query: string) => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    window.open(url, '_blank');
+  };
+
+  // Hotel address helper
+  const hotelInfo = useMemo(() => {
+    const found = itinerary.find((item) => 
+      item.category === 'hotel' || 
+      item.title?.toLowerCase().includes('hotel') ||
+      item.title?.includes('โรงแรม') ||
+      item.title?.includes('ที่พัก')
+    );
+    return found ? {
+      name: found.title,
+      address: found.location || found.address || found.city || 'ที่พักประจำทริป',
+    } : null;
+  }, [itinerary]);
+
+  const [copiedHotel, setCopiedHotel] = useState(false);
+  const handleCopyHotel = () => {
+    if (hotelInfo && typeof window !== 'undefined') {
+      navigator.clipboard.writeText(`${hotelInfo.name} - ${hotelInfo.address}`);
+      setCopiedHotel(true);
+      setTimeout(() => setCopiedHotel(false), 2000);
+    }
+  };
+
+  // ==================== 5. STORY CARD GENERATOR STATE ====================
+  const [storyBgColor, setStoryBgColor] = useState<'midnight' | 'sakura' | 'sunset' | 'fuji'>('midnight');
+  const storyCanvasRef = useRef<HTMLDivElement>(null);
+
   const totalSpent = useMemo(() => {
     return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
   }, [expenses]);
@@ -268,470 +384,413 @@ export default function TravelHubModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-        {/* Mobile Sheet Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[88vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
         
-        {/* Modal Header */}
-        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#111726]/50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-base shadow-sm shrink-0">
-              🧰
+        {/* Mobile Sheet Handle */}
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
+
+        {/* Modal Top Header */}
+        <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] bg-white/80 dark:bg-[#181a20]/80 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#e79b71] to-amber-500 text-white flex items-center justify-center text-lg shadow-sm shadow-[#e79b71]/20 shrink-0">
+              🧭
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                  Travel Command Center
+                  Travel Companion Hub
                 </h2>
-                <span className="text-[9px] font-bold px-2 py-0.2 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300">
-                  5-in-1 Hub
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#e79b71]/15 text-[#d98254] dark:text-[#f2a278]">
+                  {trip?.currency || 'JPY'} • ฿{fxRate}
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                กล่องเครื่องมืออัจฉริยะสำหรับนักเดินทางท่องเที่ยว
+                กล่องเครื่องมือออนทริปสำหรับนักเดินทางตัวจริง
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
-            {activeTab !== 'bento' && (
-              <button
-                onClick={() => setActiveTab('bento')}
-                className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 text-[11px] font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                🏠 เมนูหลัก
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#262932] transition-colors cursor-pointer"
+            title="ปิดหน้าต่าง"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* Modal Body Container */}
-        <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+        {/* Super-App Pill Tab Navigation Bar */}
+        <div className="flex items-center gap-1.5 px-4 sm:px-6 py-2 border-b border-slate-100 dark:border-[#262932] bg-slate-50/70 dark:bg-[#15171e]/70 overflow-x-auto custom-scrollbar shrink-0">
+          <button
+            onClick={() => setActiveTab('calculator')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              activeTab === 'calculator'
+                ? 'bg-[#e79b71] text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
+            }`}
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            <span>Tax-Free & เรทเงิน</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('tickets')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              activeTab === 'tickets'
+                ? 'bg-[#e79b71] text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
+            }`}
+          >
+            <QrCode className="h-3.5 w-3.5" />
+            <span>ตั๋ว & QR Vault</span>
+            {tickets.length > 0 && (
+              <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${activeTab === 'tickets' ? 'bg-white/30 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
+                {tickets.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('phrases')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              activeTab === 'phrases'
+                ? 'bg-[#e79b71] text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
+            }`}
+          >
+            <Languages className="h-3.5 w-3.5" />
+            <span>การ์ดยื่น & วลี</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('radar')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              activeTab === 'radar'
+                ? 'bg-[#e79b71] text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
+            }`}
+          >
+            <ShieldAlert className="h-3.5 w-3.5" />
+            <span>SOS & เรดาร์</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('story')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              activeTab === 'story'
+                ? 'bg-[#e79b71] text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
+            }`}
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            <span>Story สรุปทริป</span>
+          </button>
+        </div>
+
+        {/* Modal Scrollable Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
           
-          {/* ==================== VIEW 1: BENTO COMMAND DASHBOARD ==================== */}
-          {activeTab === 'bento' && (
+          {/* ========================================================
+              TAB 1: SMART TAX-FREE & CURRENCY SHOPPING CALCULATOR
+          ======================================================== */}
+          {activeTab === 'calculator' && (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/80 dark:border-[#222c42] flex items-center justify-between gap-3">
-                <div className="text-left">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <span>ทริป: {trip?.name || trip?.title || 'Japan Adventure'}</span>
-                  </span>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    รวมทุกเครื่องมือเดินทางที่จำเป็นไว้ในที่เดียว ไม่รกหน้าจอ
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-blue-600 dark:text-blue-400 block">
-                    {expenses.length} รายจ่าย • {itinerary.length} กิจกรรม
-                  </span>
-                </div>
-              </div>
-
-              {/* Bento Grid Action Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
-                
-                {/* 1. Japanese Survival Phrasebook */}
-                <div
-                  onClick={() => setActiveTab('phrases')}
-                  className="group p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#1c2438]/70 hover:border-blue-400 hover:bg-blue-50/40 dark:hover:bg-[#1c2438] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex flex-col justify-between space-y-3"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg shadow-2xs group-hover:scale-110 transition-transform">
-                      🇯🇵
-                    </div>
-                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100/80 dark:bg-blue-950/70 px-1.5 py-0.2 rounded-md">
-                      พูดได้
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      ประโยคญี่ปุ่นเอาตัวรอด
-                    </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                      พร้อมเสียงอ่าน & โหมดโชว์หน้าจอใหญ่
-                    </p>
-                  </div>
-                </div>
-
-                {/* 2. 1-Tap Nearby Essentials Radar */}
-                <div
-                  onClick={() => setActiveTab('radar')}
-                  className="group p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-purple-900/50 bg-slate-50/70 dark:bg-purple-950/20 hover:border-purple-500 hover:bg-purple-50/40 dark:hover:bg-purple-950/40 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex flex-col justify-between space-y-3"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg shadow-2xs group-hover:scale-110 transition-transform">
-                      🏪
-                    </div>
-                    <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 bg-purple-100/80 dark:bg-purple-950 px-1.5 py-0.2 rounded-md">
-                      1-Tap GPS
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                      เรดาร์หาจุดสำคัญรอบตัว
-                    </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-purple-300/70 font-medium mt-0.5">
-                      7-11, Donki, ตู้ ATM, ห้องน้ำ, ล็อกเกอร์
-                    </p>
-                  </div>
-                </div>
-
-                {/* 3. Travel Passes & QR Locker */}
-                <div
-                  onClick={() => setActiveTab('tickets')}
-                  className="group p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-purple-900/50 bg-slate-50/70 dark:bg-purple-950/20 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/40 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex flex-col justify-between space-y-3"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg shadow-2xs group-hover:scale-110 transition-transform">
-                      🎫
-                    </div>
-                    <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100/80 dark:bg-indigo-950 px-1.5 py-0.2 rounded-md">
-                      {tickets.length} ตั๋ว
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      กล่องเซฟตั๋ว & QR Code
-                    </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-purple-300/70 font-medium mt-0.5">
-                      Visit Japan Web, Shinkansen, บัตรผ่าน
-                    </p>
-                  </div>
-                </div>
-
-                {/* 4. IG Story Trip Card Generator */}
-                <div
-                  onClick={() => setActiveTab('story')}
-                  className="group p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-purple-900/50 bg-slate-50/70 dark:bg-purple-950/20 hover:border-pink-500 hover:bg-pink-50/40 dark:hover:bg-purple-950/40 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex flex-col justify-between space-y-3"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 text-white flex items-center justify-center text-lg shadow-2xs group-hover:scale-110 transition-transform">
-                      🎨
-                    </div>
-                    <span className="text-[9px] font-bold text-pink-600 dark:text-pink-400 bg-pink-100/80 dark:bg-pink-950 px-1.5 py-0.2 rounded-md">
-                      9:16 Story
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
-                      สร้างการ์ด IG Story สรุปทริป
-                    </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-purple-300/70 font-medium mt-0.5">
-                      รวมรูปและสถิติดาวน์โหลดลงสตอรี่ 1-คลิก
-                    </p>
-                  </div>
-                </div>
-
-                {/* 5. Install iOS PWA App */}
-                <div
-                  onClick={() => setActiveTab('install')}
-                  className="group p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-purple-900/50 bg-slate-50/70 dark:bg-purple-950/20 hover:border-emerald-500 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/40 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex flex-col justify-between space-y-3"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shadow-2xs group-hover:scale-110 transition-transform">
-                      📲
-                    </div>
-                    <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950 px-1.5 py-0.2 rounded-md">
-                      PWA
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                      ติดตั้งลงเครื่อง iPhone/iPad
-                    </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-purple-300/70 font-medium mt-0.5">
-                      เปิดเต็มจอ ไร้แถบ Safari ทำงานออฟไลน์
-                    </p>
-                  </div>
-                </div>
-
-                {/* 6. Quick Shortcut to Packing & Scrapbook */}
-                <div
-                  onClick={() => {
-                    onClose();
-                    if (onOpenPacking) onOpenPacking();
-                  }}
-                  className="group p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-purple-900/50 bg-slate-50/70 dark:bg-purple-950/20 hover:border-amber-500 hover:bg-amber-50/40 dark:hover:bg-purple-950/40 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex flex-col justify-between space-y-3"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shadow-2xs group-hover:scale-110 transition-transform">
-                      🧳
-                    </div>
-                    <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-950 px-1.5 py-0.2 rounded-md">
-                      Checklist
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                      เช็คลิสต์จัดกระเป๋า & เอกสาร
-                    </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-purple-300/70 font-medium mt-0.5">
-                      พาสปอร์ต, eSIM, ฮีทเทค, พาวเวอร์แบงก์
-                    </p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          )}
-
-          {/* ==================== VIEW 2: JAPANESE PHRASEBOOK ==================== */}
-          {activeTab === 'phrases' && (
-            <div className="space-y-3.5">
               
-              {/* Category Filter Pills & Search */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-                  <button
-                    onClick={() => setPhraseCategory('all')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                      phraseCategory === 'all'
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-purple-950 text-slate-700 dark:text-purple-300'
-                    }`}
-                  >
-                    ทั้งหมด ({JAPANESE_PHRASES.length})
-                  </button>
-                  <button
-                    onClick={() => setPhraseCategory('food')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                      phraseCategory === 'food'
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-purple-950 text-slate-700 dark:text-purple-300'
-                    }`}
-                  >
-                    🍜 ร้านอาหาร
-                  </button>
-                  <button
-                    onClick={() => setPhraseCategory('shopping')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                      phraseCategory === 'shopping'
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-purple-950 text-slate-700 dark:text-purple-300'
-                    }`}
-                  >
-                    🛍️ ช้อปปิ้ง & Tax Free
-                  </button>
-                  <button
-                    onClick={() => setPhraseCategory('transport')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                      phraseCategory === 'transport'
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-purple-950 text-slate-700 dark:text-purple-300'
-                    }`}
-                  >
-                    🚅 รถไฟ & สถานี
-                  </button>
-                  <button
-                    onClick={() => setPhraseCategory('emergency')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                      phraseCategory === 'emergency'
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-purple-950 text-slate-700 dark:text-purple-300'
-                    }`}
-                  >
-                    🚨 ขอความช่วยเหลือ
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="ค้นหาประโยค เช่น วาซาบิ, คืนภาษี, แยกบิล, ห้องน้ำ..."
-                    value={phraseSearch}
-                    onChange={(e) => setPhraseSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-purple-800/60 bg-slate-50/50 dark:bg-[#11101d]/60 text-slate-900 dark:text-white text-xs outline-none focus:border-pink-500 font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Phrase Cards List */}
-              <div className="space-y-2.5 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
-                {filteredPhrases.map((p) => {
-                  const isSpeaking = speakingId === p.id;
-                  const isCopied = copiedPhraseId === p.id;
-
-                  return (
-                    <div
-                      key={p.id}
-                      className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-white dark:bg-[#11101d] space-y-2 hover:border-pink-300 transition-all shadow-2xs"
+              {/* Main Interactive Shopping Calculator Card */}
+              <div className="p-4 sm:p-5 rounded-3xl bg-slate-50/80 dark:bg-[#1f222e] border border-slate-200/90 dark:border-[#262932] space-y-4 shadow-sm">
+                
+                {/* Mode Selectors */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1 bg-white dark:bg-[#181a20] p-1 rounded-2xl border border-slate-200 dark:border-[#2b2f3d]">
+                    <button
+                      type="button"
+                      onClick={() => setPriceMode('tax_included')}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        priceMode === 'tax_included'
+                          ? 'bg-[#e79b71] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
                     >
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="space-y-0.5">
-                          <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wide">
-                            {p.japanese}
-                          </h4>
-                          <p className="text-[11px] font-mono font-semibold text-pink-600 dark:text-pink-400">
-                            {p.romaji}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={() => speakJapanese(p)}
-                            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
-                              isSpeaking
-                                ? 'bg-pink-500 text-white border-pink-600 animate-pulse'
-                                : 'border-slate-200 dark:border-purple-800 hover:border-pink-500 text-slate-600 dark:text-purple-300'
-                            }`}
-                            title="ฟังเสียงพูดภาษาญี่ปุ่น"
-                          >
-                            <Volume2 className="h-4 w-4" />
-                          </button>
-
-                          <button
-                            onClick={() => setBigCardPhrase(p)}
-                            className="p-1.5 rounded-xl border border-slate-200 dark:border-purple-800 hover:border-purple-500 text-slate-600 dark:text-purple-300 hover:text-purple-600 transition-all cursor-pointer"
-                            title="เปิดโหมดโชว์หน้าจอใหญ่ (ยื่นให้คนญี่ปุ่นดู)"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-
-                          <button
-                            onClick={() => copyPhraseText(p)}
-                            className="p-1.5 rounded-xl border border-slate-200 dark:border-purple-800 hover:border-pink-500 text-slate-400 hover:text-pink-600 transition-all cursor-pointer"
-                            title="คัดลอกข้อความ"
-                          >
-                            {isCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center justify-between gap-1 border-t border-slate-100 dark:border-purple-900/30 pt-1.5 text-xs">
-                        <span className="font-bold text-slate-800 dark:text-purple-200">
-                          🇹🇭 {p.thai}
-                        </span>
-                        <span className="text-[10px] text-slate-400 dark:text-purple-400/80 font-medium">
-                          💡 {p.context}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-            </div>
-          )}
-
-          {/* ==================== VIEW 3: 1-TAP NEARBY RADAR ==================== */}
-          {activeTab === 'radar' && (
-            <div className="space-y-3.5">
-              <div className="p-3 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/40 text-xs text-slate-700 dark:text-purple-300 flex items-center gap-2">
-                <Compass className="h-5 w-5 text-purple-600 shrink-0 animate-spin-slow" />
-                <span>แตะ 1 ครั้งเพื่อเปิด Google Maps นำทางไปยังสถานที่ใกล้เคียงรอบตัวคุณทันที</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
-                {NEARBY_PRESETS.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => openNearbyGoogleMaps(item.query)}
-                    className="p-3.5 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-white dark:bg-[#11101d] hover:border-pink-500 hover:bg-pink-50/30 dark:hover:bg-purple-950/30 transition-all cursor-pointer group shadow-2xs flex items-center justify-between gap-2"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-purple-950 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
-                        {item.icon}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
-                            {item.name}
-                          </h4>
-                        </div>
-                        <p className="text-[10px] text-slate-500 dark:text-purple-400 truncate mt-0.5">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="p-2 rounded-xl bg-pink-50 dark:bg-pink-950 text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform shrink-0">
-                      <ExternalLink className="h-4 w-4" />
-                    </div>
+                      ราคาป้ายรวมภาษี (税込)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPriceMode('tax_excluded')}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        priceMode === 'tax_excluded'
+                          ? 'bg-[#e79b71] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      ราคาป้ายไม่รวมภาษี (税抜)
+                    </button>
                   </div>
-                ))}
+
+                  <div className="flex items-center gap-1 bg-white dark:bg-[#181a20] p-1 rounded-2xl border border-slate-200 dark:border-[#2b2f3d]">
+                    <button
+                      type="button"
+                      onClick={() => setTaxRateType('10')}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        taxRateType === '10'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                      title="สินค้าทั่วไป, เสื้อผ้า, เครื่องสำอาง (10%)"
+                    >
+                      ทั่วไป 10%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTaxRateType('8')}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        taxRateType === '8'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                      title="ของกิน, ขนม, เครื่องดื่ม (8%)"
+                    >
+                      ของกิน 8%
+                    </button>
+                  </div>
+                </div>
+
+                {/* Amount Input Display */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between mb-1.5">
+                    <span>ระบุราคาป้ายสินค้า ({trip?.currency || 'JPY'}):</span>
+                    <span className="text-[10px] text-slate-400">
+                      อัตราแลกเปลี่ยนปัจจุบัน 1 JPY = {fxRate} THB
+                    </span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-4 text-lg font-black text-slate-400">
+                      ¥
+                    </span>
+                    <input
+                      type="number"
+                      value={calcInput}
+                      onChange={(e) => setCalcInput(e.target.value)}
+                      placeholder="0"
+                      className="w-full pl-9 pr-4 py-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-300 dark:border-[#2b2f3d] text-slate-900 dark:text-white font-mono text-xl sm:text-2xl font-black outline-none focus:border-[#e79b71] transition-all shadow-inner"
+                    />
+                    {calcInput && (
+                      <button
+                        type="button"
+                        onClick={() => setCalcInput('')}
+                        className="absolute right-3 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Add Presets */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] font-bold text-slate-400 mr-1">ปุ่มด่วน:</span>
+                  {[
+                    { label: '+1,000¥', val: 1000 },
+                    { label: '+5,000¥ (Tax-Free)', val: 5000, highlight: true },
+                    { label: '+10,000¥', val: 10000 },
+                    { label: '+30,000¥', val: 30000 },
+                    { label: '+50,000¥', val: 50000 },
+                  ].map((btn) => (
+                    <button
+                      key={btn.label}
+                      type="button"
+                      onClick={() => handleAddPreset(btn.val)}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                        btn.highlight
+                          ? 'bg-[#e79b71]/15 text-[#d98254] dark:text-[#f2a278] border border-[#e79b71]/40 hover:bg-[#e79b71]/25'
+                          : 'bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#2b2f3d] text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setCalcInput('0')}
+                    className="px-2 py-1 rounded-xl text-[11px] font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors ml-auto cursor-pointer"
+                  >
+                    ล้างค่า
+                  </button>
+                </div>
+
+                {/* Tax-Free Threshold Status Bar */}
+                <div className={`p-3.5 rounded-2xl border transition-all ${
+                  isTaxFreeEligible 
+                    ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-300/80 dark:border-emerald-800/60'
+                    : 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-300/80 dark:border-amber-800/60'
+                }`}>
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="flex items-center gap-1.5">
+                      {isTaxFreeEligible ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      )}
+                      <span className={isTaxFreeEligible ? 'text-emerald-900 dark:text-emerald-200' : 'text-amber-900 dark:text-amber-200'}>
+                        {isTaxFreeEligible ? 'ได้รับสิทธิ์ทำ Tax-Free ทันที (เกิน 5,000 เยน) 🎉' : `ยังไม่ถึงเกณฑ์ Tax-Free (ขาดอีก ¥${remainingForTaxFree.toLocaleString()})`}
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-black opacity-80">
+                      เกณฑ์ขั้นต่ำ ¥5,000
+                    </span>
+                  </div>
+
+                  {/* Progress bar towards 5,000 JPY */}
+                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div 
+                      className={`h-full transition-all duration-300 ${isTaxFreeEligible ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                      style={{ width: `${Math.min(100, (taxFreePrice / 5000) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Calculation Result Breakdown Cards */}
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  
+                  {/* Left: Net Tax-Free Price in THB & JPY */}
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      จ่ายจริงแบบ Tax-Free
+                    </span>
+                    <div className="flex items-baseline gap-1 text-slate-900 dark:text-white">
+                      <span className="text-xl sm:text-2xl font-black font-mono">
+                        ฿{priceInThb.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-bold font-mono text-[#e79b71]">
+                      ¥{taxFreePrice.toLocaleString()} JPY
+                    </p>
+                  </div>
+
+                  {/* Right: Tax Saved (Discount) */}
+                  <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/40 space-y-1">
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                      ประหยัดภาษีคืน ({taxRateType}%)
+                    </span>
+                    <div className="flex items-baseline gap-1 text-emerald-700 dark:text-emerald-300">
+                      <span className="text-xl sm:text-2xl font-black font-mono">
+                        ฿{taxSavedThb.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                      +¥{taxSavedYen.toLocaleString()} JPY
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Action Buttons: Copy / Share */}
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleCopyCalcSummary}
+                    className="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
+                  >
+                    {copiedCalc ? (
+                      <>
+                        <Check className="h-4 w-4 text-emerald-400 dark:text-emerald-600" />
+                        <span>คัดลอกสรุปราคาแล้ว!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        <span>คัดลอกส่งเข้า LINE / โน้ต</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
               </div>
+
+              {/* Shopping Tips Box */}
+              <div className="p-3.5 rounded-2xl border border-blue-200/80 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 flex items-start gap-2.5 text-xs text-blue-950 dark:text-blue-200">
+                <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5 leading-relaxed text-[11px]">
+                  <p className="font-bold">เงื่อนไข Tax-Free ในญี่ปุ่น:</p>
+                  <p className="opacity-90">ต้องมียอดซื้อตั้งแต่ 5,000 เยนขึ้นไปต่อวันในร้านเดียวกัน แสดง Passport ตัวจริง และสินค้าจะถูกใส่ถุงซีลปลอดภาษี (ห้ามแกะใช้ในญี่ปุ่นจนกว่าจะผ่าน ตม.)</p>
+                </div>
+              </div>
+
             </div>
           )}
 
-          {/* ==================== VIEW 4: TRAVEL PASSES & QR VAULT ==================== */}
+          {/* ========================================================
+              TAB 2: PASS VAULT & FULLSCREEN QR CODES
+          ======================================================== */}
           {activeTab === 'tickets' && (
             <div className="space-y-4">
               
-              {/* Upload Pass Card */}
-              <div className="p-3.5 rounded-2xl border border-dashed border-pink-400/80 dark:border-pink-600/80 bg-pink-50/30 dark:bg-[#11101d]/60 space-y-3">
+              {/* Add Ticket / QR Code Card */}
+              <div className="p-4 rounded-3xl border border-dashed border-[#e79b71] bg-[#e79b71]/5 dark:bg-[#1f222e] space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <QrCode className="h-4 w-4 text-pink-500" />
+                    <QrCode className="h-4 w-4 text-[#e79b71]" />
                     <span>เพิ่มตั๋ว / QR Code ประจำทริป</span>
                   </span>
-                  <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400">
-                    เก็บในเครื่อง ปลอดภัย ดูได้แม้ออฟไลน์
+                  <span className="text-[10px] font-bold text-[#e79b71]">
+                    🔒 เก็บในเครื่อง ปลอดภัย ดูได้แม้ออฟไลน์
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <input
                     type="text"
-                    placeholder="ชื่อตั๋ว (เช่น Visit Japan QR)"
+                    placeholder="ชื่อตั๋ว เช่น Visit Japan Web QR"
                     value={ticketTitle}
                     onChange={(e) => setTicketTitle(e.target.value)}
-                    className="sm:col-span-2 p-2 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1a182d] text-xs outline-none font-bold"
+                    className="sm:col-span-2 p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-xs font-bold outline-none focus:border-[#e79b71]"
                   />
                   <select
                     value={ticketCategory}
                     onChange={(e) => setTicketCategory(e.target.value as any)}
-                    className="p-2 rounded-xl border border-slate-300 dark:border-purple-800 bg-white dark:bg-[#1a182d] text-xs font-bold cursor-pointer"
+                    className="p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-xs font-bold cursor-pointer"
                   >
-                    <option value="vjw">🇯🇵 Visit Japan Web</option>
-                    <option value="hotel">🏨 ใบจองที่พัก / Hotel Voucher</option>
+                    <option value="vjw">🇯🇵 Visit Japan Web (ตม.)</option>
                     <option value="flight">✈️ ตั๋วเครื่องบิน</option>
-                    <option value="train">🚅 Shinkansen / JR</option>
-                    <option value="attraction">🎟️ USJ / บัตรสวนสนุก</option>
-                    <option value="other">📄 เอกสารอื่นๆ</option>
+                    <option value="train">🚅 Shinkansen / JR Pass</option>
+                    <option value="hotel">🏨 ใบจองที่พัก / Voucher</option>
+                    <option value="attraction">🎟️ บัตรสวนสนุก / กิจกรรม</option>
+                    <option value="other">📄 เอกสารสำคัญอื่นๆ</option>
                   </select>
                 </div>
 
-                <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-xs shadow-md shadow-pink-500/20 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer">
+                <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#e79b71] to-amber-500 hover:from-[#d98254] hover:to-amber-600 text-white font-bold text-xs shadow-md shadow-[#e79b71]/20 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer">
                   <Camera className="h-4 w-4" />
-                  <span>{uploadingTicket ? 'กำลังบันทึกรูปตั๋ว...' : 'ถ่ายรูป หรือ เลือกรูปตั๋ว/QR Code'}</span>
+                  <span>{uploadingTicket ? 'กำลังประมวลผลรูปภาพ...' : 'ถ่ายภาพ หรือ เลือกภาพ QR Code / ตั๋ว'}</span>
                   <input type="file" accept="image/*" className="hidden" disabled={uploadingTicket} onChange={handleUploadPass} />
                 </label>
               </div>
 
               {/* Tickets List */}
-              <div className="space-y-2.5 max-h-[46vh] overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2.5 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
                 {tickets.length === 0 ? (
-                  <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-purple-900/40 rounded-2xl">
-                    <QrCode className="h-8 w-8 text-slate-300 dark:text-purple-400 mx-auto mb-2" />
-                    <p className="text-xs font-bold text-slate-700 dark:text-white">ยังไม่มีตั๋วหรือ QR Code ในทริปนี้</p>
-                    <p className="text-[10px] text-slate-400 dark:text-purple-400 mt-0.5">
-                      เซฟ QR Code ของ Visit Japan Web หรือตั๋วรถไฟไว้ที่นี่เพื่อเปิดสแกนได้เร็วทันใจ
+                  <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl space-y-2">
+                    <QrCode className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto" />
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">ยังไม่มีตั๋วหรือ QR Code ในทริปนี้</p>
+                    <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm mx-auto">
+                      เซฟ QR Code ของ Visit Japan Web, ตั๋วเครื่องบิน หรือ Voucher โรงแรมไว้ที่นี่ เพื่อเปิดสแกนผ่านเกตหรือแสดงต่อเจ้าหน้าที่ได้ทันทีแม้ออฟไลน์!
                     </p>
                   </div>
                 ) : (
                   tickets.map((t) => (
                     <div
                       key={t.id}
-                      className="p-3 rounded-2xl border border-slate-200 dark:border-purple-900/40 bg-white dark:bg-[#11101d] flex items-center justify-between gap-3 shadow-2xs hover:border-pink-300 transition-all"
+                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] flex items-center justify-between gap-3 shadow-2xs hover:border-[#e79b71] transition-all group"
                     >
                       <div
                         onClick={() => t.imageUrl && setPreviewPassImage(t.imageUrl)}
                         className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
                       >
-                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-purple-950 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-purple-800 shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#181a20] flex items-center justify-center overflow-hidden border border-slate-200 dark:border-[#2b2f3d] shrink-0 group-hover:scale-105 transition-transform">
                           {t.imageUrl ? (
                             <img src={t.imageUrl} alt={t.title} className="w-full h-full object-cover" />
                           ) : (
-                            <QrCode className="h-6 w-6 text-pink-500" />
+                            <QrCode className="h-6 w-6 text-[#e79b71]" />
                           )}
                         </div>
 
@@ -739,23 +798,26 @@ export default function TravelHubModal({
                           <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
                             {t.title}
                           </h4>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-pink-600 dark:text-pink-400">
-                            <span>แตะเพื่อขยายดูเต็มจอ 🔍</span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#e79b71] mt-0.5">
+                            <Maximize2 className="h-3 w-3" />
+                            <span>แตะเพื่อขยายสแกนเต็มจอ</span>
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
+                          type="button"
                           onClick={() => t.imageUrl && setPreviewPassImage(t.imageUrl)}
-                          className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-xl transition-colors cursor-pointer"
-                          title="ดูรูปเต็มจอ"
+                          className="p-2 text-slate-600 dark:text-slate-300 hover:text-[#e79b71] hover:bg-slate-100 dark:hover:bg-[#2b2f3d] rounded-xl transition-colors cursor-pointer"
+                          title="ดูแบบเต็มจอ"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeletePass(t.id, t.imageStorageKey)}
-                          className="p-2 text-slate-400 hover:text-[#e06b88] hover:bg-rose-50 dark:hover:bg-[#e06b88]/20 rounded-xl transition-colors cursor-pointer"
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors cursor-pointer"
                           title="ลบตั๋ว"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -769,7 +831,235 @@ export default function TravelHubModal({
             </div>
           )}
 
-          {/* ==================== VIEW 5: IG STORY CARD GENERATOR ==================== */}
+          {/* ========================================================
+              TAB 3: SURVIVAL FLASHCARDS & FLIP-TO-SHOW
+          ======================================================== */}
+          {activeTab === 'phrases' && (
+            <div className="space-y-3.5">
+              
+              {/* Category Pills & Search */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+                  {[
+                    { id: 'all', label: `ทั้งหมด (${JAPANESE_PHRASES.length})` },
+                    { id: 'food', label: '🍜 ร้านอาหาร & สั่งกิน' },
+                    { id: 'shopping', label: '🛍️ ช้อปปิ้ง & Tax-Free' },
+                    { id: 'transport', label: '🚅 รถไฟ & สถานี' },
+                    { id: 'emergency', label: '🚨 ขอความช่วยเหลือ' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setPhraseCategory(cat.id as any)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                        phraseCategory === cat.id
+                          ? 'bg-[#e79b71] text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-[#1f222e] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="ค้นหา เช่น วาซาบิ, แยกบิล, คืนภาษี, ห้องน้ำ, สนามบิน..."
+                    value={phraseSearch}
+                    onChange={(e) => setPhraseSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-[#e79b71] font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Phrase Cards */}
+              <div className="space-y-2.5 max-h-[52vh] overflow-y-auto custom-scrollbar pr-1">
+                {filteredPhrases.map((p) => {
+                  const isSpeaking = speakingId === p.id;
+                  const isCopied = copiedPhraseId === p.id;
+
+                  return (
+                    <div
+                      key={p.id}
+                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] space-y-2 hover:border-[#e79b71] transition-all shadow-2xs group"
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="space-y-1 min-w-0">
+                          <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wide">
+                            {p.japanese}
+                          </h4>
+                          <p className="text-xs font-mono font-bold text-[#e79b71]">
+                            {p.romaji}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => speakJapanese(p)}
+                            className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                              isSpeaking
+                                ? 'bg-[#e79b71] text-white border-[#e79b71] animate-pulse'
+                                : 'border-slate-200 dark:border-[#2b2f3d] hover:border-[#e79b71] text-slate-600 dark:text-slate-300'
+                            }`}
+                            title="ฟังเสียงออกเสียงภาษาญี่ปุ่น"
+                          >
+                            <Volume2 className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setBigCardPhrase(p)}
+                            className="p-2 rounded-xl border border-slate-200 dark:border-[#2b2f3d] hover:border-[#e79b71] text-slate-600 dark:text-slate-300 hover:text-[#e79b71] transition-all cursor-pointer"
+                            title="โหมดโชว์หน้าจอใหญ่ (ยื่นให้พนักงานอ่าน)"
+                          >
+                            <Maximize2 className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => copyPhraseText(p)}
+                            className="p-2 rounded-xl border border-slate-200 dark:border-[#2b2f3d] hover:border-[#e79b71] text-slate-400 hover:text-[#e79b71] transition-all cursor-pointer"
+                            title="คัดลอกข้อความ"
+                          >
+                            {isCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-1 border-t border-slate-100 dark:border-[#2b2f3d] pt-2 text-xs">
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                          🇹🇭 {p.thai}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          💡 {p.context}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 4: 1-TAP SOS & ESSENTIALS RADAR
+          ======================================================== */}
+          {activeTab === 'radar' && (
+            <div className="space-y-4">
+              
+              {/* Hotel / Stay Taxi Card */}
+              {hotelInfo && (
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-900/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                      <Building className="h-3.5 w-3.5" />
+                      <span>การ์ดยื่นให้คนขับแท็กซี่ (Taxi Hotel Slip)</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyHotel}
+                      className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedHotel ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      <span>{copiedHotel ? 'คัดลอกแล้ว' : 'คัดลอกที่อยู่'}</span>
+                    </button>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                      {hotelInfo.name}
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                      📍 {hotelInfo.address}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 1-Tap Emergency Calling Directory */}
+              <div className="space-y-2">
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <ShieldAlert className="h-4 w-4 text-rose-500" />
+                  <span>เบอร์โทรฉุกเฉินประเทศญี่ปุ่น (1-Tap Call)</span>
+                </span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {EMERGENCY_CONTACTS.map((c) => (
+                    <a
+                      key={c.id}
+                      href={`tel:${c.tel.replace(/[^0-9+]/g, '')}`}
+                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] hover:border-rose-400 hover:bg-rose-50/20 dark:hover:bg-rose-950/20 transition-all flex items-center justify-between gap-2 shadow-2xs group"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">
+                          {c.icon}
+                        </span>
+                        <div className="min-w-0">
+                          <h5 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                            {c.title}
+                          </h5>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            {c.detail}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-mono text-xs font-black shrink-0">
+                        <PhoneCall className="h-3 w-3" />
+                        <span>{c.tel}</span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* 1-Tap Google Maps Radar Presets */}
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#262932]">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Compass className="h-4 w-4 text-blue-600" />
+                    <span>เรดาร์ค้นหาสถานที่รอบตัว (เปิด Google Maps 1-Tap)</span>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[35vh] overflow-y-auto custom-scrollbar pr-1">
+                  {NEARBY_PRESETS.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => openNearbyGoogleMaps(item.query)}
+                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] hover:border-[#e79b71] hover:bg-[#e79b71]/5 transition-all cursor-pointer group shadow-2xs flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">
+                          {item.icon}
+                        </span>
+                        <div className="min-w-0">
+                          <h5 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                            {item.name}
+                          </h5>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#262932] text-slate-500 group-hover:text-[#e79b71] group-hover:scale-110 transition-transform shrink-0">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 5: IG STORY & TRIP SUMMARY
+          ======================================================== */}
           {activeTab === 'story' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -780,28 +1070,28 @@ export default function TravelHubModal({
                   <button
                     onClick={() => setStoryBgColor('midnight')}
                     className={`w-6 h-6 rounded-full bg-slate-900 border-2 transition-all cursor-pointer ${
-                      storyBgColor === 'midnight' ? 'border-pink-500 scale-110' : 'border-slate-300'
+                      storyBgColor === 'midnight' ? 'border-[#e79b71] scale-110' : 'border-slate-300'
                     }`}
                     title="Midnight Theme"
                   />
                   <button
                     onClick={() => setStoryBgColor('sakura')}
                     className={`w-6 h-6 rounded-full bg-gradient-to-tr from-pink-400 to-rose-400 border-2 transition-all cursor-pointer ${
-                      storyBgColor === 'sakura' ? 'border-pink-500 scale-110' : 'border-slate-300'
+                      storyBgColor === 'sakura' ? 'border-[#e79b71] scale-110' : 'border-slate-300'
                     }`}
                     title="Sakura Theme"
                   />
                   <button
                     onClick={() => setStoryBgColor('sunset')}
                     className={`w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 border-2 transition-all cursor-pointer ${
-                      storyBgColor === 'sunset' ? 'border-pink-500 scale-110' : 'border-slate-300'
+                      storyBgColor === 'sunset' ? 'border-[#e79b71] scale-110' : 'border-slate-300'
                     }`}
                     title="Sunset Theme"
                   />
                   <button
                     onClick={() => setStoryBgColor('fuji')}
                     className={`w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-700 border-2 transition-all cursor-pointer ${
-                      storyBgColor === 'fuji' ? 'border-pink-500 scale-110' : 'border-slate-300'
+                      storyBgColor === 'fuji' ? 'border-[#e79b71] scale-110' : 'border-slate-300'
                     }`}
                     title="Mount Fuji Theme"
                   />
@@ -828,11 +1118,11 @@ export default function TravelHubModal({
                   </div>
 
                   <h3 className="text-lg font-black tracking-tight leading-tight">
-                    {trip?.name || trip?.title || 'Japan Trip'}
+                    {trip?.name || trip?.title || 'Japan Adventure'}
                   </h3>
 
                   <div className="flex items-center gap-1 text-[11px] font-semibold opacity-90">
-                    <span>📍 {itinerary[0]?.city || 'Osaka'} & {itinerary[itinerary.length - 1]?.city || 'Kyoto'}</span>
+                    <span>📍 {itinerary[0]?.city || 'Tokyo'} & {itinerary[itinerary.length - 1]?.city || 'Osaka'}</span>
                   </div>
                 </div>
 
@@ -852,7 +1142,7 @@ export default function TravelHubModal({
                 <div className="space-y-2 relative z-10 bg-black/30 backdrop-blur-md p-3 rounded-2xl border border-white/10">
                   <div className="flex justify-between text-xs font-bold">
                     <span>ยอดรวมทริป:</span>
-                    <span className="font-black text-pink-300">
+                    <span className="font-black text-[#f2a278]">
                       {totalSpent.toLocaleString()} {trip?.currency || 'JPY'}
                     </span>
                   </div>
@@ -865,64 +1155,31 @@ export default function TravelHubModal({
 
               {/* Download / Share Story Button */}
               <button
+                type="button"
                 onClick={() => {
                   triggerConfetti();
                   alert('🎉 แคปหน้าจอการ์ดใบนี้เพื่อนำไปโพสต์ลง Instagram Story หรือแชร์เข้ากลุ่ม LINE ได้ทันที!');
                 }}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-white font-black text-xs sm:text-sm shadow-lg shadow-pink-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#e79b71] to-amber-500 hover:from-[#d98254] hover:to-amber-600 text-white font-black text-xs sm:text-sm shadow-lg shadow-[#e79b71]/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Share2 className="h-4 w-4" />
                 <span>แชร์ลง Instagram Story / Line</span>
               </button>
-            </div>
-          )}
 
-          {/* ==================== VIEW 6: INSTALL PWA ON IPHONE/IPAD ==================== */}
-          {activeTab === 'install' && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#11101d] border border-slate-200 dark:border-purple-900/40 space-y-3">
-                <div className="flex items-center gap-2.5">
-                  <Smartphone className="h-6 w-6 text-pink-500 shrink-0" />
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                      วิธีติดตั้ง Travel Tracker ลงบน iPhone / iPad
-                    </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-purple-400">
-                      เปิดใช้งานแบบแอปจริง เต็มหน้าจอ ไร้แถบ URL และเปิดได้รวดเร็วทันใจ
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2.5 pt-2 border-t border-slate-200/80 dark:border-purple-900/30 text-xs">
-                  <div className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-pink-500 text-white font-black text-[10px] flex items-center justify-center shrink-0">1</span>
-                    <p className="text-slate-700 dark:text-purple-200">
-                      เปิดเว็บนี้ในเบราว์เซอร์ <b>Safari</b> บน iPhone หรือ iPad ของคุณ
-                    </p>
-                  </div>
-
-                  <div className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-purple-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">2</span>
-                    <p className="text-slate-700 dark:text-purple-200">
-                      กดที่ปุ่ม <b>แชร์ (Share Icon 📤)</b> ที่แถบด้านล่างของ Safari
-                    </p>
-                  </div>
-
-                  <div className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">3</span>
-                    <p className="text-slate-700 dark:text-purple-200">
-                      เลื่อนลงมาแล้วเลือก <b>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen ➕)</b>
-                    </p>
-                  </div>
-
-                  <div className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">4</span>
-                    <p className="text-slate-700 dark:text-purple-200">
-                      กดปุ่ม <b>"เพิ่ม" (Add)</b> มุมขวาบน เป็นอันเสร็จสิ้น! 🎉
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* Packing Shortcut Link */}
+              {onOpenPacking && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenPacking();
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1f222e] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 hover:border-[#e79b71] transition-all cursor-pointer"
+                >
+                  <Luggage className="h-4 w-4 text-[#e79b71]" />
+                  <span>เปิดเช็คลิสต์จัดกระเป๋าอัจฉริยะ (AI Packing List)</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -930,18 +1187,20 @@ export default function TravelHubModal({
 
       </div>
 
-      {/* Big Screen Display Popup for Japanese Phrase */}
+      {/* ========================================================
+          BIG SCREEN DISPLAY MODAL FOR JAPANESE PHRASES
+      ======================================================== */}
       {bigCardPhrase && (
         <div 
           className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4 animate-in fade-in"
           onClick={() => setBigCardPhrase(null)}
         >
           <div 
-            className="w-full max-w-lg bg-white dark:bg-[#11101d] rounded-3xl p-6 sm:p-8 text-center space-y-6 border border-pink-500/50 shadow-2xl animate-in zoom-in-95"
+            className="w-full max-w-lg bg-white dark:bg-[#181a20] rounded-3xl p-6 sm:p-8 text-center space-y-6 border border-[#e79b71]/50 shadow-2xl animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-pink-600 dark:text-pink-400 bg-pink-100 dark:bg-pink-950 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-[#e79b71] bg-[#e79b71]/15 px-3 py-1 rounded-full">
                 โหมดโชว์หน้าจอใหญ่ (ยื่นให้พนักงานอ่าน)
               </span>
               <button
@@ -956,17 +1215,17 @@ export default function TravelHubModal({
               <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white leading-relaxed tracking-wide">
                 {bigCardPhrase.japanese}
               </h1>
-              <p className="text-base sm:text-lg font-mono font-bold text-pink-600 dark:text-pink-400">
+              <p className="text-base sm:text-lg font-mono font-bold text-[#e79b71]">
                 {bigCardPhrase.romaji}
               </p>
-              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-purple-950/60 text-sm sm:text-base font-bold text-slate-800 dark:text-purple-200">
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#262932] text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
                 🇹🇭 {bigCardPhrase.thai}
               </div>
             </div>
 
             <button
               onClick={() => speakJapanese(bigCardPhrase)}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black text-sm shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#e79b71] to-amber-500 text-white font-black text-sm shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <Volume2 className="h-5 w-5" />
               <span>กดเพื่อออกเสียงภาษาญี่ปุ่น</span>
@@ -975,36 +1234,39 @@ export default function TravelHubModal({
         </div>
       )}
 
-      {/* Preview Fullscreen Pass / Ticket Image */}
+      {/* ========================================================
+          PREVIEW FULLSCREEN HIGH-CONTRAST PASS / TICKET IMAGE
+      ======================================================== */}
       {previewPassImage && (
         <div 
-          className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4 animate-in fade-in"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/95 p-4 animate-in fade-in"
           onClick={() => setPreviewPassImage(null)}
         >
           <div 
-            className="relative max-w-md w-full bg-white dark:bg-[#1a182d] p-4 rounded-3xl border border-slate-200 dark:border-purple-800/60 shadow-2xl space-y-3"
+            className="relative max-w-md w-full bg-white dark:bg-[#181a20] p-4 rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-purple-900/40">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
               <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                <QrCode className="h-4 w-4 text-pink-500" />
-                <span>ตั๋วเดินทาง / QR Code</span>
+                <QrCode className="h-4 w-4 text-[#e79b71]" />
+                <span>โหมดสแกน QR Code / ตั๋วคมชัดสูง</span>
               </span>
               <button
                 onClick={() => setPreviewPassImage(null)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer"
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden bg-white flex items-center justify-center max-h-[70vh] p-2">
-              <img src={previewPassImage} alt="Pass Preview" className="max-h-[65vh] w-auto object-contain rounded-xl" />
+            {/* High Brightness White Container for QR scanners */}
+            <div className="rounded-2xl overflow-hidden bg-white flex items-center justify-center max-h-[70vh] p-4 border-2 border-slate-100 shadow-inner">
+              <img src={previewPassImage} alt="Pass Preview" className="max-h-[60vh] w-auto object-contain rounded-lg" />
             </div>
 
             <button
               onClick={() => setPreviewPassImage(null)}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-xs cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs cursor-pointer"
             >
               ปิดหน้าต่าง
             </button>

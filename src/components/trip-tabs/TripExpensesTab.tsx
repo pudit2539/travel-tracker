@@ -241,10 +241,10 @@ export function TripExpensesTab({
             <button
               type="button"
               onClick={() => setShowTravelHubModal(true)}
-              className="btn-luxury-primary inline-flex items-center gap-1.5 text-[11px] font-black text-white px-3.5 py-1.5 rounded-xl shadow-md shadow-blue-500/25 cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1.5 text-[11px] font-black text-white bg-gradient-to-r from-[#e79b71] to-amber-500 hover:from-[#d98254] hover:to-amber-600 px-3.5 py-1.5 rounded-xl shadow-md shadow-[#e79b71]/20 cursor-pointer active:scale-95 transition-all hover:scale-105"
             >
-              <span>🧰 Travel Hub</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              <span>🧭 Travel Hub</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse" />
             </button>
           </div>
         </div>
