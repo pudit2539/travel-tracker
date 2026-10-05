@@ -73,7 +73,7 @@ export default function TripDetailPage() {
   const params = useParams();
   const rawId = params?.id;
   const tripId = Array.isArray(rawId) ? rawId[0] : (typeof rawId === 'string' ? decodeURIComponent(rawId) : '');
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, mounted } = useTheme();
 
   // Offline Hook
   const { isOnline, lastSyncedAt, cacheTripOffline, getOfflineTripCache } = useOfflineSync(tripId);
@@ -1522,10 +1522,17 @@ export default function TripDetailPage() {
 
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer min-w-8 min-h-8 flex items-center justify-center"
                 title="สลับโหมด มืด/สว่าง"
+                aria-label="Toggle theme"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4 text-[#e79b71]" /> : <Moon className="h-4 w-4 text-slate-700" />}
+                {!mounted ? (
+                  <span className="w-4 h-4 block" />
+                ) : theme === 'dark' ? (
+                  <Sun className="h-4 w-4 text-[#e79b71]" />
+                ) : (
+                  <Moon className="h-4 w-4 text-slate-700" />
+                )}
               </button>
 
               {currentUser && (

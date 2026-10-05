@@ -25,7 +25,7 @@ import { triggerConfetti } from '@/lib/confetti';
 
 export default function HomePage() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, mounted } = useTheme();
   
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -511,28 +511,35 @@ export default function HomePage() {
               onClick={() => setShowProfileModal(true)}
               className="flex items-center gap-2 p-1.5 pr-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-[#e79b71] hover:scale-105 shadow-2xs transition-all cursor-pointer group"
               title="ตั้งค่าโปรไฟล์"
-              suppressHydrationWarning
             >
-              <div suppressHydrationWarning className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-2xs overflow-hidden`}>
-                {userCat.imgUrl ? (
+              <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${mounted ? userCat.bgGradient : 'from-amber-400 via-orange-500 to-pink-500'} flex items-center justify-center text-xs shadow-2xs overflow-hidden`}>
+                {!mounted ? (
+                  <span>🐱</span>
+                ) : userCat.imgUrl ? (
                   <img src={userCat.imgUrl} alt={userCat.name} className="w-full h-full object-cover" />
                 ) : (
                   userCat.emoji
                 )}
               </div>
-              <span suppressHydrationWarning className="text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[100px] truncate hidden sm:inline">
-                {userDisplayName}
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[100px] truncate hidden sm:inline">
+                {mounted ? userDisplayName : 'นักเดินทาง'}
               </span>
             </button>
 
             {/* Dark/Light Switcher */}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:rotate-45 shadow-2xs transition-all duration-300 cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:rotate-45 shadow-2xs transition-all duration-300 cursor-pointer min-w-8 min-h-8 flex items-center justify-center"
               title="สลับโหมด มืด/สว่าง"
-              suppressHydrationWarning
+              aria-label="Toggle theme"
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4 text-[#e79b71]" /> : <Moon className="h-4 w-4 text-slate-700" />}
+              {!mounted ? (
+                <span className="w-4 h-4 block" />
+              ) : theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-[#e79b71]" />
+              ) : (
+                <Moon className="h-4 w-4 text-slate-700" />
+              )}
             </button>
 
             {/* Quick Logout Button */}

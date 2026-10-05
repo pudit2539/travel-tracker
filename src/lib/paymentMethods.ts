@@ -48,3 +48,4 @@ export function setExpensePaymentMethod(
   saveTripPaymentMethods(tripId, current);
   return current;
 }
+

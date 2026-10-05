@@ -9,26 +9,33 @@ interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   resolvedTheme: 'dark' | 'light';
+  mounted: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'system',
   setTheme: () => null,
   resolvedTheme: 'light',
+  mounted: false,
 });
 
 // Use useLayoutEffect on client to mutate DOM before paint (prevents FOUC)
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('theme') as Theme) || 'system';
-    }
-    return 'system';
-  });
-
+  const [theme, setThemeState] = useState<Theme>('system');
+  const [mounted, setMounted] = useState(false);
   const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('light');
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const saved = localStorage.getItem('theme') as Theme;
+      if (saved) {
+        setThemeState(saved);
+      }
+    } catch {}
+  }, []);
 
   useIsomorphicLayoutEffect(() => {
     const root = document.documentElement;
@@ -47,7 +54,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     applyTheme();
     try {
-      localStorage.setItem('theme', theme);
+      if (mounted) {
+        localStorage.setItem('theme', theme);
+      }
     } catch {}
 
     const handleChange = () => {
@@ -56,10 +65,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme]);
+  }, [theme, mounted]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: setThemeState, resolvedTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme: setThemeState, resolvedTheme, mounted }}>
       {children}
     </ThemeContext.Provider>
   );
