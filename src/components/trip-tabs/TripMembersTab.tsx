@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Users, Share2, Trash2, Shield, Crown, Sparkles } from 'lucide-react';
+import { Users, Share2, Trash2, Crown, Sparkles } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 
 interface TripMembersTabProps {

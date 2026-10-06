@@ -3,7 +3,7 @@
 import React from 'react';
 import { 
   Users, AlertCircle, CheckCircle2, Camera, Calculator, 
-  Filter, Search, Download, Edit3, ChevronRight 
+  Search, Download, Edit3 
 } from 'lucide-react';
 import { ExpenseCard } from '@/components/trip-detail/ExpenseCard';
 import AnimatedNumber from '@/components/AnimatedNumber';

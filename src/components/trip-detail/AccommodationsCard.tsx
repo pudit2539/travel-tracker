@@ -6,17 +6,23 @@ import {
   Building, ChevronDown, ChevronUp, Plus, Edit3, Trash2, 
   MapPin, Calendar, Moon, ExternalLink, Copy, Check, 
   Receipt, DollarSign, Sparkles, Phone, FileText, CheckCircle2,
-  X, AlertCircle, BookmarkCheck
+  X, AlertCircle, BookmarkCheck, Upload, Eye, Download, Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { 
   AccommodationStay, 
+  AccommodationVoucherFile,
   getAccommodations, 
   saveAccommodations, 
   addAccommodation, 
   updateAccommodation, 
   deleteAccommodation,
-  getGoogleMapsUrl 
+  getGoogleMapsUrl,
+  formatFileSize,
+  downloadVoucherFile
 } from '@/lib/accommodations';
+import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
+import HotelVoucherPreviewModal from './HotelVoucherPreviewModal';
 import { convertToThb, convertCurrency } from '@/lib/currency';
 import { supabase } from '@/lib/supabase';
 import { triggerConfetti } from '@/lib/confetti';
@@ -138,6 +144,16 @@ export function AccommodationsCard({
   const [formNotes, setFormNotes] = useState('');
   const [formAutoCreateExpense, setFormAutoCreateExpense] = useState(true);
 
+  // Voucher Preview Modal State
+  const [previewVoucher, setPreviewVoucher] = useState<{
+    file: AccommodationVoucherFile;
+    hotelName: string;
+  } | null>(null);
+
+  // Form Voucher State (for Add / Edit modal)
+  const [formVoucher, setFormVoucher] = useState<AccommodationVoucherFile | null>(null);
+  const [isReadingFile, setIsReadingFile] = useState(false);
+
   // Load accommodations from storage and sync from Supabase
   useEffect(() => {
     if (tripId) {
@@ -204,6 +220,74 @@ export function AccommodationsCard({
     }
   };
 
+  // Handle Voucher File Selection (PDF or Image)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      alert('ขนาดไฟล์ต้องไม่เกิน 20 MB');
+      return;
+    }
+
+    setIsReadingFile(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setFormVoucher({
+        name: file.name,
+        type: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+        size: file.size,
+        dataUrl,
+        uploadedAt: Date.now(),
+      });
+      setIsReadingFile(false);
+    };
+    reader.onerror = () => {
+      alert('เกิดข้อผิดพลาดในการอ่านไฟล์');
+      setIsReadingFile(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveVoucher = () => {
+    setFormVoucher(null);
+  };
+
+  // Open Preview Modal for a stay
+  const handlePreviewVoucher = async (stay: AccommodationStay) => {
+    if (!stay.voucherFile) return;
+    let fileToPreview = stay.voucherFile;
+    if (!fileToPreview.dataUrl && fileToPreview.storageKey) {
+      const dataUrl = await getLocalReceiptPhoto(fileToPreview.storageKey);
+      if (dataUrl) {
+        fileToPreview = { ...fileToPreview, dataUrl };
+      }
+    }
+    setPreviewVoucher({
+      file: fileToPreview,
+      hotelName: stay.name,
+    });
+  };
+
+  // Download Voucher directly
+  const handleDownloadVoucher = async (stay: AccommodationStay) => {
+    if (!stay.voucherFile) return;
+    let fileToDownload = stay.voucherFile;
+    if (!fileToDownload.dataUrl && fileToDownload.storageKey) {
+      const dataUrl = await getLocalReceiptPhoto(fileToDownload.storageKey);
+      if (dataUrl) {
+        fileToDownload = { ...fileToDownload, dataUrl };
+      }
+    }
+    if (fileToDownload.dataUrl) {
+      downloadVoucherFile(fileToDownload, stay.name);
+      onShowToast?.(`ดาวน์โหลดใบจอง "${stay.name}" เรียบร้อยแล้ว 📥`, 'success');
+    } else {
+      alert('ไม่พบไฟล์เอกสารบนอุปกรณ์นี้');
+    }
+  };
+
   // Open modal for new stay
   const handleOpenAdd = () => {
     setEditingStay(null);
@@ -223,6 +307,7 @@ export function AccommodationsCard({
     setFormCurrency(tripCurrency || 'JPY');
     setFormNotes('');
     setFormAutoCreateExpense(true);
+    setFormVoucher(null);
     setShowModal(true);
   };
 
@@ -242,6 +327,25 @@ export function AccommodationsCard({
     setFormCurrency(stay.currency || tripCurrency || 'JPY');
     setFormNotes(stay.notes || '');
     setFormAutoCreateExpense(false);
+
+    // Populate existing voucher file
+    if (stay.voucherFile) {
+      if (stay.voucherFile.dataUrl) {
+        setFormVoucher(stay.voucherFile);
+      } else if (stay.voucherFile.storageKey) {
+        getLocalReceiptPhoto(stay.voucherFile.storageKey).then((dataUrl) => {
+          setFormVoucher({
+            ...stay.voucherFile!,
+            dataUrl: dataUrl || undefined,
+          });
+        });
+      } else {
+        setFormVoucher(stay.voucherFile);
+      }
+    } else {
+      setFormVoucher(null);
+    }
+
     setShowModal(true);
   };
 
@@ -349,6 +453,22 @@ export function AccommodationsCard({
         }
       }
 
+      // Prepare Voucher File storage in IndexedDB
+      let finalVoucher: AccommodationVoucherFile | undefined = undefined;
+      if (formVoucher) {
+        const storageKey = formVoucher.storageKey || `voucher_${tripId}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        if (formVoucher.dataUrl) {
+          await saveLocalReceiptPhoto(storageKey, formVoucher.dataUrl);
+        }
+        finalVoucher = {
+          ...formVoucher,
+          storageKey,
+        };
+      } else if (editingStay?.voucherFile?.storageKey) {
+        // User explicitly removed the voucher in edit mode
+        await deleteLocalReceiptPhoto(editingStay.voucherFile.storageKey);
+      }
+
       if (editingStay) {
         const updatedItem: AccommodationStay = {
           ...editingStay,
@@ -365,6 +485,7 @@ export function AccommodationsCard({
           currency: formCurrency,
           notes: formNotes.trim(),
           expenseId: createdExpenseId,
+          voucherFile: finalVoucher,
         };
         const updatedList = updateAccommodation(tripId, updatedItem);
         setStays(updatedList);
@@ -383,6 +504,7 @@ export function AccommodationsCard({
           currency: formCurrency,
           notes: formNotes.trim(),
           expenseId: createdExpenseId,
+          voucherFile: finalVoucher,
         });
         setStays(updatedList);
       }
@@ -616,6 +738,59 @@ export function AccommodationsCard({
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 italic line-clamp-2">
                         📝 {stay.notes}
                       </p>
+                    )}
+
+                    {/* Hotel Voucher Document Card (PDF / Image) */}
+                    {stay.voucherFile && (
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-[#161c2c] border border-slate-200/80 dark:border-[#222c42] flex items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`p-1.5 rounded-lg shrink-0 ${
+                            stay.voucherFile.type?.includes('pdf') || stay.voucherFile.name?.toLowerCase().endsWith('.pdf')
+                              ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
+                              : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400'
+                          }`}>
+                            {stay.voucherFile.type?.includes('pdf') || stay.voucherFile.name?.toLowerCase().endsWith('.pdf') ? (
+                              <FileText className="h-4 w-4" />
+                            ) : (
+                              <ImageIcon className="h-4 w-4" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
+                                {stay.voucherFile.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
+                              <span className="uppercase font-mono font-bold">
+                                {stay.voucherFile.type?.includes('pdf') || stay.voucherFile.name?.toLowerCase().endsWith('.pdf') ? 'PDF' : 'รูปภาพ'}
+                              </span>
+                              <span>•</span>
+                              <span>{formatFileSize(stay.voucherFile.size)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handlePreviewVoucher(stay)}
+                            className="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors flex items-center gap-1 cursor-pointer"
+                            title="เปิดดูใบจอง"
+                          >
+                            <Eye className="h-3 w-3" />
+                            <span>เปิดดู</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadVoucher(stay)}
+                            className="p-1 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-[#1f283d] transition-colors cursor-pointer"
+                            title="ดาวน์โหลดใบจอง"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     )}
 
                     {/* Price & Actions Bottom Section */}
@@ -886,6 +1061,102 @@ export function AccommodationsCard({
                 />
               </div>
 
+              {/* Hotel Voucher Upload Section (PDF or Image) */}
+              <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50/80 dark:bg-[#171f30] border border-slate-200/80 dark:border-[#222c42]">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                    📄 แนบใบจองที่พัก / Hotel Voucher (PDF หรือ รูปภาพ)
+                  </label>
+                  <span className="text-[10px] text-slate-400">PDF, JPG, PNG (สูงสุด 20MB)</span>
+                </div>
+
+                {formVoucher ? (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#121624] border border-emerald-500/40 dark:border-emerald-500/50 gap-2 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`p-2 rounded-lg shrink-0 ${
+                        formVoucher.type?.includes('pdf') || formVoucher.name?.toLowerCase().endsWith('.pdf')
+                          ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
+                          : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400'
+                      }`}>
+                        {formVoucher.type?.includes('pdf') || formVoucher.name?.toLowerCase().endsWith('.pdf') ? (
+                          <FileText className="h-5 w-5" />
+                        ) : (
+                          <ImageIcon className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                          {formVoucher.name}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                          <span className="font-mono uppercase font-bold text-emerald-600 dark:text-emerald-400">
+                            {formVoucher.type?.includes('pdf') || formVoucher.name?.toLowerCase().endsWith('.pdf') ? 'PDF' : 'รูปภาพ'}
+                          </span>
+                          <span>•</span>
+                          <span>{formatFileSize(formVoucher.size)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {formVoucher.dataUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewVoucher({
+                              file: formVoucher,
+                              hotelName: formName.trim() || 'ตัวอย่างที่พัก',
+                            });
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-[#25304a] transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>ดูตัวอย่าง</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleRemoveVoucher}
+                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                        title="ลบไฟล์ออก"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-slate-200 dark:border-[#2b354d] hover:border-emerald-500 dark:hover:border-emerald-500 rounded-xl p-3.5 flex flex-col items-center justify-center gap-1 bg-white dark:bg-[#131726] cursor-pointer transition-colors group">
+                    <input
+                      type="file"
+                      accept=".pdf,image/*,application/pdf"
+                      className="hidden"
+                      onChange={handleFileChange}
+                      disabled={isReadingFile}
+                    />
+                    {isReadingFile ? (
+                      <div className="flex items-center gap-2 text-xs text-slate-500 py-1">
+                        <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                        <span>กำลังอ่านไฟล์...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <Upload className="h-4 w-4" />
+                        </div>
+                        <div className="text-center">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            กดเพื่อเลือกไฟล์ใบจอง (PDF หรือ รูปภาพ)
+                          </span>
+                          <p className="text-[10px] text-slate-400">
+                            เช่น Agoda, Booking.com, Airbnb confirmation, Voucher
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </label>
+                )}
+              </div>
+
               {/* Auto Create Expense Checkbox (Only for new stays) */}
               {!editingStay && (
                 <div className="p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 flex items-start gap-2.5">
@@ -897,7 +1168,7 @@ export function AccommodationsCard({
                     className="mt-0.5 h-4 w-4 text-emerald-600 rounded border-slate-300 dark:border-[#222c42] cursor-pointer"
                   />
                   <label htmlFor="autoExpense" className="text-xs text-slate-800 dark:text-slate-200 cursor-pointer">
-                    <span className="font-bold block">⚡ บันทึกเป็นรายจ่ายลงในแท็บ 'รายการ' ทันที</span>
+                    <span className="font-bold block">⚡ บันทึกเป็นรายจ่ายลงในแท็บ &ldquo;รายการ&rdquo; ทันที</span>
                     <span className="text-[10px] text-slate-500 dark:text-slate-400">
                       ระบบจะสร้างรายการค่าที่พักในหมวด 🏨 ให้อัตโนมัติ ไม่ต้องกรอกซ้ำ
                     </span>
@@ -927,6 +1198,14 @@ export function AccommodationsCard({
           </div>
         </div>
       )}
+
+      {/* Hotel Voucher Preview Modal (PDF / Image Preview & Download) */}
+      <HotelVoucherPreviewModal
+        isOpen={Boolean(previewVoucher)}
+        onClose={() => setPreviewVoucher(null)}
+        voucher={previewVoucher?.file || null}
+        hotelName={previewVoucher?.hotelName || ''}
+      />
     </div>
   );
 }

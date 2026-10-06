@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
-  BookmarkCheck, Sparkles
+  BookmarkCheck
 } from 'lucide-react';
 import LiveTripCard from '@/components/LiveTripCard';
 import WishlistDrawer from '@/components/WishlistDrawer';
@@ -18,7 +18,7 @@ import { FlightBoardingPassCard } from '@/components/trip-detail/FlightBoardingP
 import { AccommodationsCard, formatStayDateDisplay } from '@/components/trip-detail/AccommodationsCard';
 import { TripHeroCover } from '@/components/trip-detail/TripHeroCover';
 import AnimatedNumber from '@/components/AnimatedNumber';
-import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
+import { convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
 
 interface TripPlanTabProps {
   trip: any;
@@ -99,7 +99,8 @@ export function TripPlanTab({
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
 
   // Check if any accommodation is for this day
-  const stays = useMemo(() => (trip?.id ? getAccommodations(trip.id) : []), [trip?.id]);
+  const tripId = trip?.id;
+  const stays = useMemo(() => (tripId ? getAccommodations(tripId) : []), [tripId]);
   const activeStayForSelectedDay = useMemo(() => {
     if (selectedDayFilter === 'all' || stays.length === 0) return null;
     const filterLower = selectedDayFilter.toLowerCase();

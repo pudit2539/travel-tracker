@@ -1,7 +1,7 @@
 // src/components/PhotoScrapbookModal.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Camera, Image as ImageIcon, Plus, Trash2, X, 
   MapPin, Calendar, Heart, Download, Eye, Sparkles, Loader2,
@@ -34,16 +34,16 @@ export default function PhotoScrapbookModal({
   const [dateLabel, setDateLabel] = useState('');
   const [uploading, setUploading] = useState(false);
 
+  const loadPhotos = useCallback(() => {
+    const list = getTripPhotos(tripId);
+    setPhotos(list);
+  }, [tripId]);
+
   useEffect(() => {
     if (isOpen && tripId) {
       loadPhotos();
     }
-  }, [isOpen, tripId]);
-
-  const loadPhotos = () => {
-    const list = getTripPhotos(tripId);
-    setPhotos(list);
-  };
+  }, [isOpen, tripId, loadPhotos]);
 
   const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -224,7 +224,7 @@ export default function PhotoScrapbookModal({
               <ImageIcon className="h-12 w-12 text-pink-400 mx-auto mb-2 animate-float-slow" />
               <h3 className="font-black text-base text-slate-900 dark:text-white mb-1">ยังไม่มีรูปภาพในสมุดความทรงจำ</h3>
               <p className="text-xs text-slate-500 dark:text-purple-300/70 mb-4 font-medium">
-                กดปุ่ม "เพิ่มรูปภาพ" เพื่ออัปโหลดรูปสวยๆ ระหว่างการท่องเที่ยว
+                กดปุ่ม &ldquo;เพิ่มรูปภาพ&rdquo; เพื่ออัปโหลดรูปสวยๆ ระหว่างการท่องเที่ยว
               </p>
               <button
                 onClick={() => setShowAddForm(true)}

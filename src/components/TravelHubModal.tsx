@@ -1,7 +1,7 @@
 // src/components/TravelHubModal.tsx
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useDeferredValue } from 'react';
+import { useState, useEffect, useRef, useMemo, useDeferredValue, useCallback } from 'react';
 import { 
   X, Sparkles, Languages, MapPin, QrCode, Share2, 
   Download, Volume2, Copy, Check, ExternalLink, 
@@ -206,16 +206,12 @@ export default function TravelHubModal({
   const [uploadingTicket, setUploadingTicket] = useState(false);
   const [previewPassImage, setPreviewPassImage] = useState<string | null>(null);
 
-  // Load Saved Passes from LocalStorage & LocalReceipt DB
-  useEffect(() => {
-    if (isOpen && trip?.id) {
-      loadTickets();
-    }
-  }, [isOpen, trip?.id]);
+  const tripId = trip?.id;
 
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
+    if (!tripId) return;
     try {
-      const raw = localStorage.getItem(`travel_hub_tickets_${trip?.id}`);
+      const raw = localStorage.getItem(`travel_hub_tickets_${tripId}`);
       if (raw) {
         const parsed: TicketPass[] = JSON.parse(raw);
         const hydrated = await Promise.all(
@@ -232,7 +228,14 @@ export default function TravelHubModal({
     } catch (e) {
       console.warn('Failed to load tickets', e);
     }
-  };
+  }, [tripId]);
+
+  // Load Saved Passes from LocalStorage & LocalReceipt DB
+  useEffect(() => {
+    if (isOpen && tripId) {
+      loadTickets();
+    }
+  }, [isOpen, tripId, loadTickets]);
 
   const handleUploadPass = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

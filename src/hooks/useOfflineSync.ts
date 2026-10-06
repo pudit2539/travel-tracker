@@ -1,36 +1,30 @@
 // src/hooks/useOfflineSync.ts
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useSyncExternalStore } from 'react';
 
 const OFFLINE_CACHE_PREFIX = 'travel_tracker_offline_cache_';
 
+function subscribeOnline(callback: () => void) {
+  window.addEventListener('online', callback);
+  window.addEventListener('offline', callback);
+  return () => {
+    window.removeEventListener('online', callback);
+    window.removeEventListener('offline', callback);
+  };
+}
+
+function getOnlineSnapshot() {
+  return navigator.onLine;
+}
+
+function getServerSnapshot() {
+  return true;
+}
+
 export function useOfflineSync(tripId?: string) {
-  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const isOnline = useSyncExternalStore(subscribeOnline, getOnlineSnapshot, getServerSnapshot);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    setIsOnline(navigator.onLine);
-
-    const handleOnline = () => {
-      setIsOnline(true);
-      setLastSyncedAt(new Date().toLocaleTimeString('th-TH'));
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   const cacheTripOffline = useCallback((data: {
     trip?: any;

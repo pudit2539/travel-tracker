@@ -57,7 +57,7 @@ export async function saveLocalReceiptPhoto(receiptId: string, dataUrl: string):
         }
       };
     });
-  } catch (e) {
+  } catch {
     try {
       localStorage.setItem(`receipt_cache_${receiptId}`, dataUrl);
       return true;

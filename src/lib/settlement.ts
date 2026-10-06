@@ -77,7 +77,7 @@ export function calculateSettlement(
     const eId = e.payer_id?.toLowerCase();
     const eName = cleanMemberName(e.payer_name);
 
-    let matchedMember = membersList.find((m) => {
+    const matchedMember = membersList.find((m) => {
       if (eId && m.id && m.id.toLowerCase() === eId) return true;
       return cleanMemberName(m.name) === eName;
     });

@@ -1,7 +1,7 @@
 // src/components/ProfileModal.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { CAT_AVATARS, getCatAvatar } from '@/lib/avatars';
@@ -40,14 +40,8 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
   // Copied User ID state
   const [copiedId, setCopiedId] = useState(false);
 
-  // Fetch current user profile
-  useEffect(() => {
-    if (isOpen && user?.id) {
-      fetchProfile();
-    }
-  }, [isOpen, user?.id]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
     setSaveError('');
     try {
@@ -79,7 +73,14 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Fetch current user profile
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      fetchProfile();
+    }
+  }, [isOpen, user?.id, fetchProfile]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();

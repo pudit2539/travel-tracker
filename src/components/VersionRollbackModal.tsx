@@ -1,7 +1,7 @@
 // src/components/VersionRollbackModal.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   X, History, RotateCcw, Download, Upload, 
   ShieldCheck, AlertTriangle, CheckCircle2, Clock, 
@@ -48,16 +48,16 @@ export default function VersionRollbackModal({
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const loadSnapshots = useCallback(() => {
+    const list = getTripSnapshots(tripId);
+    setSnapshots(list);
+  }, [tripId]);
+
   useEffect(() => {
     if (isOpen && tripId) {
       loadSnapshots();
     }
-  }, [isOpen, tripId]);
-
-  const loadSnapshots = () => {
-    const list = getTripSnapshots(tripId);
-    setSnapshots(list);
-  };
+  }, [isOpen, tripId, loadSnapshots]);
 
   const handleCreateSnapshot = () => {
     setCreating(true);

@@ -47,14 +47,9 @@ export function TripAnalyticsTab({
   onOpenBudgetModalWithTab,
 }: TripAnalyticsTabProps) {
   // Allow user to view all statistics and budgets in ANY currency (e.g. JPY, THB, USD, etc.)
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(tripBaseCurrency || 'JPY');
-
-  // Keep in sync if tripBaseCurrency changes
-  useEffect(() => {
-    if (tripBaseCurrency) {
-      setSelectedCurrency(tripBaseCurrency);
-    }
-  }, [tripBaseCurrency]);
+  const [userSelectedCurrency, setUserSelectedCurrency] = useState<string | null>(null);
+  const selectedCurrency = userSelectedCurrency ?? (tripBaseCurrency || 'JPY');
+  const setSelectedCurrency = (curr: string) => setUserSelectedCurrency(curr);
 
   const rawBudget = propTargetBudget !== undefined ? propTargetBudget : Number(trip?.total_budget ?? trip?.budget ?? 0);
 

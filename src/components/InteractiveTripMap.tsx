@@ -148,21 +148,27 @@ export default function InteractiveTripMap({
                   onClick={() => setSelectedStopIdx(idx)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-xs scale-105'
-                      : 'bg-white/80 dark:bg-[#11131a]/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-[#262c3d] hover:border-slate-400'
+                      ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-md scale-102 ring-2 ring-slate-900/10 dark:ring-white/20'
+                      : 'bg-white/80 dark:bg-[#11131a]/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-[#262c3d] hover:border-slate-400 hover:bg-slate-50/80 dark:hover:bg-[#1c2232]'
                   }`}
+                  title={`จุดหมายลำดับที่ ${idx + 1}: ${cleanName}`}
                 >
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                    isSelected ? 'bg-white text-slate-900 dark:bg-slate-900 dark:text-white' : 'bg-rose-50 dark:bg-slate-800 text-rose-600 dark:text-rose-300'
+                  <div className={`px-1.5 py-0.5 rounded-lg flex flex-col items-center justify-center shrink-0 min-w-[28px] ${
+                    isSelected 
+                      ? 'bg-white/20 dark:bg-slate-900/15 text-white dark:text-slate-900' 
+                      : 'bg-rose-50 dark:bg-slate-800 text-rose-600 dark:text-rose-300'
                   }`}>
-                    {idx + 1}
+                    <span className="text-[7.5px] font-black uppercase tracking-tight leading-none opacity-80">จุดที่</span>
+                    <span className="text-[11px] font-black leading-tight">#{idx + 1}</span>
                   </div>
                   <div className="text-left">
-                    <span className="text-xs font-bold block max-w-[120px] sm:max-w-[150px] truncate">
+                    <span className="text-xs font-bold block max-w-[120px] sm:max-w-[160px] truncate">
                       {cleanName}
                     </span>
-                    <span className="text-[9px] opacity-80 block">
-                      {item.time_slot || item.date_label || `Stop ${idx + 1}`}
+                    <span className="text-[9.5px] opacity-80 block font-medium">
+                      {item.date_label && item.time_slot 
+                        ? `${item.date_label} • ${item.time_slot}`
+                        : (item.time_slot || item.date_label || `ลำดับที่ ${idx + 1}`)}
                     </span>
                   </div>
                 </button>
@@ -180,25 +186,38 @@ export default function InteractiveTripMap({
       {activeStop && (
         <div className="p-5 rounded-3xl border border-slate-200/90 dark:border-[#262c3d] bg-white/95 dark:bg-[#171a23]/95 card-elevation space-y-4 animate-in fade-in duration-200">
           <div className="flex justify-between items-start gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center text-base font-black shadow-xs">
-                {selectedStopIdx + 1}
+            <div className="flex items-center gap-3">
+              {/* Stop Order Indicator Badge */}
+              <div className="px-3 py-2 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-700 dark:to-slate-800 text-white flex flex-col items-center justify-center shadow-xs shrink-0 min-w-[58px] border border-slate-700/50">
+                <span className="text-[8.5px] font-bold text-rose-300 dark:text-rose-300 uppercase tracking-wider leading-none mb-0.5">
+                  จุดที่
+                </span>
+                <span className="text-lg font-black leading-none">
+                  #{selectedStopIdx + 1}
+                </span>
               </div>
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    {activeStop.date_label || 'Day Plan'}
-                  </span>
+                  {activeStop.date_label && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 flex items-center gap-1 shadow-2xs">
+                      <span>📅 วันที่:</span>
+                      <span>{activeStop.date_label}</span>
+                    </span>
+                  )}
                   {activeStop.time_slot && (
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-rose-500" /> {activeStop.time_slot}
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-rose-500" />
+                      <span>เวลา {activeStop.time_slot}</span>
                     </span>
                   )}
                   {activeStop.city && (
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                       📍 {activeStop.city}
                     </span>
                   )}
+                  <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">
+                    (จุดหมาย {selectedStopIdx + 1} จาก {displayItems.length})
+                  </span>
                 </div>
                 <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">
                   {activeStop.main_place}

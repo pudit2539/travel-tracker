@@ -1,5 +1,14 @@
 // src/lib/accommodations.ts
 
+export interface AccommodationVoucherFile {
+  name: string;             // ชื่อไฟล์ เช่น Agoda_Tokyo_Hotel.pdf
+  type: string;             // MIME type เช่น application/pdf หรือ image/jpeg
+  size?: number;            // ขนาดไฟล์ (bytes)
+  storageKey?: string;      // IndexedDB storage key
+  dataUrl?: string;         // Base64 dataUrl สำหรับ preview / download ทันที
+  uploadedAt?: number;
+}
+
 export interface AccommodationStay {
   id: string;
   tripId: string;
@@ -17,12 +26,31 @@ export interface AccommodationStay {
   currency?: string;        // สกุลเงินที่จ่าย (เช่น JPY หรือ THB)
   notes?: string;           // โน้ต เช่น รวมอาหารเช้า, เช็คอินได้หลัง 15:00 น., ฝากกระเป๋าได้
   expenseId?: string;       // เชื่อมกับ Expense ใน Supabase ถ้าส่งเข้ารายการแล้ว
+  voucherFile?: AccommodationVoucherFile; // เอกสารใบจองโรงแรม (PDF หรือ รูปภาพ)
   createdAt: number;
 }
 
 import { supabase } from '@/lib/supabase';
+import { deleteLocalReceiptPhoto, getLocalReceiptPhoto } from '@/lib/localReceipts';
 
 const STORAGE_PREFIX = 'travel_tracker_accommodations_';
+
+/**
+ * Remove massive base64 dataUrl before saving to localStorage and Supabase payload
+ * to avoid exceeding browser localStorage (5MB) or PostgreSQL json row size.
+ */
+function sanitizeStaysForStorage(stays: AccommodationStay[]): AccommodationStay[] {
+  return stays.map((stay) => {
+    if (stay.voucherFile && stay.voucherFile.storageKey) {
+      const { dataUrl, ...restVoucher } = stay.voucherFile;
+      return {
+        ...stay,
+        voucherFile: restVoucher,
+      };
+    }
+    return stay;
+  });
+}
 
 export async function syncAccommodationsToSupabase(tripId: string, stays: AccommodationStay[]): Promise<void> {
   if (!tripId) return;
@@ -38,9 +66,11 @@ export async function syncAccommodationsToSupabase(tripId: string, stays: Accomm
     if (existing?.backup_plan) {
       try {
         payload = JSON.parse(existing.backup_plan);
-      } catch (e) {}
+      } catch {
+        // ignore malformed JSON
+      }
     }
-    payload.accommodations = stays;
+    payload.accommodations = sanitizeStaysForStorage(stays);
 
     if (existing?.id) {
       await supabase
@@ -77,15 +107,16 @@ export function getAccommodations(tripId: string): AccommodationStay[] {
 
 export function saveAccommodations(tripId: string, stays: AccommodationStay[]): void {
   if (!tripId) return;
+  const sanitized = sanitizeStaysForStorage(stays);
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(stays));
+      localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(sanitized));
     } catch (err) {
-      console.error('Failed to save accommodations:', err);
+      console.error('Failed to save accommodations to localStorage:', err);
     }
   }
   // Async sync to Supabase for multi-device cross-platform availability
-  syncAccommodationsToSupabase(tripId, stays).catch(() => {});
+  syncAccommodationsToSupabase(tripId, sanitized).catch(() => {});
 }
 
 export function addAccommodation(
@@ -113,6 +144,10 @@ export function updateAccommodation(tripId: string, stay: AccommodationStay): Ac
 
 export function deleteAccommodation(tripId: string, stayId: string): AccommodationStay[] {
   const current = getAccommodations(tripId);
+  const stayToDelete = current.find((s) => s.id === stayId);
+  if (stayToDelete?.voucherFile?.storageKey) {
+    deleteLocalReceiptPhoto(stayToDelete.voucherFile.storageKey).catch(() => {});
+  }
   const updated = current.filter((s) => s.id !== stayId);
   saveAccommodations(tripId, updated);
   return updated;
@@ -127,4 +162,82 @@ export function getGoogleMapsUrl(stay: AccommodationStay): string {
   }
   const query = [stay.name, stay.city, stay.address].filter(Boolean).join(' ');
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+/**
+ * Format bytes into human readable format (e.g. "1.5 MB", "420 KB")
+ */
+export function formatFileSize(bytes?: number): string {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
+/**
+ * Download hotel booking voucher file directly
+ */
+export function downloadVoucherFile(voucher: AccommodationVoucherFile, fallbackStayName: string): void {
+  if (typeof window === 'undefined' || !voucher.dataUrl) return;
+  const link = document.createElement('a');
+  link.href = voucher.dataUrl;
+  const defaultExt = voucher.type?.includes('pdf') ? '.pdf' : '.jpg';
+  const cleanHotelName = (fallbackStayName || 'Hotel').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+  const safeName = voucher.name || `Hotel_Voucher_${cleanHotelName}${defaultExt}`;
+  link.download = safeName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+/**
+ * Open voucher data URL in new browser tab / window safely
+ */
+export function openVoucherInNewTab(dataUrl: string, mimeType?: string): void {
+  if (typeof window === 'undefined' || !dataUrl) return;
+  try {
+    if (dataUrl.startsWith('data:')) {
+      const arr = dataUrl.split(',');
+      const mime = mimeType || arr[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      return;
+    }
+    window.open(dataUrl, '_blank');
+  } catch (err) {
+    console.error('Failed to open voucher blob URL:', err);
+    window.open(dataUrl, '_blank');
+  }
+}
+
+/**
+ * Hydrate dataUrl for a stay's voucherFile from IndexedDB if not present
+ */
+export async function hydrateStayVoucher(stay: AccommodationStay): Promise<AccommodationStay> {
+  if (stay.voucherFile?.storageKey && !stay.voucherFile.dataUrl) {
+    try {
+      const dataUrl = await getLocalReceiptPhoto(stay.voucherFile.storageKey);
+      if (dataUrl) {
+        return {
+          ...stay,
+          voucherFile: {
+            ...stay.voucherFile,
+            dataUrl,
+          },
+        };
+      }
+    } catch (e) {
+      console.warn('Could not hydrate voucher for stay:', stay.name, e);
+    }
+  }
+  return stay;
 }

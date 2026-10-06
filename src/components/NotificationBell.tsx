@@ -63,6 +63,7 @@ export default function NotificationBell({
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
   const [clearedIds, setClearedIds] = useState<Set<string>>(() => new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [baseTimestamp] = useState(() => (typeof window !== 'undefined' ? Date.now() : 1735689600000));
 
   // Initialize stored IDs safely on client mount
   useEffect(() => {
@@ -80,14 +81,14 @@ export default function NotificationBell({
         const memberId = `notif-member-${m.user_id || m.id || idx}`;
         if (!clearedIds.has(memberId)) {
           const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิกใหม่';
-          const memberTime = m.created_at ? new Date(m.created_at) : new Date();
+          const memberTime = m.created_at ? new Date(m.created_at) : new Date(baseTimestamp);
           
           list.push({
             id: memberId,
             title: 'สมาชิกใหม่เข้าร่วมทริป 👥',
             message: `${mName} เข้าร่วมทริปแล้ว (สิทธิ์: ${m.role === 'owner' ? '👑 เจ้าของทริป' : m.role === 'editor' ? '✏️ ผู้แก้ไข' : '👁️ ผู้เข้าชม'})`,
             time: m.created_at ? memberTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : 'ล่าสุด',
-            timestamp: m.created_at ? memberTime.getTime() : Date.now() - (idx * 60000),
+            timestamp: m.created_at ? memberTime.getTime() : baseTimestamp - (idx * 60000),
             type: 'member',
             read: readIds.has(memberId),
           });
@@ -100,7 +101,7 @@ export default function NotificationBell({
       expenses.slice(0, 5).forEach((exp, idx) => {
         const expId = `notif-exp-${exp.id || idx}`;
         if (!clearedIds.has(expId)) {
-          const expTime = exp.spent_at ? new Date(exp.spent_at) : new Date();
+          const expTime = exp.spent_at ? new Date(exp.spent_at) : new Date(baseTimestamp);
           list.push({
             id: expId,
             title: 'บันทึกค่าใช้จ่าย 🧾',
@@ -123,7 +124,7 @@ export default function NotificationBell({
           title: 'ระบบเคลียร์บิลพร้อมคำนวณ 💸',
           message: 'มีรายการค่าใช้จ่ายเพียงพอแล้ว สามารถเปิดดูแผนการโอนเงินหารเฉลี่ยได้ทันที',
           time: 'แนะนำ',
-          timestamp: Date.now() - 3600000,
+          timestamp: baseTimestamp - 3600000,
           type: 'settlement',
           read: readIds.has(settleId),
         });
@@ -138,7 +139,7 @@ export default function NotificationBell({
         title: 'พยากรณ์อากาศโอซาก้า & เกียวโต 🌤️',
         message: 'อุณหภูมิเฉลี่ย 8-14°C อากาศหนาวเย็นในฤดูหนาว อย่าลืมพกเสื้อโค้ทหนาและฮีทเทค',
         time: 'วันนี้',
-        timestamp: Date.now() - 7200000,
+        timestamp: baseTimestamp - 7200000,
         type: 'weather',
         read: readIds.has(weatherId),
       });
@@ -154,7 +155,7 @@ export default function NotificationBell({
           title: 'จุดเริ่มต้นการเดินทาง ✈️',
           message: `กิจกรรมแรก: "${firstItem.main_place}" (${firstItem.date_label || 'Day 1'})`,
           time: 'เริ่มต้นทริป',
-          timestamp: Date.now() - 86400000,
+          timestamp: baseTimestamp - 86400000,
           type: 'itinerary',
           read: readIds.has(planId),
         });
@@ -164,7 +165,7 @@ export default function NotificationBell({
     // Sort strictly by timestamp descending
     list.sort((a, b) => b.timestamp - a.timestamp);
     return list;
-  }, [expenses, itinerary, members, readIds, clearedIds]);
+  }, [expenses, itinerary, members, readIds, clearedIds, baseTimestamp]);
 
   // Close when clicking outside
   useEffect(() => {

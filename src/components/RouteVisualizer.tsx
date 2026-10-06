@@ -101,8 +101,9 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
                 className="group p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#222c42] bg-slate-50/90 dark:bg-[#1c2438] hover:border-blue-500 dark:hover:border-blue-400 transition-all cursor-pointer flex items-center gap-3 min-w-[170px] max-w-[220px] shadow-2xs"
                 title="เปิดดูใน Google Maps"
               >
-                <div className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black text-white shrink-0 bg-blue-600 shadow-xs">
-                  {idx + 1}
+                <div className="px-2 py-1 rounded-xl flex flex-col items-center justify-center text-white shrink-0 bg-blue-600 shadow-xs min-w-[36px]">
+                  <span className="text-[7.5px] font-bold uppercase tracking-tight opacity-80 leading-none">จุดที่</span>
+                  <span className="text-xs font-black leading-tight">#{idx + 1}</span>
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -112,8 +113,10 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
                     </span>
                     <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-blue-600 shrink-0" />
                   </div>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-300 block font-semibold truncate mt-0.5">
-                    {item.time_slot || item.city || 'จุดแวะ'}
+                  <span className="text-[10px] text-slate-500 dark:text-slate-300 block font-semibold truncate mt-0.5">
+                    {item.date_label && item.time_slot
+                      ? `${item.date_label} • ${item.time_slot}`
+                      : (item.time_slot || item.date_label || item.city || 'จุดแวะ')}
                   </span>
                 </div>
               </a>
