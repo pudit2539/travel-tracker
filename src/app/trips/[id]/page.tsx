@@ -808,10 +808,9 @@ export default function TripDetailPage() {
         const localReceiptKey = `receipt_${tripId}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
         try {
           await saveLocalReceiptPhoto(localReceiptKey, scannedData.receipt_url);
-          receiptStorageRef = localReceiptKey;
-        } catch {
-          receiptStorageRef = 'local';
-        }
+        } catch {}
+        // Save the full compressed image dataUrl to Supabase so other devices & mobile can access immediately
+        receiptStorageRef = scannedData.receipt_url;
       }
 
       // ตรวจสอบว่าเลือกแยกบันทึกเป็นรายคนหรือไม่

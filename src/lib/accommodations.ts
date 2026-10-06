@@ -70,7 +70,8 @@ export async function syncAccommodationsToSupabase(tripId: string, stays: Accomm
         // ignore malformed JSON
       }
     }
-    payload.accommodations = sanitizeStaysForStorage(stays);
+    // Retain full accommodation data (including voucherFile.dataUrl) so mobile and all devices can view & download
+    payload.accommodations = stays;
 
     if (existing?.id) {
       await supabase
@@ -107,16 +108,21 @@ export function getAccommodations(tripId: string): AccommodationStay[] {
 
 export function saveAccommodations(tripId: string, stays: AccommodationStay[]): void {
   if (!tripId) return;
-  const sanitized = sanitizeStaysForStorage(stays);
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(sanitized));
-    } catch (err) {
-      console.error('Failed to save accommodations to localStorage:', err);
+      localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(stays));
+    } catch {
+      // If browser localStorage quota (5MB) is reached, save sanitized version in localStorage
+      try {
+        const sanitized = sanitizeStaysForStorage(stays);
+        localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(sanitized));
+      } catch (err) {
+        console.error('Failed to save accommodations to localStorage:', err);
+      }
     }
   }
-  // Async sync to Supabase for multi-device cross-platform availability
-  syncAccommodationsToSupabase(tripId, sanitized).catch(() => {});
+  // Async sync FULL stays to Supabase for multi-device cross-platform availability
+  syncAccommodationsToSupabase(tripId, stays).catch(() => {});
 }
 
 export function addAccommodation(

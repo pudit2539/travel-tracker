@@ -19,7 +19,8 @@ import {
   deleteAccommodation,
   getGoogleMapsUrl,
   formatFileSize,
-  downloadVoucherFile
+  downloadVoucherFile,
+  syncAccommodationsToSupabase
 } from '@/lib/accommodations';
 import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
 import HotelVoucherPreviewModal from './HotelVoucherPreviewModal';
@@ -168,14 +169,45 @@ export function AccommodationsCard({
         .eq('trip_id', tripId)
         .eq('date_label', '__meta_trip_data__')
         .maybeSingle()
-        .then(({ data: metaRow }) => {
+        .then(async ({ data: metaRow }) => {
           if (metaRow?.backup_plan) {
             try {
               const parsed = JSON.parse(metaRow.backup_plan);
               if (parsed.accommodations && Array.isArray(parsed.accommodations) && parsed.accommodations.length > 0) {
-                setStays(parsed.accommodations);
+                let needsSupabaseResync = false;
+                const hydratedStays = await Promise.all(
+                  parsed.accommodations.map(async (stay: AccommodationStay) => {
+                    if (stay.voucherFile) {
+                      // 1. If Supabase is missing dataUrl but this device has it in local storage / IndexedDB
+                      if (!stay.voucherFile.dataUrl && stay.voucherFile.storageKey) {
+                        const localData = await getLocalReceiptPhoto(stay.voucherFile.storageKey);
+                        if (localData) {
+                          needsSupabaseResync = true;
+                          return {
+                            ...stay,
+                            voucherFile: {
+                              ...stay.voucherFile,
+                              dataUrl: localData,
+                            },
+                          };
+                        }
+                      } 
+                      // 2. If stay has dataUrl from Supabase, cache locally into IndexedDB for offline access
+                      else if (stay.voucherFile.dataUrl && stay.voucherFile.storageKey) {
+                        saveLocalReceiptPhoto(stay.voucherFile.storageKey, stay.voucherFile.dataUrl).catch(() => {});
+                      }
+                    }
+                    return stay;
+                  })
+                );
+
+                setStays(hydratedStays);
                 if (typeof window !== 'undefined') {
-                  localStorage.setItem(`travel_tracker_accommodations_${tripId}`, JSON.stringify(parsed.accommodations));
+                  saveAccommodations(tripId, hydratedStays);
+                }
+                // Push to Supabase so other devices (Mobile) get the file immediately!
+                if (needsSupabaseResync) {
+                  syncAccommodationsToSupabase(tripId, hydratedStays).catch(() => {});
                 }
               }
             } catch (e) {}

@@ -12,6 +12,7 @@ import {
   openVoucherInNewTab, 
   formatFileSize 
 } from '@/lib/accommodations';
+import { getLocalReceiptPhoto } from '@/lib/localReceipts';
 
 interface HotelVoucherPreviewModalProps {
   isOpen: boolean;
@@ -28,6 +29,54 @@ export function HotelVoucherPreviewModal({
 }: HotelVoucherPreviewModalProps) {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [activeDataUrl, setActiveDataUrl] = useState<string | null>(voucher?.dataUrl || null);
+  const [blobPdfUrl, setBlobPdfUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Sync dataUrl or resolve from IndexedDB if not passed directly
+  useEffect(() => {
+    if (voucher?.dataUrl) {
+      setActiveDataUrl(voucher.dataUrl);
+      setLoading(false);
+    } else if (voucher?.storageKey) {
+      setLoading(true);
+      getLocalReceiptPhoto(voucher.storageKey)
+        .then((data) => {
+          if (data) setActiveDataUrl(data);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setActiveDataUrl(null);
+      setLoading(false);
+    }
+  }, [voucher]);
+
+  // Convert Base64 PDF to Object Blob URL for iOS Safari / Mobile rendering
+  useEffect(() => {
+    const isPdfType = voucher?.type?.includes('pdf') || voucher?.name?.toLowerCase().endsWith('.pdf');
+    if (isPdfType && activeDataUrl && activeDataUrl.startsWith('data:')) {
+      try {
+        const arr = activeDataUrl.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const objUrl = URL.createObjectURL(blob);
+        setBlobPdfUrl(objUrl);
+        return () => {
+          URL.revokeObjectURL(objUrl);
+        };
+      } catch (e) {
+        setBlobPdfUrl(activeDataUrl);
+      }
+    } else {
+      setBlobPdfUrl(activeDataUrl);
+    }
+  }, [voucher, activeDataUrl]);
 
   // Reset zoom & rotation when modal opens/closes
   useEffect(() => {
@@ -51,15 +100,17 @@ export function HotelVoucherPreviewModal({
   if (!isOpen || !voucher) return null;
 
   const isPdf = voucher.type?.includes('pdf') || voucher.name?.toLowerCase().endsWith('.pdf');
-  const hasData = Boolean(voucher.dataUrl);
+  const hasData = Boolean(activeDataUrl);
 
   const handleDownload = () => {
-    downloadVoucherFile(voucher, hotelName);
+    if (activeDataUrl) {
+      downloadVoucherFile({ ...voucher, dataUrl: activeDataUrl }, hotelName);
+    }
   };
 
   const handleOpenNewTab = () => {
-    if (voucher.dataUrl) {
-      openVoucherInNewTab(voucher.dataUrl, voucher.type);
+    if (activeDataUrl) {
+      openVoucherInNewTab(activeDataUrl, voucher.type);
     }
   };
 
@@ -140,14 +191,21 @@ export function HotelVoucherPreviewModal({
 
         {/* Modal Content Preview Area */}
         <div className="flex-1 overflow-auto bg-slate-100/70 dark:bg-[#0c0f17] p-2 sm:p-4 flex items-center justify-center min-h-[300px]">
-          {!hasData ? (
+          {loading ? (
             <div className="text-center p-8 text-slate-400 space-y-2">
+              <div className="w-8 h-8 mx-auto border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                กำลังเปิดเอกสารใบจอง...
+              </p>
+            </div>
+          ) : !hasData ? (
+            <div className="text-center p-8 text-slate-400 space-y-3 max-w-sm mx-auto">
               <AlertCircle className="h-10 w-10 mx-auto text-amber-500 opacity-80" />
               <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                กำลังเตรียมข้อมูลเอกสาร...
+                ยังไม่พบไฟล์บนอุปกรณ์นี้
               </p>
-              <p className="text-xs text-slate-400">
-                หากเอกสารถูกบันทึกในอุปกรณ์อื่น อาจต้องเปิดจากอุปกรณ์เครื่องเดิมที่เคยอัปโหลด
+              <p className="text-xs text-slate-400 leading-relaxed">
+                ระบบได้เชื่อมต่อระบบคลาวด์แล้ว หากไฟล์ถูกอัปโหลดจากคอมพิวเตอร์ ให้เปิดหน้าเว็บจากเครื่องคอมพิวเตอร์อีกครั้งเพื่อทำการซิงค์ขึ้นระบบให้อัตโนมัติ
               </p>
             </div>
           ) : isPdf ? (
@@ -155,7 +213,7 @@ export function HotelVoucherPreviewModal({
               {/* PDF Viewer Iframe */}
               <div className="w-full h-[62vh] sm:h-[72vh] rounded-xl overflow-hidden border border-slate-200 dark:border-[#222c42] bg-white shadow-inner">
                 <iframe
-                  src={voucher.dataUrl}
+                  src={blobPdfUrl || activeDataUrl || ''}
                   title={`ใบจอง ${hotelName}`}
                   className="w-full h-full border-0"
                 />
@@ -216,7 +274,7 @@ export function HotelVoucherPreviewModal({
 
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={voucher.dataUrl}
+                src={activeDataUrl || ''}
                 alt={`ใบจอง ${hotelName}`}
                 style={{
                   transform: `scale(${zoom}) rotate(${rotation}deg)`,

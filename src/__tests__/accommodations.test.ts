@@ -64,7 +64,7 @@ describe('Accommodation Voucher Features', () => {
     const stored = getAccommodations(tripId);
     expect(stored.length).toBe(1);
     expect(stored[0].voucherFile?.storageKey).toBe('voucher_key_123');
-    expect(stored[0].voucherFile?.dataUrl).toBeUndefined();
+    expect(stored[0].voucherFile?.dataUrl).toBe('data:application/pdf;base64,JVBERi0xLjQK...');
   });
 
   it('hydrates voucher dataUrl from IndexedDB store', async () => {

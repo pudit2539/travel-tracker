@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Edit3, Trash2, Camera, Check, CheckCircle2, 
   Image as ImageIcon, Calendar, DollarSign, Wallet, 
-  Tag, Loader2, ZoomIn, ArrowRight, Users, UserCheck
+  Tag, Loader2, ZoomIn, ArrowRight, Users, UserCheck, Download
 } from 'lucide-react';
 import { CategoryItem, getCategoryMeta } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
@@ -191,7 +191,8 @@ export function ExpenseDetailModal({
       const receiptStorageRef = `local_receipt_${Date.now()}`;
       await saveLocalReceiptPhoto(receiptStorageRef, result.dataUrl);
       setReceiptImage(result.dataUrl);
-      setForm((prev) => ({ ...prev, receipt_url: receiptStorageRef }));
+      // Save dataUrl directly so all devices and mobile can load and download the photo
+      setForm((prev) => ({ ...prev, receipt_url: result.dataUrl }));
     } catch (err) {
       alert('ไม่สามารถอัปโหลดรูปภาพได้');
     } finally {
@@ -850,15 +851,28 @@ export function ExpenseDetailModal({
                     <ImageIcon className="h-3.5 w-3.5 text-blue-500" />
                     <span>รูปภาพใบเสร็จ</span>
                   </span>
-                  {receiptImage && onOpenReceiptFullscreen && (
-                    <button
-                      type="button"
-                      onClick={() => onOpenReceiptFullscreen(receiptImage)}
-                      className="text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline cursor-pointer"
-                    >
-                      <ZoomIn className="h-3 w-3" />
-                      <span>ดูขนาดใหญ่</span>
-                    </button>
+                  {receiptImage && (
+                    <div className="flex items-center gap-2.5">
+                      <a
+                        href={receiptImage}
+                        download={`receipt_${expense.title || 'expense'}.jpg`}
+                        className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 hover:underline cursor-pointer"
+                        title="ดาวน์โหลดรูปใบเสร็จลงเครื่อง"
+                      >
+                        <Download className="h-3 w-3" />
+                        <span>ดาวน์โหลด</span>
+                      </a>
+                      {onOpenReceiptFullscreen && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenReceiptFullscreen(receiptImage)}
+                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline cursor-pointer"
+                        >
+                          <ZoomIn className="h-3 w-3" />
+                          <span>ดูขนาดใหญ่</span>
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
 
