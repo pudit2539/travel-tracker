@@ -943,6 +943,59 @@ export default function TripDetailPage() {
     }
   };
 
+  // ดาวน์โหลด / บันทึกรูปภาพใบเสร็จ (รองรับ Web Share API บน iOS / Android)
+  const handleDownloadReceiptImage = async (imgUrl: string) => {
+    if (!imgUrl) return;
+    try {
+      if (imgUrl.startsWith('data:')) {
+        const arr = imgUrl.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const ext = mime.includes('png') ? '.png' : '.jpg';
+        const filename = `travel_receipt_${Date.now()}${ext}`;
+        const file = new File([blob], filename, { type: mime });
+
+        if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'รูปภาพใบเสร็จ',
+            });
+            return;
+          } catch (shareErr: any) {
+            if (shareErr.name === 'AbortError') return;
+          }
+        }
+
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        return;
+      }
+    } catch (e) {
+      console.warn('Failed to download via blob/share', e);
+    }
+    const link = document.createElement('a');
+    link.href = imgUrl;
+    link.download = 'travel_receipt.jpg';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleDeleteExpense = async (id: string, receiptRef?: string) => {
     if (!confirm('ต้องการลบรายการค่าใช้จ่ายนี้ใช่หรือไม่?')) return;
     if (receiptRef) {
@@ -2683,14 +2736,14 @@ export default function TripDetailPage() {
       {/* 12. Preview Receipt Image */}
       {previewImage && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md animate-in fade-in duration-200"
           onClick={() => setPreviewImage(null)}
         >
           <div className="relative max-w-lg w-full bg-white dark:bg-[#151b2b] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] shadow-2xl space-y-3 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center pb-2 border-b border-slate-200/90 dark:border-[#222c42]">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <ImageIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" /> 
-                <span>รูปภาพใบเสร็จ (บันทึกในโทรศัพท์)</span>
+                <span>รูปภาพใบเสร็จ</span>
               </h3>
               <button
                 onClick={() => setPreviewImage(null)}
@@ -2700,26 +2753,32 @@ export default function TripDetailPage() {
               </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[68vh]">
-              <img src={previewImage} alt="Receipt Preview" className="max-h-[65vh] w-auto object-contain rounded-xl shadow-md" />
+            <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[65vh]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={previewImage} alt="Receipt Preview" className="max-h-[62vh] w-auto object-contain rounded-xl shadow-md" />
             </div>
 
-            <div className="pt-2 flex gap-2">
-              <a
-                href={previewImage}
-                download="travel_receipt.jpg"
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer"
-              >
-                <HardDriveDownload className="h-4 w-4" />
-                <span>ดาวน์โหลด / บันทึกลงโทรศัพท์</span>
-              </a>
-              <button
-                type="button"
-                onClick={() => setPreviewImage(null)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
-              >
-                ปิด
-              </button>
+            <div className="pt-2 flex flex-col gap-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadReceiptImage(previewImage)}
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer"
+                >
+                  <HardDriveDownload className="h-4 w-4" />
+                  <span>บันทึกรูปภาพ / แชร์ลงโทรศัพท์</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                >
+                  ปิด
+                </button>
+              </div>
+              <p className="text-[10px] text-center text-slate-400">
+                💡 บนมือถือ: สามารถกดปุ่มบันทึก หรือแตะค้างที่รูปภาพเพื่อเลือกบันทึกลงโทรศัพท์ (Save to Photos) ได้
+              </p>
             </div>
           </div>
         </div>

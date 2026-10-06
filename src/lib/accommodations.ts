@@ -182,16 +182,62 @@ export function formatFileSize(bytes?: number): string {
 }
 
 /**
- * Download hotel booking voucher file directly
+ * Download hotel booking voucher file directly (with Web Share API support for iOS/Android)
  */
-export function downloadVoucherFile(voucher: AccommodationVoucherFile, fallbackStayName: string): void {
+export async function downloadVoucherFile(voucher: AccommodationVoucherFile, fallbackStayName: string): Promise<void> {
   if (typeof window === 'undefined' || !voucher.dataUrl) return;
-  const link = document.createElement('a');
-  link.href = voucher.dataUrl;
-  const defaultExt = voucher.type?.includes('pdf') ? '.pdf' : '.jpg';
+
+  const defaultExt = voucher.type?.includes('pdf') || voucher.name?.toLowerCase().endsWith('.pdf') ? '.pdf' : '.jpg';
   const cleanHotelName = (fallbackStayName || 'Hotel').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
   const safeName = voucher.name || `Hotel_Voucher_${cleanHotelName}${defaultExt}`;
+  const mime = voucher.type || (safeName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+
+  try {
+    if (voucher.dataUrl.startsWith('data:')) {
+      const arr = voucher.dataUrl.split(',');
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      const file = new File([blob], safeName, { type: mime });
+
+      // If mobile browser supports Web Share API with files (iOS Safari, Android Chrome)
+      if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: safeName,
+          });
+          return;
+        } catch (shareErr: any) {
+          if (shareErr.name === 'AbortError') return; // User closed share sheet intentionally
+        }
+      }
+
+      // Fallback: create blob URL and trigger download link
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = safeName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      return;
+    }
+  } catch (err) {
+    console.warn('Web Share / Blob download failed, falling back to basic download link:', err);
+  }
+
+  // Basic fallback
+  const link = document.createElement('a');
+  link.href = voucher.dataUrl;
   link.download = safeName;
+  link.target = '_blank';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -214,8 +260,17 @@ export function openVoucherInNewTab(dataUrl: string, mimeType?: string): void {
       }
       const blob = new Blob([u8arr], { type: mime });
       const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      const newWin = window.open(blobUrl, '_blank');
+      if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
       return;
     }
     window.open(dataUrl, '_blank');

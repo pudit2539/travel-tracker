@@ -2,9 +2,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, Download, ExternalLink, FileText, Image as ImageIcon, 
-  ZoomIn, ZoomOut, RotateCw, CheckCircle2, AlertCircle 
+  ZoomIn, ZoomOut, RotateCw, CheckCircle2, AlertCircle, Upload
 } from 'lucide-react';
 import { 
   AccommodationVoucherFile, 
@@ -12,7 +13,7 @@ import {
   openVoucherInNewTab, 
   formatFileSize 
 } from '@/lib/accommodations';
-import { getLocalReceiptPhoto } from '@/lib/localReceipts';
+import { getLocalReceiptPhoto, saveLocalReceiptPhoto } from '@/lib/localReceipts';
 
 interface HotelVoucherPreviewModalProps {
   isOpen: boolean;
@@ -32,6 +33,11 @@ export function HotelVoucherPreviewModal({
   const [activeDataUrl, setActiveDataUrl] = useState<string | null>(voucher?.dataUrl || null);
   const [blobPdfUrl, setBlobPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync dataUrl or resolve from IndexedDB if not passed directly
   useEffect(() => {
@@ -97,7 +103,7 @@ export function HotelVoucherPreviewModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !voucher) return null;
+  if (!isOpen || !voucher || !mounted) return null;
 
   const isPdf = voucher.type?.includes('pdf') || voucher.name?.toLowerCase().endsWith('.pdf');
   const hasData = Boolean(activeDataUrl);
@@ -114,8 +120,8 @@ export function HotelVoucherPreviewModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-md bg-black/75 animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 sm:p-4 backdrop-blur-md bg-black/85 animate-in fade-in duration-200">
       <div 
         className="w-full max-w-4xl max-h-[94vh] bg-white dark:bg-[#111624] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-[#222c42] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
@@ -199,19 +205,69 @@ export function HotelVoucherPreviewModal({
               </p>
             </div>
           ) : !hasData ? (
-            <div className="text-center p-8 text-slate-400 space-y-3 max-w-sm mx-auto">
+            <div className="text-center p-6 sm:p-8 text-slate-400 space-y-3 max-w-sm mx-auto">
               <AlertCircle className="h-10 w-10 mx-auto text-amber-500 opacity-80" />
               <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                ยังไม่พบไฟล์บนอุปกรณ์นี้
+                ยังไม่พบเนื้อหาไฟล์บนอุปกรณ์นี้
               </p>
               <p className="text-xs text-slate-400 leading-relaxed">
-                ระบบได้เชื่อมต่อระบบคลาวด์แล้ว หากไฟล์ถูกอัปโหลดจากคอมพิวเตอร์ ให้เปิดหน้าเว็บจากเครื่องคอมพิวเตอร์อีกครั้งเพื่อทำการซิงค์ขึ้นระบบให้อัตโนมัติ
+                ไฟล์อาจถูกบันทึกไว้ในอุปกรณ์เครื่องเดิมที่อัปโหลด หรือยังไม่ได้ซิงค์เนื้อหาไฟล์สมบูรณ์
               </p>
+              <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95">
+                <Upload className="h-4 w-4" />
+                <span>เลือกไฟล์ใบจอง (PDF/รูป) เพื่อเปิดดูทันที</span>
+                <input
+                  type="file"
+                  accept=".pdf,image/*,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    const r = new FileReader();
+                    r.onload = () => {
+                      const res = r.result as string;
+                      setActiveDataUrl(res);
+                      if (voucher.storageKey) {
+                        saveLocalReceiptPhoto(voucher.storageKey, res).catch(() => {});
+                      }
+                    };
+                    r.readAsDataURL(f);
+                  }}
+                />
+              </label>
             </div>
           ) : isPdf ? (
             <div className="w-full h-full flex flex-col space-y-2">
+              {/* Quick Mobile Action Ribbon for PDF */}
+              <div className="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-900/90 text-white text-xs border border-white/10 shadow-sm gap-2">
+                <span className="font-bold flex items-center gap-1.5 truncate text-[11px] sm:text-xs">
+                  <FileText className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                  <span className="truncate">{voucher.name || `ใบจอง ${hotelName}`}</span>
+                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleOpenNewTab}
+                    className="px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                    title="เปิดดู PDF เต็มจอในเบราว์เซอร์"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 text-amber-300" />
+                    <span>เปิดเต็มจอ</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownload}
+                    className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                    title="แชร์ หรือ บันทึกลงเครื่อง"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span>แชร์ / บันทึก</span>
+                  </button>
+                </div>
+              </div>
+
               {/* PDF Viewer Iframe */}
-              <div className="w-full h-[62vh] sm:h-[72vh] rounded-xl overflow-hidden border border-slate-200 dark:border-[#222c42] bg-white shadow-inner">
+              <div className="w-full h-[58vh] sm:h-[68vh] rounded-xl overflow-hidden border border-slate-200 dark:border-[#222c42] bg-white shadow-inner">
                 <iframe
                   src={blobPdfUrl || activeDataUrl || ''}
                   title={`ใบจอง ${hotelName}`}
@@ -219,14 +275,7 @@ export function HotelVoucherPreviewModal({
                 />
               </div>
               <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1">
-                <span>💡 หากแสดงผลไม่สมบูรณ์บนมือถือบางรุ่น สามารถกดปุ่ม &ldquo;เปิดแท็บใหม่&rdquo; หรือ &ldquo;ดาวน์โหลด&rdquo;</span>
-                <button
-                  type="button"
-                  onClick={handleOpenNewTab}
-                  className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
-                >
-                  เปิดเต็มจอ <ExternalLink className="h-3 w-3" />
-                </button>
+                <span>💡 หาก iPhone หรือมือถือไม่แสดงเอกสารในกรอบ ให้แตะปุ่ม &ldquo;เปิดเต็มจอ&rdquo; ด้านบน</span>
               </div>
             </div>
           ) : (
@@ -312,7 +361,8 @@ export function HotelVoucherPreviewModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

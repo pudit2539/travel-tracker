@@ -200,6 +200,60 @@ export function ExpenseDetailModal({
     }
   };
 
+  // ดาวน์โหลด / บันทึกรูปภาพใบเสร็จ
+  const handleDownloadReceipt = async () => {
+    if (!receiptImage) return;
+    try {
+      if (receiptImage.startsWith('data:')) {
+        const arr = receiptImage.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const ext = mime.includes('png') ? '.png' : '.jpg';
+        const safeTitle = (expense?.title || 'receipt').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+        const filename = `receipt_${safeTitle}${ext}`;
+        const file = new File([blob], filename, { type: mime });
+
+        if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'รูปภาพใบเสร็จ',
+            });
+            return;
+          } catch (shareErr: any) {
+            if (shareErr.name === 'AbortError') return;
+          }
+        }
+
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        return;
+      }
+    } catch (e) {
+      console.warn('Failed to download receipt', e);
+    }
+    const link = document.createElement('a');
+    link.href = receiptImage;
+    link.download = `receipt_${expense?.title || 'expense'}.jpg`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleSwitchToEdit = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -289,11 +343,11 @@ export function ExpenseDetailModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-black/60 p-0 sm:p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[95] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out"
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85dvh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Drag Indicator */}
@@ -853,15 +907,15 @@ export function ExpenseDetailModal({
                   </span>
                   {receiptImage && (
                     <div className="flex items-center gap-2.5">
-                      <a
-                        href={receiptImage}
-                        download={`receipt_${expense.title || 'expense'}.jpg`}
+                      <button
+                        type="button"
+                        onClick={handleDownloadReceipt}
                         className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 hover:underline cursor-pointer"
-                        title="ดาวน์โหลดรูปใบเสร็จลงเครื่อง"
+                        title="ดาวน์โหลดหรือแชร์รูปใบเสร็จลงโทรศัพท์"
                       >
                         <Download className="h-3 w-3" />
-                        <span>ดาวน์โหลด</span>
-                      </a>
+                        <span>ดาวน์โหลด / บันทึก</span>
+                      </button>
                       {onOpenReceiptFullscreen && (
                         <button
                           type="button"
