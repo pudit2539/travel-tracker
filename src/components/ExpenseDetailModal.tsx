@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, Edit3, Trash2, Camera, Check, CheckCircle2, 
   Image as ImageIcon, Calendar, DollarSign, Wallet, 
@@ -24,13 +25,13 @@ interface ExpenseDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   expense: any;
-  categories: CategoryItem[];
-  members: any[];
-  currentUser: any;
-  userDisplayName: string;
-  tripBaseCurrency: string;
-  fxRate: number;
-  canEdit: boolean;
+  categories?: CategoryItem[];
+  members?: any[];
+  currentUser?: any;
+  userDisplayName?: string;
+  tripBaseCurrency?: string;
+  fxRate?: number;
+  canEdit?: boolean;
   startInEditMode?: boolean;
   tripId?: string;
   onSaveExpense: (updatedExpense: any) => Promise<void>;
@@ -42,13 +43,13 @@ export function ExpenseDetailModal({
   isOpen,
   onClose,
   expense,
-  categories,
-  members,
+  categories = [],
+  members = [],
   currentUser,
-  userDisplayName,
-  tripBaseCurrency,
-  fxRate,
-  canEdit,
+  userDisplayName = 'ฉัน',
+  tripBaseCurrency = 'JPY',
+  fxRate = 0.210,
+  canEdit = true,
   startInEditMode = false,
   tripId,
   onSaveExpense,
@@ -58,9 +59,36 @@ export function ExpenseDetailModal({
   const [isEditing, setIsEditing] = useState(startInEditMode);
   const [saving, setSaving] = useState(false);
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const editSwitchTimeRef = React.useRef<number>(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scrolling when modal is open to prevent touch scroll bleeding on iOS/iPadOS
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isOpen]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Split state
   const [splitWith, setSplitWith] = useState<string[]>([]);
@@ -341,13 +369,17 @@ export function ExpenseDetailModal({
     onClose();
   };
 
-  return (
+  if (!isOpen || !expense || !mounted) return null;
+
+  return createPortal(
     <div 
-      className="fixed inset-0 z-[95] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[105] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div 
-        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85dvh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out"
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Drag Indicator */}
@@ -393,7 +425,7 @@ export function ExpenseDetailModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-5 pt-3 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+        <div className="p-4 sm:p-5 pt-3 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
           {isEditing ? (
             /* ==================== EDIT FORM MODE ==================== */
             <form id="edit-expense-form" onSubmit={handleSave} className="space-y-3.5">
@@ -406,7 +438,7 @@ export function ExpenseDetailModal({
                   type="text"
                   required
                   placeholder="เช่น สุกี้ตี๋น้อย, Shabu Buffet, Matsumoto Kiyoshi"
-                  className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
+                  className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all touch-manipulation min-h-[44px]"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                 />
@@ -423,7 +455,7 @@ export function ExpenseDetailModal({
                     step="any"
                     required
                     placeholder="0.00"
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-black transition-all"
+                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-black transition-all touch-manipulation min-h-[44px]"
                     value={form.amount}
                     onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   />
@@ -970,7 +1002,7 @@ export function ExpenseDetailModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 sm:p-5 pt-3 border-t border-slate-200/90 dark:border-[#222c42] flex gap-2.5">
+        <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#222c42] flex items-center justify-end gap-2 bg-slate-50/90 dark:bg-[#1c2438]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           {isEditing ? (
             <>
               {canEdit && (
@@ -978,7 +1010,7 @@ export function ExpenseDetailModal({
                   type="button"
                   key="edit-delete-btn"
                   onClick={handleDelete}
-                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 min-h-[42px] touch-manipulation active:scale-95"
                   title="ลบรายการนี้"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -990,16 +1022,17 @@ export function ExpenseDetailModal({
                 key="edit-cancel-btn"
                 onClick={onClose}
                 disabled={saving}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
               >
                 ปิด
               </button>
               <button
-                type="button"
+                type="submit"
+                form="edit-expense-form"
                 key="edit-save-btn"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95"
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95 min-h-[42px] touch-manipulation"
               >
                 {saving ? (
                   <>
@@ -1022,7 +1055,7 @@ export function ExpenseDetailModal({
                   type="button"
                   key="view-delete-btn"
                   onClick={handleDelete}
-                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 min-h-[42px] touch-manipulation active:scale-95"
                   title="ลบรายการนี้"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1034,7 +1067,7 @@ export function ExpenseDetailModal({
                   type="button"
                   key="view-edit-btn"
                   onClick={handleSwitchToEdit}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.01] active:scale-95"
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.01] active:scale-95 min-h-[42px] touch-manipulation"
                 >
                   <Edit3 className="h-4 w-4" />
                   <span>แก้ไขข้อมูล</span>
@@ -1044,7 +1077,7 @@ export function ExpenseDetailModal({
                 type="button"
                 key="view-close-btn"
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
               >
                 ปิด
               </button>
@@ -1052,7 +1085,8 @@ export function ExpenseDetailModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

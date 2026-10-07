@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -160,6 +161,24 @@ export default function TripDetailPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedAuthLink, setCopiedAuthLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+
+  // Lock body scroll on mobile/iPad when any page modal is active
+  useEffect(() => {
+    const isAnyModalOpen = Boolean(
+      showScanModal ||
+      showActivityModal ||
+      showShareModal ||
+      showAiKeyModal ||
+      previewImage
+    );
+    if (isAnyModalOpen && typeof document !== 'undefined') {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [showScanModal, showActivityModal, showShareModal, showAiKeyModal, previewImage]);
 
   const copyTripCode = () => {
     if (typeof window !== 'undefined' && tripId) {
@@ -2178,16 +2197,15 @@ export default function TripDetailPage() {
         onOpenReceiptFullscreen={(img) => setPreviewImage(img)}
       />
 
-      {/* 10. Scan / Add Expense Modal with Itemized Split */}
       {/* 10. Scan / Add Expense Modal (Unified Single Clean Form) */}
-      {showScanModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+      {showScanModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
             {/* Mobile Sheet Handle */}
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
             
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42]">
+            <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-2.5">
                 <CatAvatarBadge cat={userCat} size="lg" />
                 <div>
@@ -2208,7 +2226,7 @@ export default function TripDetailPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-4 sm:p-5 pt-3 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+            <div className="p-4 sm:p-5 pt-3 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
               
               {/* 1. Receipt Upload Area */}
               <div className="space-y-1.5">
@@ -2532,11 +2550,11 @@ export default function TripDetailPage() {
             </div>
 
             {/* Modal Footer Buttons */}
-            <div className="p-4 sm:p-5 pt-3 border-t border-slate-200/90 dark:border-[#222c42] flex gap-2.5">
+            <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#222c42] flex gap-2.5 bg-slate-50/90 dark:bg-[#1c2438]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
               <button
                 type="button"
                 onClick={() => setShowScanModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
               >
                 ยกเลิก
               </button>
@@ -2544,7 +2562,7 @@ export default function TripDetailPage() {
                 type="button"
                 onClick={handleSaveExpense}
                 disabled={scanning || savingExpense}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 min-h-[42px] touch-manipulation"
               >
                 {savingExpense ? (
                   <>
@@ -2556,23 +2574,25 @@ export default function TripDetailPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 11. Activity Modal */}
-      {showActivityModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+      {showActivityModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
             {/* Mobile Sheet Handle */}
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
             
-            <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42]">
+            <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div>
                 <h2 className="text-base font-black text-slate-900 dark:text-slate-100">
                   {editingActivity ? 'แก้ไขกิจกรรม ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยว 🗺️'}
                 </h2>
               </div>
               <button
+                type="button"
                 onClick={() => setShowActivityModal(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
@@ -2580,7 +2600,7 @@ export default function TripDetailPage() {
               </button>
             </div>
 
-            <form id="activity-form" onSubmit={handleSaveActivity} className="p-6 pt-4 overflow-y-auto custom-scrollbar flex-1 space-y-3.5">
+            <form id="activity-form" onSubmit={handleSaveActivity} className="p-4 sm:p-6 pt-3 sm:pt-4 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-3.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">วัน / Day (เช่น 04-Dec)</label>
@@ -2711,11 +2731,11 @@ export default function TripDetailPage() {
 
             </form>
 
-            <div className="p-6 pt-3 border-t border-slate-200/90 dark:border-[#222c42] flex gap-2">
+            <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#222c42] flex gap-2.5 bg-slate-50/90 dark:bg-[#1c2438]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
               <button
                 type="button"
                 onClick={() => setShowActivityModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors min-h-[42px] touch-manipulation active:scale-95"
               >
                 ยกเลิก
               </button>
@@ -2723,29 +2743,33 @@ export default function TripDetailPage() {
                 type="submit"
                 form="activity-form"
                 disabled={savingActivity}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all min-h-[42px] touch-manipulation"
               >
                 {savingActivity ? 'กำลังบันทึก...' : 'บันทึกกิจกรรม'}
               </button>
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 12. Preview Receipt Image */}
-      {previewImage && (
+      {previewImage && mounted && createPortal(
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md animate-in fade-in duration-200 overscroll-contain"
           onClick={() => setPreviewImage(null)}
+          role="dialog"
+          aria-modal="true"
         >
-          <div className="relative max-w-lg w-full bg-white dark:bg-[#151b2b] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] shadow-2xl space-y-3 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+          <div className="relative max-w-lg w-full bg-white dark:bg-[#151b2b] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] shadow-2xl space-y-3 animate-in zoom-in-95 duration-200 max-h-[92dvh] overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center pb-2 border-b border-slate-200/90 dark:border-[#222c42]">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <ImageIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" /> 
                 <span>รูปภาพใบเสร็จ</span>
               </h3>
               <button
+                type="button"
                 onClick={() => setPreviewImage(null)}
                 className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
               >
@@ -2753,9 +2777,9 @@ export default function TripDetailPage() {
               </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[65vh]">
+            <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[58vh] sm:max-h-[62vh]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewImage} alt="Receipt Preview" className="max-h-[62vh] w-auto object-contain rounded-xl shadow-md" />
+              <img src={previewImage} alt="Receipt Preview" className="max-h-[56vh] sm:max-h-[60vh] w-auto object-contain rounded-xl shadow-md" />
             </div>
 
             <div className="pt-2 flex flex-col gap-2">
@@ -2763,7 +2787,7 @@ export default function TripDetailPage() {
                 <button
                   type="button"
                   onClick={() => handleDownloadReceiptImage(previewImage)}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer min-h-[42px] touch-manipulation"
                 >
                   <HardDriveDownload className="h-4 w-4" />
                   <span>บันทึกรูปภาพ / แชร์ลงโทรศัพท์</span>
@@ -2771,7 +2795,7 @@ export default function TripDetailPage() {
                 <button
                   type="button"
                   onClick={() => setPreviewImage(null)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
                 >
                   ปิด
                 </button>
@@ -2781,13 +2805,14 @@ export default function TripDetailPage() {
               </p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 13. Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+      {showShareModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto overscroll-contain pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
             {/* Mobile Sheet Handle */}
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-2 sm:hidden shrink-0" />
             
@@ -2804,6 +2829,7 @@ export default function TripDetailPage() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowShareModal(false)}
                 className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
               >
@@ -2825,8 +2851,9 @@ export default function TripDetailPage() {
                   สำหรับเพื่อนที่มีบัญชีแล้ว หรือต้องการเปิดดูรายละเอียดทริปทันที
                 </p>
                 <button
+                  type="button"
                   onClick={copyInviteLink}
-                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[42px] touch-manipulation"
                 >
                   {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   <span>{copiedLink ? 'คัดลอกลิงก์เรียบร้อยแล้ว!' : 'คัดลอกลิงก์ตรง (Direct Link)'}</span>
@@ -2841,8 +2868,9 @@ export default function TripDetailPage() {
                   เพื่อนที่ยังไม่มีบัญชี กดลิงก์นี้เพื่อสมัครสมาชิกแล้วระบบจะดึงเข้ากลุ่มทริปนี้ให้อัตโนมัติ
                 </p>
                 <button
+                  type="button"
                   onClick={copyAuthInviteLink}
-                  className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-400 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-400 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 min-h-[42px] touch-manipulation"
                 >
                   {copiedAuthLink ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-blue-500" />}
                   <span>{copiedAuthLink ? 'คัดลอกลิงก์เชิญเรียบร้อยแล้ว!' : 'คัดลอกลิงก์เชิญสมาชิกใหม่'}</span>
@@ -2859,8 +2887,9 @@ export default function TripDetailPage() {
                     value={tripId}
                   />
                   <button
+                    type="button"
                     onClick={copyTripCode}
-                    className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 dark:bg-[#1c2438] dark:hover:bg-[#222c42] text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold transition-colors shrink-0 cursor-pointer active:scale-95"
+                    className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 dark:bg-[#1c2438] dark:hover:bg-[#222c42] text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold transition-colors shrink-0 cursor-pointer active:scale-95 min-h-[42px] touch-manipulation"
                   >
                     {copiedCode ? 'คัดลอกแล้ว' : 'คัดลอก'}
                   </button>
@@ -2868,13 +2897,14 @@ export default function TripDetailPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal: ตั้งค่า Gemini API Key สำหรับ AI Vision สแกนใบเสร็จจริง */}
-      {showAiKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] shadow-2xl p-5 sm:p-6 space-y-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-200 glow-blue">
+      {showAiKeyModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md bg-black/80 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
+          <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] shadow-2xl p-5 sm:p-6 space-y-4 max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto overscroll-contain animate-in slide-in-from-bottom duration-200 glow-blue pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
             {/* Mobile Sheet Handle */}
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-2 sm:hidden shrink-0" />
             <div className="flex items-center justify-between">
@@ -2934,7 +2964,7 @@ export default function TripDetailPage() {
                     setGeminiApiKeyInput('');
                     handleSaveGeminiKey('');
                   }}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-slate-500 hover:text-rose-600 text-xs font-bold transition-colors cursor-pointer"
+                  className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-slate-500 hover:text-rose-600 text-xs font-bold transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
                 >
                   ล้างค่า
                 </button>
@@ -2942,13 +2972,14 @@ export default function TripDetailPage() {
               <button
                 type="button"
                 onClick={() => handleSaveGeminiKey(geminiApiKeyInput)}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95 min-h-[42px] touch-manipulation"
               >
                 บันทึก API Key
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Global Success / Feedback Floating Toast (Positioned at bottom for iPhone 17 Pro Max Safe Zone) */}

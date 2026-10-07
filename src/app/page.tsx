@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useDeferredValue } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -56,6 +57,18 @@ export default function HomePage() {
     endDate: '',
   });
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Lock body scroll on mobile/iPad when any home modal is active
+  useEffect(() => {
+    const isAnyOpen = Boolean(showCreateModal || showEditModal || showJoinModal || showDeleteModal || showProfileModal);
+    if (isAnyOpen && typeof document !== 'undefined') {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [showCreateModal, showEditModal, showJoinModal, showDeleteModal, showProfileModal]);
 
   useEffect(() => {
     // Restore cached data on client mount safely to eliminate SSR hydration mismatch
@@ -996,14 +1009,14 @@ export default function HomePage() {
       />
 
       {/* ==================== CREATE TRIP MODAL ==================== */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
+      {showCreateModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
             {/* Mobile Sheet Handle */}
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
             
             {/* Modal Header */}
-            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42]">
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
                   ✈️
@@ -1027,7 +1040,7 @@ export default function HomePage() {
             </div>
 
             {/* Modal Body Form */}
-            <form onSubmit={handleCreateTrip} className="p-6 pt-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+            <form id="create-trip-form" onSubmit={handleCreateTrip} className="p-4 sm:p-6 pt-3 sm:pt-4 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">
                   ชื่อทริปท่องเที่ยว *
@@ -1128,35 +1141,37 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2.5 pt-3 border-t border-slate-200/90 dark:border-[#222c42]">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  {actionLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> กำลังสร้างทริป...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" /> สร้างทริปเลย
-                    </>
-                  )}
-                </button>
-              </div>
             </form>
+
+            {/* Sticky Action Footer */}
+            <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#222c42] flex gap-2.5 bg-slate-50/90 dark:bg-[#1c2438]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                form="create-trip-form"
+                disabled={actionLoading}
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] touch-manipulation"
+              >
+                {actionLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> กำลังสร้างทริป...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" /> สร้างทริปเลย
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ==================== CREATE SUCCESS MODAL TOAST ==================== */}
@@ -1201,13 +1216,13 @@ export default function HomePage() {
       )}
 
       {/* ==================== EDIT TRIP MODAL ==================== */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
+      {showEditModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
             {/* Mobile Sheet Handle */}
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
             
-            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42]">
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
                   ✏️
@@ -1224,19 +1239,19 @@ export default function HomePage() {
               <button 
                 type="button"
                 onClick={() => setShowEditModal(false)} 
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateTrip} className="p-6 pt-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+            <form id="edit-trip-form" onSubmit={handleUpdateTrip} className="p-4 sm:p-6 pt-5 overflow-y-auto overscroll-contain min-h-0 flex-1 space-y-4 custom-scrollbar">
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">ชื่อทริป *</label>
                 <input
                   type="text"
                   required
-                  className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold shadow-2xs transition-all"
+                  className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold shadow-2xs transition-all touch-manipulation"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
@@ -1248,7 +1263,7 @@ export default function HomePage() {
                   <input
                     type="number"
                     required
-                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black shadow-2xs transition-all"
+                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black shadow-2xs transition-all touch-manipulation"
                     value={formData.budget}
                     onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
                   />
@@ -1256,7 +1271,7 @@ export default function HomePage() {
                 <div>
                   <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">สกุลเงินหลัก</label>
                   <select
-                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 font-bold shadow-2xs cursor-pointer transition-all"
+                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 font-bold shadow-2xs cursor-pointer transition-all touch-manipulation"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   >
@@ -1277,7 +1292,7 @@ export default function HomePage() {
                   <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">วันเริ่มเดินทาง</label>
                   <input
                     type="date"
-                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all"
+                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all touch-manipulation"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                   />
@@ -1286,42 +1301,47 @@ export default function HomePage() {
                   <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">วันเดินทางกลับ</label>
                   <input
                     type="date"
-                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all"
+                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all touch-manipulation"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   />
                 </div>
               </div>
+            </form>
 
-              <div className="flex gap-2.5 pt-3 border-t border-slate-200/90 dark:border-[#222c42]">
+            {/* Sticky Action Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+              <div className="flex gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                  className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer touch-manipulation"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
+                  form="edit-trip-form"
                   disabled={actionLoading}
-                  className="flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                  className="flex-1 py-3 min-h-[44px] rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer touch-manipulation"
                 >
                   {actionLoading ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ==================== JOIN TRIP MODAL ==================== */}
-      {showJoinModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
+      {showJoinModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
             {/* Mobile Sheet Handle */}
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
             
-            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42]">
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
                   🔑
@@ -1338,13 +1358,13 @@ export default function HomePage() {
               <button 
                 type="button"
                 onClick={() => setShowJoinModal(false)} 
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleJoinTrip} className="p-4 sm:p-6 pt-4 sm:pt-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+            <form id="join-trip-form" onSubmit={handleJoinTrip} className="p-4 sm:p-6 pt-4 sm:pt-5 overflow-y-auto overscroll-contain min-h-0 flex-1 space-y-4 custom-scrollbar">
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">
                   รหัสเชิญเข้าร่วมทริป (Trip ID) *
@@ -1353,7 +1373,7 @@ export default function HomePage() {
                   type="text"
                   required
                   placeholder="เช่น 123e4567-e89b-12d3-a456-426614174000"
-                  className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-mono shadow-2xs transition-all"
+                  className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-mono shadow-2xs transition-all touch-manipulation"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value)}
                 />
@@ -1365,19 +1385,22 @@ export default function HomePage() {
                   <span>{joinError}</span>
                 </div>
               )}
+            </form>
 
-              <div className="flex gap-2.5 pt-2">
+            <div className="p-4 sm:p-5 border-t border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+              <div className="flex gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowJoinModal(false)}
-                  className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                  className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer touch-manipulation"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
+                  form="join-trip-form"
                   disabled={joinLoading}
-                  className="flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 min-h-[44px] rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 touch-manipulation"
                 >
                   {joinLoading ? (
                     <>
@@ -1390,14 +1413,15 @@ export default function HomePage() {
                   )}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ==================== DELETE TRIP MODAL ==================== */}
-      {showDeleteModal && selectedTrip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 animate-in fade-in duration-200">
+      {showDeleteModal && selectedTrip && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
           <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-rose-500/40 glow-rose p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
             <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 flex items-center justify-center text-2xl mx-auto shadow-md">
               <Trash2 className="h-7 w-7" />
@@ -1416,7 +1440,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer touch-manipulation"
               >
                 ยกเลิก
               </button>
@@ -1424,13 +1448,14 @@ export default function HomePage() {
                 type="button"
                 onClick={handleDeleteTrip}
                 disabled={actionLoading}
-                className="flex-1 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/25 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                className="flex-1 py-3 min-h-[44px] rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer touch-manipulation"
               >
                 {actionLoading ? 'กำลังลบ...' : 'ลบทริปถาวร'}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

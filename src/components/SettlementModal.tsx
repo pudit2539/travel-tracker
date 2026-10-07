@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { calculateSettlement, TransferPlan, MemberBalance } from '@/lib/settlement';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
@@ -47,6 +48,33 @@ export default function SettlementModal({
   const [promptPayNumber, setPromptPayNumber] = useState<string>('');
   const [copiedPromptPay, setCopiedPromptPay] = useState(false);
   const [editingPromptPay, setEditingPromptPay] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll and listen for Escape key on mobile / iPad
+  useEffect(() => {
+    if (isOpen && typeof document !== 'undefined') {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (selectedTransferForQr) {
+            setSelectedTransferForQr(null);
+          } else {
+            onClose();
+          }
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = prev;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose, selectedTransferForQr]);
 
   // Transfer paid status (saved locally per trip)
   const [settledTransfers, setSettledTransfers] = useState<Record<string, boolean>>({});
@@ -215,17 +243,19 @@ export default function SettlementModal({
     setTimeout(() => setCopiedText(false), 2500);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[88vh] sm:max-h-[92vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+    <>
+      {createPortal(
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-black/75 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
+      <div className="w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
         
         {/* Mobile Sheet Handle */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
         
         {/* Header */}
-        <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42]">
+        <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Calculator className="h-5 w-5" strokeWidth={2} />
@@ -241,7 +271,7 @@ export default function SettlementModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
           >
             <X className="h-5 w-5" />
           </button>
@@ -252,7 +282,7 @@ export default function SettlementModal({
           <button
             type="button"
             onClick={() => setActiveTab('transfers')}
-            className={`pb-2.5 text-xs font-bold transition-all relative flex items-center gap-1.5 cursor-pointer ${
+            className={`pb-2.5 text-xs font-bold transition-all relative flex items-center gap-1.5 cursor-pointer min-h-[40px] touch-manipulation ${
               activeTab === 'transfers'
                 ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                 : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
@@ -264,7 +294,7 @@ export default function SettlementModal({
           <button
             type="button"
             onClick={() => setActiveTab('dishes')}
-            className={`pb-2.5 text-xs font-bold transition-all relative flex items-center gap-1.5 cursor-pointer ${
+            className={`pb-2.5 text-xs font-bold transition-all relative flex items-center gap-1.5 cursor-pointer min-h-[40px] touch-manipulation ${
               activeTab === 'dishes'
                 ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                 : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
@@ -276,7 +306,7 @@ export default function SettlementModal({
         </div>
 
         {/* Body Content */}
-        <div className="p-4 sm:p-5 pt-3 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+        <div className="p-4 sm:p-5 pt-3 overflow-y-auto overscroll-contain min-h-0 custom-scrollbar flex-1 space-y-4">
           
           {/* Top Summary Banner */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42]">
@@ -640,11 +670,11 @@ export default function SettlementModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 dark:border-[#222c42] flex justify-between items-center gap-2 shrink-0">
+        <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 dark:border-[#222c42] flex justify-between items-center gap-2 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           <button
             type="button"
             onClick={copySettlementSummary}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105"
+            className="px-4 py-2.5 min-h-[44px] rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 touch-manipulation"
           >
             {copiedText ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             <span>{copiedText ? 'คัดลอกสรุปแล้ว!' : 'คัดลอกสรุปส่งเข้า LINE'}</span>
@@ -653,18 +683,21 @@ export default function SettlementModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            className="px-5 py-2.5 min-h-[44px] rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer touch-manipulation flex items-center justify-center"
           >
             ปิดหน้าต่าง
           </button>
         </div>
 
       </div>
+    </div>,
+    document.body
+  )}
 
       {/* PROMPTPAY QR MODAL (Feature 5) */}
-      {selectedTransferForQr && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#151b2b] p-6 shadow-2xl border border-slate-200 dark:border-[#222c42] space-y-4 animate-in zoom-in-95 duration-150">
+      {selectedTransferForQr && mounted && createPortal(
+        <div className="fixed inset-0 z-[110] flex items-center justify-center backdrop-blur-md bg-black/80 p-4 overscroll-contain animate-in fade-in duration-150" role="dialog" aria-modal="true">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#151b2b] p-6 shadow-2xl border border-slate-200 dark:border-[#222c42] space-y-4 animate-in zoom-in-95 duration-150 max-h-[92dvh] overflow-y-auto overscroll-contain min-h-0">
             {/* Header */}
             <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#222c42]">
               <div className="flex items-center gap-2">
@@ -679,7 +712,7 @@ export default function SettlementModal({
               <button
                 type="button"
                 onClick={() => setSelectedTransferForQr(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -733,7 +766,7 @@ export default function SettlementModal({
                 <button
                   type="button"
                   onClick={() => setEditingPromptPay(!editingPromptPay)}
-                  className="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer"
+                  className="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer touch-manipulation min-h-[32px] px-2 flex items-center"
                 >
                   {editingPromptPay ? 'เสร็จสิ้น' : 'เปลี่ยนเบอร์'}
                 </button>
@@ -746,12 +779,12 @@ export default function SettlementModal({
                     value={promptPayNumber}
                     onChange={(e) => setPromptPayNumber(e.target.value)}
                     placeholder="เช่น 0812345678 หรือ เลข ปชช."
-                    className="flex-1 p-2 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-slate-50 dark:bg-[#111624] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                    className="flex-1 p-2 min-h-[44px] rounded-xl border border-slate-300 dark:border-[#2a3650] bg-slate-50 dark:bg-[#111624] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 touch-manipulation"
                   />
                   <button
                     type="button"
                     onClick={() => handleSavePromptPay(promptPayNumber)}
-                    className="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold cursor-pointer"
+                    className="px-4 py-2 min-h-[44px] rounded-xl bg-blue-600 text-white text-xs font-bold cursor-pointer touch-manipulation flex items-center justify-center"
                   >
                     บันทึก
                   </button>
@@ -764,7 +797,7 @@ export default function SettlementModal({
                   <button
                     type="button"
                     onClick={copyPromptPayText}
-                    className="p-1 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-bold"
+                    className="p-2 min-h-[44px] min-w-[44px] text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-bold touch-manipulation"
                   >
                     {copiedPromptPay ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                     <span>{copiedPromptPay ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
@@ -777,14 +810,14 @@ export default function SettlementModal({
             <button
               type="button"
               onClick={() => setSelectedTransferForQr(null)}
-              className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2438] dark:hover:bg-[#252f48] text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+              className="w-full py-3 min-h-[44px] rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2438] dark:hover:bg-[#252f48] text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer touch-manipulation flex items-center justify-center"
             >
               ปิดหน้าต่าง QR
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-
-    </div>
+    </>
   );
 }
