@@ -373,20 +373,17 @@ export function ExpenseDetailModal({
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[105] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200"
+      className="fixed inset-0 z-[105] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div 
-        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out"
+        className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Mobile Drag Indicator */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42]">
+        <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="text-xl p-2 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs shrink-0">
               {currentCategoryMeta.icon}
@@ -407,7 +404,7 @@ export function ExpenseDetailModal({
                 type="button"
                 key="header-edit-btn"
                 onClick={handleSwitchToEdit}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold transition-all cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold transition-all cursor-pointer min-h-[40px] touch-manipulation"
                 title="แก้ไขข้อมูล"
               >
                 <Edit3 className="h-3.5 w-3.5" />
@@ -417,7 +414,7 @@ export function ExpenseDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
             >
               <X className="h-5 w-5" />
             </button>
@@ -425,7 +422,7 @@ export function ExpenseDetailModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-5 pt-3 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
+        <div className="p-4 sm:p-5 pt-3 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
           {isEditing ? (
             /* ==================== EDIT FORM MODE ==================== */
             <form id="edit-expense-form" onSubmit={handleSave} className="space-y-3.5">

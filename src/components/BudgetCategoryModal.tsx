@@ -394,11 +394,8 @@ export default function BudgetCategoryModal({
   if (!isOpen || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-black/75 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-      <div className="w-full max-w-2xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out">
-        {/* Mobile Sheet Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/75 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+      <div className="w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out">
         {/* Header */}
         <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
           <div className="flex items-center gap-3">
@@ -479,7 +476,7 @@ export default function BudgetCategoryModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-6 pt-4 overflow-y-auto overscroll-contain min-h-0 custom-scrollbar flex-1 space-y-4">
+        <div className="p-4 sm:p-6 pt-4 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain min-h-0 custom-scrollbar flex-1 space-y-4">
 
           {/* ==================== TAB 1: จัดสรรงบตามรายการ (ที่พัก / ตั๋ว / หมวดหมู่) ==================== */}
           {activeSubTab === 'categories' && (

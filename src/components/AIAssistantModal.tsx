@@ -1,7 +1,7 @@
 // src/components/AIAssistantModal.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
   Sparkles, X, MapPin, ExternalLink, Loader2, 
@@ -69,16 +69,28 @@ export default function AIAssistantModal({
     }
   };
 
+  // Body scroll lock and ESC key listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200 dark:border-[#222c42] card-elevation max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-        {/* Mobile Sheet Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+      <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200 dark:border-[#222c42] card-elevation max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42]">
+        <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 dark:bg-blue-700 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/20">
               <span>🐱</span>
@@ -104,7 +116,7 @@ export default function AIAssistantModal({
         </div>
 
         {/* Body */}
-        <div className="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+        <div className="p-5 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain custom-scrollbar flex-1 min-h-0 space-y-4">
           
           {/* City / Area input */}
           <div className="grid grid-cols-3 gap-2">

@@ -384,15 +384,26 @@ export default function TravelHubModal({
     return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
   }, [expenses]);
 
+  // Body scroll lock and ESC key listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[88vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-        
-        {/* Mobile Sheet Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+      <div className="relative w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Modal Top Header */}
         <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] bg-white/80 dark:bg-[#181a20]/80 backdrop-blur-md">
           <div className="flex items-center gap-3">
@@ -492,7 +503,7 @@ export default function TravelHubModal({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+        <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain custom-scrollbar flex-1 min-h-0 space-y-4">
           
           {/* ========================================================
               TAB 1: SMART TAX-FREE & CURRENCY SHOPPING CALCULATOR

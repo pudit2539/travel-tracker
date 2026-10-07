@@ -1,7 +1,7 @@
 // src/components/PrintableItineraryModal.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Printer, Download, X, MapPin, Utensils, 
   Bus, ShieldAlert, PhoneCall, Calendar, DollarSign, Sparkles
@@ -25,6 +25,21 @@ export default function PrintableItineraryModal({
   expenses = [],
   categories = [],
 }: PrintableItineraryModalProps) {
+  // Body scroll lock and ESC key listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handlePrint = () => {
@@ -42,12 +57,10 @@ export default function PrintableItineraryModal({
   const totalSpent = expenses.reduce((a, b) => a + Number(b.amount || 0), 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 animate-in fade-in duration-200 print:p-0 print:static print:bg-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none print:p-0 print:static print:bg-white" role="dialog" aria-modal="true">
       
       {/* Modal Container (Scrollable Preview on screen, Clean Page on Print) */}
-      <div className="w-full max-w-4xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200 dark:border-purple-800/60 max-h-[85vh] sm:max-h-[95vh] flex flex-col overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in slide-in-from-bottom duration-200">
-        {/* Mobile Sheet Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0 print:hidden" />
+      <div className="w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200 dark:border-purple-800/60 max-h-[90dvh] flex flex-col overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in zoom-in-95 duration-200">
         
         {/* Screen Header (Hidden on print) */}
         <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40 bg-slate-50 dark:bg-purple-950/40 print:hidden">
@@ -82,7 +95,7 @@ export default function PrintableItineraryModal({
         </div>
 
         {/* Printable Booklet Document Body */}
-        <div className="p-6 sm:p-10 overflow-y-auto custom-scrollbar flex-1 bg-white text-slate-900 print:overflow-visible print:p-6 print:text-black space-y-8">
+        <div className="p-6 sm:p-10 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain custom-scrollbar flex-1 min-h-0 bg-white text-slate-900 print:overflow-visible print:p-6 print:text-black space-y-8">
           
           {/* Document Cover Header */}
           <div className="border-b-2 border-slate-900 pb-5 flex flex-wrap justify-between items-end gap-4">

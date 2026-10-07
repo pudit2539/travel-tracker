@@ -2199,11 +2199,8 @@ export default function TripDetailPage() {
 
       {/* 10. Scan / Add Expense Modal (Unified Single Clean Form) */}
       {showScanModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-            {/* Mobile Sheet Handle */}
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-            
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-2.5">
@@ -2226,7 +2223,7 @@ export default function TripDetailPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-4 sm:p-5 pt-3 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
+            <div className="p-4 sm:p-5 pt-3 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
               
               {/* 1. Receipt Upload Area */}
               <div className="space-y-1.5">
@@ -2580,11 +2577,8 @@ export default function TripDetailPage() {
 
       {/* 11. Activity Modal */}
       {showActivityModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-            {/* Mobile Sheet Handle */}
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-            
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div>
                 <h2 className="text-base font-black text-slate-900 dark:text-slate-100">
@@ -2600,7 +2594,7 @@ export default function TripDetailPage() {
               </button>
             </div>
 
-            <form id="activity-form" onSubmit={handleSaveActivity} className="p-4 sm:p-6 pt-3 sm:pt-4 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-3.5">
+            <form id="activity-form" onSubmit={handleSaveActivity} className="p-4 sm:p-6 pt-3 sm:pt-4 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-3.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">วัน / Day (เช่น 04-Dec)</label>
@@ -2811,10 +2805,8 @@ export default function TripDetailPage() {
 
       {/* 13. Share Modal */}
       {showShareModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto overscroll-contain pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
-            {/* Mobile Sheet Handle */}
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-2 sm:hidden shrink-0" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue animate-in zoom-in-95 duration-200 space-y-4 max-h-[90dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain">
             
             <div className="flex justify-between items-center pb-3 border-b border-slate-200/90 dark:border-[#222c42]">
               <div className="flex items-center gap-2.5">
@@ -2903,10 +2895,8 @@ export default function TripDetailPage() {
 
       {/* Modal: ตั้งค่า Gemini API Key สำหรับ AI Vision สแกนใบเสร็จจริง */}
       {showAiKeyModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md bg-black/80 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-          <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] shadow-2xl p-5 sm:p-6 space-y-4 max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto overscroll-contain animate-in slide-in-from-bottom duration-200 glow-blue pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
-            {/* Mobile Sheet Handle */}
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-2 sm:hidden shrink-0" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 backdrop-blur-md bg-black/80 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+          <div className="relative w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain animate-in zoom-in-95 duration-200 glow-blue">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-base">
                 <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">

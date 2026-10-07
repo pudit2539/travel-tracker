@@ -47,6 +47,21 @@ export default function QuickCurrencyCalculator({
     }
   }, [defaultCurrency]);
 
+  // Body scroll lock and ESC key listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   const activeMeta = useMemo(() => {
     return SUPPORTED_FOREIGN_CURRENCIES.find((c) => c.code === foreignCurrency) || {
       code: foreignCurrency,
@@ -108,10 +123,8 @@ export default function QuickCurrencyCalculator({
   const isSmallUnit = foreignCurrency === 'USD' || foreignCurrency === 'EUR' || foreignCurrency === 'CNY' || foreignCurrency === 'SGD';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
-        {/* Mobile Sheet Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-2 sm:hidden shrink-0" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+      <div className="w-full sm:max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue animate-in zoom-in-95 duration-200 space-y-4 max-h-[90dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain">
         
         {/* Header */}
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#222c42]">

@@ -91,13 +91,15 @@ describe('Mobile & iPad Responsive UI & Modal Tests', () => {
     const dialog = document.body.querySelector('[role="dialog"]');
     expect(dialog).not.toBeNull();
 
-    // 3. Verify mobile dynamic viewport height (dvh) to prevent iPhone address bar clipping
+    // 3. Verify mobile dynamic viewport height (dvh) and centered dialog border-radius
     const modalCard = dialog?.querySelector('.glow-blue');
-    expect(modalCard?.className).toContain('max-h-[92dvh]');
+    expect(modalCard?.className).toContain('max-h-[90dvh]');
+    expect(modalCard?.className).toContain('rounded-2xl');
 
-    // 4. Verify scrollable body has overscroll-contain and min-h-0 to prevent iOS rubberbanding
+    // 4. Verify scrollable body has overscroll-contain, touch-pan-y, and min-h-0 to prevent iOS rubberbanding
     const scrollBody = dialog?.querySelector('.overflow-y-auto');
     expect(scrollBody?.className).toContain('overscroll-contain');
+    expect(scrollBody?.className).toContain('touch-pan-y');
     expect(scrollBody?.className).toContain('min-h-0');
 
     // 5. Verify bottom footer has safe-area-inset-bottom for iPhone home bar & iPad gesture bar
@@ -170,7 +172,8 @@ describe('Mobile & iPad Responsive UI & Modal Tests', () => {
 
     // Dynamic viewport height for iPhone/iPad Pro 11 portrait and landscape
     const card = dialog?.querySelector('.glow-blue');
-    expect(card?.className).toContain('max-h-[92dvh]');
+    expect(card?.className).toContain('max-h-[90dvh]');
+    expect(card?.className).toContain('rounded-2xl');
 
     // Safe area bottom inset in footer
     const footer = dialog?.querySelector('.pb-\\[max\\(1rem\\,env\\(safe-area-inset-bottom\\)\\)\\]');
@@ -214,9 +217,10 @@ describe('Mobile & iPad Responsive UI & Modal Tests', () => {
     const dialog = document.body.querySelector('[role="dialog"]');
     expect(dialog).not.toBeNull();
 
-    // Check dynamic viewport height
-    const mainDialogCard = dialog?.querySelector('.max-h-\\[92dvh\\]');
+    // Check dynamic viewport height and rounded-2xl
+    const mainDialogCard = dialog?.querySelector('.max-h-\\[90dvh\\]');
     expect(mainDialogCard).not.toBeNull();
+    expect(mainDialogCard?.className).toContain('rounded-2xl');
 
     // Footer with safe area bottom
     const footer = dialog?.querySelector('.pb-\\[max\\(1rem\\,env\\(safe-area-inset-bottom\\)\\)\\]');

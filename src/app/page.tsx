@@ -1010,11 +1010,8 @@ export default function HomePage() {
 
       {/* ==================== CREATE TRIP MODAL ==================== */}
       {showCreateModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
-            {/* Mobile Sheet Handle */}
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-            
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
             {/* Modal Header */}
             <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-3">
@@ -1033,14 +1030,14 @@ export default function HomePage() {
               <button 
                 type="button"
                 onClick={() => setShowCreateModal(false)} 
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Modal Body Form */}
-            <form id="create-trip-form" onSubmit={handleCreateTrip} className="p-4 sm:p-6 pt-3 sm:pt-4 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
+            <form id="create-trip-form" onSubmit={handleCreateTrip} className="p-4 sm:p-6 pt-3 sm:pt-4 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">
                   ชื่อทริปท่องเที่ยว *
@@ -1217,11 +1214,8 @@ export default function HomePage() {
 
       {/* ==================== EDIT TRIP MODAL ==================== */}
       {showEditModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
-            {/* Mobile Sheet Handle */}
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-            
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
             <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
@@ -1245,7 +1239,7 @@ export default function HomePage() {
               </button>
             </div>
 
-            <form id="edit-trip-form" onSubmit={handleUpdateTrip} className="p-4 sm:p-6 pt-5 overflow-y-auto overscroll-contain min-h-0 flex-1 space-y-4 custom-scrollbar">
+            <form id="edit-trip-form" onSubmit={handleUpdateTrip} className="p-4 sm:p-6 pt-5 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain min-h-0 flex-1 space-y-4 custom-scrollbar">
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">ชื่อทริป *</label>
                 <input
@@ -1336,11 +1330,8 @@ export default function HomePage() {
 
       {/* ==================== JOIN TRIP MODAL ==================== */}
       {showJoinModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 glow-blue">
-            {/* Mobile Sheet Handle */}
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-            
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
             <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
@@ -1364,7 +1355,7 @@ export default function HomePage() {
               </button>
             </div>
 
-            <form id="join-trip-form" onSubmit={handleJoinTrip} className="p-4 sm:p-6 pt-4 sm:pt-5 overflow-y-auto overscroll-contain min-h-0 flex-1 space-y-4 custom-scrollbar">
+            <form id="join-trip-form" onSubmit={handleJoinTrip} className="p-4 sm:p-6 pt-4 sm:pt-5 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain min-h-0 flex-1 space-y-4 custom-scrollbar">
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">
                   รหัสเชิญเข้าร่วมทริป (Trip ID) *

@@ -284,14 +284,26 @@ export default function PackingChecklistModal({
   const currentPreset = WEATHER_PRESETS[selectedProfile];
   const WeatherIconComponent = currentPreset.icon;
 
+  // Body scroll lock and ESC key listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 space-y-4">
-        
-        {/* Mobile Sheet Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto -mt-1 mb-1 sm:hidden shrink-0" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-4">
         
         {/* Header */}
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#222c42] shrink-0">
@@ -485,7 +497,7 @@ export default function PackingChecklistModal({
         </div>
 
         {/* List of Checklist Items */}
-        <div className="overflow-y-auto custom-scrollbar flex-1 space-y-2 pr-1">
+        <div className="overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain custom-scrollbar flex-1 min-h-0 space-y-2 pr-1">
           {filteredItems.map((item) => (
             <div
               key={item.id}

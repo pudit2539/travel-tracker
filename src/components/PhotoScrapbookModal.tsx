@@ -45,6 +45,21 @@ export default function PhotoScrapbookModal({
     }
   }, [isOpen, tripId, loadPhotos]);
 
+  // Body scroll lock and ESC key listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -93,11 +108,8 @@ export default function PhotoScrapbookModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-4xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-        {/* Mobile Sheet Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+      <div className="w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#1a182d] shadow-2xl border border-slate-200/90 dark:border-purple-800/60 max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40 shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3">
@@ -135,7 +147,7 @@ export default function PhotoScrapbookModal({
         </div>
 
         {/* Body */}
-        <div className="p-4 sm:p-6 pt-3 overflow-y-auto custom-scrollbar flex-1 space-y-5">
+        <div className="p-4 sm:p-6 pt-3 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain custom-scrollbar flex-1 min-h-0 space-y-5">
           
           {/* Add Photo Form (Accordion) */}
           {showAddForm && (

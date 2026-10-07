@@ -161,6 +161,22 @@ export function AccommodationsCard({
   const [formVoucher, setFormVoucher] = useState<AccommodationVoucherFile | null>(null);
   const [isReadingFile, setIsReadingFile] = useState(false);
 
+  // Lock body scroll and listen for Escape key on mobile / iPad
+  useEffect(() => {
+    if (showModal && typeof document !== 'undefined') {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setShowModal(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = prev;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [showModal]);
+
   // Load accommodations from storage and sync from Supabase
   useEffect(() => {
     if (tripId) {
@@ -889,8 +905,8 @@ export function AccommodationsCard({
 
       {/* ==================== ADD / EDIT MODAL ==================== */}
       {showModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-md bg-black/80 p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[85dvh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 ease-out">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
               <div className="flex items-center gap-2">
@@ -910,16 +926,16 @@ export function AccommodationsCard({
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSaveForm} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            <form id="accommodation-form" onSubmit={handleSaveForm} className="flex flex-col flex-1 overflow-hidden min-h-0">
               {/* Scrollable Form Body */}
-              <div className="p-4 sm:p-5 space-y-3.5 overflow-y-auto overscroll-contain flex-1 custom-scrollbar pb-6">
+              <div className="p-4 sm:p-5 space-y-3.5 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain flex-1 custom-scrollbar pb-6 min-h-0">
               {/* Hotel Name */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
@@ -1112,8 +1128,8 @@ export function AccommodationsCard({
                 </div>
 
                 {formVoucher ? (
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#121624] border border-emerald-500/40 dark:border-emerald-500/50 gap-2 shadow-2xs">
-                    <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#121624] border border-emerald-500/40 dark:border-emerald-500/50 gap-2.5 shadow-2xs overflow-hidden">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
                       <div className={`p-2 rounded-lg shrink-0 ${
                         formVoucher.type?.includes('pdf') || formVoucher.name?.toLowerCase().endsWith('.pdf')
                           ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
@@ -1125,7 +1141,7 @@ export function AccommodationsCard({
                           <ImageIcon className="h-5 w-5" />
                         )}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                           {formVoucher.name}
                         </p>
@@ -1139,7 +1155,7 @@ export function AccommodationsCard({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
                       {formVoucher.dataUrl ? (
                         <>
                           <button
@@ -1150,13 +1166,13 @@ export function AccommodationsCard({
                                 hotelName: formName.trim() || 'ตัวอย่างที่พัก',
                               });
                             }}
-                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs touch-manipulation min-h-[36px]"
                           >
                             <Eye className="h-3 w-3" />
                             <span>ดูตัวอย่าง</span>
                           </button>
                           <label 
-                            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-[#2b354d] hover:bg-slate-100 dark:hover:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-[#2b354d] hover:bg-slate-100 dark:hover:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer touch-manipulation min-h-[36px]"
                             title="เปลี่ยนไฟล์ใบจองใหม่"
                           >
                             <Upload className="h-3 w-3" />
@@ -1172,7 +1188,7 @@ export function AccommodationsCard({
                         </>
                       ) : (
                         <label 
-                          className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                          className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs touch-manipulation min-h-[36px]"
                           title="อัปโหลดไฟล์ใหม่แทนที่"
                         >
                           <Upload className="h-3 w-3" />
@@ -1189,7 +1205,7 @@ export function AccommodationsCard({
                       <button
                         type="button"
                         onClick={handleRemoveVoucher}
-                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer touch-manipulation min-h-[36px] min-w-[36px] flex items-center justify-center"
                         title="ลบไฟล์ออก"
                       >
                         <X className="h-4 w-4" />
@@ -1255,14 +1271,15 @@ export function AccommodationsCard({
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors"
+                  className="px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors touch-manipulation"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
+                  form="accommodation-form"
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-5 py-2.5 min-h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/25 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 touch-manipulation"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
