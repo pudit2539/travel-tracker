@@ -384,11 +384,24 @@ export default function HomePage() {
         return;
       }
 
-      await supabase.from('trip_members').upsert({
-        trip_id: code,
-        user_id: user.id,
-        role: 'editor',
-      });
+      // ตรวจสอบสถานะการเป็นสมาชิกเดิม เพื่อไม่ให้เขียนทับสิทธิ์ที่มีอยู่แล้ว
+      const { data: existingMember } = await supabase
+        .from('trip_members')
+        .select('id, role')
+        .eq('trip_id', code)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!existingMember) {
+        // สมาชิกใหม่ที่เข้าผ่านรหัสเชิญ ได้สิทธิ์เริ่มต้นเป็น plan_only เสมอ (ปลอดภัยสูงสุด)
+        await supabase.from('trip_members').insert([
+          {
+            trip_id: code,
+            user_id: user.id,
+            role: 'plan_only',
+          },
+        ]);
+      }
 
       setShowJoinModal(false);
       setJoinCode('');

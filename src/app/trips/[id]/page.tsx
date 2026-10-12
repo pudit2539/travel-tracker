@@ -60,6 +60,7 @@ const PackingChecklistModal = dynamic(() => import('@/components/PackingChecklis
 const TravelHubModal = dynamic(() => import('@/components/TravelHubModal'), { ssr: false });
 const ExpenseDetailModal = dynamic(() => import('@/components/ExpenseDetailModal'), { ssr: false });
 const TransferOwnershipModal = dynamic(() => import('@/components/TransferOwnershipModal'), { ssr: false });
+const AddMemberModal = dynamic(() => import('@/components/AddMemberModal'), { ssr: false });
 import { 
   Camera, Upload, MapPin, Utensils, ShieldAlert, 
   Plus, Download, Moon, Sun, ExternalLink, ChevronDown, 
@@ -161,6 +162,7 @@ export default function TripDetailPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferTargetMember, setTransferTargetMember] = useState<any | null>(null);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -174,6 +176,7 @@ export default function TripDetailPage() {
       showActivityModal ||
       showShareModal ||
       showTransferModal ||
+      showAddMemberModal ||
       showAiKeyModal ||
       previewImage
     );
@@ -184,7 +187,7 @@ export default function TripDetailPage() {
         document.body.style.overflow = prev;
       };
     }
-  }, [showScanModal, showActivityModal, showShareModal, showTransferModal, showAiKeyModal, previewImage]);
+  }, [showScanModal, showActivityModal, showShareModal, showTransferModal, showAddMemberModal, showAiKeyModal, previewImage]);
 
   const copyTripCode = async () => {
     if (typeof window !== 'undefined' && tripId) {
@@ -452,6 +455,94 @@ export default function TripDetailPage() {
     fetchTripData();
   }, [tripId]);
 
+  // Supabase Realtime Subscription: ฟังการเปลี่ยนแปลงแบบ Real-time (เมื่อสมาชิกใหม่เข้าร่วม, มีการปรับสิทธิ์, หรืออัปเดตข้อมูลทริป)
+  useEffect(() => {
+    if (!tripId) return;
+
+    const channel = supabase
+      .channel(`trip-realtime-${tripId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trip_members',
+          filter: `trip_id=eq.${tripId}`,
+        },
+        (payload: any) => {
+          console.log('[Realtime] trip_members event:', payload);
+          if (payload.eventType === 'INSERT') {
+            toast.info('✨ มีสมาชิกใหม่เข้าร่วมทริปแล้ว!');
+          } else if (payload.eventType === 'UPDATE') {
+            if (currentUser && payload.new?.user_id === currentUser.id) {
+              const newRole = payload.new?.role;
+              const roleLabel = ROLE_INFO[newRole as TripRole]?.label || newRole;
+              toast.success(`✨ สิทธิ์การเข้าถึงของคุณถูกปรับปรุงเป็น "${roleLabel}"`);
+            } else {
+              toast.info('มีการอัปเดตสิทธิ์หรือข้อมูลสมาชิกในทริป');
+            }
+          } else if (payload.eventType === 'DELETE') {
+            if (currentUser && payload.old?.user_id === currentUser.id) {
+              toast.error('คุณถูกนำออกจากทริปนี้แล้ว');
+            } else {
+              toast.info('มีสมาชิกออกจากทริป');
+            }
+          }
+          fetchTripData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trips',
+          filter: `id=eq.${tripId}`,
+        },
+        (payload: any) => {
+          console.log('[Realtime] trips event:', payload);
+          if (payload.eventType === 'UPDATE') {
+            toast.info('มีการอัปเดตข้อมูลทริป');
+          }
+          fetchTripData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'expenses',
+          filter: `trip_id=eq.${tripId}`,
+        },
+        (payload: any) => {
+          if (payload.eventType === 'INSERT') {
+            toast.info('💸 มีการบันทึกรายการใช้จ่ายใหม่');
+          }
+          fetchTripData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'itinerary_items',
+          filter: `trip_id=eq.${tripId}`,
+        },
+        () => {
+          fetchTripData();
+        }
+      )
+      .subscribe((status) => {
+        console.log(`[Realtime] Subscription status for trip ${tripId}:`, status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [tripId, currentUser?.id, fetchTripData]);
+
   const handleJoinTripDirectly = async (codeToUse?: string) => {
     if (!currentUser || !tripId) return;
     const finalCode = (codeToUse || manualJoinCode || inviteParam || '').trim();
@@ -461,20 +552,30 @@ export default function TripDetailPage() {
     }
     setJoiningTrip(true);
     try {
-      const { error } = await supabase.from('trip_members').insert([
-        {
-          trip_id: tripId,
-          user_id: currentUser.id,
-          role: 'plan_only', // เริ่มต้นด้วยสิทธิ์ดูเฉพาะแผนเที่ยว (ปลอดภัยที่สุด)
-        },
-      ]);
-      if (error) {
-        toast.error('ไม่สามารถเข้าร่วมทริปได้: ' + error.message);
-      } else {
-        toast.success('เข้าร่วมทริปเรียบร้อยแล้ว! (เริ่มต้นด้วยสิทธิ์ดูเฉพาะแผนเที่ยว) 🎉');
-        setUnauthorized(false);
-        fetchTripData();
+      // ตรวจสอบว่าเคยเป็นสมาชิกอยู่แล้วหรือไม่
+      const { data: existingMember } = await supabase
+        .from('trip_members')
+        .select('id, role')
+        .eq('trip_id', tripId)
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (!existingMember) {
+        const { error } = await supabase.from('trip_members').insert([
+          {
+            trip_id: tripId,
+            user_id: currentUser.id,
+            role: 'plan_only', // เริ่มต้นด้วยสิทธิ์ดูเฉพาะแผนเที่ยวเสมอ (ปลอดภัยที่สุด)
+          },
+        ]);
+        if (error) {
+          toast.error('ไม่สามารถเข้าร่วมทริปได้: ' + error.message);
+          return;
+        }
       }
+      toast.success('เข้าร่วมทริปเรียบร้อยแล้ว! (เริ่มต้นด้วยสิทธิ์ดูเฉพาะแผนเที่ยว) 🎉');
+      setUnauthorized(false);
+      fetchTripData();
     } catch (e: any) {
       toast.error('เกิดข้อผิดพลาด: ' + (e.message || ''));
     } finally {
@@ -2195,6 +2296,7 @@ export default function TripDetailPage() {
                   setTransferTargetMember(member);
                   setShowTransferModal(true);
                 }}
+                onOpenAddMemberModal={() => setShowAddMemberModal(true)}
               />
             </motion.div>
           )}
@@ -3348,6 +3450,18 @@ export default function TripDetailPage() {
           tripName={trip?.name || trip?.title}
           currentUserEmail={currentUser?.email || ''}
           onConfirmTransfer={handleConfirmTransferOwnership}
+        />
+      )}
+
+      {/* 15. Add Member from System Modal (Owner / Super Admin) */}
+      {showAddMemberModal && mounted && (
+        <AddMemberModal
+          isOpen={showAddMemberModal}
+          onClose={() => setShowAddMemberModal(false)}
+          tripId={tripId}
+          tripName={trip?.name || trip?.title}
+          existingMemberUserIds={members.map((m) => m.user_id || m.id)}
+          onMemberAdded={fetchTripData}
         />
       )}
 

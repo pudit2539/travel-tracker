@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Users, Share2, Trash2, Crown, Sparkles, Shield, Eye, Edit3, MapPin } from 'lucide-react';
+import { Users, Share2, Trash2, Crown, Sparkles, Shield, Eye, Edit3, MapPin, UserPlus } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { TripRole } from '@/lib/permissions';
 
@@ -14,6 +14,7 @@ interface TripMembersTabProps {
   handleUpdateMemberRole: (memberId: string, role: TripRole) => void;
   handleRemoveMember: (memberId: string, memberName: string) => void;
   onInitiateTransferOwnership?: (member: any) => void;
+  onOpenAddMemberModal?: () => void;
 }
 
 export function TripMembersTab({
@@ -25,6 +26,7 @@ export function TripMembersTab({
   handleUpdateMemberRole,
   handleRemoveMember,
   onInitiateTransferOwnership,
+  onOpenAddMemberModal,
 }: TripMembersTabProps) {
   return (
     <div className="space-y-4">
@@ -41,19 +43,31 @@ export function TripMembersTab({
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 {isOwner
-                  ? '👑 คุณเป็นเจ้าของทริป สามารถกำหนดสิทธิ์ให้เพื่อนดูเฉพาะแผนเที่ยว หรือดู/แก้ไขค่าใช้จ่ายได้'
+                  ? '👑 คุณเป็นเจ้าของทริป สามารถเพิ่มสมาชิก กำหนดสิทธิ์ให้ดูเฉพาะแผนเที่ยว หรือดู/แก้ไขค่าใช้จ่ายได้'
                   : 'รายชื่อเพื่อนร่วมทริปและสิทธิ์การเข้าถึง'}
               </p>
             </div>
           </div>
 
           {isOwner && (
-            <button
-              onClick={() => setShowShareModal(true)}
-              className="btn-luxury-primary px-4 py-2 rounded-xl text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
-            >
-              <Share2 className="h-3.5 w-3.5" /> ชวนเพื่อนเข้าทริป
-            </button>
+            <div className="flex items-center gap-2">
+              {onOpenAddMemberModal && (
+                <button
+                  type="button"
+                  onClick={onOpenAddMemberModal}
+                  className="px-3.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 active:scale-95 shadow-xs"
+                >
+                  <UserPlus className="h-3.5 w-3.5 text-blue-500" /> เพิ่มสมาชิกจากระบบ
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowShareModal(true)}
+                className="btn-luxury-primary px-4 py-2 rounded-xl text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Share2 className="h-3.5 w-3.5" /> ชวนเพื่อนเข้าทริป
+              </button>
+            </div>
           )}
         </div>
 
