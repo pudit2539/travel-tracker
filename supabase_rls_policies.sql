@@ -1,0 +1,216 @@
+-- ====================================================================
+-- SUPABASE ROW LEVEL SECURITY (RLS) POLICIES FOR TRAVEL TRACKER
+-- รันสคริปต์นี้ใน Supabase Dashboard -> SQL Editor
+-- เพื่อแยกสิทธิ์ความปลอดภัยในระดับฐานข้อมูล (Postgres Database Level)
+-- ====================================================================
+
+-- 1. ตาราง trips: เปิดใช้งาน RLS
+ALTER TABLE public.trips ENABLE ROW LEVEL SECURITY;
+
+-- นโยบาย: ผู้ใช้สามารถดู (SELECT) ทริปได้เฉพาะทริปที่ตนสร้าง หรือทริปที่เป็นสมาชิก
+DROP POLICY IF EXISTS "Users can view their own or member trips" ON public.trips;
+CREATE POLICY "Users can view their own or member trips"
+ON public.trips
+FOR SELECT
+TO authenticated
+USING (
+  auth.uid() = created_by
+  OR EXISTS (
+    SELECT 1 FROM public.trip_members
+    WHERE public.trip_members.trip_id = public.trips.id
+      AND public.trip_members.user_id = auth.uid()
+  )
+);
+
+-- นโยบาย: ผู้ใช้สามารถสร้าง (INSERT) ทริปได้
+DROP POLICY IF EXISTS "Users can insert trips" ON public.trips;
+CREATE POLICY "Users can insert trips"
+ON public.trips
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  auth.uid() = created_by
+);
+
+-- นโยบาย: เจ้าของหรือ Editor สามารถแก้ไข (UPDATE) ข้อมูลทริปได้
+DROP POLICY IF EXISTS "Owners and editors can update trips" ON public.trips;
+CREATE POLICY "Owners and editors can update trips"
+ON public.trips
+FOR UPDATE
+TO authenticated
+USING (
+  auth.uid() = created_by
+  OR EXISTS (
+    SELECT 1 FROM public.trip_members
+    WHERE public.trip_members.trip_id = public.trips.id
+      AND public.trip_members.user_id = auth.uid()
+      AND public.trip_members.role IN ('owner', 'editor')
+  )
+);
+
+-- นโยบาย: เฉพาะเจ้าของทริป (Owner) เท่านั้นที่สามารถลบ (DELETE) ทริปได้
+DROP POLICY IF EXISTS "Only trip owner can delete trip" ON public.trips;
+CREATE POLICY "Only trip owner can delete trip"
+ON public.trips
+FOR DELETE
+TO authenticated
+USING (
+  auth.uid() = created_by
+);
+
+
+-- 2. ตาราง trip_members: เปิดใช้งาน RLS
+ALTER TABLE public.trip_members ENABLE ROW LEVEL SECURITY;
+
+-- นโยบาย: สมาชิกในทริปสามารถดูรายชื่อเพื่อนร่วมทริปได้
+DROP POLICY IF EXISTS "Members can view trip members" ON public.trip_members;
+CREATE POLICY "Members can view trip members"
+ON public.trip_members
+FOR SELECT
+TO authenticated
+USING (
+  user_id = auth.uid()
+  OR EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.trip_members.trip_id
+      AND public.trips.created_by = auth.uid()
+  )
+  OR EXISTS (
+    SELECT 1 FROM public.trip_members tm
+    WHERE tm.trip_id = public.trip_members.trip_id
+      AND tm.user_id = auth.uid()
+  )
+);
+
+-- นโยบาย: เพิ่มสมาชิกเข้าทริป (ผ่านการเชิญ/แชร์ หรือผู้สร้างทริป)
+DROP POLICY IF EXISTS "Users can join or add trip members" ON public.trip_members;
+CREATE POLICY "Users can join or add trip members"
+ON public.trip_members
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  user_id = auth.uid()
+  OR EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.trip_members.trip_id
+      AND public.trips.created_by = auth.uid()
+  )
+);
+
+-- นโยบาย: เจ้าของทริปสามารถเปลี่ยน role สมาชิกได้
+DROP POLICY IF EXISTS "Owners can update member role" ON public.trip_members;
+CREATE POLICY "Owners can update member role"
+ON public.trip_members
+FOR UPDATE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.trip_members.trip_id
+      AND public.trips.created_by = auth.uid()
+  )
+);
+
+-- นโยบาย: เจ้าของทริปสามารถลบสมาชิกได้ หรือสมาชิกกดออกจากทริปเองได้
+DROP POLICY IF EXISTS "Owners can remove members or user can leave" ON public.trip_members;
+CREATE POLICY "Owners can remove members or user can leave"
+ON public.trip_members
+FOR DELETE
+TO authenticated
+USING (
+  user_id = auth.uid()
+  OR EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.trip_members.trip_id
+      AND public.trips.created_by = auth.uid()
+  )
+);
+
+
+-- 3. ตาราง itinerary_items: เปิดใช้งาน RLS
+ALTER TABLE public.itinerary_items ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Members can view itinerary" ON public.itinerary_items;
+CREATE POLICY "Members can view itinerary"
+ON public.itinerary_items
+FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.itinerary_items.trip_id
+      AND (
+        public.trips.created_by = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM public.trip_members
+          WHERE public.trip_members.trip_id = public.trips.id
+            AND public.trip_members.user_id = auth.uid()
+        )
+      )
+  )
+);
+
+DROP POLICY IF EXISTS "Members can modify itinerary" ON public.itinerary_items;
+CREATE POLICY "Members can modify itinerary"
+ON public.itinerary_items
+FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.itinerary_items.trip_id
+      AND (
+        public.trips.created_by = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM public.trip_members
+          WHERE public.trip_members.trip_id = public.trips.id
+            AND public.trip_members.user_id = auth.uid()
+            AND public.trip_members.role IN ('owner', 'editor')
+        )
+      )
+  )
+);
+
+
+-- 4. ตาราง expenses: เปิดใช้งาน RLS
+ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Members can view expenses" ON public.expenses;
+CREATE POLICY "Members can view expenses"
+ON public.expenses
+FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.expenses.trip_id
+      AND (
+        public.trips.created_by = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM public.trip_members
+          WHERE public.trip_members.trip_id = public.trips.id
+            AND public.trip_members.user_id = auth.uid()
+        )
+      )
+  )
+);
+
+DROP POLICY IF EXISTS "Members can manage expenses" ON public.expenses;
+CREATE POLICY "Members can manage expenses"
+ON public.expenses
+FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.expenses.trip_id
+      AND (
+        public.trips.created_by = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM public.trip_members
+          WHERE public.trip_members.trip_id = public.trips.id
+            AND public.trip_members.user_id = auth.uid()
+        )
+      )
+  )
+);

@@ -17,12 +17,16 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/ThemeProvider';
 import ProfileModal from '@/components/ProfileModal';
+import SuperAdminModal from '@/components/SuperAdminModal';
 import NotificationBell from '@/components/NotificationBell';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
+import { toast } from 'sonner';
+import { isSuperAdmin } from '@/lib/permissions';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export default function HomePage() {
   const router = useRouter();
@@ -36,6 +40,11 @@ export default function HomePage() {
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [fxRate, setFxRate] = useState<number>(0.235);
   
+  // Super Admin state
+  const [showSuperAdminModal, setShowSuperAdminModal] = useState(false);
+  const [adminViewMode, setAdminViewMode] = useState<'my' | 'all'>('my');
+  const isSuper = useMemo(() => isSuperAdmin(user, profile), [user, profile]);
+
   // Modals state
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -71,58 +80,99 @@ export default function HomePage() {
   }, [showCreateModal, showEditModal, showJoinModal, showDeleteModal, showProfileModal]);
 
   useEffect(() => {
-    // Restore cached data on client mount safely to eliminate SSR hydration mismatch
+    // Clean up legacy unkeyed caches to prevent cross-account leak
     try {
-      const p = localStorage.getItem('travel_tracker_cached_profile');
-      if (p) setProfile(JSON.parse(p));
-      const cached = localStorage.getItem('travel_tracker_home_trips_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setTrips(parsed);
-          setLoading(false);
-        }
-      }
+      localStorage.removeItem('travel_tracker_home_trips_cache');
+      localStorage.removeItem('travel_tracker_cached_profile');
     } catch {}
 
     setFxRate(getCustomJpyToThbRate());
     checkUserAndFetchTrips();
   }, []);
 
-  const checkUserAndFetchTrips = async () => {
+  const checkUserAndFetchTrips = async (customMode?: 'my' | 'all') => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push('/login');
         return;
       }
+      const currentUserId = session.user.id;
       setUser(session.user);
 
-      // Parallelize profile & trips queries for 2x faster load!
-      const [profRes, tripsRes] = await Promise.allSettled([
+      // Restore user-specific cached profile & trips
+      try {
+        const cachedProf = localStorage.getItem(`travel_tracker_cached_profile_${currentUserId}`);
+        if (cachedProf) setProfile(JSON.parse(cachedProf));
+
+        const cachedTrips = localStorage.getItem(`travel_tracker_home_trips_cache_${currentUserId}`);
+        if (cachedTrips) {
+          const parsed = JSON.parse(cachedTrips);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setTrips(parsed);
+            setLoading(false);
+          }
+        }
+      } catch {}
+
+      // Parallelize: get profile & user memberships
+      const [profRes, memberRes] = await Promise.allSettled([
         supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', currentUserId)
           .maybeSingle(),
         supabase
-          .from('trips')
-          .select('*')
-          .order('created_at', { ascending: false })
+          .from('trip_members')
+          .select('trip_id, role')
+          .eq('user_id', currentUserId)
       ]);
 
       if (profRes.status === 'fulfilled' && profRes.value.data) {
         setProfile(profRes.value.data);
         try {
-          localStorage.setItem('travel_tracker_cached_profile', JSON.stringify(profRes.value.data));
+          localStorage.setItem(`travel_tracker_cached_profile_${currentUserId}`, JSON.stringify(profRes.value.data));
         } catch {}
       }
 
-      if (tripsRes.status === 'fulfilled' && tripsRes.value.data) {
-        setTrips(tripsRes.value.data);
-        try {
-          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(tripsRes.value.data));
-        } catch {}
+      const memberRows = (memberRes.status === 'fulfilled' && memberRes.value.data) ? memberRes.value.data : [];
+      const memberTripIds = memberRows.map((r: any) => r.trip_id).filter(Boolean);
+      const memberRoleMap = new Map(memberRows.map((r: any) => [r.trip_id, r.role]));
+
+      const effectiveMode = customMode !== undefined ? customMode : adminViewMode;
+      const isAdmin = isSuperAdmin(session.user, profRes.status === 'fulfilled' ? profRes.value.data : null);
+
+      // Query trips: if Super Admin in 'all' mode, fetch all trips in the system!
+      let tripQuery = supabase.from('trips').select('*');
+      if (isAdmin && effectiveMode === 'all') {
+        // Super Admin viewing everything
+      } else if (memberTripIds.length > 0) {
+        tripQuery = tripQuery.or(`created_by.eq.${currentUserId},id.in.(${memberTripIds.join(',')})`);
+      } else {
+        tripQuery = tripQuery.eq('created_by', currentUserId);
+      }
+
+      const { data: tripsData, error: tripsErr } = await tripQuery.order('created_at', { ascending: false });
+
+      if (tripsErr) {
+        console.error('Error fetching user trips:', tripsErr);
+      } else {
+        const enrichedTrips = (tripsData || []).map((t: any) => {
+          const isOwner = isAdmin || t.created_by === currentUserId || memberRoleMap.get(t.id) === 'owner';
+          const role = isOwner ? 'owner' : (memberRoleMap.get(t.id) || 'viewer');
+          return {
+            ...t,
+            isOwner,
+            userRole: role,
+          };
+        });
+
+        setTrips(enrichedTrips);
+        if (effectiveMode === 'my') {
+          try {
+            localStorage.setItem(`travel_tracker_home_trips_cache_${currentUserId}`, JSON.stringify(enrichedTrips));
+          } catch {}
+        }
       }
     } catch (err) {
       console.error('Error fetching trips:', err);
@@ -143,7 +193,7 @@ export default function HomePage() {
       const currentUserId = session?.user?.id || user?.id;
 
       if (!currentUserId) {
-        alert('กรุณาเข้าสู่ระบบก่อนสร้างทริป');
+        toast.error('กรุณาเข้าสู่ระบบก่อนสร้างทริป');
         window.location.href = '/login';
         return;
       }
@@ -166,7 +216,7 @@ export default function HomePage() {
 
       if (error) {
         console.error('Create trip error:', error);
-        alert('เกิดข้อผิดพลาดในการสร้างทริป: ' + error.message);
+        toast.error('เกิดข้อผิดพลาดในการสร้างทริป: ' + error.message);
         return;
       }
 
@@ -185,16 +235,22 @@ export default function HomePage() {
         }
 
         // อัปเดต State และ Local Cache ทันที
-        const newTripList = [data, ...trips];
+        const enrichedTrip = {
+          ...data,
+          isOwner: true,
+          userRole: 'owner',
+        };
+        const newTripList = [enrichedTrip, ...trips];
         setTrips(newTripList);
         try {
-          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(newTripList));
+          localStorage.setItem(`travel_tracker_home_trips_cache_${currentUserId}`, JSON.stringify(newTripList));
         } catch {}
 
         setShowCreateModal(false);
         resetForm();
         setCreatedTripSuccess(data);
         triggerConfetti();
+        toast.success(`🎉 สร้างทริป "${data.name}" เรียบร้อยแล้ว!`);
 
         // Auto navigate ไปยังหน้าทริป
         setTimeout(() => {
@@ -203,7 +259,7 @@ export default function HomePage() {
       }
     } catch (err: any) {
       console.error('Create trip exception:', err);
-      alert('เกิดข้อผิดพลาด: ' + (err.message || 'ไม่สามารถสร้างทริปได้'));
+      toast.error('เกิดข้อผิดพลาด: ' + (err.message || 'ไม่สามารถสร้างทริปได้'));
     } finally {
       setActionLoading(false);
     }
@@ -213,6 +269,13 @@ export default function HomePage() {
   const handleUpdateTrip = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTrip || !formData.title.trim()) return;
+
+    // ตรวจสอบสิทธิ์: เฉพาะเจ้าของ หรือ editor เท่านั้น
+    if (!selectedTrip.isOwner && selectedTrip.userRole !== 'editor') {
+      toast.error('คุณไม่มีสิทธิ์แก้ไขข้อมูลทริปนี้ (เฉพาะเจ้าของหรือผู้แก้ไข)');
+      setShowEditModal(false);
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -238,17 +301,21 @@ export default function HomePage() {
         } : t);
         setTrips(updated);
         try {
-          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(updated));
+          const currentUserId = user?.id;
+          if (currentUserId) {
+            localStorage.setItem(`travel_tracker_home_trips_cache_${currentUserId}`, JSON.stringify(updated));
+          }
         } catch {}
 
         setShowEditModal(false);
         setSelectedTrip(null);
         resetForm();
+        toast.success('แก้ไขข้อมูลทริปเรียบร้อยแล้ว ✨');
       } else {
-        alert('เกิดข้อผิดพลาดในการแก้ไขทริป: ' + error.message);
+        toast.error('เกิดข้อผิดพลาดในการแก้ไขทริป: ' + error.message);
       }
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
       setActionLoading(false);
     }
@@ -257,6 +324,14 @@ export default function HomePage() {
   // ลบทริป
   const handleDeleteTrip = async () => {
     if (!selectedTrip) return;
+
+    // ตรวจสอบสิทธิ์: เฉพาะเจ้าของทริปเท่านั้นที่สามารถลบทริปได้
+    if (!selectedTrip.isOwner && selectedTrip.created_by !== user?.id) {
+      toast.error('เฉพาะเจ้าของทริปเท่านั้นที่สามารถลบทริปนี้ได้');
+      setShowDeleteModal(false);
+      return;
+    }
+
     setActionLoading(true);
 
     try {
@@ -269,15 +344,19 @@ export default function HomePage() {
         const updated = trips.filter(t => t.id !== selectedTrip.id);
         setTrips(updated);
         try {
-          localStorage.setItem('travel_tracker_home_trips_cache', JSON.stringify(updated));
+          const currentUserId = user?.id;
+          if (currentUserId) {
+            localStorage.setItem(`travel_tracker_home_trips_cache_${currentUserId}`, JSON.stringify(updated));
+          }
         } catch {}
         setShowDeleteModal(false);
         setSelectedTrip(null);
+        toast.success('ลบทริปเรียบร้อยแล้ว');
       } else {
-        alert('เกิดข้อผิดพลาดในการลบทริป: ' + error.message);
+        toast.error('เกิดข้อผิดพลาดในการลบทริป: ' + error.message);
       }
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
       setActionLoading(false);
     }
@@ -313,6 +392,8 @@ export default function HomePage() {
 
       setShowJoinModal(false);
       setJoinCode('');
+      toast.success(`เข้าร่วมทริป "${tripData.name || 'ทริป'}" เรียบร้อยแล้ว! 🎉`);
+      await checkUserAndFetchTrips();
       window.location.href = `/trips/${code}`;
     } catch (err: any) {
       setJoinError('เกิดข้อผิดพลาด: ' + err.message);
@@ -516,6 +597,18 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Super Admin Console Button */}
+            {isSuper && (
+              <button
+                onClick={() => setShowSuperAdminModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-600 dark:text-amber-400 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer"
+                title="เปิด Super Admin Console"
+              >
+                <span className="text-sm">👑</span>
+                <span className="text-xs font-black hidden sm:inline">Admin</span>
+              </button>
+            )}
+
             {/* Notification Bell */}
             <NotificationBell tripTitle="Travel Hub" />
 
@@ -803,6 +896,69 @@ export default function HomePage() {
           </motion.div>
         )}
 
+        {/* ==================== SUPER ADMIN GLOBAL MODE BAR ==================== */}
+        {isSuper && (
+          <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-purple-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">👑</span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-black text-amber-700 dark:text-amber-400">
+                    Super Admin Mode
+                  </h3>
+                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                    ({user?.email})
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                  คุณมีสิทธิ์ควบคุมสูงสุด สามารถสลับดูเฉพาะทริปของตนเอง หรือทริปทั้งหมดของทุกคนในระบบได้
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              <div className="flex items-center p-1 rounded-2xl bg-white/80 dark:bg-[#121316] border border-amber-500/30">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdminViewMode('my');
+                    checkUserAndFetchTrips('my');
+                  }}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    adminViewMode === 'my'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-amber-500'
+                  }`}
+                >
+                  ทริปของฉัน
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdminViewMode('all');
+                    checkUserAndFetchTrips('all');
+                  }}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    adminViewMode === 'all'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-amber-600 dark:text-amber-400 hover:text-amber-500'
+                  }`}
+                >
+                  <span>👑 ดูทริปทั้งหมด ({trips.length})</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowSuperAdminModal(true)}
+                className="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+              >
+                <span>คอนโซล</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ==================== 3. ACTION BAR & SEARCH & FILTERS (TravelGo Clean Super-App) ==================== */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="relative flex-1 min-w-[240px]">
@@ -921,8 +1077,8 @@ export default function HomePage() {
                   className="group relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-[#e79b71] dark:hover:border-[#e79b71]/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-lg"
                 >
                   {/* Top Metadata Row */}
-                  <div className="p-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932]">
-                    <div className="flex items-center gap-1.5">
+                  <div className="p-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       {isActive ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                           กำลังเที่ยว
@@ -940,25 +1096,39 @@ export default function HomePage() {
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#121316] text-slate-700 dark:text-slate-300">
                         {t.currency || 'JPY'}
                       </span>
+
+                      {t.isOwner ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 flex items-center gap-0.5">
+                          👑 เจ้าของ
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25 flex items-center gap-0.5">
+                          👥 สมาชิก{t.userRole === 'viewer' ? ' (ดู)' : ''}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={(e) => openEditModal(t, e)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                        title="แก้ไขทริป"
-                      >
-                        <Edit3 className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => openDeleteModal(t, e)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
-                        title="ลบทริป"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      {(t.isOwner || t.userRole === 'editor') && (
+                        <button
+                          type="button"
+                          onClick={(e) => openEditModal(t, e)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                          title="แก้ไขทริป"
+                        >
+                          <Edit3 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {t.isOwner && (
+                        <button
+                          type="button"
+                          onClick={(e) => openDeleteModal(t, e)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
+                          title="ลบทริป (เฉพาะเจ้าของ)"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1006,6 +1176,15 @@ export default function HomePage() {
         onClose={() => setShowProfileModal(false)}
         user={user}
         onProfileUpdated={(updated) => setProfile((prev: any) => ({ ...prev, ...updated }))}
+      />
+
+      {/* ==================== SUPER ADMIN MODAL ==================== */}
+      <SuperAdminModal
+        isOpen={showSuperAdminModal}
+        onClose={() => setShowSuperAdminModal(false)}
+        currentUser={user}
+        currentProfile={profile}
+        onRefreshTrips={() => checkUserAndFetchTrips(adminViewMode)}
       />
 
       {/* ==================== CREATE TRIP MODAL ==================== */}

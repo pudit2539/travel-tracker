@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { parseTripExcel } from '@/lib/excelParser';
@@ -22,6 +22,9 @@ import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCustomJpyToThbRate, formatCurrencyWithThb, convertCurrency, convertToThb } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
+import { toast } from 'sonner';
+import { copyToClipboard } from '@/lib/clipboard';
+import { isSuperAdmin, TripRole, ROLE_INFO } from '@/lib/permissions';
 import { 
   CategoryItem, 
   CategoryBudgetMap, 
@@ -56,6 +59,7 @@ const QuickCurrencyCalculator = dynamic(() => import('@/components/QuickCurrency
 const PackingChecklistModal = dynamic(() => import('@/components/PackingChecklistModal'), { ssr: false });
 const TravelHubModal = dynamic(() => import('@/components/TravelHubModal'), { ssr: false });
 const ExpenseDetailModal = dynamic(() => import('@/components/ExpenseDetailModal'), { ssr: false });
+const TransferOwnershipModal = dynamic(() => import('@/components/TransferOwnershipModal'), { ssr: false });
 import { 
   Camera, Upload, MapPin, Utensils, ShieldAlert, 
   Plus, Download, Moon, Sun, ExternalLink, ChevronDown, 
@@ -72,8 +76,11 @@ import * as XLSX from 'xlsx';
 
 export default function TripDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const rawId = params?.id;
   const tripId = Array.isArray(rawId) ? rawId[0] : (typeof rawId === 'string' ? decodeURIComponent(rawId) : '');
+  const inviteParam = searchParams?.get('invite') || searchParams?.get('code') || '';
+  const [manualJoinCode, setManualJoinCode] = useState(inviteParam);
   const { theme, setTheme, mounted } = useTheme();
 
   // Offline Hook
@@ -91,15 +98,11 @@ export default function TripDetailPage() {
   const [memberBudgets, setMemberBudgets] = useState<MemberBudgetMap>({});
   const [photosCount, setPhotosCount] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'plan' | 'expenses' | 'analytics' | 'members'>('plan');
-  const handleSwitchTab = useCallback((tab: 'plan' | 'expenses' | 'analytics' | 'members') => {
-    setActiveTab(tab);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-  }, []);
   const [heroBudgetView, setHeroBudgetView] = useState<'all' | 'me' | string>('all');
   const [itineraryViewMode, setItineraryViewMode] = useState<'list' | 'map'>('list');
   const [loading, setLoading] = useState(true);
+  const [unauthorized, setUnauthorized] = useState(false);
+  const [joiningTrip, setJoiningTrip] = useState(false);
   const [reordering, setReordering] = useState(false);
   const [fxRate, setFxRate] = useState<number>(0.235);
   const [currencyView, setCurrencyView] = useState<'foreign' | 'thb'>('foreign');
@@ -156,6 +159,8 @@ export default function TripDetailPage() {
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferTargetMember, setTransferTargetMember] = useState<any | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -168,6 +173,7 @@ export default function TripDetailPage() {
       showScanModal ||
       showActivityModal ||
       showShareModal ||
+      showTransferModal ||
       showAiKeyModal ||
       previewImage
     );
@@ -178,33 +184,48 @@ export default function TripDetailPage() {
         document.body.style.overflow = prev;
       };
     }
-  }, [showScanModal, showActivityModal, showShareModal, showAiKeyModal, previewImage]);
+  }, [showScanModal, showActivityModal, showShareModal, showTransferModal, showAiKeyModal, previewImage]);
 
-  const copyTripCode = () => {
+  const copyTripCode = async () => {
     if (typeof window !== 'undefined' && tripId) {
-      navigator.clipboard.writeText(tripId);
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2000);
+      const ok = await copyToClipboard(tripId);
+      if (ok) {
+        setCopiedCode(true);
+        toast.success('คัดลอกรหัสทริปเรียบร้อยแล้ว ✨');
+        setTimeout(() => setCopiedCode(false), 2000);
+      } else {
+        toast.info('สามารถคัดลอกรหัสทริปได้จากช่องข้อความด้านล่าง');
+      }
     }
   };
 
-  const copyInviteLink = () => {
+  const copyInviteLink = async () => {
     if (typeof window !== 'undefined' && tripId) {
       const origin = window.location.origin;
-      const shareUrl = `${origin}/trips/${tripId}`;
-      navigator.clipboard.writeText(shareUrl);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
+      const shareUrl = `${origin}/trips/${tripId}?invite=${tripId}`;
+      const ok = await copyToClipboard(shareUrl);
+      if (ok) {
+        setCopiedLink(true);
+        toast.success('คัดลอกลิงก์ตรงเรียบร้อยแล้ว ✨');
+        setTimeout(() => setCopiedLink(false), 2000);
+      } else {
+        toast.info('สามารถคัดลอกลิงก์ได้จากกล่องข้อความด้านล่าง');
+      }
     }
   };
 
-  const copyAuthInviteLink = () => {
+  const copyAuthInviteLink = async () => {
     if (typeof window !== 'undefined' && tripId) {
       const origin = window.location.origin;
       const inviteUrl = `${origin}/login?invite=${tripId}`;
-      navigator.clipboard.writeText(inviteUrl);
-      setCopiedAuthLink(true);
-      setTimeout(() => setCopiedAuthLink(false), 2000);
+      const ok = await copyToClipboard(inviteUrl);
+      if (ok) {
+        setCopiedAuthLink(true);
+        toast.success('คัดลอกลิงก์เชิญสมาชิกใหม่เรียบร้อยแล้ว ✨');
+        setTimeout(() => setCopiedAuthLink(false), 2000);
+      } else {
+        toast.info('สามารถคัดลอกลิงก์ได้จากกล่องข้อความด้านล่าง');
+      }
     }
   };
 
@@ -253,17 +274,6 @@ export default function TripDetailPage() {
         }
         if (offlineCached.data.itinerary) setItinerary(offlineCached.data.itinerary);
         if (offlineCached.data.expenses) setExpenses(offlineCached.data.expenses);
-      } else {
-        const homeCache = localStorage.getItem('travel_tracker_home_trips_cache');
-        if (homeCache) {
-          const list = JSON.parse(homeCache);
-          const found = list.find((t: any) => t.id === tripId);
-          if (found) {
-            setTrip(found);
-            hasCachedTrip = true;
-            setScannedData((prev: any) => ({ ...prev, currency: found.currency || 'JPY' }));
-          }
-        }
       }
     } catch {}
 
@@ -303,25 +313,49 @@ export default function TripDetailPage() {
       ]);
 
       const session = sessionRes.data?.session;
-      if (session?.user) {
-        setCurrentUser(session.user);
-        // Resolve profile instantly from memberData without extra roundtrip query
-        const matchedMember = memberData?.find((m: any) => m.user_id === session.user.id);
-        if (matchedMember?.profiles) {
-          setUserProfile(matchedMember.profiles);
-        } else {
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle()
-            .then(({ data: prof }) => { if (prof) setUserProfile(prof); });
+      if (!session?.user) {
+        if (typeof window !== 'undefined') {
+          window.location.href = `/login?returnUrl=/trips/${tripId}`;
         }
+        return;
+      }
+      setCurrentUser(session.user);
+
+      if (!tripData) {
+        setTrip(null);
+        setLoading(false);
+        return;
       }
 
-      if (tripData) {
+      // ตรวจสอบสิทธิ์การเข้าถึงทริป (ต้องเป็นผู้สร้าง หรือเป็นสมาชิกในตาราง trip_members หรือ Super Admin)
+      const isSuper = isSuperAdmin(session.user, null);
+      const isCreator = tripData.created_by === session.user.id;
+      const matchedMember = memberData?.find((m: any) => m.user_id === session.user.id);
+      const isMember = Boolean(matchedMember);
+
+      if (!isCreator && !isMember && !isSuper) {
         setTrip(tripData);
-        setScannedData((prev: any) => ({ ...prev, currency: tripData.currency || 'JPY' }));
+        setItinerary([]);
+        setExpenses([]);
+        setMembers([]);
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
+
+      setUnauthorized(false);
+      setTrip(tripData);
+      setScannedData((prev: any) => ({ ...prev, currency: tripData.currency || 'JPY' }));
+
+      if (matchedMember?.profiles) {
+        setUserProfile(matchedMember.profiles);
+      } else {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle()
+          .then(({ data: prof }) => { if (prof) setUserProfile(prof); });
       }
 
       let cleanPlanData: any[] = [];
@@ -418,6 +452,36 @@ export default function TripDetailPage() {
     fetchTripData();
   }, [tripId]);
 
+  const handleJoinTripDirectly = async (codeToUse?: string) => {
+    if (!currentUser || !tripId) return;
+    const finalCode = (codeToUse || manualJoinCode || inviteParam || '').trim();
+    if (finalCode !== tripId) {
+      toast.error('รหัสเชิญไม่ถูกต้อง กรุณาขอรหัสเชิญที่ถูกต้องจากเจ้าของทริป');
+      return;
+    }
+    setJoiningTrip(true);
+    try {
+      const { error } = await supabase.from('trip_members').insert([
+        {
+          trip_id: tripId,
+          user_id: currentUser.id,
+          role: 'plan_only', // เริ่มต้นด้วยสิทธิ์ดูเฉพาะแผนเที่ยว (ปลอดภัยที่สุด)
+        },
+      ]);
+      if (error) {
+        toast.error('ไม่สามารถเข้าร่วมทริปได้: ' + error.message);
+      } else {
+        toast.success('เข้าร่วมทริปเรียบร้อยแล้ว! (เริ่มต้นด้วยสิทธิ์ดูเฉพาะแผนเที่ยว) 🎉');
+        setUnauthorized(false);
+        fetchTripData();
+      }
+    } catch (e: any) {
+      toast.error('เกิดข้อผิดพลาด: ' + (e.message || ''));
+    } finally {
+      setJoiningTrip(false);
+    }
+  };
+
   // ตรวจสอบ Gemini API Key จาก Browser LocalStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -455,7 +519,7 @@ export default function TripDetailPage() {
       const parsedItems = parseTripExcel(buffer);
 
       if (parsedItems.length === 0) {
-        alert('ไม่พบข้อมูลแผนเที่ยวในไฟล์ Excel หรือโครงสร้างตารางไม่ตรง');
+        toast.error('ไม่พบข้อมูลแผนเที่ยวในไฟล์ Excel หรือโครงสร้างตารางไม่ตรง');
         return;
       }
 
@@ -468,13 +532,13 @@ export default function TripDetailPage() {
       const { error } = await supabase.from('itinerary_items').insert(formatted);
       if (!error) {
         triggerConfetti();
-        alert(`🎉 นำเข้าแผนเที่ยวสำเร็จจำนวน ${parsedItems.length} รายการ!`);
+        toast.success(`🎉 นำเข้าแผนเที่ยวสำเร็จจำนวน ${parsedItems.length} รายการ!`);
         fetchTripData();
       } else {
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
+        toast.error('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
       }
     } catch (err: any) {
-      alert('ไม่สามารถประมวลผลไฟล์ได้: ' + err.message);
+      toast.error('ไม่สามารถประมวลผลไฟล์ได้: ' + err.message);
     }
   };
 
@@ -572,9 +636,9 @@ export default function TripDetailPage() {
         if (!error) {
           setShowActivityModal(false);
           fetchTripData();
-          showToast(editingActivity ? 'แก้ไขกิจกรรมเรียบร้อยแล้ว ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยวแล้ว 🗺️', 'success');
+          toast.success(editingActivity ? 'แก้ไขกิจกรรมเรียบร้อยแล้ว ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยวแล้ว 🗺️');
         } else {
-          alert('เกิดข้อผิดพลาดในการแก้ไข: ' + error.message);
+          toast.error('เกิดข้อผิดพลาดในการแก้ไข: ' + error.message);
         }
       } else {
         let nextOrder = itinerary.length;
@@ -602,13 +666,13 @@ export default function TripDetailPage() {
         if (!error) {
           setShowActivityModal(false);
           fetchTripData();
-          showToast('เพิ่มกิจกรรมในแผนเที่ยวแล้ว 🗺️', 'success');
+          toast.success('เพิ่มกิจกรรมในแผนเที่ยวแล้ว 🗺️');
         } else {
-          alert('เกิดข้อผิดพลาดในการเพิ่มกิจกรรม: ' + error.message);
+          toast.error('เกิดข้อผิดพลาดในการเพิ่มกิจกรรม: ' + error.message);
         }
       }
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
       setSavingActivity(false);
     }
@@ -805,7 +869,7 @@ export default function TripDetailPage() {
     }
 
     if (!calculatedAmount || calculatedAmount <= 0) {
-      alert('กรุณาระบุจำนวนเงิน หรือเพิ่มรายการสินค้า');
+      toast.error('กรุณาระบุจำนวนเงิน หรือเพิ่มรายการสินค้า');
       return;
     }
 
@@ -931,9 +995,9 @@ export default function TripDetailPage() {
         items: [] as ItemizedDish[],
       });
       fetchTripData();
-      showToast('บันทึกค่าใช้จ่ายใหม่เรียบร้อยแล้ว! 🎉', 'success');
+      toast.success('บันทึกค่าใช้จ่ายใหม่เรียบร้อยแล้ว! 🎉');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการบันทึกค่าใช้จ่าย: ' + (err?.message || err));
+      toast.error('เกิดข้อผิดพลาดในการบันทึกค่าใช้จ่าย: ' + (err?.message || err));
     } finally {
       setSavingExpense(false);
     }
@@ -952,7 +1016,7 @@ export default function TripDetailPage() {
           setPreviewImage(localData);
         } else {
           setPreviewImage(null);
-          alert('รูปใบเสร็จถูกบันทึกไว้ในอุปกรณ์ต้นทางที่ถ่ายรูป ไม่พบในอุปกรณ์นี้');
+          toast.info('รูปใบเสร็จถูกบันทึกไว้ในอุปกรณ์ต้นทางที่ถ่ายรูป ไม่พบในอุปกรณ์นี้');
         }
       }
     } catch (e) {
@@ -1066,9 +1130,9 @@ export default function TripDetailPage() {
       setSelectedExpenseForDetail(null);
       fetchTripData();
       triggerConfetti();
-      showToast('บันทึกการแก้ไขค่าใช้จ่ายเรียบร้อยแล้ว ✨', 'success');
+      toast.success('บันทึกการแก้ไขค่าใช้จ่ายเรียบร้อยแล้ว ✨');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการบันทึกการแก้ไข: ' + (err?.message || err));
+      toast.error('เกิดข้อผิดพลาดในการบันทึกการแก้ไข: ' + (err?.message || err));
       throw err;
     }
   };
@@ -1150,26 +1214,50 @@ export default function TripDetailPage() {
     XLSX.writeFile(wb, `${tripTitle}_Expenses_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  // Permissions
+  // Permissions & Super Admin
+  const isSuper = useMemo(() => {
+    return isSuperAdmin(currentUser, userProfile);
+  }, [currentUser, userProfile]);
+
   const isOwner = useMemo(() => {
     if (!currentUser) return false;
+    if (isSuper) return true;
     if (trip?.created_by && trip.created_by === currentUser.id) return true;
     const currentMember = members.find((m) => m.user_id === currentUser.id);
     return currentMember?.role === 'owner';
-  }, [trip, currentUser, members]);
+  }, [trip, currentUser, members, isSuper]);
 
-  const currentUserRole = useMemo(() => {
-    if (!currentUser) return 'guest';
-    if (isOwner) return 'owner';
+  const currentUserRole = useMemo<TripRole>(() => {
+    if (!currentUser) return 'viewer';
+    if (isSuper) return 'owner';
+    if (trip?.created_by && trip.created_by === currentUser.id) return 'owner';
     const currentMember = members.find((m) => m.user_id === currentUser.id);
-    return currentMember?.role || 'viewer';
-  }, [currentUser, isOwner, members]);
+    return (currentMember?.role as TripRole) || 'viewer';
+  }, [currentUser, trip, members, isSuper]);
 
-  const canEditPlan = currentUserRole === 'owner' || currentUserRole === 'editor';
-  const canAddExpense = currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'viewer';
+  const canSeeMoney = isSuper || currentUserRole !== 'plan_only';
+  const canEditPlan = isSuper || currentUserRole === 'owner' || currentUserRole === 'editor';
+  const canAddExpense = canSeeMoney && (isSuper || currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'viewer');
   const canImportExcel = isOwner;
 
-  const handleUpdateMemberRole = async (memberId: string, newRole: 'editor' | 'viewer') => {
+  const handleSwitchTab = useCallback((tab: 'plan' | 'expenses' | 'analytics' | 'members') => {
+    if (!canSeeMoney && (tab === 'expenses' || tab === 'analytics')) {
+      toast.info('สิทธิ์ของคุณคือดูเฉพาะแผนเที่ยว (Plan Only)');
+      return;
+    }
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [canSeeMoney]);
+
+  useEffect(() => {
+    if (!canSeeMoney && (activeTab === 'expenses' || activeTab === 'analytics')) {
+      setActiveTab('plan');
+    }
+  }, [canSeeMoney, activeTab]);
+
+  const handleUpdateMemberRole = async (memberId: string, newRole: TripRole) => {
     if (!isOwner) return;
     try {
       const { error } = await supabase
@@ -1181,11 +1269,12 @@ export default function TripDetailPage() {
         setMembers((prev) =>
           prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
         );
+        toast.success(`อัปเดตสิทธิ์สมาชิกเป็น "${ROLE_INFO[newRole]?.label || newRole}" เรียบร้อยแล้ว ✨`);
       } else {
-        alert('ไม่สามารถเปลี่ยนสิทธิ์ได้: ' + error.message);
+        toast.error('ไม่สามารถเปลี่ยนสิทธิ์ได้: ' + error.message);
       }
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     }
   };
 
@@ -1201,11 +1290,84 @@ export default function TripDetailPage() {
 
       if (!error) {
         setMembers((prev) => prev.filter((m) => m.id !== memberId));
+        toast.success(`ลบสมาชิก "${memberName}" ออกจากทริปแล้ว`);
       } else {
-        alert('ไม่สามารถลบสมาชิกได้: ' + error.message);
+        toast.error('ไม่สามารถลบสมาชิกได้: ' + error.message);
       }
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
+    }
+  };
+
+  const handleConfirmTransferOwnership = async (password: string): Promise<boolean> => {
+    if (!currentUser?.email || !tripId || !transferTargetMember) {
+      toast.error('ข้อมูลไม่ครบถ้วน ไม่สามารถโอนสิทธิ์ได้');
+      return false;
+    }
+
+    // 1. ตรวจสอบรหัสผ่านบัญชีของเจ้าของทริปปัจจุบันผ่าน Supabase Auth
+    const { error: authErr } = await supabase.auth.signInWithPassword({
+      email: currentUser.email,
+      password: password,
+    });
+
+    if (authErr) {
+      toast.error('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+      throw new Error('รหัสผ่านไม่ถูกต้อง');
+    }
+
+    const targetUserId = transferTargetMember.user_id;
+    const targetMemberName =
+      transferTargetMember.profiles?.display_name ||
+      transferTargetMember.profiles?.email?.split('@')[0] ||
+      'สมาชิก';
+
+    try {
+      // 2. อัปเดต trips: เปลี่ยน created_by เป็นสมาชิกคนใหม่
+      const { error: tripUpdateErr } = await supabase
+        .from('trips')
+        .update({ created_by: targetUserId })
+        .eq('id', tripId);
+
+      if (tripUpdateErr) {
+        toast.error('ไม่สามารถอัปเดตเจ้าของทริปได้: ' + tripUpdateErr.message);
+        return false;
+      }
+
+      // 3. อัปเดต trip_members: สมาชิกใหม่รับสิทธิ์ 'owner'
+      await supabase
+        .from('trip_members')
+        .update({ role: 'owner' })
+        .eq('id', transferTargetMember.id);
+
+      // 4. อัปเดตตัวเราเองใน trip_members: ปรับสถานะเป็น 'editor'
+      const myMembership = members.find((m) => m.user_id === currentUser.id);
+      if (myMembership) {
+        await supabase
+          .from('trip_members')
+          .update({ role: 'editor' })
+          .eq('id', myMembership.id);
+      } else {
+        await supabase
+          .from('trip_members')
+          .insert([
+            {
+              trip_id: tripId,
+              user_id: currentUser.id,
+              role: 'editor',
+            },
+          ]);
+      }
+
+      triggerConfetti();
+      toast.success(`🎉 โอนสิทธิ์ความเป็นเจ้าของทริปให้คุณ ${targetMemberName} เรียบร้อยแล้ว!`);
+      setShowTransferModal(false);
+      setTransferTargetMember(null);
+      await fetchTripData();
+      return true;
+    } catch (err: any) {
+      toast.error('เกิดข้อผิดพลาดในการโอนสิทธิ์: ' + (err.message || ''));
+      return false;
     }
   };
 
@@ -1506,8 +1668,119 @@ export default function TripDetailPage() {
   if (loading && !trip) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-3">
-        <Loader2 className="h-9 w-9 animate-spin text-rose-400" />
-        <p className="text-xs font-bold text-slate-500 dark:text-purple-300">กำลังโหลดข้อมูลทริป...</p>
+        <Loader2 className="h-9 w-9 animate-spin text-[#e79b71]" />
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">กำลังโหลดข้อมูลทริป...</p>
+      </div>
+    );
+  }
+
+  if (unauthorized && trip) {
+    const hasValidInvite = Boolean(
+      (inviteParam && inviteParam === tripId) || 
+      (manualJoinCode && manualJoinCode.trim() === tripId)
+    );
+
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-grid-pattern">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] p-6 sm:p-8 text-center space-y-5 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto text-3xl">
+            🔒
+          </div>
+          <div className="space-y-2">
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              พื้นที่เฉพาะสมาชิกทริป
+            </span>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white">
+              {trip.name || trip.title}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+              ทริปนี้เป็นพื้นที่ส่วนตัวสำหรับสมาชิกเท่านั้น คุณยังไม่ได้ถูกเพิ่มเป็นสมาชิกในทริปนี้
+            </p>
+          </div>
+
+          {hasValidInvite ? (
+            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 font-medium space-y-1">
+              <div className="font-bold flex items-center justify-center gap-1.5">
+                <span>✨ มีลิงก์เชิญที่ถูกต้อง</span>
+              </div>
+              <p>คุณได้รับคำเชิญเข้าร่วมทริปนี้แล้ว กดปุ่มด้านล่างเพื่อเริ่มดูแผนเที่ยวได้เลย</p>
+            </div>
+          ) : (
+            <div className="space-y-2.5 text-left p-4 rounded-2xl bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932]">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                กรอกรหัสเชิญประจำทริป (Trip ID) เพื่อเข้าร่วม:
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="วางรหัสเชิญที่นี่..."
+                  value={manualJoinCode}
+                  onChange={(e) => setManualJoinCode(e.target.value)}
+                  className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#e79b71]"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleJoinTripDirectly(manualJoinCode)}
+                  disabled={joiningTrip || !manualJoinCode.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-[#e79b71] hover:bg-[#d98254] text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  ยืนยัน
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium">
+                * หากไม่มีรหัสเชิญ กรุณาติดต่อผู้สร้างทริปเพื่อขอลิงก์เชิญ
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2.5 pt-2">
+            {hasValidInvite && (
+              <button
+                type="button"
+                onClick={() => handleJoinTripDirectly()}
+                disabled={joiningTrip}
+                className="w-full py-3 rounded-2xl bg-[#e79b71] hover:bg-[#d98254] text-white text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {joiningTrip ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>กำลังเข้าร่วมทริป...</span>
+                  </>
+                ) : (
+                  <>
+                    <Users className="h-4 w-4" />
+                    <span>เข้าร่วมทริปนี้</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            <Link
+              href="/"
+              className="w-full py-2.5 rounded-2xl border border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#121316] text-xs font-bold transition-all text-center"
+            >
+              กลับสู่หน้าทริปของฉัน
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loading && !trip) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-grid-pattern">
+        <div className="w-full max-w-sm rounded-3xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] p-6 text-center space-y-4 shadow-xl">
+          <AlertCircle className="h-10 w-10 text-rose-500 mx-auto" />
+          <h2 className="text-base font-black text-slate-900 dark:text-white">ไม่พบทริปนี้</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">ทริปนี้อาจถูกลบไปแล้ว หรือรหัสทริปไม่ถูกต้อง</p>
+          <Link
+            href="/"
+            className="inline-block px-5 py-2.5 rounded-2xl bg-[#e79b71] text-white text-xs font-bold shadow-md"
+          >
+            กลับสู่หน้าหลัก
+          </Link>
+        </div>
       </div>
     );
   }
@@ -1557,6 +1830,12 @@ export default function TripDetailPage() {
                     {isOnline ? <Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-500" /> : <WifiOff className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-500" />}
                     <span className="hidden md:inline">{isOnline ? 'ออนไลน์' : 'ออฟไลน์ (แคชเครื่อง)'}</span>
                   </span>
+
+                  {isSuper && (
+                    <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                      👑 Super Admin
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold truncate">
@@ -1582,14 +1861,16 @@ export default function TripDetailPage() {
                 </span>
               </button>
 
-              <button
-                onClick={() => setShowShareModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:text-[#e79b71] hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
-                title="แชร์ทริป / จัดการสิทธิ์"
-              >
-                <Share2 className="h-3.5 w-3.5 text-[#e79b71]" />
-                <span className="hidden sm:inline">แชร์</span>
-              </button>
+              {isOwner && (
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:text-[#e79b71] hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
+                  title="แชร์ทริป / ชวนเพื่อนเข้าทริป (เฉพาะเจ้าของทริป)"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-[#e79b71]" />
+                  <span className="hidden sm:inline">แชร์</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -1632,8 +1913,8 @@ export default function TripDetailPage() {
             </div>
           </div>
 
-          {/* Row 2: The 4 Tabs (Travo & TravelGo Hybrid Pill Selector) */}
-          <div className="grid grid-cols-4 gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100/90 dark:bg-[#181a20] backdrop-blur-xl border border-slate-200/90 dark:border-[#262932] rounded-2xl sm:rounded-3xl shadow-inner">
+          {/* Row 2: The Tabs (Travo & TravelGo Hybrid Pill Selector) */}
+          <div className={`grid ${canSeeMoney ? 'grid-cols-4' : 'grid-cols-2'} gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100/90 dark:bg-[#181a20] backdrop-blur-xl border border-slate-200/90 dark:border-[#262932] rounded-2xl sm:rounded-3xl shadow-inner`}>
             <button
               type="button"
               onClick={() => handleSwitchTab('plan')}
@@ -1661,54 +1942,58 @@ export default function TripDetailPage() {
               </span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('expenses')}
-              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
-                activeTab === 'expenses' 
-                  ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#262932]/50'
-              }`}
-            >
-              {activeTab === 'expenses' && (
-                <motion.div
-                  layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
-                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                />
-              )}
-              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <Receipt className="h-3.5 w-3.5" />
-                <span className="truncate">รายจ่าย</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden md:inline transition-colors ${
-                  activeTab === 'expenses' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#262932] text-slate-500 dark:text-slate-400'
-                }`}>
-                  {expenses.length}
+            {canSeeMoney && (
+              <button
+                type="button"
+                onClick={() => handleSwitchTab('expenses')}
+                className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
+                  activeTab === 'expenses' 
+                    ? 'text-white' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#262932]/50'
+                }`}
+              >
+                {activeTab === 'expenses' && (
+                  <motion.div
+                    layoutId="activeTopTabPill"
+                    className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
+                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
+                  <Receipt className="h-3.5 w-3.5" />
+                  <span className="truncate">รายจ่าย</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden md:inline transition-colors ${
+                    activeTab === 'expenses' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-[#262932] text-slate-500 dark:text-slate-400'
+                  }`}>
+                    {expenses.length}
+                  </span>
                 </span>
-              </span>
-            </button>
+              </button>
+            )}
 
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('analytics')}
-              className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
-                activeTab === 'analytics' 
-                  ? 'text-white' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#262932]/50'
-              }`}
-            >
-              {activeTab === 'analytics' && (
-                <motion.div
-                  layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
-                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                />
-              )}
-              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
-                <PieChart className="h-3.5 w-3.5" />
-                <span className="truncate">สถิติ & งบ</span>
-              </span>
-            </button>
+            {canSeeMoney && (
+              <button
+                type="button"
+                onClick={() => handleSwitchTab('analytics')}
+                className={`relative py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 active:scale-95 ${
+                  activeTab === 'analytics' 
+                    ? 'text-white' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-[#262932]/50'
+                }`}
+              >
+                {activeTab === 'analytics' && (
+                  <motion.div
+                    layoutId="activeTopTabPill"
+                    className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
+                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 truncate">
+                  <PieChart className="h-3.5 w-3.5" />
+                  <span className="truncate">สถิติ & งบ</span>
+                </span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -1782,6 +2067,7 @@ export default function TripDetailPage() {
                 tripBaseCurrency={tripBaseCurrency}
                 fxRate={fxRate}
                 heroDisplayData={heroDisplayData}
+                canSeeMoney={canSeeMoney}
                 itinerary={itinerary}
                 filteredItinerary={filteredItinerary}
                 availableDays={availableDays}
@@ -1903,6 +2189,10 @@ export default function TripDetailPage() {
                 setShowShareModal={setShowShareModal}
                 handleUpdateMemberRole={handleUpdateMemberRole}
                 handleRemoveMember={handleRemoveMember}
+                onInitiateTransferOwnership={(member) => {
+                  setTransferTargetMember(member);
+                  setShowTransferModal(true);
+                }}
               />
             </motion.div>
           )}
@@ -1949,7 +2239,7 @@ export default function TripDetailPage() {
 
       {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
       <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-white/98 dark:bg-[#151b2b]/98 border-t border-slate-200/90 dark:border-[#222c42] shadow-2xl">
-        <div className="grid grid-cols-4 gap-1 max-w-md mx-auto">
+        <div className={`grid ${canSeeMoney ? 'grid-cols-4' : 'grid-cols-2'} gap-1 max-w-md mx-auto`}>
           <button
             type="button"
             onClick={() => handleSwitchTab('plan')}
@@ -1972,49 +2262,53 @@ export default function TripDetailPage() {
             </div>
           </button>
 
-          <button
-            type="button"
-            onClick={() => handleSwitchTab('expenses')}
-            className={`relative flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
-              activeTab === 'expenses'
-                ? 'text-blue-600 dark:text-blue-400 font-black'
-                : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
-            }`}
-          >
-            {activeTab === 'expenses' && (
-              <motion.div
-                layoutId="activeBottomTabPill"
-                className="absolute inset-0 bg-blue-600/10 dark:bg-blue-500/20 rounded-2xl"
-                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-              />
-            )}
-            <div className="relative z-10 flex flex-col items-center justify-center">
-              <DollarSign className="h-4 w-4 mb-0.5" />
-              <span className="text-[10px]">รายจ่าย ({expenses.length})</span>
-            </div>
-          </button>
+          {canSeeMoney && (
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('expenses')}
+              className={`relative flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+                activeTab === 'expenses'
+                  ? 'text-blue-600 dark:text-blue-400 font-black'
+                  : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
+              }`}
+            >
+              {activeTab === 'expenses' && (
+                <motion.div
+                  layoutId="activeBottomTabPill"
+                  className="absolute inset-0 bg-blue-600/10 dark:bg-blue-500/20 rounded-2xl"
+                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                />
+              )}
+              <div className="relative z-10 flex flex-col items-center justify-center">
+                <DollarSign className="h-4 w-4 mb-0.5" />
+                <span className="text-[10px]">รายจ่าย ({expenses.length})</span>
+              </div>
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => handleSwitchTab('analytics')}
-            className={`relative flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
-              activeTab === 'analytics'
-                ? 'text-blue-600 dark:text-blue-400 font-black'
-                : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
-            }`}
-          >
-            {activeTab === 'analytics' && (
-              <motion.div
-                layoutId="activeBottomTabPill"
-                className="absolute inset-0 bg-blue-600/10 dark:bg-blue-500/20 rounded-2xl"
-                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-              />
-            )}
-            <div className="relative z-10 flex flex-col items-center justify-center">
-              <PieChart className="h-4 w-4 mb-0.5" />
-              <span className="text-[10px]">สถิติ & งบ</span>
-            </div>
-          </button>
+          {canSeeMoney && (
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('analytics')}
+              className={`relative flex flex-col items-center justify-center py-1.5 rounded-2xl transition-all cursor-pointer ${
+                activeTab === 'analytics'
+                  ? 'text-blue-600 dark:text-blue-400 font-black'
+                  : 'text-slate-500 dark:text-slate-400 font-semibold active:scale-95'
+              }`}
+            >
+              {activeTab === 'analytics' && (
+                <motion.div
+                  layoutId="activeBottomTabPill"
+                  className="absolute inset-0 bg-blue-600/10 dark:bg-blue-500/20 rounded-2xl"
+                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                />
+              )}
+              <div className="relative z-10 flex flex-col items-center justify-center">
+                <PieChart className="h-4 w-4 mb-0.5" />
+                <span className="text-[10px]">สถิติ & งบ</span>
+              </div>
+            </button>
+          )}
 
           <button
             type="button"
@@ -2803,8 +3097,8 @@ export default function TripDetailPage() {
         document.body
       )}
 
-      {/* 13. Share Modal */}
-      {showShareModal && mounted && createPortal(
+      {/* 13. Share Modal (Owner Only) */}
+      {showShareModal && isOwner && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
           <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue animate-in zoom-in-95 duration-200 space-y-4 max-h-[90dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain">
             
@@ -2842,14 +3136,22 @@ export default function TripDetailPage() {
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   สำหรับเพื่อนที่มีบัญชีแล้ว หรือต้องการเปิดดูรายละเอียดทริปทันที
                 </p>
-                <button
-                  type="button"
-                  onClick={copyInviteLink}
-                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[42px] touch-manipulation"
-                >
-                  {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  <span>{copiedLink ? 'คัดลอกลิงก์เรียบร้อยแล้ว!' : 'คัดลอกลิงก์ตรง (Direct Link)'}</span>
-                </button>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] text-xs font-mono text-slate-900 dark:text-white select-all"
+                    value={typeof window !== 'undefined' ? `${window.location.origin}/trips/${tripId}?invite=${tripId}` : ''}
+                  />
+                  <button
+                    type="button"
+                    onClick={copyInviteLink}
+                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer active:scale-95 flex items-center gap-1.5"
+                  >
+                    {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    <span>{copiedLink ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438] space-y-2">
@@ -2859,14 +3161,22 @@ export default function TripDetailPage() {
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   เพื่อนที่ยังไม่มีบัญชี กดลิงก์นี้เพื่อสมัครสมาชิกแล้วระบบจะดึงเข้ากลุ่มทริปนี้ให้อัตโนมัติ
                 </p>
-                <button
-                  type="button"
-                  onClick={copyAuthInviteLink}
-                  className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-400 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 min-h-[42px] touch-manipulation"
-                >
-                  {copiedAuthLink ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-blue-500" />}
-                  <span>{copiedAuthLink ? 'คัดลอกลิงก์เชิญเรียบร้อยแล้ว!' : 'คัดลอกลิงก์เชิญสมาชิกใหม่'}</span>
-                </button>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] text-xs font-mono text-slate-900 dark:text-white select-all"
+                    value={typeof window !== 'undefined' ? `${window.location.origin}/login?invite=${tripId}` : ''}
+                  />
+                  <button
+                    type="button"
+                    onClick={copyAuthInviteLink}
+                    className="px-4 py-2.5 bg-white dark:bg-[#151b2b] border border-slate-200 dark:border-[#222c42] hover:border-blue-400 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer active:scale-95 flex items-center gap-1.5"
+                  >
+                    {copiedAuthLink ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-blue-500" />}
+                    <span>{copiedAuthLink ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -3023,6 +3333,21 @@ export default function TripDetailPage() {
         }}
         fxRate={fxRate}
       />
+
+      {/* 14. Transfer Ownership Modal with Password Confirmation */}
+      {showTransferModal && mounted && (
+        <TransferOwnershipModal
+          isOpen={showTransferModal}
+          onClose={() => {
+            setShowTransferModal(false);
+            setTransferTargetMember(null);
+          }}
+          targetMember={transferTargetMember}
+          tripName={trip?.name || trip?.title}
+          currentUserEmail={currentUser?.email || ''}
+          onConfirmTransfer={handleConfirmTransferOwnership}
+        />
+      )}
 
     </div>
   );

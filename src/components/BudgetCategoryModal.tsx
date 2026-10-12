@@ -10,6 +10,7 @@ import {
   Divide, Calculator, ArrowDownRight, ArrowUpRight, RefreshCw,
   Building, Plane, Ticket, Utensils, Train, ShoppingBag, Box, HelpCircle
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { 
   CategoryItem, 
   CategoryBudgetMap, 
@@ -246,10 +247,10 @@ export default function BudgetCategoryModal({
           onClose();
         }, 500);
       } else {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
+        toast.error('เกิดข้อผิดพลาด: ' + error.message);
       }
     } catch (err: any) {
-      alert('บันทึกงบประมาณล้มเหลว: ' + err.message);
+      toast.error('บันทึกงบประมาณล้มเหลว: ' + err.message);
     } finally {
       setSavingTotal(false);
     }
@@ -266,7 +267,7 @@ export default function BudgetCategoryModal({
     setBudgetSuccess(true);
     triggerConfetti();
     onUpdated();
-    onShowToast?.('บันทึกงบประมาณแยกหมวดเรียบร้อยแล้ว ✨', 'success');
+    toast.success('บันทึกงบประมาณแยกหมวดเรียบร้อยแล้ว ✨');
     setTimeout(() => {
       setBudgetSuccess(false);
       onClose();
@@ -278,7 +279,7 @@ export default function BudgetCategoryModal({
     if (!trip?.id) return;
     const sum = totalCatAllocated;
     if (sum <= 0) {
-      alert('กรุณาใส่ตัวเลขในรายการค่าที่พัก ค่าตั๋ว หรือหมวดหมู่อื่นๆ ก่อนนำมาตั้งเป็นงบรวม');
+      toast.warning('กรุณาใส่ตัวเลขในรายการค่าที่พัก ค่าตั๋ว หรือหมวดหมู่อื่นๆ ก่อนนำมาตั้งเป็นงบรวม');
       return;
     }
     setTotalBudget(String(sum));
@@ -289,13 +290,13 @@ export default function BudgetCategoryModal({
       setBudgetSuccess(true);
       triggerConfetti();
       onUpdated();
-      onShowToast?.('นำผลรวมหมวดหมูไปตั้งเป็นงบรวมแล้ว 🎯', 'success');
+      toast.success('นำผลรวมหมวดหมู่ไปตั้งเป็นงบรวมแล้ว 🎯');
       setTimeout(() => {
         setBudgetSuccess(false);
         onClose();
       }, 500);
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
       setSavingTotal(false);
     }
@@ -312,7 +313,7 @@ export default function BudgetCategoryModal({
     setBudgetSuccess(true);
     triggerConfetti();
     onUpdated();
-    onShowToast?.('บันทึกงบประมาณรายบุคคลเรียบร้อยแล้ว 👥', 'success');
+    toast.success('บันทึกงบประมาณรายบุคคลเรียบร้อยแล้ว 👥');
     setTimeout(() => {
       setBudgetSuccess(false);
       onClose();
@@ -323,7 +324,7 @@ export default function BudgetCategoryModal({
   const handleAutoSplitMembers = () => {
     const total = Number(totalBudget || 0) > 0 ? Number(totalBudget) : totalCatAllocated;
     if (total <= 0) {
-      alert('กรุณากำหนดงบรวมหรือระบุรายการค่าใช้จ่ายก่อนทำการหารเฉลี่ย');
+      toast.warning('กรุณากำหนดงบรวมหรือระบุรายการค่าใช้จ่ายก่อนทำการหารเฉลี่ย');
       return;
     }
     const perPerson = Math.floor(total / allMembersList.length);

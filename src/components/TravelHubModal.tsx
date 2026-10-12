@@ -13,6 +13,7 @@ import {
   Luggage, Info, Maximize2, ShieldAlert
 } from 'lucide-react';
 import { triggerConfetti } from '@/lib/confetti';
+import { toast } from 'sonner';
 import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
 
 interface TravelHubModalProps {
@@ -277,9 +278,10 @@ export default function TravelHubModal({
 
         triggerConfetti();
         setTicketTitle('');
+        toast.success('บันทึกตั๋ว / QR Code เรียบร้อยแล้ว 🎟️');
       } catch (err) {
         console.error('Save pass err', err);
-        alert('ไม่สามารถบันทึกตั๋วได้');
+        toast.error('ไม่สามารถบันทึกตั๋วได้');
       } finally {
         setUploadingTicket(false);
       }
@@ -296,6 +298,7 @@ export default function TravelHubModal({
         `travel_hub_tickets_${trip?.id}`,
         JSON.stringify(updated.map(({ imageUrl, ...rest }) => rest))
       );
+      toast.success('ลบตั๋วเรียบร้อยแล้ว');
     } catch (e) {
       console.error('Delete pass err', e);
     }
@@ -311,7 +314,7 @@ export default function TravelHubModal({
 
   const speakJapanese = (phrase: PhraseItem) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert('เบราว์เซอร์ของคุณไม่รองรับระบบออกเสียง');
+      toast.warning('เบราว์เซอร์ของคุณไม่รองรับระบบออกเสียง');
       return;
     }
 
@@ -1172,7 +1175,7 @@ export default function TravelHubModal({
                 type="button"
                 onClick={() => {
                   triggerConfetti();
-                  alert('🎉 แคปหน้าจอการ์ดใบนี้เพื่อนำไปโพสต์ลง Instagram Story หรือแชร์เข้ากลุ่ม LINE ได้ทันที!');
+                  toast.info('🎉 แคปหน้าจอการ์ดใบนี้เพื่อนำไปโพสต์ลง Instagram Story หรือแชร์เข้ากลุ่ม LINE ได้ทันที!');
                 }}
                 className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#e79b71] to-amber-500 hover:from-[#d98254] hover:to-amber-600 text-white font-black text-xs sm:text-sm shadow-lg shadow-[#e79b71]/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >

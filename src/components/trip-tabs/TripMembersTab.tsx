@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Users, Share2, Trash2, Crown, Sparkles } from 'lucide-react';
+import { Users, Share2, Trash2, Crown, Sparkles, Shield, Eye, Edit3, MapPin } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
+import { TripRole } from '@/lib/permissions';
 
 interface TripMembersTabProps {
   members: any[];
@@ -10,8 +11,9 @@ interface TripMembersTabProps {
   currentUser: any;
   trip: any;
   setShowShareModal: (show: boolean) => void;
-  handleUpdateMemberRole: (memberId: string, role: 'editor' | 'viewer') => void;
+  handleUpdateMemberRole: (memberId: string, role: TripRole) => void;
   handleRemoveMember: (memberId: string, memberName: string) => void;
+  onInitiateTransferOwnership?: (member: any) => void;
 }
 
 export function TripMembersTab({
@@ -22,6 +24,7 @@ export function TripMembersTab({
   setShowShareModal,
   handleUpdateMemberRole,
   handleRemoveMember,
+  onInitiateTransferOwnership,
 }: TripMembersTabProps) {
   return (
     <div className="space-y-4">
@@ -37,17 +40,37 @@ export function TripMembersTab({
                 <Sparkles className="h-3.5 w-3.5 text-amber-500" />
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                {isOwner ? '👑 คุณเป็นเจ้าของทริป สามารถกำหนดสิทธิ์ให้เพื่อนแก้ไขหรือดูได้อย่างเดียว' : 'รายชื่อเพื่อนร่วมทริปทุกคน'}
+                {isOwner
+                  ? '👑 คุณเป็นเจ้าของทริป สามารถกำหนดสิทธิ์ให้เพื่อนดูเฉพาะแผนเที่ยว หรือดู/แก้ไขค่าใช้จ่ายได้'
+                  : 'รายชื่อเพื่อนร่วมทริปและสิทธิ์การเข้าถึง'}
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => setShowShareModal(true)}
-            className="btn-luxury-primary px-4 py-2 rounded-xl text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            <Share2 className="h-3.5 w-3.5" /> ชวนเพื่อนเข้าทริป
-          </button>
+          {isOwner && (
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="btn-luxury-primary px-4 py-2 rounded-xl text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Share2 className="h-3.5 w-3.5" /> ชวนเพื่อนเข้าทริป
+            </button>
+          )}
+        </div>
+
+        {/* Roles explainer banner */}
+        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+          <div className="flex items-start gap-1.5">
+            <span className="text-emerald-500 font-bold shrink-0">✏️ Editor:</span>
+            <span className="text-slate-500 dark:text-slate-400">แก้ไขแผนและบันทึกค่าใช้จ่ายได้</span>
+          </div>
+          <div className="flex items-start gap-1.5">
+            <span className="text-blue-500 font-bold shrink-0">👁️ Viewer:</span>
+            <span className="text-slate-500 dark:text-slate-400">ดูได้ทั้งแผนและรายจ่าย (ห้ามแก้ไข)</span>
+          </div>
+          <div className="flex items-start gap-1.5">
+            <span className="text-amber-500 font-bold shrink-0">🗺️ Plan Only:</span>
+            <span className="text-slate-500 dark:text-slate-400">ดูเฉพาะแผนเที่ยว (ซ่อนเรื่องเงินทั้งหมด)</span>
+          </div>
         </div>
 
         <div className="space-y-2.5 pt-1">
@@ -85,33 +108,57 @@ export function TripMembersTab({
                       )}
                     </div>
                     <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
-                      {isTripOwner ? 'สิทธิ์เต็ม (ผู้สร้างทริป)' : m.role === 'editor' ? '✏️ สิทธิ์แก้ไขแผนและรายจ่าย' : '👁️ สิทธิ์เปิดดูอย่างเดียว'}
+                      {isTripOwner
+                        ? '👑 สิทธิ์เต็ม (ผู้สร้างทริป)'
+                        : m.role === 'editor'
+                        ? '✏️ สิทธิ์แก้ไขแผนและรายจ่าย'
+                        : m.role === 'plan_only'
+                        ? '🗺️ สิทธิ์ดูเฉพาะแผนเที่ยว (ซ่อนเงิน/งบ)'
+                        : '👁️ สิทธิ์เปิดดูอย่างเดียว (แผน + รายจ่าย)'}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                   {isOwner && !isTripOwner ? (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
                       <select
-                        value={m.role}
-                        onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as any)}
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-600 shadow-2xs transition-colors"
+                        value={m.role || 'viewer'}
+                        onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as TripRole)}
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-600 shadow-2xs transition-colors"
                       >
-                        <option value="editor">✏️ ผู้แก้ไข (Editor)</option>
-                        <option value="viewer">👁️ ผู้เข้าชม (Viewer)</option>
+                        <option value="editor">✏️ Editor</option>
+                        <option value="viewer">👁️ Viewer</option>
+                        <option value="plan_only">🗺️ Plan Only</option>
                       </select>
+                      {onInitiateTransferOwnership && (
+                        <button
+                          type="button"
+                          onClick={() => onInitiateTransferOwnership(m)}
+                          className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/25 transition-all cursor-pointer flex items-center gap-1 active:scale-95 shadow-2xs"
+                          title="โอนสิทธิ์เจ้าของทริปให้สมาชิกคนนี้"
+                        >
+                          <Crown className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">โอนสิทธิ์</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => handleRemoveMember(m.id, mName)}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-all cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-900/50"
-                        title="ลบสมาชิก"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-all cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-900/50"
+                        title="ลบสมาชิกออกจากทริป"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
                     <span className="px-3 py-1 rounded-xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] text-xs font-extrabold text-blue-600 dark:text-blue-400 font-mono shadow-2xs">
-                      {isTripOwner ? 'Owner 👑' : m.role === 'editor' ? 'Editor ✏️' : 'Viewer 👁️'}
+                      {isTripOwner
+                        ? 'Owner 👑'
+                        : m.role === 'editor'
+                        ? 'Editor ✏️'
+                        : m.role === 'plan_only'
+                        ? 'Plan Only 🗺️'
+                        : 'Viewer 👁️'}
                     </span>
                   )}
                 </div>

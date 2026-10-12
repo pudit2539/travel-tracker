@@ -61,6 +61,7 @@ interface TripPlanTabProps {
   currentUser?: any;
   onRefreshTrip?: () => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
+  canSeeMoney?: boolean;
 }
 
 export function TripPlanTab({
@@ -95,6 +96,7 @@ export function TripPlanTab({
   currentUser,
   onRefreshTrip,
   onShowToast,
+  canSeeMoney = true,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
 
@@ -131,6 +133,7 @@ export function TripPlanTab({
         itineraryCount={itinerary.length} 
         totalSpent={heroDisplayData.spent} 
         currency={tripBaseCurrency} 
+        showBudget={canSeeMoney}
       />
 
       {/* 2. Apple Wallet Style Flight Boarding Pass */}

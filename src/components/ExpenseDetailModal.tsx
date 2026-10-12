@@ -8,6 +8,7 @@ import {
   Image as ImageIcon, Calendar, DollarSign, Wallet, 
   Tag, Loader2, ZoomIn, ArrowRight, Users, UserCheck, Download
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { CategoryItem, getCategoryMeta } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
@@ -222,7 +223,7 @@ export function ExpenseDetailModal({
       // Save dataUrl directly so all devices and mobile can load and download the photo
       setForm((prev) => ({ ...prev, receipt_url: result.dataUrl }));
     } catch (err) {
-      alert('ไม่สามารถอัปโหลดรูปภาพได้');
+      toast.error('ไม่สามารถอัปโหลดรูปภาพได้');
     } finally {
       setUploadingReceipt(false);
     }
@@ -302,12 +303,12 @@ export function ExpenseDetailModal({
       return;
     }
     if (!form.title.trim()) {
-      alert('กรุณากรอกชื่อรายการ / ร้านค้า');
+      toast.error('กรุณากรอกชื่อรายการ / ร้านค้า');
       return;
     }
     const numAmount = parseFloat(form.amount);
     if (isNaN(numAmount) || numAmount < 0) {
-      alert('กรุณากรอกจำนวนเงินให้ถูกต้อง');
+      toast.error('กรุณากรอกจำนวนเงินให้ถูกต้อง');
       return;
     }
 
@@ -351,8 +352,9 @@ export function ExpenseDetailModal({
 
       setIsEditing(false);
       onClose();
+      toast.success('บันทึกการแก้ไขค่าใช้จ่ายเรียบร้อยแล้ว ✨');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการบันทึก: ' + (err?.message || err));
+      toast.error('เกิดข้อผิดพลาดในการบันทึก: ' + (err?.message || err));
     } finally {
       setSaving(false);
     }

@@ -2,6 +2,7 @@ import type { Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import PWAHandler from '@/components/PWAHandler';
+import { Toaster } from 'sonner';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -44,6 +45,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <PWAHandler />
           {children}
+          <Toaster 
+            position="top-center" 
+            richColors 
+            closeButton
+            theme="system"
+            toastOptions={{
+              className: '!rounded-2xl !backdrop-blur-xl !shadow-2xl !border !border-white/20 !font-sans',
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

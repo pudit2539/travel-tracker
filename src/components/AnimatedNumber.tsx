@@ -40,7 +40,7 @@ export function AnimatedNumber({
   }, [springVal, maximumFractionDigits, prefix, suffix]);
 
   return (
-    <span ref={spanRef} className={className}>
+    <span ref={spanRef} className={`tabular-nums select-none ${className}`}>
       {prefix}
       {(Number(value) || 0).toLocaleString(undefined, { maximumFractionDigits })}
       {suffix}

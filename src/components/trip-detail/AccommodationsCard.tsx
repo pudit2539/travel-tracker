@@ -10,6 +10,7 @@ import {
   X, AlertCircle, BookmarkCheck, Upload, Eye, Download, Image as ImageIcon,
   Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { 
   AccommodationStay, 
   AccommodationVoucherFile,
@@ -280,7 +281,7 @@ export function AccommodationsCard({
     if (!file) return;
 
     if (file.size > 20 * 1024 * 1024) {
-      alert('ขนาดไฟล์ต้องไม่เกิน 20 MB');
+      toast.error('ขนาดไฟล์ต้องไม่เกิน 20 MB');
       return;
     }
 
@@ -298,7 +299,7 @@ export function AccommodationsCard({
       setIsReadingFile(false);
     };
     reader.onerror = () => {
-      alert('เกิดข้อผิดพลาดในการอ่านไฟล์');
+      toast.error('เกิดข้อผิดพลาดในการอ่านไฟล์');
       setIsReadingFile(false);
     };
     reader.readAsDataURL(file);
@@ -336,9 +337,9 @@ export function AccommodationsCard({
     }
     if (fileToDownload.dataUrl) {
       downloadVoucherFile(fileToDownload, stay.name);
-      onShowToast?.(`ดาวน์โหลดใบจอง "${stay.name}" เรียบร้อยแล้ว 📥`, 'success');
+      toast.success(`ดาวน์โหลดใบจอง "${stay.name}" เรียบร้อยแล้ว 📥`);
     } else {
-      alert('ไม่พบไฟล์เอกสารบนอุปกรณ์นี้');
+      toast.error('ไม่พบไฟล์เอกสารบนอุปกรณ์นี้');
     }
   };
 
@@ -425,7 +426,7 @@ export function AccommodationsCard({
   // Create an expense for a stay (Safe date parsing)
   const handleCreateExpenseForStay = async (stay: AccommodationStay) => {
     if (!stay.price || stay.price <= 0) {
-      alert('ที่พักนี้ยังไม่ได้ระบุราคา กรุณาแก้ไขเพื่อใส่ราคาก่อนบันทึกเป็นรายจ่าย');
+      toast.warning('ที่พักนี้ยังไม่ได้ระบุราคา กรุณาแก้ไขเพื่อใส่ราคาก่อนบันทึกเป็นรายจ่าย');
       return;
     }
     try {
@@ -461,9 +462,9 @@ export function AccommodationsCard({
       if (onExpenseCreated) {
         onExpenseCreated();
       }
-      onShowToast?.('บันทึกค่าที่พักลงในรายการค่าใช้จ่ายเรียบร้อยแล้ว! 💰', 'success');
+      toast.success('บันทึกค่าที่พักลงในรายการค่าใช้จ่ายเรียบร้อยแล้ว! 💰');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการบันทึกรายจ่าย: ' + err.message);
+      toast.error('เกิดข้อผิดพลาดในการบันทึกรายจ่าย: ' + err.message);
     }
   };
 
@@ -471,7 +472,7 @@ export function AccommodationsCard({
   const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
-      alert('กรุณากรอกชื่อที่พัก / โรงแรม');
+      toast.error('กรุณากรอกชื่อที่พัก / โรงแรม');
       return;
     }
 
@@ -566,12 +567,12 @@ export function AccommodationsCard({
 
       triggerConfetti();
       setShowModal(false);
-      onShowToast?.(editingStay ? 'แก้ไขข้อมูลที่พักเรียบร้อยแล้ว ✨' : 'บันทึกที่พักใหม่เรียบร้อยแล้ว 🏨', 'success');
+      toast.success(editingStay ? 'แก้ไขข้อมูลที่พักเรียบร้อยแล้ว ✨' : 'บันทึกที่พักใหม่เรียบร้อยแล้ว 🏨');
       if (onExpenseCreated) {
         onExpenseCreated();
       }
     } catch (err: any) {
-      alert('บันทึกที่พักไม่สำเร็จ: ' + err.message);
+      toast.error('บันทึกที่พักไม่สำเร็จ: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }

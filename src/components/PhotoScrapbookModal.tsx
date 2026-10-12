@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { PhotoMemory, getTripPhotos, saveTripPhoto, deleteTripPhoto } from '@/lib/photos';
 import { triggerConfetti } from '@/lib/confetti';
+import { toast } from 'sonner';
 
 interface PhotoScrapbookModalProps {
   isOpen: boolean;
@@ -77,7 +78,7 @@ export default function PhotoScrapbookModal({
   const handleAddPhoto = (e: React.FormEvent) => {
     e.preventDefault();
     if (!imageUrl) {
-      alert('กรุณาเลือกรูปภาพ');
+      toast.error('กรุณาเลือกรูปภาพ');
       return;
     }
 
@@ -95,6 +96,7 @@ export default function PhotoScrapbookModal({
     setDateLabel('');
     setShowAddForm(false);
     triggerConfetti();
+    toast.success('บันทึกรูปภาพเรียบร้อยแล้ว 📸');
   };
 
   const handleDeletePhoto = (photoId: string) => {

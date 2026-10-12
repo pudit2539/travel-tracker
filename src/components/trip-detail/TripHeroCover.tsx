@@ -3,15 +3,23 @@
 
 import React, { useMemo } from 'react';
 import { Calendar, MapPin, Sparkles, Clock, Heart, Compass } from 'lucide-react';
+import AnimatedNumber from '@/components/AnimatedNumber';
 
 interface TripHeroCoverProps {
   trip: any;
   itineraryCount?: number;
   totalSpent?: number;
   currency?: string;
+  showBudget?: boolean;
 }
 
-export function TripHeroCover({ trip, itineraryCount = 0, totalSpent = 0, currency = 'JPY' }: TripHeroCoverProps) {
+export function TripHeroCover({ 
+  trip, 
+  itineraryCount = 0, 
+  totalSpent = 0, 
+  currency = 'JPY',
+  showBudget = true 
+}: TripHeroCoverProps) {
   // Destination Cover Image detection based on trip name or country
   const coverImage = useMemo(() => {
     if (trip?.cover_image) return trip.cover_image;
@@ -162,10 +170,21 @@ export function TripHeroCover({ trip, itineraryCount = 0, totalSpent = 0, curren
           </div>
 
           <div className="hidden sm:block text-right">
-            <span className="text-[10px] uppercase font-bold text-slate-300 block">ยอดใช้จ่ายรวม</span>
-            <span className="text-base font-black text-amber-300 font-mono">
-              {totalSpent.toLocaleString()} {currency}
-            </span>
+            {showBudget ? (
+              <>
+                <span className="text-[10px] uppercase font-bold text-slate-300 block">ยอดใช้จ่ายรวม</span>
+                <span className="text-base font-black text-amber-300 font-mono">
+                  <AnimatedNumber value={totalSpent} suffix={` ${currency}`} />
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-[10px] uppercase font-bold text-emerald-300 block">โหมดการเข้าชม</span>
+                <span className="text-xs font-bold text-emerald-200 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full inline-flex items-center gap-1 shadow-sm backdrop-blur-xs mt-0.5">
+                  🗺️ ดูเฉพาะแผนเที่ยว
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>

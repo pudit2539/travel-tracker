@@ -7,6 +7,7 @@ import {
   ShieldCheck, AlertTriangle, CheckCircle2, Clock, 
   Trash2, Plus, Loader2, FileJson, ArrowDownToLine
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { 
   TripSnapshot, 
   getTripSnapshots, 
@@ -146,7 +147,7 @@ export default function VersionRollbackModal({
         const content = event.target?.result as string;
         const parsed = parseBackupJSON(content);
         if (!parsed) {
-          alert('ไฟล์สำรองไม่ถูกต้อง หรือโครงสร้างไม่ตรง');
+          toast.error('ไฟล์สำรองไม่ถูกต้อง หรือโครงสร้างไม่ตรง');
           return;
         }
 
@@ -163,15 +164,15 @@ export default function VersionRollbackModal({
           const res = await restoreTripSnapshot(snap);
           setCreating(false);
           if (res.success) {
-            alert('🎉 นำเข้าข้อมูลสำรองสำเร็จเรียบร้อย!');
+            toast.success('🎉 นำเข้าข้อมูลสำรองสำเร็จเรียบร้อย!');
             onRestored();
             onClose();
           } else {
-            alert('เกิดข้อผิดพลาด: ' + res.error);
+            toast.error('เกิดข้อผิดพลาด: ' + res.error);
           }
         }
       } catch (err: any) {
-        alert('อ่านไฟล์ล้มเหลว: ' + err.message);
+        toast.error('อ่านไฟล์ล้มเหลว: ' + err.message);
       }
     };
     reader.readAsText(file);
