@@ -1890,18 +1890,20 @@ export default function TripDetailPage() {
               {currentUser && (
                 <button
                   onClick={async () => {
-                    if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+                    toast.info('กำลังออกจากระบบ...');
+                    try {
+                      await Promise.race([
+                        supabase.auth.signOut(),
+                        new Promise((resolve) => setTimeout(resolve, 600)),
+                      ]);
+                    } catch (e) {
+                      console.error('Signout error', e);
+                    } finally {
                       try {
-                        await supabase.auth.signOut();
-                      } catch (e) {
-                        console.error('Signout error', e);
-                      } finally {
-                        try {
-                          localStorage.clear();
-                          sessionStorage.clear();
-                        } catch {}
-                        window.location.href = '/login';
-                      }
+                        localStorage.clear();
+                        sessionStorage.clear();
+                      } catch {}
+                      window.location.replace('/login');
                     }
                   }}
                   className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-400 hover:text-rose-500 hover:border-rose-300 shadow-2xs transition-all cursor-pointer"

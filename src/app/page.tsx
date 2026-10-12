@@ -542,18 +542,20 @@ export default function HomePage() {
   };
 
   const handleQuickLogout = async () => {
-    if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+    toast.info('กำลังออกจากระบบ...');
+    try {
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((resolve) => setTimeout(resolve, 600)),
+      ]);
+    } catch (err) {
+      console.error('Signout error', err);
+    } finally {
       try {
-        await supabase.auth.signOut();
-      } catch (err) {
-        console.error('Signout error', err);
-      } finally {
-        try {
-          localStorage.clear();
-          sessionStorage.clear();
-        } catch {}
-        window.location.href = '/login';
-      }
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch {}
+      window.location.replace('/login');
     }
   };
 

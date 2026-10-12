@@ -195,20 +195,21 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
-      setLoggingOut(true);
+    setLoggingOut(true);
+    try {
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((resolve) => setTimeout(resolve, 600)),
+      ]);
+    } catch (err) {
+      console.error('Sign out error:', err);
+    } finally {
       try {
-        await supabase.auth.signOut();
-      } catch (err) {
-        console.error('Sign out error:', err);
-      } finally {
-        try {
-          localStorage.clear();
-          sessionStorage.clear();
-        } catch {}
-        onClose();
-        window.location.href = '/login';
-      }
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch {}
+      onClose();
+      window.location.replace('/login');
     }
   };
 

@@ -49,7 +49,7 @@ function LoginForm() {
 
       if (!existing) {
         await supabase.from('trip_members').insert([
-          { trip_id: tripId, user_id: userId, role: 'editor' }
+          { trip_id: tripId, user_id: userId, role: 'plan_only' }
         ]);
       }
     } catch (e) {
