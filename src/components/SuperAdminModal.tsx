@@ -136,6 +136,53 @@ export default function SuperAdminModal({
     }
   };
 
+  // Audit Logs (Chronological system activity feed) - Must be declared at top level before any early returns!
+  const auditLogs = useMemo(() => {
+    const logs: Array<{
+      id: string;
+      type: 'trip_create' | 'expense_create';
+      title: string;
+      subtitle: string;
+      actorName: string;
+      actorEmail: string;
+      timestamp: string;
+      meta?: any;
+    }> = [];
+
+    const userMap = new Map(users.map((u) => [u.id, u]));
+    const tripMap = new Map(trips.map((t) => [t.id, t]));
+
+    trips.forEach((t) => {
+      const creator = userMap.get(t.created_by);
+      logs.push({
+        id: `trip_${t.id}`,
+        type: 'trip_create',
+        title: `สร้างทริปใหม่: "${t.name || t.title}"`,
+        subtitle: `ปลายทาง: ${t.destination || t.currency || 'ทริป'} • งบ: ${Number(t.total_budget || 0).toLocaleString()} ${t.currency}`,
+        actorName: creator?.display_name || creator?.email?.split('@')[0] || 'ผู้ใช้',
+        actorEmail: creator?.email || '',
+        timestamp: t.created_at || 'ไม่ระบุ',
+        meta: { tripId: t.id },
+      });
+    });
+
+    recentExpenses.forEach((e) => {
+      const trip = tripMap.get(e.trip_id);
+      logs.push({
+        id: `exp_${e.id}`,
+        type: 'expense_create',
+        title: `ลงบันทึกค่าใช้จ่าย: "${e.title}" (${Number(e.amount || 0).toLocaleString()} ${e.currency || 'THB'})`,
+        subtitle: `ในทริป: "${trip?.name || trip?.title || 'ทริป'}" (หมวด: ${e.category || 'ทั่วไป'})`,
+        actorName: e.payer_name || 'สมาชิก',
+        actorEmail: '',
+        timestamp: e.created_at || e.spent_at || 'ไม่ระบุ',
+        meta: { tripId: e.trip_id },
+      });
+    });
+
+    return logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [trips, recentExpenses, users]);
+
   if (!isOpen) return null;
 
   if (!isUserAdmin) {
@@ -185,53 +232,6 @@ export default function SuperAdminModal({
     }
     return true;
   });
-
-  // Audit Logs (Chronological system activity feed)
-  const auditLogs = useMemo(() => {
-    const logs: Array<{
-      id: string;
-      type: 'trip_create' | 'expense_create';
-      title: string;
-      subtitle: string;
-      actorName: string;
-      actorEmail: string;
-      timestamp: string;
-      meta?: any;
-    }> = [];
-
-    const userMap = new Map(users.map((u) => [u.id, u]));
-    const tripMap = new Map(trips.map((t) => [t.id, t]));
-
-    trips.forEach((t) => {
-      const creator = userMap.get(t.created_by);
-      logs.push({
-        id: `trip_${t.id}`,
-        type: 'trip_create',
-        title: `สร้างทริปใหม่: "${t.name || t.title}"`,
-        subtitle: `ปลายทาง: ${t.destination || t.currency || 'ทริป'} • งบ: ${Number(t.total_budget || 0).toLocaleString()} ${t.currency}`,
-        actorName: creator?.display_name || creator?.email?.split('@')[0] || 'ผู้ใช้',
-        actorEmail: creator?.email || '',
-        timestamp: t.created_at || 'ไม่ระบุ',
-        meta: { tripId: t.id },
-      });
-    });
-
-    recentExpenses.forEach((e) => {
-      const trip = tripMap.get(e.trip_id);
-      logs.push({
-        id: `exp_${e.id}`,
-        type: 'expense_create',
-        title: `ลงบันทึกค่าใช้จ่าย: "${e.title}" (${Number(e.amount || 0).toLocaleString()} ${e.currency || 'THB'})`,
-        subtitle: `ในทริป: "${trip?.name || trip?.title || 'ทริป'}" (หมวด: ${e.category || 'ทั่วไป'})`,
-        actorName: e.payer_name || 'สมาชิก',
-        actorEmail: '',
-        timestamp: e.created_at || e.spent_at || 'ไม่ระบุ',
-        meta: { tripId: e.trip_id },
-      });
-    });
-
-    return logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [trips, recentExpenses, users]);
 
   const filteredAuditLogs = auditLogs.filter((log) => {
     const q = auditSearch.toLowerCase().trim();
