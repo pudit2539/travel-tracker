@@ -745,7 +745,7 @@ export default function TripDetailPage() {
         if (!error) {
           setShowActivityModal(false);
           fetchTripData();
-          toast.success(editingActivity ? 'แก้ไขกิจกรรมเรียบร้อยแล้ว ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยวแล้ว 🗺️');
+          toast.success(editingActivity ? 'แก้ไขกิจกรรมเรียบร้อยแล้ว' : 'เพิ่มกิจกรรมในแผนเที่ยวแล้ว');
         } else {
           toast.error('เกิดข้อผิดพลาดในการแก้ไข: ' + error.message);
         }
@@ -775,7 +775,7 @@ export default function TripDetailPage() {
         if (!error) {
           setShowActivityModal(false);
           fetchTripData();
-          toast.success('เพิ่มกิจกรรมในแผนเที่ยวแล้ว 🗺️');
+          toast.success('เพิ่มกิจกรรมในแผนเที่ยวแล้ว');
         } else {
           toast.error('เกิดข้อผิดพลาดในการเพิ่มกิจกรรม: ' + error.message);
         }
@@ -837,7 +837,7 @@ export default function TripDetailPage() {
     const { error } = await supabase.from('itinerary_items').delete().eq('id', id);
     if (!error) {
       fetchTripData();
-      showToast('ลบกิจกรรมออกจากแผนเที่ยวแล้ว 🗑️', 'info');
+      showToast('ลบกิจกรรมออกจากแผนเที่ยวแล้ว', 'info');
     }
   };
 
@@ -2664,7 +2664,7 @@ export default function TripDetailPage() {
                     className="inline-flex items-center gap-1 font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 cursor-pointer active:scale-95"
                   >
                     <Sparkles className="h-3 w-3" />
-                    <span>{hasSavedGeminiKey ? 'Gemini Key (เชื่อมต่อแล้ว ✨)' : '🔑 ตั้งค่า AI Key'}</span>
+                    <span>{hasSavedGeminiKey ? 'Gemini Key (เชื่อมต่อแล้ว)' : 'ตั้งค่า AI Key'}</span>
                   </button>
                 </div>
 
@@ -2688,7 +2688,7 @@ export default function TripDetailPage() {
                         ถ่ายรูปใบเสร็จ หรือเลือกรูปจากโทรศัพท์
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                        AI ช่วยเติมชื่อร้าน ยอดเงิน และรายการสินค้าให้อัตโนมัติ ✨
+                        AI ช่วยเติมชื่อร้าน ยอดเงิน และรายการสินค้าให้อัตโนมัติ
                       </span>
                     </>
                   )}
@@ -2993,7 +2993,7 @@ export default function TripDetailPage() {
                     <Loader2 className="h-4 w-4 animate-spin" /> กำลังบันทึก...
                   </>
                 ) : (
-                  splitAsSeparateExpenses && scannedData.items?.length > 0 ? 'แยกบันทึกรายคน ✨' : 'บันทึกรายการ'
+                  splitAsSeparateExpenses && scannedData.items?.length > 0 ? 'แยกบันทึกรายคน' : 'บันทึกรายการ'
                 )}
               </button>
             </div>
@@ -3008,8 +3008,8 @@ export default function TripDetailPage() {
           <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
               <div>
-                <h2 className="text-base font-black text-slate-900 dark:text-slate-100">
-                  {editingActivity ? 'แก้ไขกิจกรรม ✏️' : 'เพิ่มกิจกรรมในแผนเที่ยว 🗺️'}
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  {editingActivity ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรมในแผนเที่ยว'}
                 </h2>
               </div>
               <button

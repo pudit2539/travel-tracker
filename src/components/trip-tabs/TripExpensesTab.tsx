@@ -441,7 +441,7 @@ export function TripExpensesTab({
               title="ส่งออกรายการค่าใช้จ่ายทั้งหมดเป็นไฟล์ Excel (.xlsx)"
             >
               <Download className="h-4 w-4 shrink-0" />
-              <span className="truncate">Export Excel 📊</span>
+              <span className="truncate">Export Excel</span>
             </button>
           </div>
         </div>

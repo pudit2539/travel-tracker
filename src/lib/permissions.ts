@@ -36,28 +36,28 @@ export function isSuperAdmin(user?: UserLike | null, profile?: ProfileLike | nul
 export const ROLE_INFO: Record<TripRole, { label: string; badge: string; description: string; canEdit: boolean; canSeeMoney: boolean }> = {
   owner: {
     label: 'เจ้าของทริป (Owner)',
-    badge: '👑 เจ้าของ',
+    badge: 'Owner',
     description: 'ควบคุมได้ทั้งหมด จัดการแผน, ค่าใช้จ่าย, สมาชิก และการลบทริป',
     canEdit: true,
     canSeeMoney: true,
   },
   editor: {
     label: 'ผู้แก้ไข (Editor)',
-    badge: '✏️ ผู้แก้ไข',
+    badge: 'Editor',
     description: 'แก้ไขและเพิ่มข้อมูลได้ทั้งแผนเที่ยวและรายการค่าใช้จ่าย',
     canEdit: true,
     canSeeMoney: true,
   },
   viewer: {
     label: 'ผู้เข้าชม (Viewer)',
-    badge: '👁️ ผู้เข้าชม',
+    badge: 'Viewer',
     description: 'ดูได้ทั้งแผนเที่ยวและค่าใช้จ่าย/งบประมาณ แต่ไม่สามารถแก้ไขได้',
     canEdit: false,
     canSeeMoney: true,
   },
   plan_only: {
     label: 'ดูเฉพาะแผนเที่ยว (Plan Only)',
-    badge: '🗺️ ดูเฉพาะแผน',
+    badge: 'Plan Only',
     description: 'ดูได้เฉพาะแผนเที่ยวเท่านั้น ซ่อนแท็บค่าใช้จ่าย งบประมาณ และการเงินทั้งหมด',
     canEdit: false,
     canSeeMoney: false,

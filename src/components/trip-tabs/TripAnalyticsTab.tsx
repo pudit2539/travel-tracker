@@ -576,8 +576,12 @@ export function TripAnalyticsTab({
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 {convertedTotalBudget > 0 ? (overBudget > 0 ? 'เกินงบประมาณ' : 'งบคงเหลือ') : 'สถานะงบทริป'}
               </span>
-              <span className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
-                {convertedTotalBudget > 0 ? (overBudget > 0 ? '⚠️' : '💎') : '✨'}
+              <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs ${
+                convertedTotalBudget > 0 
+                  ? (overBudget > 0 ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400')
+                  : 'bg-slate-100 dark:bg-[#1a2133] text-slate-500'
+              }`}>
+                {convertedTotalBudget > 0 ? (overBudget > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />) : <Sliders className="h-3.5 w-3.5" />}
               </span>
             </div>
             <div className={`text-xl sm:text-2xl font-black font-mono tracking-tight text-left ${
@@ -589,7 +593,7 @@ export function TripAnalyticsTab({
                   <span className="text-xs font-sans text-slate-500 font-bold">{selectedCurrency}</span>
                 </>
               ) : (
-                <span className="text-xs font-bold text-slate-400 font-sans">ทริปยืดหยุ่น ✨</span>
+                <span className="text-xs font-bold text-slate-400 font-sans">ยังไม่ได้ตั้งเป้างบ</span>
               )}
             </div>
             {convertedTotalBudget > 0 && (

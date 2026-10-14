@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Calendar, MapPin, Sparkles, Clock, Heart, Compass } from 'lucide-react';
+import { Calendar, MapPin, Sparkles, Clock, Compass, Sun, Utensils, Moon, Check } from 'lucide-react';
 import AnimatedNumber from '@/components/AnimatedNumber';
 
 interface TripHeroCoverProps {
@@ -49,7 +49,7 @@ export function TripHeroCover({
     return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80';
   }, [trip]);
 
-  // Trip Countdown / Status Calculation
+  // Trip Countdown / Status Calculation (Clean, No Emojis)
   const tripCountdown = useMemo(() => {
     if (!trip?.start_date) return null;
 
@@ -66,18 +66,18 @@ export function TripHeroCover({
       if (diffDays > 0) {
         return {
           type: 'countdown',
-          text: `⏳ อีก ${diffDays} วันจะออกเดินทาง!`,
-          subtext: `${new Date(trip.start_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} - ${trip.end_date ? new Date(trip.end_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}`,
-          badgeColor: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-blue-500/30 border border-white/20',
+          text: `อีก ${diffDays} วันจะออกเดินทาง`,
+          icon: <Clock className="h-3.5 w-3.5 shrink-0" />,
+          badgeColor: 'bg-blue-600/90 text-white shadow-md border border-white/20',
         };
       }
 
       if (diffDays === 0) {
         return {
           type: 'today',
-          text: '🚀 วันนี้ออกเดินทางแล้ว! ลุยเลยเมี๊ยว!',
-          subtext: 'เปิดแผนเที่ยวแล้วเริ่มเดินทางกันได้เลย',
-          badgeColor: 'bg-emerald-500 text-white animate-pulse',
+          text: 'เริ่มออกเดินทางวันนี้',
+          icon: <Compass className="h-3.5 w-3.5 shrink-0" />,
+          badgeColor: 'bg-emerald-600/90 text-white border border-white/20',
         };
       }
 
@@ -89,45 +89,45 @@ export function TripHeroCover({
           const currentDay = Math.abs(diffDays) + 1;
           return {
             type: 'in_progress',
-            text: `🎌 กำลังเที่ยววันที่ ${currentDay} ของทริป`,
-            subtext: 'ขอให้เที่ยวอย่างมีความสุขและปลอดภัยนะเมี๊ยว',
-            badgeColor: 'bg-purple-600 text-white',
+            text: `กำลังเดินทาง — วันที่ ${currentDay} ของทริป`,
+            icon: <Calendar className="h-3.5 w-3.5 shrink-0" />,
+            badgeColor: 'bg-indigo-600/90 text-white border border-white/20',
           };
         }
       }
 
       return {
         type: 'completed',
-        text: '✨ ทริปความทรงจำอันแสนอบอุ่น',
-        subtext: 'บันทึกภาพถ่ายและเรื่องราวประทับใจ',
-        badgeColor: 'bg-slate-700 text-white',
+        text: 'สิ้นสุดการเดินทาง',
+        icon: <Check className="h-3.5 w-3.5 shrink-0" />,
+        badgeColor: 'bg-slate-700/90 text-white border border-white/10',
       };
     } catch {
       return null;
     }
   }, [trip]);
 
-  // Dynamic Cat Companion Mood Greeting based on current hour
-  const catMoodGreeting = useMemo(() => {
+  // Dynamic Travel Assistant Advice based on current hour (Clean Corporate Style)
+  const assistantGreeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) {
       return {
-        mood: '☀️ อรุณสวัสดิ์ยามเช้า',
-        message: 'วันนี้มีที่เที่ยวให้ไปเช็กอิน เตรียมตัวให้พร้อมแล้วออกลุยกันเลยเมี๊ยว! 🐾',
-        icon: '🐱☕',
+        title: 'ช่วงเช้า: เตรียมพร้อมออกเดินทาง',
+        message: 'ตรวจสอบเวลาเปิด-ปิดของสถานที่และสภาพอากาศก่อนเริ่มเดินทางตามแผน',
+        icon: <Sun className="h-4 w-4 text-amber-500 shrink-0" />,
       };
     }
     if (hour >= 12 && hour < 17) {
       return {
-        mood: '🍜 ช่วงบ่ายชวนชิม',
-        message: 'เดินทางมาครึ่งวันแล้ว อย่าลืมแวะเติมพลังด้วยร้านอาหารแนะนำในแพลนนะเมี๊ยว! 🍱',
-        icon: '🐱🍱',
+        title: 'ช่วงบ่าย: จุดแวะพักและร้านอาหาร',
+        message: 'มีร้านอาหารและจุดพักผ่อนแนะนำตามเส้นทางในแผนเดินทางของคุณ',
+        icon: <Utensils className="h-4 w-4 text-blue-500 shrink-0" />,
       };
     }
     return {
-      mood: '🌙 ยามค่ำคืนแสนสุข',
-      message: 'วันนี้เที่ยวสนุกมั้ย? อย่าลืมจดค่าใช้จ่ายและบันทึกภาพความทรงจำลงสมุดนะเมี๊ยว 📸',
-      icon: '🐱🌙',
+      title: 'ช่วงค่ำ: ตรวจสอบและสรุปรายจ่ายประจำวัน',
+      message: 'ตรวจสอบรายการค่าใช้จ่ายและบันทึกข้อมูลเพื่อความถูกต้องของงบประมาณ',
+      icon: <Moon className="h-4 w-4 text-indigo-400 shrink-0" />,
     };
   }, []);
 
@@ -144,10 +144,11 @@ export function TripHeroCover({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/30" />
 
-        {/* Top Floating Countdown Pill (Trip.com style) */}
+        {/* Top Floating Countdown Pill */}
         {tripCountdown && (
           <div className="absolute top-3.5 left-3.5 sm:left-5 z-10">
-            <div className={`px-3 py-1.5 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 backdrop-blur-xs ${tripCountdown.badgeColor}`}>
+            <div className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1.5 backdrop-blur-md ${tripCountdown.badgeColor}`}>
+              {tripCountdown.icon}
               <span>{tripCountdown.text}</span>
             </div>
           </div>
@@ -156,14 +157,14 @@ export function TripHeroCover({
         {/* Bottom Banner Content inside Image */}
         <div className="absolute bottom-3.5 left-3.5 sm:left-5 right-3.5 sm:right-5 z-10 flex flex-wrap justify-between items-end gap-2 text-white">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl sm:text-2xl font-black drop-shadow-md tracking-tight">
-                {trip?.name || 'ทริปท่องเที่ยว'}
-              </span>
-              <span className="text-lg">🎌</span>
-            </div>
+            <h1 className="text-xl sm:text-2xl font-bold drop-shadow-md tracking-tight">
+              {trip?.name || 'ทริปท่องเที่ยว'}
+            </h1>
             <p className="text-xs sm:text-sm text-slate-200 font-medium drop-shadow-xs flex items-center gap-2 mt-0.5">
-              <span>📍 {trip?.destination || trip?.country || 'ญี่ปุ่น'}</span>
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5 text-slate-300" />
+                <span>{trip?.destination || trip?.country || 'ญี่ปุ่น'}</span>
+              </span>
               <span>•</span>
               <span>{itineraryCount} กิจกรรม</span>
             </p>
@@ -173,15 +174,16 @@ export function TripHeroCover({
             {showBudget ? (
               <>
                 <span className="text-[10px] uppercase font-bold text-slate-300 block">ยอดใช้จ่ายรวม</span>
-                <span className="text-base font-black text-amber-300 font-mono">
+                <span className="text-base font-bold text-amber-300 font-mono">
                   <AnimatedNumber value={totalSpent} suffix={` ${currency}`} />
                 </span>
               </>
             ) : (
               <>
                 <span className="text-[10px] uppercase font-bold text-emerald-300 block">โหมดการเข้าชม</span>
-                <span className="text-xs font-bold text-emerald-200 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full inline-flex items-center gap-1 shadow-sm backdrop-blur-xs mt-0.5">
-                  🗺️ ดูเฉพาะแผนเที่ยว
+                <span className="text-xs font-bold text-emerald-200 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm backdrop-blur-xs mt-0.5">
+                  <Compass className="h-3 w-3" />
+                  <span>ดูเฉพาะแผนเที่ยว</span>
                 </span>
               </>
             )}
@@ -189,21 +191,22 @@ export function TripHeroCover({
         </div>
       </div>
 
-      {/* Cat Companion Mood Banner directly below cover (With subtle pink gimmick) */}
-      <div className="p-3 sm:p-3.5 bg-white dark:bg-[#151b2b] border-t border-slate-200/90 dark:border-[#222c42] flex items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-[#1c2438] shadow-xs flex items-center justify-center text-base shrink-0 border border-slate-200/80 dark:border-[#222c42]">
-            {catMoodGreeting.icon}
+      {/* Travel Assistant Banner directly below cover (Clean Executive Style) */}
+      <div className="p-3 sm:p-3.5 bg-white dark:bg-[#151b2b] border-t border-slate-200/90 dark:border-[#222c42] flex items-center justify-between gap-3 text-xs text-left">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-[#1c2438] shadow-xs flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#222c42]">
+            {assistantGreeting.icon}
           </div>
-          <div>
-            <div className="flex items-center gap-1.5 font-black text-slate-900 dark:text-white">
-              <span>{catMoodGreeting.mood}</span>
-              <span className="text-[10px] text-[#f43f5e] dark:text-[#fb7185] bg-rose-50 dark:bg-rose-950/40 px-2 py-0.2 rounded-full font-bold border border-rose-200/80 dark:border-[#fb7185]/30">
-                Cat AI Companion 🐾
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white flex-wrap">
+              <span>{assistantGreeting.title}</span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full font-bold border border-blue-200 dark:border-blue-900/40 inline-flex items-center gap-1">
+                <Sparkles className="h-2.5 w-2.5" />
+                <span>Travel Assistant</span>
               </span>
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
-              {catMoodGreeting.message}
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium truncate">
+              {assistantGreeting.message}
             </p>
           </div>
         </div>
