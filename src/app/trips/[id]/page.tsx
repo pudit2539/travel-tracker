@@ -46,6 +46,8 @@ import ItemizedReceiptSplitter, { ItemizedDish } from '@/components/ItemizedRece
 import { parseTransitInfo, formatTransitInfo } from '@/lib/transitGuide';
 import { getTripExpenseSplits } from '@/lib/expenseSplits';
 import { getTripPaymentMethods, setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
+import { syncExpenseToAccommodation } from '@/lib/accommodations';
+import { syncExpenseToFlight } from '@/lib/flights';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
@@ -372,12 +374,16 @@ export default function TripDetailPage() {
         if (metaItem?.backup_plan) {
           try {
             const parsed = JSON.parse(metaItem.backup_plan);
-            if (parsed.accommodations && Array.isArray(parsed.accommodations) && parsed.accommodations.length > 0) {
+            if (parsed.accommodations !== undefined && Array.isArray(parsed.accommodations)) {
               if (typeof window !== 'undefined') {
                 localStorage.setItem(`travel_tracker_accommodations_${tripId}`, JSON.stringify(parsed.accommodations));
+                window.dispatchEvent(new CustomEvent('travel_tracker_accommodations_updated', { detail: { tripId, stays: parsed.accommodations } }));
               }
             }
-            if (parsed.flight && typeof window !== 'undefined') {
+            if (parsed.flights !== undefined && Array.isArray(parsed.flights) && typeof window !== 'undefined') {
+              localStorage.setItem(`flight_pass_${tripId}`, JSON.stringify(parsed.flights));
+              window.dispatchEvent(new CustomEvent('travel_tracker_flights_updated', { detail: { tripId, flights: parsed.flights } }));
+            } else if (parsed.flight && typeof window !== 'undefined') {
               localStorage.setItem(`flight_pass_${tripId}`, JSON.stringify(parsed.flight));
             }
             if (parsed.splits && typeof window !== 'undefined') {
@@ -926,7 +932,7 @@ export default function TripDetailPage() {
       }));
 
       if (mappedItems.length > 0) {
-        setSplitAsSeparateExpenses(true);
+        setSplitAsSeparateExpenses(false);
         setOcrSuccessToast(`✨ AI สแกนใบเสร็จสำเร็จ: "${json.data.merchant}" (แยกได้ ${mappedItems.length} รายการ)`);
       } else {
         setOcrSuccessToast(`ℹ️ สแกนสำเร็จ: "${json.data.merchant}" ยอดรวม ${Number(json.data.amount || 0).toLocaleString()} ${json.data.currency || 'THB'} (ไม่พบรายการย่อยในใบเสร็จ)`);
@@ -999,6 +1005,7 @@ export default function TripDetailPage() {
         receiptStorageRef = scannedData.receipt_url;
       }
 
+      let primaryExpenseId: string | undefined;
       // ตรวจสอบว่าเลือกแยกบันทึกเป็นรายคนหรือไม่
       if (splitAsSeparateExpenses && scannedData.items && scannedData.items.length > 0) {
         const memberTotals: Record<string, { member: any; total: number; count: number }> = {};
@@ -1048,9 +1055,11 @@ export default function TripDetailPage() {
             if (err2) throw err2;
             if (fbRows) {
               fbRows.forEach((r: any) => setExpensePaymentMethod(tripId, r.id, scannedData.payment_method || 'cash'));
+              primaryExpenseId = fbRows[0]?.id;
             }
           } else if (insertedRows) {
             insertedRows.forEach((r: any) => setExpensePaymentMethod(tripId, r.id, scannedData.payment_method || 'cash'));
+            primaryExpenseId = insertedRows[0]?.id;
           }
         }
       } else {
@@ -1076,10 +1085,34 @@ export default function TripDetailPage() {
           if (err2) throw err2;
           if (fbRows && fbRows[0]) {
             setExpensePaymentMethod(tripId, fbRows[0].id, scannedData.payment_method || 'cash');
+            primaryExpenseId = fbRows[0].id;
           }
         } else if (insertedRows && insertedRows[0]) {
           setExpensePaymentMethod(tripId, insertedRows[0].id, scannedData.payment_method || 'cash');
+          primaryExpenseId = insertedRows[0].id;
         }
+      }
+
+      // Sync related expense to Accommodations / Flights if category is hotel or transport/flight
+      const isHotel = scannedData.category === 'hotel' || finalTitle.toLowerCase().includes('hotel') || finalTitle.includes('โรงแรม') || finalTitle.includes('ที่พัก');
+      const isFlight = scannedData.category === 'transport' || finalTitle.toLowerCase().includes('flight') || finalTitle.includes('ตั๋ว') || finalTitle.includes('บิน');
+
+      if (isHotel) {
+        syncExpenseToAccommodation(tripId, {
+          id: primaryExpenseId || 'exp_' + Date.now(),
+          title: finalTitle,
+          amount: calculatedAmount,
+          currency: scannedData.currency || trip?.currency || 'THB',
+          spent_at: scannedData.spent_at,
+        }).catch(() => {});
+      } else if (isFlight) {
+        syncExpenseToFlight(tripId, {
+          id: primaryExpenseId || 'exp_' + Date.now(),
+          title: finalTitle,
+          amount: calculatedAmount,
+          currency: scannedData.currency || trip?.currency || 'THB',
+          spent_at: scannedData.spent_at,
+        }).catch(() => {});
       }
 
       triggerConfetti();
@@ -2872,7 +2905,6 @@ export default function TripDetailPage() {
                           ...prev,
                           items: [defaultItem],
                         }));
-                        setSplitAsSeparateExpenses(true);
                       }}
                       className="text-xs font-black text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1 cursor-pointer active:scale-95"
                     >
@@ -2939,7 +2971,6 @@ export default function TripDetailPage() {
                           ...prev,
                           items: [defaultItem],
                         }));
-                        setSplitAsSeparateExpenses(true);
                       }} className="text-blue-600 dark:text-blue-400 font-bold underline cursor-pointer">+ เพิ่มรายการย่อย</button> เพื่อเลือกว่าเมนูไหนใครกินบ้าง
                     </p>
                   </div>

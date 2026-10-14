@@ -26,6 +26,7 @@ export interface AccommodationStay {
   currency?: string;        // สกุลเงินที่จ่าย (เช่น JPY หรือ THB)
   notes?: string;           // โน้ต เช่น รวมอาหารเช้า, เช็คอินได้หลัง 15:00 น., ฝากกระเป๋าได้
   expenseId?: string;       // เชื่อมกับ Expense ใน Supabase ถ้าส่งเข้ารายการแล้ว
+  paymentStatus?: 'paid' | 'unpaid'; // จ่ายเงินแล้ว หรือ ยังไม่จ่าย (Checklist สำหรับจองแล้วจ่ายทีหลัง)
   voucherFile?: AccommodationVoucherFile; // เอกสารใบจองโรงแรม (PDF หรือ รูปภาพ)
   createdAt: number;
 }
@@ -111,11 +112,13 @@ export function saveAccommodations(tripId: string, stays: AccommodationStay[]): 
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(stays));
+      window.dispatchEvent(new CustomEvent('travel_tracker_accommodations_updated', { detail: { tripId, stays } }));
     } catch {
       // If browser localStorage quota (5MB) is reached, save sanitized version in localStorage
       try {
         const sanitized = sanitizeStaysForStorage(stays);
         localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(sanitized));
+        window.dispatchEvent(new CustomEvent('travel_tracker_accommodations_updated', { detail: { tripId, stays: sanitized } }));
       } catch (err) {
         console.error('Failed to save accommodations to localStorage:', err);
       }
@@ -157,6 +160,59 @@ export function deleteAccommodation(tripId: string, stayId: string): Accommodati
   const updated = current.filter((s) => s.id !== stayId);
   saveAccommodations(tripId, updated);
   return updated;
+}
+
+export function toggleAccommodationPaymentStatus(tripId: string, stayId: string): AccommodationStay[] {
+  const current = getAccommodations(tripId);
+  const updated = current.map((s) => {
+    if (s.id === stayId) {
+      const nextStatus: 'paid' | 'unpaid' = s.paymentStatus === 'paid' ? 'unpaid' : 'paid';
+      return { ...s, paymentStatus: nextStatus };
+    }
+    return s;
+  });
+  saveAccommodations(tripId, updated);
+  return updated;
+}
+
+/**
+ * Automatically creates or updates an accommodation entry when an expense with category 'hotel' is recorded
+ */
+export async function syncExpenseToAccommodation(
+  tripId: string,
+  expense: { id: string; title: string; amount: number; currency: string; spent_at?: string }
+): Promise<void> {
+  if (!tripId || !expense) return;
+  try {
+    const stays = getAccommodations(tripId);
+    const cleanTitle = expense.title.replace(/^ค่าที่พัก:\s*/i, '').replace(/\s*\(\d+\s*คืน\)/i, '').trim();
+    const existing = stays.find((s) => s.expenseId === expense.id || s.name.toLowerCase() === cleanTitle.toLowerCase());
+
+    if (existing) {
+      existing.expenseId = expense.id;
+      existing.price = expense.amount;
+      existing.currency = expense.currency;
+      existing.paymentStatus = 'paid';
+      saveAccommodations(tripId, stays);
+    } else {
+      const newStay: AccommodationStay = {
+        id: 'stay_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6),
+        tripId,
+        name: cleanTitle || 'โรงแรมที่พัก',
+        checkInDate: expense.spent_at || new Date().toISOString().split('T')[0],
+        checkOutDate: expense.spent_at || new Date().toISOString().split('T')[0],
+        nights: 1,
+        price: expense.amount,
+        currency: expense.currency,
+        expenseId: expense.id,
+        paymentStatus: 'paid',
+        createdAt: Date.now(),
+      };
+      saveAccommodations(tripId, [...stays, newStay]);
+    }
+  } catch (e) {
+    console.error('Failed to sync expense to accommodation', e);
+  }
 }
 
 /**

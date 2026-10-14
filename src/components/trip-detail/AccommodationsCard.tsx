@@ -8,7 +8,7 @@ import {
   MapPin, Calendar, Moon, ExternalLink, Copy, Check, 
   Receipt, DollarSign, Sparkles, Phone, FileText, CheckCircle2,
   X, AlertCircle, BookmarkCheck, Upload, Eye, Download, Image as ImageIcon,
-  Loader2
+  Loader2, Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -19,6 +19,7 @@ import {
   addAccommodation, 
   updateAccommodation, 
   deleteAccommodation,
+  toggleAccommodationPaymentStatus,
   getGoogleMapsUrl,
   formatFileSize,
   downloadVoucherFile,
@@ -151,6 +152,7 @@ export function AccommodationsCard({
   const [formCurrency, setFormCurrency] = useState(tripCurrency || 'JPY');
   const [formNotes, setFormNotes] = useState('');
   const [formAutoCreateExpense, setFormAutoCreateExpense] = useState(true);
+  const [formPaymentStatus, setFormPaymentStatus] = useState<'paid' | 'unpaid'>('paid');
 
   // Voucher Preview Modal State
   const [previewVoucher, setPreviewVoucher] = useState<{
@@ -178,65 +180,98 @@ export function AccommodationsCard({
     }
   }, [showModal]);
 
-  // Load accommodations from storage and sync from Supabase
+  // Load accommodations from storage and sync from Supabase (with Realtime multi-browser support)
   useEffect(() => {
-    if (tripId) {
+    if (!tripId) return;
+
+    const loadLatestStays = async () => {
+      // 1. Initial local load
       const data = getAccommodations(tripId);
-      if (data && data.length > 0) {
+      if (data) {
         setStays(data);
       }
-      // Always fetch latest from Supabase metadata row to ensure PC & Mobile sync
-      supabase
-        .from('itinerary_items')
-        .select('backup_plan')
-        .eq('trip_id', tripId)
-        .eq('date_label', '__meta_trip_data__')
-        .maybeSingle()
-        .then(async ({ data: metaRow }) => {
-          if (metaRow?.backup_plan) {
-            try {
-              const parsed = JSON.parse(metaRow.backup_plan);
-              if (parsed.accommodations && Array.isArray(parsed.accommodations) && parsed.accommodations.length > 0) {
-                let needsSupabaseResync = false;
-                const hydratedStays = await Promise.all(
-                  parsed.accommodations.map(async (stay: AccommodationStay) => {
-                    if (stay.voucherFile) {
-                      // 1. If Supabase is missing dataUrl but this device has it in local storage / IndexedDB
-                      if (!stay.voucherFile.dataUrl && stay.voucherFile.storageKey) {
-                        const localData = await getLocalReceiptPhoto(stay.voucherFile.storageKey);
-                        if (localData) {
-                          needsSupabaseResync = true;
-                          return {
-                            ...stay,
-                            voucherFile: {
-                              ...stay.voucherFile,
-                              dataUrl: localData,
-                            },
-                          };
-                        }
-                      } 
-                      // 2. If stay has dataUrl from Supabase, cache locally into IndexedDB for offline access
-                      else if (stay.voucherFile.dataUrl && stay.voucherFile.storageKey) {
-                        saveLocalReceiptPhoto(stay.voucherFile.storageKey, stay.voucherFile.dataUrl).catch(() => {});
-                      }
-                    }
-                    return stay;
-                  })
-                );
 
-                setStays(hydratedStays);
-                if (typeof window !== 'undefined') {
-                  saveAccommodations(tripId, hydratedStays);
+      // 2. Fetch latest from Supabase metadata row
+      try {
+        const { data: metaRow } = await supabase
+          .from('itinerary_items')
+          .select('backup_plan')
+          .eq('trip_id', tripId)
+          .eq('date_label', '__meta_trip_data__')
+          .maybeSingle();
+
+        if (metaRow?.backup_plan) {
+          const parsed = JSON.parse(metaRow.backup_plan);
+          if (parsed.accommodations !== undefined && Array.isArray(parsed.accommodations)) {
+            let needsSupabaseResync = false;
+            const hydratedStays = await Promise.all(
+              parsed.accommodations.map(async (stay: AccommodationStay) => {
+                if (stay.voucherFile) {
+                  if (!stay.voucherFile.dataUrl && stay.voucherFile.storageKey) {
+                    const localData = await getLocalReceiptPhoto(stay.voucherFile.storageKey);
+                    if (localData) {
+                      needsSupabaseResync = true;
+                      return {
+                        ...stay,
+                        voucherFile: {
+                          ...stay.voucherFile,
+                          dataUrl: localData,
+                        },
+                      };
+                    }
+                  } else if (stay.voucherFile.dataUrl && stay.voucherFile.storageKey) {
+                    saveLocalReceiptPhoto(stay.voucherFile.storageKey, stay.voucherFile.dataUrl).catch(() => {});
+                  }
                 }
-                // Push to Supabase so other devices (Mobile) get the file immediately!
-                if (needsSupabaseResync) {
-                  syncAccommodationsToSupabase(tripId, hydratedStays).catch(() => {});
-                }
-              }
-            } catch (e) {}
+                return stay;
+              })
+            );
+
+            setStays(hydratedStays);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(`travel_tracker_accommodations_${tripId}`, JSON.stringify(hydratedStays));
+            }
+            if (needsSupabaseResync) {
+              syncAccommodationsToSupabase(tripId, hydratedStays).catch(() => {});
+            }
           }
-        });
-    }
+        }
+      } catch (err) {
+        console.warn('Accommodations fetch error:', err);
+      }
+    };
+
+    loadLatestStays();
+
+    // Listen to local update events across components
+    const handleLocalUpdate = (e: any) => {
+      if (e.detail?.tripId === tripId && Array.isArray(e.detail?.stays)) {
+        setStays(e.detail.stays);
+      }
+    };
+    window.addEventListener('travel_tracker_accommodations_updated', handleLocalUpdate);
+
+    // Subscribe to Supabase Realtime changes on itinerary_items for multi-browser / multi-user sync
+    const channel = supabase
+      .channel(`rt_accommodations_${tripId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'itinerary_items',
+          filter: `trip_id=eq.${tripId}`,
+        },
+        () => {
+          loadLatestStays();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener('travel_tracker_accommodations_updated', handleLocalUpdate);
+      supabase.removeChannel(channel);
+    };
   }, [tripId]);
 
   const totalNights = useMemo(() => {
@@ -362,6 +397,7 @@ export function AccommodationsCard({
     setFormCurrency(tripCurrency || 'JPY');
     setFormNotes('');
     setFormAutoCreateExpense(true);
+    setFormPaymentStatus('paid');
     setFormVoucher(null);
     setShowModal(true);
   };
@@ -382,6 +418,7 @@ export function AccommodationsCard({
     setFormCurrency(stay.currency || tripCurrency || 'JPY');
     setFormNotes(stay.notes || '');
     setFormAutoCreateExpense(false);
+    setFormPaymentStatus(stay.paymentStatus || 'paid');
 
     // Populate existing voucher file
     if (stay.voucherFile) {
@@ -404,12 +441,40 @@ export function AccommodationsCard({
     setShowModal(true);
   };
 
-  // Delete stay
-  const handleDelete = (stayId: string, stayName: string) => {
+  // Delete stay with guaranteed Supabase sync
+  const handleDelete = async (stayId: string, stayName: string) => {
     if (confirm(`ต้องการลบข้อมูลที่พัก "${stayName}" ใช่หรือไม่?`)) {
       const updated = deleteAccommodation(tripId, stayId);
       setStays(updated);
+      try {
+        await syncAccommodationsToSupabase(tripId, updated);
+      } catch (err) {
+        console.warn('Sync accommodations deletion warn:', err);
+      }
       onShowToast?.(`ลบข้อมูลที่พัก "${stayName}" เรียบร้อยแล้ว 🗑️`, 'info');
+    }
+  };
+
+  // Toggle payment status (Paid vs Pay Later) checklist
+  const handleTogglePayment = async (stay: AccommodationStay) => {
+    const updated = toggleAccommodationPaymentStatus(tripId, stay.id);
+    setStays(updated);
+    try {
+      await syncAccommodationsToSupabase(tripId, updated);
+    } catch (err) {
+      console.warn('Sync accommodations payment status warn:', err);
+    }
+    const updatedStay = updated.find((s) => s.id === stay.id);
+    if (updatedStay?.paymentStatus === 'paid') {
+      toast.success(`อัปเดต "${stay.name}" เป็น จ่ายเงินแล้ว ✅`);
+      // If price is specified and not yet linked to an expense, ask if user wants to record it
+      if (stay.price && stay.price > 0 && !stay.expenseId) {
+        if (window.confirm(`ต้องการบันทึกราคา ${stay.price.toLocaleString()} ${stay.currency || tripCurrency} เป็นรายจ่ายลงในทริปด้วยเลยไหม?`)) {
+          handleCreateExpenseForStay(updatedStay);
+        }
+      }
+    } else {
+      toast.info(`อัปเดต "${stay.name}" เป็น ยังไม่จ่าย / จ่ายทีหลัง ⏳`);
     }
   };
 
@@ -539,6 +604,7 @@ export function AccommodationsCard({
           phone: formPhone.trim(),
           price: priceNum,
           currency: formCurrency,
+          paymentStatus: formPaymentStatus,
           notes: formNotes.trim(),
           expenseId: createdExpenseId,
           voucherFile: finalVoucher,
@@ -558,6 +624,7 @@ export function AccommodationsCard({
           phone: formPhone.trim(),
           price: priceNum,
           currency: formCurrency,
+          paymentStatus: formPaymentStatus,
           notes: formNotes.trim(),
           expenseId: createdExpenseId,
           voucherFile: finalVoucher,
@@ -851,9 +918,30 @@ export function AccommodationsCard({
 
                     {/* Price & Actions Bottom Section */}
                     <div className="pt-2 border-t border-slate-100 dark:border-[#222c42] flex flex-col gap-2">
-                      {/* Price Display */}
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">ราคา:</span>
+                      {/* Payment Status Checklist & Price Display */}
+                      <div className="flex items-center justify-between text-xs gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePayment(stay)}
+                          className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-all flex items-center gap-1 cursor-pointer shrink-0 ${
+                            stay.paymentStatus === 'unpaid'
+                              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+                              : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                          }`}
+                          title={stay.paymentStatus === 'unpaid' ? 'คลิกเพื่อเปลี่ยนเป็นจ่ายแล้ว' : 'คลิกเพื่อเปลี่ยนเป็นจ่ายทีหลัง'}
+                        >
+                          {stay.paymentStatus === 'unpaid' ? (
+                            <>
+                              <Clock className="h-3 w-3 text-amber-500" />
+                              <span>⏳ ยังไม่จ่าย / จ่ายทีหลัง</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                              <span>✅ จ่ายเงินแล้ว</span>
+                            </>
+                          )}
+                        </button>
                         <div className="text-right">
                           <span className="font-mono font-black text-slate-900 dark:text-white">
                             {stay.price ? `${stay.price.toLocaleString()} ${stay.currency || tripCurrency}` : 'ไม่ระบุ'}
@@ -1022,6 +1110,48 @@ export function AccommodationsCard({
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">คืน</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Payment Status Segment: Paid vs Pay Later */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                  สถานะการชำระเงิน (Payment Checklist)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormPaymentStatus('paid');
+                      if (!editingStay) setFormAutoCreateExpense(true);
+                    }}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      formPaymentStatus === 'paid'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-xs ring-1 ring-emerald-500'
+                        : 'bg-slate-50 dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                    }`}
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span>✅ จ่ายเงินแล้ว (Paid)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormPaymentStatus('unpaid');
+                      if (!editingStay) setFormAutoCreateExpense(false);
+                    }}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      formPaymentStatus === 'unpaid'
+                        ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 text-amber-700 dark:text-amber-300 shadow-xs ring-1 ring-amber-500'
+                        : 'bg-slate-50 dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    <span>⏳ จ่ายทีหลัง / ยังไม่ตัดบัตร</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  กรณีจองผ่าน Agoda / Booking.com ที่เลือกชำระเงินภายหลัง หรือชำระ ณ ที่พัก
+                </p>
               </div>
 
               {/* Price & Currency */}

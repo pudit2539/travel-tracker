@@ -140,6 +140,11 @@ export function TripPlanTab({
       <FlightBoardingPassCard 
         tripId={trip?.id || ''} 
         defaultDestination={trip?.destination || 'Tokyo'} 
+        tripCurrency={tripBaseCurrency}
+        fxRate={fxRate}
+        currentUser={currentUser}
+        onExpenseCreated={onRefreshTrip}
+        onShowToast={onShowToast}
       />
 
       {/* 3. Accommodations / Hotels Card */}
