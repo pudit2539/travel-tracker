@@ -23,18 +23,29 @@ const ThemeContext = createContext<ThemeContextType>({
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('system');
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return (localStorage.getItem('theme') as Theme) || 'system';
+      } catch {}
+    }
+    return 'system';
+  });
   const [mounted, setMounted] = useState(false);
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark') return 'dark';
+        if (saved === 'light') return 'light';
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } catch {}
+    }
+    return 'light';
+  });
 
   useEffect(() => {
     setMounted(true);
-    try {
-      const saved = localStorage.getItem('theme') as Theme;
-      if (saved) {
-        setThemeState(saved);
-      }
-    } catch {}
   }, []);
 
   useIsomorphicLayoutEffect(() => {
@@ -45,9 +56,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const isDark = theme === 'system' ? mediaQuery.matches : theme === 'dark';
       if (isDark) {
         root.classList.add('dark');
+        root.style.colorScheme = 'dark';
         setResolvedTheme('dark');
       } else {
         root.classList.remove('dark');
+        root.style.colorScheme = 'light';
         setResolvedTheme('light');
       }
     };

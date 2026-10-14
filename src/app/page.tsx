@@ -1,8 +1,10 @@
 // src/app/page.tsx
 'use client';
 
-import { useState, useEffect, useMemo, useDeferredValue } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useDeferredValue } from 'react';
 import { createPortal } from 'react-dom';
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -80,6 +82,29 @@ export default function HomePage() {
     }
   }, [showCreateModal, showEditModal, showJoinModal, showDeleteModal, showProfileModal]);
 
+  // Synchronously restore cached profile and trips before browser paints to prevent flash
+  useIsomorphicLayoutEffect(() => {
+    try {
+      const lastUid = localStorage.getItem('travel_tracker_last_uid');
+      if (lastUid) {
+        const cachedProf = localStorage.getItem(`travel_tracker_cached_profile_${lastUid}`);
+        if (cachedProf) {
+          const parsed = JSON.parse(cachedProf);
+          setProfile(parsed);
+        }
+
+        const cachedTrips = localStorage.getItem(`travel_tracker_home_trips_cache_${lastUid}`);
+        if (cachedTrips) {
+          const parsed = JSON.parse(cachedTrips);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setTrips(parsed);
+            setLoading(false);
+          }
+        }
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     // Clean up legacy unkeyed caches to prevent cross-account leak
     try {
@@ -101,6 +126,9 @@ export default function HomePage() {
       const currentUserId = session.user.id;
       setUser(session.user);
       trackCurrentDevice(currentUserId);
+      try {
+        localStorage.setItem('travel_tracker_last_uid', currentUserId);
+      } catch {}
 
       // Restore user-specific cached profile & trips
       try {
@@ -568,6 +596,7 @@ export default function HomePage() {
       console.error('Signout error', err);
     } finally {
       try {
+        localStorage.removeItem('travel_tracker_last_uid');
         localStorage.removeItem('travel_tracker_cached_profile');
         sessionStorage.clear();
       } catch {}
@@ -636,17 +665,15 @@ export default function HomePage() {
               className="flex items-center gap-2 p-1.5 pr-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 hover:scale-105 shadow-2xs transition-all cursor-pointer group"
               title="ตั้งค่าโปรไฟล์"
             >
-              <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${mounted ? userCat.bgGradient : 'from-amber-400 via-orange-500 to-pink-500'} flex items-center justify-center text-xs shadow-2xs overflow-hidden`}>
-                {!mounted ? (
-                  <span>🐱</span>
-                ) : userCat.imgUrl ? (
+              <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-2xs overflow-hidden`}>
+                {userCat.imgUrl ? (
                   <img src={userCat.imgUrl} alt={userCat.name} className="w-full h-full object-cover" />
                 ) : (
                   userCat.emoji
                 )}
               </div>
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[100px] truncate hidden sm:inline">
-                {mounted ? userDisplayName : 'นักเดินทาง'}
+                {userDisplayName}
               </span>
             </button>
 
@@ -657,13 +684,8 @@ export default function HomePage() {
               title="สลับโหมด มืด/สว่าง"
               aria-label="Toggle theme"
             >
-              {!mounted ? (
-                <span className="w-4 h-4 block" />
-              ) : theme === 'dark' ? (
-                <Sun className="h-4 w-4 text-amber-400" />
-              ) : (
-                <Moon className="h-4 w-4 text-slate-700" />
-              )}
+              <Sun className="h-4 w-4 text-amber-400 hidden dark:block" />
+              <Moon className="h-4 w-4 text-slate-700 block dark:hidden" />
             </button>
 
             {/* Quick Logout Button */}
@@ -716,7 +738,7 @@ export default function HomePage() {
                   TRIPS
                 </span>
                 <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  {trips.length}
+                  {loading && trips.length === 0 ? <span className="inline-block w-6 h-6 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : trips.length}
                 </span>
                 <span className="text-[10px] font-semibold text-slate-400 block mt-0.5 hidden sm:block">
                   ทริปทั้งหมด
@@ -728,7 +750,7 @@ export default function HomePage() {
                   TOTAL BUDGET
                 </span>
                 <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate block">
-                  ฿{Math.round(totalCombinedBudgetInThb).toLocaleString()}
+                  {loading && trips.length === 0 ? <span className="inline-block w-12 h-6 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : `฿${Math.round(totalCombinedBudgetInThb).toLocaleString()}`}
                 </span>
                 <span className="text-[10px] font-semibold text-slate-400 block mt-0.5 hidden sm:block">
                   งบรวมทุกทริป
@@ -740,7 +762,7 @@ export default function HomePage() {
                   UPCOMING
                 </span>
                 <span className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">
-                  {tripStats.upcomingCount}
+                  {loading && trips.length === 0 ? <span className="inline-block w-6 h-6 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : tripStats.upcomingCount}
                 </span>
                 <span className="text-[10px] font-semibold text-blue-600/80 dark:text-blue-400/80 block mt-0.5 hidden sm:block">
                   เร็วๆ นี้

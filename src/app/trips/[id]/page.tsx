@@ -2014,13 +2014,8 @@ export default function TripDetailPage() {
                 title="สลับโหมด มืด/สว่าง"
                 aria-label="Toggle theme"
               >
-                {!mounted ? (
-                  <span className="w-4 h-4 block" />
-                ) : theme === 'dark' ? (
-                  <Sun className="h-4 w-4 text-amber-400" />
-                ) : (
-                  <Moon className="h-4 w-4 text-slate-700" />
-                )}
+                <Sun className="h-4 w-4 text-amber-400 hidden dark:block" />
+                <Moon className="h-4 w-4 text-slate-700 block dark:hidden" />
               </button>
 
               {currentUser && (
