@@ -61,20 +61,34 @@ function ItineraryStopCardComponent({
     item.main_place + (item.city ? ' ' + item.city : '')
   )}`;
 
+  // Clean restaurant title for fallback search (e.g. remove "มื้อกลางวันร้าน", "มื้อเย็น", etc.)
+  const cleanFoodQuery = React.useMemo(() => {
+    if (!item.food_recommendation || item.food_recommendation === '-') return '';
+    let text = item.food_recommendation;
+    // Check if there is an English name inside or after Thai prefix (e.g. "On Yasai", "Katsukura", etc.)
+    const engMatch = text.match(/[A-Za-z0-9&'\- ]{3,}/);
+    if (engMatch && engMatch[0].trim().length > 3) {
+      return engMatch[0].trim() + ' ' + (item.city || 'Japan');
+    }
+    // Otherwise strip common Thai fluff
+    text = text.replace(/^(มื้อกลางวัน|มื้อค่ำ|มื้อเย็น|ทานร้าน|ร้านอาหาร|แวะชิม|นั่งจิบกาแฟที่|นั่งจิบชาและชิมขนมที่|เลือกทานอาหารที่)\s*/i, '');
+    const firstPart = text.split(/[,(]/)[0].trim();
+    return (firstPart || item.food_recommendation) + ' ' + (item.city || 'Japan');
+  }, [item.food_recommendation, item.city]);
+
   const foodSearchUrl =
     item.food_links && item.food_links[0]
       ? item.food_links[0]
-      : item.food_recommendation
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          item.food_recommendation.split(/[,(]/)[0].trim() + ' ' + (item.city || 'Japan')
-        )}`
+      : cleanFoodQuery
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanFoodQuery)}`
       : '';
 
-  const foodDirectionsUrl = item.food_recommendation
-    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-        item.food_recommendation.split(/[,(]/)[0].trim() + (item.city ? ' ' + item.city : '')
-      )}`
-    : '';
+  const foodDirectionsUrl =
+    item.food_links && item.food_links[0]
+      ? item.food_links[0]
+      : cleanFoodQuery
+      ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(cleanFoodQuery)}`
+      : '';
 
   return (
     <div className={`group rounded-3xl border transition-all duration-300 relative overflow-hidden card-elevation ${
