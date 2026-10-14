@@ -382,9 +382,9 @@ export function TripAnalyticsTab({
 
   // ==================== DASHLET 6: PAYMENT METHOD BREAKDOWN ====================
   const paymentMethodData = useMemo(() => {
-    let creditTotal = 0;
     let cashTotal = 0;
-    let icCardTotal = 0;
+    let travelCardTotal = 0;
+    let creditCardTotal = 0;
 
     expenses.forEach((e) => {
       const amountInSelected = convertCurrency(
@@ -397,28 +397,27 @@ export function TripAnalyticsTab({
       const method = (e.payment_method || '').toLowerCase();
       const title = (e.title || '').toLowerCase();
 
-      if (method.includes('cash') || method.includes('เงินสด') || title.includes('เงินสด') || title.includes('ตู้ atm')) {
-        cashTotal += amountInSelected;
-      } else if (method.includes('ic') || method.includes('suica') || method.includes('icoca') || title.includes('suica') || title.includes('icoca')) {
-        icCardTotal += amountInSelected;
+      if (method === 'travel_card' || method.includes('travel') || title.includes('youtrip') || title.includes('planet')) {
+        travelCardTotal += amountInSelected;
+      } else if (method === 'credit_card' || method.includes('credit')) {
+        creditCardTotal += amountInSelected;
       } else {
-        // Default to Card / Digital
-        creditTotal += amountInSelected;
+        cashTotal += amountInSelected;
       }
     });
 
-    const sum = creditTotal + cashTotal + icCardTotal || 1;
-    const creditPct = Math.round((creditTotal / sum) * 100);
+    const sum = cashTotal + travelCardTotal + creditCardTotal || 1;
     const cashPct = Math.round((cashTotal / sum) * 100);
-    const icCardPct = Math.max(0, 100 - creditPct - cashPct);
+    const travelCardPct = Math.round((travelCardTotal / sum) * 100);
+    const creditCardPct = Math.max(0, 100 - cashPct - travelCardPct);
 
     return {
-      creditTotal: Math.round(creditTotal),
       cashTotal: Math.round(cashTotal),
-      icCardTotal: Math.round(icCardTotal),
-      creditPct,
+      travelCardTotal: Math.round(travelCardTotal),
+      creditCardTotal: Math.round(creditCardTotal),
       cashPct,
-      icCardPct,
+      travelCardPct,
+      creditCardPct,
     };
   }, [expenses, tripBaseCurrency, selectedCurrency, fxRate]);
 
@@ -1025,44 +1024,30 @@ export function TripAnalyticsTab({
         {/* Triple Split Bar */}
         <div className="w-full bg-slate-100 dark:bg-[#111624] h-3.5 rounded-full overflow-hidden flex p-0.5 shadow-inner">
           <div
-            className="h-full bg-blue-600 rounded-l-full transition-all"
-            style={{ width: `${paymentMethodData.creditPct}%` }}
-            title={`บัตรเครดิต ${paymentMethodData.creditPct}%`}
-          />
-          <div
-            className="h-full bg-amber-500 transition-all"
+            className="h-full bg-emerald-500 rounded-l-full transition-all"
             style={{ width: `${paymentMethodData.cashPct}%` }}
             title={`เงินสด ${paymentMethodData.cashPct}%`}
           />
           <div
-            className="h-full bg-emerald-500 rounded-r-full transition-all"
-            style={{ width: `${paymentMethodData.icCardPct}%` }}
-            title={`IC Card ${paymentMethodData.icCardPct}%`}
+            className="h-full bg-blue-600 transition-all"
+            style={{ width: `${paymentMethodData.travelCardPct}%` }}
+            title={`บัตร Travel Card ${paymentMethodData.travelCardPct}%`}
+          />
+          <div
+            className="h-full bg-purple-600 rounded-r-full transition-all"
+            style={{ width: `${paymentMethodData.creditCardPct}%` }}
+            title={`บัตรเครดิต ${paymentMethodData.creditCardPct}%`}
           />
         </div>
 
         {/* Method Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-[#1c2438] border border-blue-200/70 dark:border-blue-900/40 text-left space-y-1">
+          <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-[#1c2438] border border-emerald-200/70 dark:border-emerald-900/40 text-left space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                💳 บัตรเครดิต / Travel Card
+              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                💵 เงินสด (Cash)
               </span>
-              <span className="text-xs font-black font-mono text-blue-600">
-                {paymentMethodData.creditPct}%
-              </span>
-            </div>
-            <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
-              {paymentMethodData.creditTotal.toLocaleString()} {selectedCurrency}
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-amber-50/50 dark:bg-[#1c2438] border border-amber-200/70 dark:border-amber-900/40 text-left space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                💴 เงินสด (Cash)
-              </span>
-              <span className="text-xs font-black font-mono text-amber-600">
+              <span className="text-xs font-black font-mono text-emerald-600">
                 {paymentMethodData.cashPct}%
               </span>
             </div>
@@ -1071,17 +1056,31 @@ export function TripAnalyticsTab({
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-[#1c2438] border border-emerald-200/70 dark:border-emerald-900/40 text-left space-y-1">
+          <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-[#1c2438] border border-blue-200/70 dark:border-blue-900/40 text-left space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                📲 IC Card / Suica
+              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                💳 บัตร Travel Card
               </span>
-              <span className="text-xs font-black font-mono text-emerald-600">
-                {paymentMethodData.icCardPct}%
+              <span className="text-xs font-black font-mono text-blue-600">
+                {paymentMethodData.travelCardPct}%
               </span>
             </div>
             <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
-              {paymentMethodData.icCardTotal.toLocaleString()} {selectedCurrency}
+              {paymentMethodData.travelCardTotal.toLocaleString()} {selectedCurrency}
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-[#1c2438] border border-purple-200/70 dark:border-purple-900/40 text-left space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                💳 บัตรเครดิต
+              </span>
+              <span className="text-xs font-black font-mono text-purple-600">
+                {paymentMethodData.creditCardPct}%
+              </span>
+            </div>
+            <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
+              {paymentMethodData.creditCardTotal.toLocaleString()} {selectedCurrency}
             </div>
           </div>
         </div>
