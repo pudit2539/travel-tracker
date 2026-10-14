@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { 
   MapPin, ExternalLink, Navigation, Compass, 
   Clock, Bus, Utensils, ArrowRight, Sparkles, 
-  ChevronRight, Map, CheckCircle2, AlertCircle
+  ChevronRight, Map, CheckCircle2, AlertCircle, Calendar
 } from 'lucide-react';
 
 interface InteractiveTripMapProps {
@@ -146,26 +146,26 @@ export default function InteractiveTripMap({
                 <button
                   type="button"
                   onClick={() => setSelectedStopIdx(idx)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-2xl border transition-all cursor-pointer ${
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-md scale-102 ring-2 ring-slate-900/10 dark:ring-white/20'
-                      : 'bg-white/80 dark:bg-[#11131a]/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-[#262c3d] hover:border-slate-400 hover:bg-slate-50/80 dark:hover:bg-[#1c2232]'
+                      : 'bg-white/90 dark:bg-[#11131a]/90 text-slate-800 dark:text-slate-200 border-slate-200/90 dark:border-[#262c3d] hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-[#1c2232]'
                   }`}
                   title={`จุดหมายลำดับที่ ${idx + 1}: ${cleanName}`}
                 >
-                  <div className={`px-1.5 py-0.5 rounded-lg flex flex-col items-center justify-center shrink-0 min-w-[28px] ${
+                  <div className={`px-2 py-1 rounded-xl flex flex-col items-center justify-center shrink-0 min-w-[34px] ${
                     isSelected 
                       ? 'bg-white/20 dark:bg-slate-900/15 text-white dark:text-slate-900' 
-                      : 'bg-rose-50 dark:bg-slate-800 text-rose-600 dark:text-rose-300'
+                      : 'bg-rose-50 dark:bg-slate-800/80 text-rose-600 dark:text-rose-300 font-bold'
                   }`}>
-                    <span className="text-[7.5px] font-black uppercase tracking-tight leading-none opacity-80">จุดที่</span>
-                    <span className="text-[11px] font-black leading-tight">#{idx + 1}</span>
+                    <span className="text-[8px] font-black uppercase tracking-tight leading-none opacity-80">จุดที่</span>
+                    <span className="text-xs font-black leading-tight">#{idx + 1}</span>
                   </div>
-                  <div className="text-left">
-                    <span className="text-xs font-bold block max-w-[120px] sm:max-w-[160px] truncate">
+                  <div className="text-left min-w-0">
+                    <span className="text-xs font-bold block max-w-[140px] sm:max-w-[200px] truncate text-left">
                       {cleanName}
                     </span>
-                    <span className="text-[9.5px] opacity-80 block font-medium">
+                    <span className="text-[10px] opacity-80 block font-medium text-left">
                       {item.date_label && item.time_slot 
                         ? `${item.date_label} • ${item.time_slot}`
                         : (item.time_slot || item.date_label || `ลำดับที่ ${idx + 1}`)}
@@ -184,48 +184,46 @@ export default function InteractiveTripMap({
 
       {/* Active Selected Stop Detail Spotlight Card */}
       {activeStop && (
-        <div className="p-5 rounded-3xl border border-slate-200/90 dark:border-[#262c3d] bg-white/95 dark:bg-[#171a23]/95 card-elevation space-y-4 animate-in fade-in duration-200">
-          <div className="flex justify-between items-start gap-3">
-            <div className="flex items-center gap-3">
-              {/* Stop Order Indicator Badge */}
-              <div className="px-3 py-2 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-700 dark:to-slate-800 text-white flex flex-col items-center justify-center shadow-xs shrink-0 min-w-[58px] border border-slate-700/50">
-                <span className="text-[8.5px] font-bold text-rose-300 dark:text-rose-300 uppercase tracking-wider leading-none mb-0.5">
-                  จุดที่
-                </span>
-                <span className="text-lg font-black leading-none">
-                  #{selectedStopIdx + 1}
-                </span>
+        <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262c3d] bg-white/95 dark:bg-[#171a23]/95 card-elevation space-y-4 animate-in fade-in duration-200 text-left">
+          
+          {/* Top Row: Meta Tags & Direct 1-Click Navigation Button */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Stop Number Badge */}
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-rose-500 to-[#c25872] text-white text-xs font-black shadow-xs">
+                <MapPin className="h-3 w-3" />
+                <span>จุดที่ #{selectedStopIdx + 1}</span>
               </div>
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {activeStop.date_label && (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 flex items-center gap-1 shadow-2xs">
-                      <span>📅 วันที่:</span>
-                      <span>{activeStop.date_label}</span>
-                    </span>
-                  )}
-                  {activeStop.time_slot && (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-rose-500" />
-                      <span>เวลา {activeStop.time_slot}</span>
-                    </span>
-                  )}
-                  {activeStop.city && (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                      📍 {activeStop.city}
-                    </span>
-                  )}
-                  <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">
-                    (จุดหมาย {selectedStopIdx + 1} จาก {displayItems.length})
-                  </span>
-                </div>
-                <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">
-                  {activeStop.main_place}
-                </h4>
-              </div>
+
+              {/* Date */}
+              {activeStop.date_label && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/80 dark:border-rose-900/60 shadow-2xs">
+                  <Calendar className="h-3 w-3 text-rose-500" />
+                  <span>{activeStop.date_label}</span>
+                </span>
+              )}
+
+              {/* Time */}
+              {activeStop.time_slot && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+                  <Clock className="h-3 w-3 text-rose-500" />
+                  <span>เวลา {activeStop.time_slot}</span>
+                </span>
+              )}
+
+              {/* City */}
+              {activeStop.city && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+                  <span>📍 {activeStop.city}</span>
+                </span>
+              )}
+
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 hidden sm:inline ml-1">
+                ({selectedStopIdx + 1} จาก {displayItems.length} จุดหมาย)
+              </span>
             </div>
 
-            {/* Direct 1-Click Navigation Button (Guaranteed to Work) */}
+            {/* Direct 1-Click Navigation Button */}
             <a
               href={
                 (activeStop.main_place_links && activeStop.main_place_links[0])
@@ -234,16 +232,23 @@ export default function InteractiveTripMap({
               }
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-2 rounded-2xl bg-[#c25872] hover:bg-[#b04a63] dark:bg-[#d47087] dark:hover:bg-[#c25872] text-white font-bold text-xs shadow-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-[#c25872] hover:bg-[#b04a63] dark:bg-[#d47087] dark:hover:bg-[#c25872] text-white font-bold text-xs shadow-xs hover:shadow-md hover:scale-102 active:scale-98 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
             >
               <Navigation className="h-3.5 w-3.5" />
               <span>นำทางจุดนี้ 📍</span>
-              <ExternalLink className="h-2.5 w-2.5" />
+              <ExternalLink className="h-2.5 w-2.5 opacity-80" />
             </a>
           </div>
 
+          {/* Full-width Title (Left-aligned, Spacious, Natural line breaks) */}
+          <div className="w-full text-left pt-0.5">
+            <h3 className="text-left text-base sm:text-lg font-black text-slate-900 dark:text-white leading-relaxed tracking-tight break-words">
+              {activeStop.main_place}
+            </h3>
+          </div>
+
           {/* Embedded Interactive Google Map Window */}
-          <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 dark:border-[#262c3d] shadow-inner bg-slate-100 dark:bg-[#11131a] h-[280px] sm:h-[360px]">
+          <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 dark:border-[#262c3d] shadow-inner bg-slate-100 dark:bg-[#11131a] h-[260px] sm:h-[340px]">
             <iframe
               title={`Google Map - ${activeCleanPlace}`}
               width="100%"
@@ -264,40 +269,63 @@ export default function InteractiveTripMap({
             </div>
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#262c3d] text-xs">
+          {/* Information Sections: Food, Transport, Backup Plan */}
+          <div className="space-y-3 pt-1 text-xs text-left">
             {activeStop.food_recommendation && (
-              <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
-                <Utensils className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <span className="font-bold text-slate-900 dark:text-white">ร้านอาหารแนะนำ: </span>
-                  <span>{activeStop.food_recommendation}</span>
+              <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 text-left transition-all space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/20 dark:bg-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                      <Utensils className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
+                      ร้านอาหารแนะนำ / ของกินเด่น
+                    </span>
+                  </div>
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeStop.food_recommendation.split(/[,(]/)[0].trim() + ' ' + (activeStop.city || 'Japan'))}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline ml-1.5"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-500 shadow-2xs hover:scale-102 active:scale-98 transition-all shrink-0 cursor-pointer"
                   >
                     <span>แผนที่ร้าน 📍</span>
-                    <ExternalLink className="h-2.5 w-2.5" />
+                    <ExternalLink className="h-2.5 w-2.5 opacity-80" />
                   </a>
                 </div>
+                <p className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed pl-8">
+                  {activeStop.food_recommendation}
+                </p>
               </div>
             )}
 
             {activeStop.transport_info && (
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-medium">
-                <Bus className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                <span>การเดินทาง: {activeStop.transport_info}</span>
+              <div className="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-800/40 text-left flex items-start gap-2.5">
+                <div className="w-6 h-6 rounded-lg bg-indigo-500/20 dark:bg-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
+                  <Bus className="h-3.5 w-3.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300 mr-1.5">
+                    การเดินทาง:
+                  </span>
+                  <span className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
+                    {activeStop.transport_info}
+                  </span>
+                </div>
               </div>
             )}
 
             {activeStop.backup_plan && (
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1a1e2b] border border-slate-200/80 dark:border-[#262c3d] space-y-2">
-                <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-                  <Sparkles className="h-3.5 w-3.5 text-rose-500" />
-                  <span>แผนสำรอง (Plan B):</span>
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1a1e2b] border border-slate-200/80 dark:border-[#262c3d] text-left space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-rose-500/15 dark:bg-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                    แผนสำรอง (Plan B)
+                  </span>
                 </div>
-                <div className="space-y-1.5">
+
+                <div className="space-y-2">
                   {activeStop.backup_plan.split('\n').filter((line: string) => line.trim().length > 0).map((line: string, lineIdx: number) => {
                     let cleanName = line.replace(/^(ร้านอาหารสำรอง|สถานที่สำรอง|จุดเที่ยวสำรอง|แผนสำรอง|\d+[\).:-]|\*|•)\s*/i, '').trim();
                     if (cleanName.includes(':')) {
@@ -308,15 +336,18 @@ export default function InteractiveTripMap({
                       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanName + ' ' + (activeStop.city || 'Japan'))}`;
 
                     return (
-                      <div key={lineIdx} className="p-2 rounded-xl bg-white dark:bg-[#11131a] border border-slate-200/80 dark:border-[#262c3d] flex items-center justify-between gap-2 shadow-2xs">
-                        <span className="font-medium text-slate-800 dark:text-slate-200 leading-snug">
+                      <div
+                        key={lineIdx}
+                        className="p-2.5 rounded-xl bg-white dark:bg-[#11131a] border border-slate-200/90 dark:border-[#262c3d] flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-all"
+                      >
+                        <span className="text-xs font-medium text-slate-800 dark:text-slate-200 leading-relaxed flex-1 text-left">
                           {line}
                         </span>
                         <a
                           href={lineMapsUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 hover:bg-[#c25872] hover:text-white dark:hover:bg-[#d47087] transition-all shrink-0 cursor-pointer"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-[#c25872] hover:text-white dark:hover:bg-[#d47087] transition-all shrink-0 cursor-pointer shadow-2xs"
                           title="เปิด Google Maps สำหรับรายการนี้"
                         >
                           <span>แผนที่ 📍</span>
