@@ -8,8 +8,12 @@
     "main_place_links": [],
     "food_recommendation": "อาหารบนเครื่อง",
     "food_links": [],
-    "backup_plan": "แวะเปลี่ยนเครื่องที่ฮานอย (รอต่อเครื่องเที่ยวบิน VN334 ประมาณ 7 ชม.)",
-    "backup_links": [],
+    "backup_plan": "ที่พักผ่อนสำรอง: Song Hong Premium Lounge & Bar (เลานจ์พักผ่อน อาบน้ำ ทานบุฟเฟต์ระหว่างรอต่อเครื่องที่สนามบินฮานอย)\nคาเฟ่สำรอง: Highlands Coffee Noi Bai Airport (แวะจิบค้างคาวกาแฟเวียดนามแท้ในสนามบิน)\nร้านอาหารสำรอง: Big Bowl Pho Noi Bai (เฝอร้อนๆ ซุปรสชาติดั้งเดิมในสนามบิน)",
+    "backup_links": [
+      "https://maps.google.com/?q=Song+Hong+Premium+Lounge+Noi+Bai",
+      "https://maps.google.com/?q=Highlands+Coffee+Noi+Bai+Airport",
+      "https://maps.google.com/?q=Big+Bowl+Pho+Noi+Bai+Airport"
+    ],
     "transport_info": "เครื่องบิน Vietnam Airlines (VN614) | จ่ายรวมในตั๋วเครื่องบินแล้ว"
   },
   {
@@ -21,8 +25,12 @@
     "main_place_links": [],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "หากเพลียมาก สามารถซื้อของว่างทานบนรถไฟได้เลย",
-    "backup_links": [],
+    "backup_plan": "ร้านของว่างสำรอง: 551 Horai Kansai Airport (ซาลาเปาหมูสับนึ่งร้อนๆ ซิกเนเจอร์โอซาก้าหน้าสถานีรถไฟ KIX)\nคาเฟ่สำรอง: Tully's Coffee KIX Station (จิบกาแฟอุ่นๆ ระหว่างรอขบวนรถไฟ Haruka)\nที่พักผ่อนสำรอง: KIX Airport Lounge (จุดนั่งพักชาร์จแบตเตอรี่และเชื่อมต่อ Wi-Fi ในสนามบิน)",
+    "backup_links": [
+      "https://maps.google.com/?q=551+Horai+Kansai+Airport",
+      "https://maps.google.com/?q=Tullys+Coffee+Kansai+Airport",
+      "https://maps.google.com/?q=KIX+Airport+Lounge"
+    ],
     "transport_info": "รถไฟด่วน JR Haruka | ซื้อตั๋ว e-Ticket แยก หรือแตะ ICOCA (ประมาณ 2,200 - 3,110 เยน)"
   },
   {
@@ -38,10 +46,11 @@
     "food_links": [
       "https://maps.google.com/?q=Katsukura+Kyoto+Station+The+Cube"
     ],
-    "backup_plan": "ร้านอาหารสำรอง: Donguri Kyoto Station (โอโคโนมิยากิ)\n\nที่เที่ยวสำรอง: ขึ้นชมวิวที่ Kyoto Tower",
+    "backup_plan": "ร้านอาหารสำรอง: Donguri Kyoto Station (โอโคโนมิยากิกระทะร้อนต้นตำรับเกียวโต)\nที่เที่ยวสำรอง: ขึ้นชมวิวเมืองเกียวโตแบบพาโนรามาที่ Kyoto Tower\nคาเฟ่สำรอง: Inoda Coffee Kyoto Porta (ร้านกาแฟคลาสสิกสไตล์ย้อนยุคดั้งเดิมของเกียวโต)",
     "backup_links": [
       "https://maps.google.com/?q=Donguri+Kyoto+Station",
-      "https://maps.google.com/?q=Kyoto+Tower"
+      "https://maps.google.com/?q=Kyoto+Tower",
+      "https://maps.google.com/?q=Inoda+Coffee+Porta+Kyoto"
     ],
     "transport_info": "เดินเท้าจากสถานีเกียวโต | ฟรี"
   },
@@ -56,8 +65,12 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "นอนพักผ่อนชาร์จแบตร่างกายหลังลงเครื่อง",
-    "backup_links": [],
+    "backup_plan": "ที่เที่ยวสำรองใกล้ที่พัก: วัด Toji Temple (ชมเจดีย์ไม้ 5 ชั้นที่สูงที่สุดในญี่ปุ่น เดินจากโรงแรมได้)\nคาเฟ่สำรอง: Kissa Master Kyoto (คาเฟ่โลคอลสไตล์คิสซาเต็น จิบกาแฟดริปโบราณ)\nที่เที่ยวช้อปปิ้งสำรอง: Aeon Mall Kyoto (ห้างใหญ่ใกล้สถานีเกียวโต เดินชิลซื้อของใช้และขนม)",
+    "backup_links": [
+      "https://maps.google.com/?q=Toji+Temple+Kyoto",
+      "https://maps.google.com/?q=Kissa+Master+Kyoto",
+      "https://maps.google.com/?q=Aeon+Mall+Kyoto"
+    ],
     "transport_info": "เดินเท้าจากสถานีเกียวโต | ฟรี"
   },
   {
@@ -73,9 +86,11 @@
     "food_links": [
       "https://maps.google.com/?q=Pontocho+Alley+Izakaya+Kyoto"
     ],
-    "backup_plan": "ร้านอาหารสำรอง: Chao Chao Gyoza Sanjo (เกี๊ยวซ่าชื่อดังที่คนท้องถิ่นชอบไปนั่งดื่มกิน)",
+    "backup_plan": "ร้านอาหารสำรอง 1: Chao Chao Gyoza Sanjo (เกี๊ยวซ่าชื่อดังที่คนท้องถิ่นชอบไปนั่งดื่มกิน)\nร้านอาหารสำรอง 2: Ippudo Nishikikoji Kyoto (ราเมนฮากาตะซุปกระดูกหมูเข้มข้น)\nคาเฟ่/บาร์สำรอง: Hello Dolly Pontocho (คาเฟ่แจ๊สคลาสสิกริมแม่น้ำคาโมะ วิวยามค่ำคืน)",
     "backup_links": [
-      "https://maps.google.com/?q=Chao+Chao+Gyoza+Sanjo+Kaiko"
+      "https://maps.google.com/?q=Chao+Chao+Gyoza+Sanjo+Kaiko",
+      "https://maps.google.com/?q=Ippudo+Nishikikoji+Kyoto",
+      "https://maps.google.com/?q=Hello+Dolly+Pontocho+Kyoto"
     ],
     "transport_info": "Kyoto Subway หรือเดินเท้า | แตะ ICOCA (220 เยน)"
   },
@@ -92,9 +107,11 @@
     "food_links": [
       "https://maps.google.com/?q=Arabica+Kyoto+Higashiyama"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง: เดินต่อไปวัด Kodai-ji Temple",
+    "backup_plan": "ที่เที่ยวสำรอง: เดินต่อไปวัด Kodai-ji Temple (สวนหินและทางเดินไผ่เงียบสงบ)\nคาเฟ่สำรอง: Starbucks Coffee Kyoto Ninenzaka Yasaka Chaya (สตาร์บัคส์บ้านไม้โบราณเสื่อทาทามิแห่งเดียวในโลก)\nร้านขนมสำรอง: Maccha House Kyoto (มัทฉะทีรามิสุในกล่องไม้สนฮิโนกิยอดฮิต)",
     "backup_links": [
-      "https://maps.google.com/?q=Kodai-ji"
+      "https://maps.google.com/?q=Kodai-ji",
+      "https://maps.google.com/?q=Starbucks+Coffee+Kyoto+Ninenzaka+Yasaka+Chaya",
+      "https://maps.google.com/?q=Maccha+House+Kyoto"
     ],
     "transport_info": "Kyoto City Bus / Taxi | แตะ ICOCA (230 เยน)"
   },
@@ -111,10 +128,11 @@
     "food_links": [
       "https://maps.google.com/?q=Gion+Kyoto+Soba+Restaurant"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง 1: เดินเล่นสวน Maruyama Park ข้างศาลเจ้า\n\nร้านอาหารสำรอง 1: Gion Karyo (อาหารไคเซกิเกียวโตดั้งเดิม)",
+    "backup_plan": "ที่เที่ยวสำรอง 1: เดินเล่นสวน Maruyama Park ข้างศาลเจ้า ยาซากะ\nร้านอาหารสำรอง 1: Gion Karyo (อาหารไคเซกิเกียวโตดั้งเดิมริมถนนฮานามิโคจิ)\nคาเฟ่สำรอง: Gion Tsujiri Main Shop (ร้านชาเขียวอุจิระดับตำนาน ไอศกรีมพาร์เฟต์เข้มข้น)",
     "backup_links": [
       "https://maps.google.com/?q=Maruyama+Park+Kyoto",
-      "https://maps.google.com/?q=Gion+Karyo"
+      "https://maps.google.com/?q=Gion+Karyo",
+      "https://maps.google.com/?q=Gion+Tsujiri+Main+Shop"
     ],
     "transport_info": "เดินเท้าจากย่านฮิกาชิยามา / รถบัส | แตะ ICOCA (230 เยน)"
   },
@@ -132,10 +150,12 @@
     "food_links": [
       "https://maps.google.com/?q=Arabica+Kyoto+Arashiyama"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง 2: เดินชมป่าไผ่ Arashiyama Bamboo Grove (ปรับเป็นแผนสำรอง)\n\nที่เที่ยวสำรอง 3: ล่องเรือชมแม่น้ำโฮซึ Hozugawa River Boat Ride",
+    "backup_plan": "ที่เที่ยวสำรอง 2: เดินชมป่าไผ่ Arashiyama Bamboo Grove (ปรับเป็นแผนสำรอง)\nที่เที่ยวสำรอง 3: ล่องเรือชมแม่น้ำโฮซึ Hozugawa River Boat Ride\nคาเฟ่สำรอง: Bread, Espresso & Arashiyama Garden (เบเกอรี่บ้านโบราณในสวนญี่ปุ่น)\nร้านอาหารสำรอง: Yojiya Cafe Saga Arashiyama (คาเฟ่หน้าสาวเกอิชา ซุปและขนมสไตล์เกียวโต)",
     "backup_links": [
       "https://maps.google.com/?q=Arashiyama+Bamboo+Grove",
-      "https://maps.google.com/?q=Hozugawa+River+Boat+Ride"
+      "https://maps.google.com/?q=Hozugawa+River+Boat+Ride",
+      "https://maps.google.com/?q=Bread+Espresso+and+Arashiyama+Garden",
+      "https://maps.google.com/?q=Yojiya+Cafe+Saga+Arashiyama"
     ],
     "transport_info": "รถไฟ JR San-in Line (Kyoto -> Saga-Arashiyama) | แตะ ICOCA (240 เยน)"
   },
@@ -150,9 +170,11 @@
     "food_links": [
       "https://maps.google.com/?q=Kyoto+Ramen+Koji"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 2: Katsukura Tonkatsu (หมูทอดทงคัตสึต้นตำรับเกียวโต)",
+    "backup_plan": "ร้านอาหารสำรอง 2: Katsukura Tonkatsu (หมูทอดทงคัตสึต้นตำรับเกียวโต ชั้น The Cube)\nที่เที่ยวสำรอง: Kyoto Railway Museum (พิพิธภัณฑ์รถไฟยักษ์และหัวรถจักรไอน้ำใกล้สถานี)\nคาเฟ่สำรอง: Nakamura Tokichi Kyoto Station Store (มัทฉะพาร์เฟต์เกรดพรีเมียมบนสถานี)",
     "backup_links": [
-      "https://maps.google.com/?q=Katsukura+Kyoto+Station+The+Cube"
+      "https://maps.google.com/?q=Katsukura+Kyoto+Station+The+Cube",
+      "https://maps.google.com/?q=Kyoto+Railway+Museum",
+      "https://maps.google.com/?q=Nakamura+Tokichi+Kyoto+Station"
     ],
     "transport_info": "รถไฟ JR San-in Line (Saga-Arashiyama -> Kyoto) | แตะ ICOCA (240 เยน)"
   },
@@ -167,9 +189,11 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "เดินเล่นชมตลาด Nishiki Market ตลาดเก่าแก่ใจกลางเมืองข้างโรงแรม",
+    "backup_plan": "ที่เที่ยวสำรอง: เดินเล่นชมตลาด Nishiki Market ตลาดเก่าแก่ใจกลางเมืองข้างโรงแรม\nคาเฟ่สำรอง: Koe Donuts Kyoto (โดนัทออร์แกนิกดีไซน์สถาปัตยกรรมไม้ไผ่โดย Kengo Kuma ย่านชิโจ)\nร้านอาหารสำรอง: Honke Dai-ichi Asahi (ราเมนคิวยาวระดับตำนานน้ำซุปเข้มข้น)",
     "backup_links": [
-      "https://maps.google.com/?q=Nishiki+Market+Kyoto"
+      "https://maps.google.com/?q=Nishiki+Market+Kyoto",
+      "https://maps.google.com/?q=Koe+Donuts+Kyoto",
+      "https://maps.google.com/?q=Honke+DaiichiAsahi"
     ],
     "transport_info": "เดินเท้า / แท็กซี่ / รถไฟใต้ดิน | แตะ ICOCA (220 เยน)"
   },
@@ -186,10 +210,12 @@
     "food_links": [
       "https://maps.google.com/?q=Nakamura+Tokichi+Main+Branch"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง 4: ศาลเจ้าเก่าแก่ที่สุดในญี่ปุ่น Ujigami Shrine\n\nร้านอาหารสำรอง 3: Itohkyuemon Uji (คาเฟ่มัทฉะโซบะและพาร์เฟต์)",
+    "backup_plan": "ที่เที่ยวสำรอง 4: ศาลเจ้าเก่าแก่ที่สุดในญี่ปุ่น Ujigami Shrine\nร้านอาหารสำรอง 3: Itohkyuemon Uji (คาเฟ่มัทฉะโซบะและพาร์เฟต์)\nคาเฟ่ประวัติศาสตร์สำรอง: Tsuen Tea Uji (ร้านน้ำชาที่เก่าแก่ที่สุดในญี่ปุ่น ก่อตั้ง ค.ศ. 1160 ริมแม่น้ำอุจิ)\nที่เที่ยวสำรอง: The Tale of Genji Museum Uji (พิพิธภัณฑ์ตำนานเก็นจิ วรรณกรรมชิ้นเอก)",
     "backup_links": [
       "https://maps.google.com/?q=Ujigami+Shrine",
-      "https://maps.google.com/?q=Itohkyuemon+Uji"
+      "https://maps.google.com/?q=Itohkyuemon+Uji",
+      "https://maps.google.com/?q=Tsuen+Tea+Uji",
+      "https://maps.google.com/?q=The+Tale+of+Genji+Museum+Uji"
     ],
     "transport_info": "รถไฟ Keihan Line หรือ JR Nara Line | แตะ ICOCA (330 - 430 เยน)"
   },
@@ -205,10 +231,12 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "ร้านของมือสองเสริม 1: Kindal Kyoto Teramachi (ร้านคัดเกรด 3 ชั้น)\n\nร้านของมือสองเสริม 2: Hard-Off / Surugaya Kyoto Teramachi (ของสะสม ฟิกเกอร์ แผ่นเกม แผ่นเสียง แก็ดเจ็ต)",
+    "backup_plan": "ร้านของมือสองเสริม 1: Kindal Kyoto Teramachi (ร้านคัดเกรด 3 ชั้น)\nร้านของมือสองเสริม 2: Hard-Off / Surugaya Kyoto Teramachi (ของสะสม ฟิกเกอร์ แผ่นเกม แผ่นเสียง แก็ดเจ็ต)\nร้านแบรนด์เนมมือสองสำรอง: Komehyo Kyoto Shijo (แบรนด์เนม นาฬิกา กล้อง กระเป๋าคัดเกรด A)\nคาเฟ่พักขาสำรอง: Doutor Coffee Shijo Kawaramachi",
     "backup_links": [
       "https://maps.google.com/?q=Kindal+Kyoto",
-      "https://maps.google.com/?q=Surugaya+Kyoto+Teramachi"
+      "https://maps.google.com/?q=Surugaya+Kyoto+Teramachi",
+      "https://maps.google.com/?q=Komehyo+Kyoto+Shijo",
+      "https://maps.google.com/?q=Doutor+Coffee+Shijo+Kawaramachi"
     ],
     "transport_info": "เดินเท้าจากที่พักย่าน Shijo Kawaramachi / Teramachi | ฟรี"
   },
@@ -225,9 +253,11 @@
     "food_links": [
       "https://maps.google.com/?q=Moritaya+Sukiyaki+Kyoto"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 4: Gyoza Hohei Gion (เกี๊ยวซ่าระดับมิชลินบิบกูร์มองด์ บรรยากาศอบอุ่น)",
+    "backup_plan": "ร้านอาหารสำรอง 4: Gyoza Hohei Gion (เกี๊ยวซ่าระดับมิชลินบิบกูร์มองด์ บรรยากาศอบอุ่น)\nร้านอาหารสำรองเสริม: Musashi Sushi Kyoto (ซูชิสายพานท้องถิ่นคุณภาพสดคุ้มราคา ย่านคาวาระมาจิ)\nคาเฟ่ของหวานสำรอง: Salon de Muge Kyoto (มิชลินไกด์ เซตชาเขียวและขนมญี่ปุ่นแบบประณีต)",
     "backup_links": [
-      "https://maps.google.com/?q=Gyoza+Hohei+Gion"
+      "https://maps.google.com/?q=Gyoza+Hohei+Gion",
+      "https://maps.google.com/?q=Musashi+Sushi+Kyoto",
+      "https://maps.google.com/?q=Salon+de+Muge+Kyoto"
     ],
     "transport_info": "เดินเท้าในย่านชิโจคาวาระมาจิ | ฟรี"
   },
@@ -242,9 +272,11 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "ที่เที่ยวสำรอง 5: แวะชมศาลาลอยน้ำโบราณ Ukimidou Mangetsu-ji (ศาลาวัดยื่นลงในทะเลสาบบิวะ)",
+    "backup_plan": "ที่เที่ยวสำรอง 5: แวะชมศาลาลอยน้ำโบราณ Ukimidou Mangetsu-ji (ศาลาวัดยื่นลงในทะเลสาบบิวะ)\nคาเฟ่วิวทะเลสาบสำรอง: Shirahige Soba (ร้านโซบะท้องถิ่นชมวิวทะเลสาบบิวะ)\nจุดชมวิวสำรอง: Biwako Valley (กระเช้าลอยฟ้าบนยอดเขามองเห็นทะเลสาบบิวะ 360 องศา)",
     "backup_links": [
-      "https://maps.google.com/?q=Ukimidou+Mangetsuji"
+      "https://maps.google.com/?q=Ukimidou+Mangetsuji",
+      "https://maps.google.com/?q=Shirahige+Jinja+Soba",
+      "https://maps.google.com/?q=Biwako+Valley"
     ],
     "transport_info": "รถไฟ JR Kosei Line (Kyoto -> Omi-Takashima) + แท็กซี่ | แตะ ICOCA + ค่าแท็กซี่ (ประมาณ 1,500 เยน/คัน)"
   },
@@ -261,9 +293,11 @@
     "food_links": [
       "https://maps.google.com/?q=Sennaritei+Hachimabori"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง (Plan B ทะเลสาบ): ขึ้นกระเช้าลอยฟ้า Hachimanyama Ropeway ชมวิวมุมสูงแบบพาโนรามาของทะเลสาบบิวะและเมืองโอมิฮาจิมัง",
+    "backup_plan": "ที่เที่ยวสำรอง (Plan B ทะเลสาบ): ขึ้นกระเช้าลอยฟ้า Hachimanyama Ropeway ชมวิวมุมสูงแบบพาโนรามา\nคาเฟ่ริมคลองสำรอง: Merikatei Cafe Omihachiman (คาเฟ่เรือนขนมปังฝรั่งเศสริมลำคลองประวัติศาสตร์)\nร้านอาหารสำรอง: Omi Beef Shin (ร้านข้าวหน้าเนื้อวากิวโอมิย่างเตาถ่านแท้)",
     "backup_links": [
-      "https://maps.google.com/?q=Hachimanyama+Ropeway"
+      "https://maps.google.com/?q=Hachimanyama+Ropeway",
+      "https://maps.google.com/?q=Merikatei+Omihachiman",
+      "https://maps.google.com/?q=Omi+Beef+Shin+Omihachiman"
     ],
     "transport_info": "รถไฟ JR Line + รถบัสท้องถิ่น Omihachiman | แตะ ICOCA (ประมาณ 700 เยน)"
   },
@@ -280,9 +314,11 @@
     "food_links": [
       "https://maps.google.com/?q=Club+Harie+La+Collina"
     ],
-    "backup_plan": "ที่เที่ยวสำรองในเมืองเกียวโต (หากต้องการกลับเร็ว): ปราสาทมรดกโลก Nijo Castle",
+    "backup_plan": "ที่เที่ยวสำรองในเกียวโต (หากต้องการกลับเร็ว): ปราสาทมรดกโลก Nijo Castle\nที่เที่ยวประวัติศาสตร์สำรอง: Kawara Museum (พิพิธภัณฑ์กระเบื้องหลังคาโบราณริมคลองโอมิฮาจิมัง)\nร้านขนมสำรอง: Taneya Main Store Omihachiman (ร้านขนมญี่ปุ่นดั้งเดิมต้นกำเนิดของ Club Harie)",
     "backup_links": [
-      "https://maps.google.com/?q=Nijo+Castle"
+      "https://maps.google.com/?q=Nijo+Castle",
+      "https://maps.google.com/?q=Kawara+Museum+Omihachiman",
+      "https://maps.google.com/?q=Taneya+Main+Store+Omihachiman"
     ],
     "transport_info": "รถบัสท้องถิ่น Omihachiman หรือแท็กซี่ | แตะ ICOCA / เงินสด (200 - 1,000 เยน)"
   },
@@ -297,9 +333,11 @@
     "food_links": [
       "https://maps.google.com/?q=Menya+Inoichi"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 5: Chao Chao Gyoza Shijo (เกี๊ยวซ่าทอดกระทะร้อน)",
+    "backup_plan": "ร้านอาหารสำรอง 5: Chao Chao Gyoza Shijo (เกี๊ยวซ่าทอดกระทะร้อน)\nร้านอาหารสำรองเสริม: Tendon Makino Kyoto Teramachi (ข้าวหน้าเทมปุระล้นชามทอดสดใหม่ คิวยอดนิยม)\nบาร์เครื่องดื่มสำรอง: Bar K6 Kyoto (บาร์ค็อกเทลคลาสสิกระดับท็อปของเกียวโต)",
     "backup_links": [
-      "https://maps.google.com/?q=Chao+Chao+Gyoza+Sanjo+Kaiko"
+      "https://maps.google.com/?q=Chao+Chao+Gyoza+Sanjo+Kaiko",
+      "https://maps.google.com/?q=Tendon+Makino+Kyoto+Teramachi",
+      "https://maps.google.com/?q=Bar+K6+Kyoto"
     ],
     "transport_info": "รถไฟ JR Biwako Line (Omihachiman -> Kyoto) + เดินเท้า/บัส | แตะ ICOCA (680 เยน)"
   },
@@ -316,9 +354,11 @@
     "food_links": [
       "https://maps.google.com/?q=Fushimi+Inari+Taisha+Street+Food"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง: คาเฟ่ริมลำธาร Vermillion Cafe Fushimi",
+    "backup_plan": "คาเฟ่สำรอง: Vermillion Cafe Fushimi (คาเฟ่ริมลำธารและป่าร่มรื่น)\nที่เที่ยวสำรอง: Tofukuji Temple (วัดโทฟุคุจิ สะพานไม้ Tsutenkyo ชมสวนหินเซนและธรรมชาติสงบ)\nร้านอาหารสำรอง: Kendon Udon Fushimi (อุด้งเส้นสดทำมือ ซุปปลาแห้งเข้มข้นสไตล์เกียวโต)",
     "backup_links": [
-      "https://maps.google.com/?q=Vermillion+cafe+Fushimi+Kyoto"
+      "https://maps.google.com/?q=Vermillion+cafe+Fushimi+Kyoto",
+      "https://maps.google.com/?q=Tofukuji+Temple+Kyoto",
+      "https://maps.google.com/?q=Kendon+Udon+Fushimi"
     ],
     "transport_info": "รถไฟ Keihan Line หรือ JR Nara Line | แตะ ICOCA (150 - 210 เยน)"
   },
@@ -331,8 +371,12 @@
     "main_place_links": [],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "เตรียมตัวย้ายเข้าที่พักย่านชอปปิงใจกลางเมืองโอซาก้า",
-    "backup_links": [],
+    "backup_plan": "ที่เที่ยวช้อปปิ้งสำรองระหว่างทาง: Eki Marche Shin-Osaka (ศูนย์รวมของฝากและร้านอาหารในสถานีชินโอซาก้า)\nร้านอาหารสำรอง: Matsuba Kushikatsu Shin-Osaka (ร้านของทอดแบบยืนกินระดับตำนานในสถานี)\nคาเฟ่สำรอง: Doutor Coffee Shin-Osaka Station",
+    "backup_links": [
+      "https://maps.google.com/?q=Eki+Marche+Shin-Osaka",
+      "https://maps.google.com/?q=Matsuba+Shin-Osaka",
+      "https://maps.google.com/?q=Doutor+Coffee+Shin-Osaka"
+    ],
     "transport_info": "รถไฟ Hankyu Kyoto Line (Kawaramachi -> Umeda) | แตะ ICOCA (410 เยน)"
   },
   {
@@ -346,8 +390,12 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "พักผ่อนจัดของในห้องพัก",
-    "backup_links": [],
+    "backup_plan": "ที่เที่ยวสำรองใกล้ที่พัก: America-mura Osaka (หมู่บ้านอเมริกา แหล่งรวมแฟชั่นสตรีท เสื้อผ้ามือสอง และกราฟิตี)\nคาเฟ่สำรอง: LiLo Coffee Roasters (ร้านกาแฟ Specialty Coffee ชื่อดังแห่งย่านชินไซบาชิ)\nร้านขนมสำรอง: Rikuro Ojisan Namba (ชีสเค้กคุณลุงเด้งดึ๋ง อบสดใหม่ส่งกลิ่นหอมสั่นกระดิ่ง)",
+    "backup_links": [
+      "https://maps.google.com/?q=America-mura+Osaka",
+      "https://maps.google.com/?q=LiLo+Coffee+Roasters",
+      "https://maps.google.com/?q=Rikuro+Ojisan+Namba+Main+Branch"
+    ],
     "transport_info": "Osaka Metro | แตะ ICOCA (190 เยน)"
   },
   {
@@ -364,10 +412,11 @@
     "food_links": [
       "https://maps.google.com/?q=Chibo+Okonomiyaki+Dotonbori"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 6: Mizuno Okonomiyaki\n\nร้านอาหารสำรอง 7: Takoyaki Wanaka Dotonbori",
+    "backup_plan": "ร้านอาหารสำรอง 6: Mizuno Okonomiyaki (โอโคโนมิยากิมิชลินบิบกูร์มองด์)\nร้านอาหารสำรอง 7: Ichiran Ramen Dotonbori (ราเมนข้อสอบสาขาริมคลองโดทงโบริ)\nที่เที่ยวสำรอง: Hozenji Yokocho (ตรอกหินโบราณและรูปปั้นพระฟุโดเมียวโอะปกคลุมด้วยมอสเขียว)",
     "backup_links": [
       "https://maps.google.com/?q=Mizuno+Okonomiyaki",
-      "https://maps.google.com/?q=Takoyaki+Wanaka+Dotonbori"
+      "https://maps.google.com/?q=Ichiran+Dotonbori",
+      "https://maps.google.com/?q=Hozenji+Yokocho+Osaka"
     ],
     "transport_info": "เดินเท้าจากโรงแรม | ฟรี"
   },
@@ -382,9 +431,11 @@
     ],
     "food_recommendation": "รวมอาหารกลางวันในแพ็กเกจทัวร์แล้ว",
     "food_links": [],
-    "backup_plan": "แผนสำรอง: กิจกรรมให้อาหารนกนางนวลระหว่างล่องเรือที่อ่าวอิเนะ",
+    "backup_plan": "คาเฟ่อาหารเช้าสำรอง: Komeda's Coffee Shinsaibashi (เปิดเช้า สั่งกาแฟแถมเซตขนมปังปิ้งไข่ต้มฟรี)\nร้านกาแฟสปีดสำรอง: Doutor Coffee Shinsaibashi\nจุดนัดพบสำรอง: Namba Station Tourist Information Center",
     "backup_links": [
-      "https://maps.google.com/?q=Amanohashidate"
+      "https://maps.google.com/?q=Komedas+Coffee+Shinsaibashi",
+      "https://maps.google.com/?q=Doutor+Coffee+Shinsaibashi",
+      "https://maps.google.com/?q=Namba+Station+Tourist+Information"
     ],
     "transport_info": "รถบัสท่องเที่ยว One Day Tour | รวมในค่าแพ็กเกจทัวร์แล้ว (นัดรวมพล 07:00 น.)"
   },
@@ -401,10 +452,12 @@
     "food_links": [
       "https://maps.google.com/?q=Umeda+Station+Yakiniku+Osaka"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง: เดินห้าง Grand Front Osaka\n\nร้านขนมสำรอง: Harbs Umeda (เค้กผลไม้เครปพันชั้นชื่อดัง)",
+    "backup_plan": "ที่เที่ยวสำรอง: เดินห้าง Grand Front Osaka\nร้านขนมสำรอง: Harbs Umeda (เค้กผลไม้เครปพันชั้นชื่อดัง)\nร้านอาหารสำรอง: Kiji Okonomiyaki Umeda (โอโคโนมิยากิสูตรดั้งเดิมในตรอกโบราณ Takimi Koji ใต้ตึกสกาย)\nจุดชมวิวสำรอง: HEP FIVE Ferris Wheel (ชิงช้าสวรรค์สีแดงยักษ์บนดาดฟ้าห้างใจกลางอุเมดะ)",
     "backup_links": [
       "https://maps.google.com/?q=Grand+Front+Osaka",
-      "https://maps.google.com/?q=Harbs+Umeda"
+      "https://maps.google.com/?q=Harbs+Umeda",
+      "https://maps.google.com/?q=Kiji+Okonomiyaki+Umeda+Sky+Building",
+      "https://maps.google.com/?q=HEP+FIVE+Ferris+Wheel"
     ],
     "transport_info": "Osaka Metro | แตะ ICOCA (240 เยน)"
   },
@@ -421,9 +474,11 @@
     "food_links": [
       "https://maps.google.com/?q=Nakatanidou"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง: ศาลเจ้าโคมไฟโบราณ Kasuga Taisha Shrine",
+    "backup_plan": "ที่เที่ยวสำรอง: ศาลเจ้าโคมไฟโบราณ Kasuga Taisha Shrine\nคาเฟ่สำรอง: Rokumei Coffee Co. Nara (แชมป์บาริสต้าคั่วกาแฟ คาเฟ่ Specialty ประจำเมืองนารา)\nร้านอาหารสำรอง: Shizuka Kamameshi Nara (ข้าวอบหม้อโบราณคิวยาวหน้าสวนนารา)",
     "backup_links": [
-      "https://maps.google.com/?q=Kasuga+Taisha+Nara"
+      "https://maps.google.com/?q=Kasuga+Taisha+Nara",
+      "https://maps.google.com/?q=Rokumei+Coffee+Nara",
+      "https://maps.google.com/?q=Shizuka+Koen-ten+Nara"
     ],
     "transport_info": "รถไฟ Kintetsu Line (Osaka-Namba -> Kintetsu-Nara) | แตะ ICOCA (680 เยน)"
   },
@@ -438,9 +493,11 @@
     "food_links": [
       "https://maps.google.com/?q=Hakugintei+Osaka"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 8: Curry House Nishimoto",
+    "backup_plan": "ร้านอาหารสำรอง 8: Curry House Nishimoto (แกงกะหรี่เนื้อทอดสไตล์โฮมเมด)\nคาเฟ่สำรอง: Wad Omotenashi Cafe (คาเฟ่ชาเขียวชงสดและขนมดังโงะย่างเตาถ่านส่วนตัว)\nที่เที่ยวสำรอง: Utsubo Park Osaka (สวนอุสึโบะ สวนกว้างร่มรื่นและย่านคาเฟ่ชิคๆ ของโอซาก้า)",
     "backup_links": [
-      "https://maps.google.com/?q=Curry+House+Nishimoto+Osaka"
+      "https://maps.google.com/?q=Curry+House+Nishimoto+Osaka",
+      "https://maps.google.com/?q=Wad+Omotenashi+Cafe+Osaka",
+      "https://maps.google.com/?q=Utsubo+Park+Osaka"
     ],
     "transport_info": "รถไฟ Kintetsu Line (Kintetsu-Nara -> Osaka) | แตะ ICOCA (680 เยน)"
   },
@@ -457,9 +514,11 @@
     "food_links": [
       "https://maps.google.com/?q=Tsuruhashi+Korea+Town+Street+Food+Osaka"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 9: ปิ้งย่างเกาหลี / หมูย่างเกาหลีรสเด็ดย่าน Tsuruhashi",
+    "backup_plan": "ร้านอาหารสำรอง 9: ปิ้งย่างเกาหลี / หมูย่างเกาหลีรสเด็ดย่าน Tsuruhashi\nคาเฟ่เกาหลีสำรอง: Cafe N2 Tsuruhashi (คาเฟ่สไตล์มินิมอลเกาหลี ครอฟเฟิลและครีมลาเต้)\nร้านของฝากสำรอง: Tsuruhashi Wholesale Market (ตลาดค้าส่งกิมจิและอาหารเกาหลีแท้ๆ)",
     "backup_links": [
-      "https://maps.google.com/?q=Tsuruhashi+Korean+Yakiniku+Osaka"
+      "https://maps.google.com/?q=Tsuruhashi+Korean+Yakiniku+Osaka",
+      "https://maps.google.com/?q=Cafe+N2+Tsuruhashi",
+      "https://maps.google.com/?q=Tsuruhashi+Market"
     ],
     "transport_info": "Osaka Metro (Namba -> Tsuruhashi) | แตะ ICOCA (190 เยน)"
   },
@@ -476,10 +535,12 @@
     "food_links": [
       "https://maps.google.com/?q=Tenmasa+Osaka"
     ],
-    "backup_plan": "ร้านของมือสองเสริม 3: Book-Off Plus / Book-Off Super Bazaar Namba\n\nร้านของมือสองเสริม 4: Kindal Shinsaibashi Amerikamura",
+    "backup_plan": "ร้านของมือสองเสริม 3: Book-Off Plus / Book-Off Super Bazaar Namba\nร้านของมือสองเสริม 4: Kindal Shinsaibashi Amerikamura\nคาเฟ่สำรอง: Brooklyn Roasting Company Namba (คาเฟ่ริมทางรถไฟ บรรยากาศดิบเท่สไตล์นิวยอร์ก)\nร้านของสะสมสำรอง: Joshin Super Kids Land Main Store Nipponbashi (สวรรค์กันดั้มและโมเดลรถไฟ)",
     "backup_links": [
       "https://maps.google.com/?q=BookOff+Plus+Namba+Osaka",
-      "https://maps.google.com/?q=Kindal+Shinsaibashi+Amerikamura"
+      "https://maps.google.com/?q=Kindal+Shinsaibashi+Amerikamura",
+      "https://maps.google.com/?q=Brooklyn+Roasting+Company+Namba",
+      "https://maps.google.com/?q=Joshin+Super+Kids+Land+Main+Store"
     ],
     "transport_info": "Osaka Metro / เดินเท้า | แตะ ICOCA (190 เยน)"
   },
@@ -496,10 +557,12 @@
     "food_links": [
       "https://maps.google.com/?q=Steakland+Kobe"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 10: Steak Ishida Kobe\n\nที่เที่ยวสำรอง: นั่งกระเช้าลอยฟ้า Kobe Nunobiki Ropeway",
+    "backup_plan": "ร้านอาหารสำรอง 10: Steak Ishida Kobe (สเต๊กเนื้อโกเบพรีเมียม)\nที่เที่ยวสำรอง: นั่งกระเช้าลอยฟ้า Kobe Nunobiki Ropeway ชมสวนสมุนไพรและวิวมุมสูง\nคาเฟ่ประวัติศาสตร์สำรอง: Starbucks Coffee Kobe Kitano Ijinkan (สตาร์บัคส์บ้านวิกตอเรียนปี 1907)\nร้านเบเกอรี่สำรอง: Cafe Freundlieb Kobe (คาเฟ่โบสถ์เก่า แซนด์วิชและพายผีเสื้อชื่อดัง)",
     "backup_links": [
       "https://maps.google.com/?q=Steak+Ishida+Kobe",
-      "https://maps.google.com/?q=Kobe+Nunobiki+Ropeway"
+      "https://maps.google.com/?q=Kobe+Nunobiki+Ropeway",
+      "https://maps.google.com/?q=Starbucks+Coffee+Kobe+Kitano+Ijinkan",
+      "https://maps.google.com/?q=Cafe+Freundlieb+Kobe"
     ],
     "transport_info": "Osaka Metro + รถไฟ Hanshin Line | ใช้ตั๋วแตะ ICOCA (รวมประมาณ 600 เยน)"
   },
@@ -516,10 +579,12 @@
     "food_links": [
       "https://maps.google.com/?q=Roshoki+Kobe"
     ],
-    "backup_plan": "ที่เที่ยวสำรองในโกเบ 1: เดินรับลมทะเลที่ห้าง Kobe Harborland\nที่เที่ยวสำรองในโกเบ 2: ถ่ายรูปคู่กับป้าย BE KOBE ที่ Meriken Park",
+    "backup_plan": "ที่เที่ยวสำรองในโกเบ 1: เดินรับลมทะเลที่ห้าง Kobe Harborland\nที่เที่ยวสำรองในโกเบ 2: ถ่ายรูปคู่กับป้าย BE KOBE ที่ Meriken Park\nคาเฟ่ขนมหวานสำรอง: Morozoff Kobe Main Store (ชีสเค้กและพุดดิ้งคัสตาร์ดระดับตำนานของเมืองโกเบ)\nจุดชมวิวสำรอง: Kobe Port Tower (หอคอยสีแดงทรงกลองญี่ปุ่นสัญลักษณ์แห่งอ่าวโกเบ)",
     "backup_links": [
       "https://maps.google.com/?q=Kobe+Harborland",
-      "https://maps.google.com/?q=Meriken+Park"
+      "https://maps.google.com/?q=Meriken+Park",
+      "https://maps.google.com/?q=Morozoff+Kobe+Main+Store",
+      "https://maps.google.com/?q=Kobe+Port+Tower"
     ],
     "transport_info": "เดินเท้าจากย่านโมโตมาจิ | ฟรี"
   },
@@ -534,9 +599,11 @@
     "food_links": [
       "https://maps.google.com/?q=Kushikatsu+Daruma+Shinsekai"
     ],
-    "backup_plan": "ร้านอาหารสำรอง: Yaekatsu Kushikatsu",
+    "backup_plan": "ร้านอาหารสำรอง: Yaekatsu Kushikatsu (คุชิคัตสึทอดไม่อมน้ำมันเจ้าดังย่านชินเซไก)\nที่เที่ยวสำรอง: Tsutenkaku Tower & Slider (หอคอยซึเทนคาคุและสไลเดอร์ยักษ์ Tower Slider)\nคาเฟ่สำรอง: Sennari Kissa Shinsekai (คาเฟ่ย้อนยุคโชวะ ชิมพาร์เฟต์ผลไม้และกาแฟโบราณ)",
     "backup_links": [
-      "https://maps.google.com/?q=Yaekatsu"
+      "https://maps.google.com/?q=Yaekatsu",
+      "https://maps.google.com/?q=Tsutenkaku+Tower+Osaka",
+      "https://maps.google.com/?q=Sennari+Kissa+Shinsekai"
     ],
     "transport_info": "รถไฟ Hanshin Line (Motomachi -> Osaka-Namba) | แตะ ICOCA (410 เยน)"
   },
@@ -553,8 +620,12 @@
     "food_links": [
       "https://maps.google.com/?q=Minoh+Momiji+Tempura"
     ],
-    "backup_plan": "แผนสำรอง: นั่งแท็กซี่ขึ้นไปใกล้จุดชมน้ำตกได้โดยตรงสำหรับผู้ที่ไม่อยากเดินไกล",
-    "backup_links": [],
+    "backup_plan": "แผนสำรองการเดินทาง: นั่งแท็กซี่ขึ้นไปใกล้จุดชมน้ำตกได้โดยตรงสำหรับผู้ที่ไม่อยากเดินไกล\nคาเฟ่สำรอง: Yamamoto Coffee Minoh (ร้านกาแฟคั่วบดริมลำธารหุบเขามิโนะ)\nที่เที่ยวธรรมชาติสำรอง: Minoh Park Insect Museum (พิพิธภัณฑ์ธรรมชาติและโดมผีเสื้อเขตร้อนกลางป่า)",
+    "backup_links": [
+      "https://maps.google.com/?q=Minoh+Falls",
+      "https://maps.google.com/?q=Yamamoto+Coffee+Minoh",
+      "https://maps.google.com/?q=Minoh+Park+Insect+Museum"
+    ],
     "transport_info": "Osaka Metro สาย Midosuji + Hankyu Bus หรือ Taxi | แตะ ICOCA (ประมาณ 900 เยน/ขา)"
   },
   {
@@ -570,9 +641,11 @@
     "food_links": [
       "https://maps.google.com/?q=Katsuoji+Restaurant+Minoh"
     ],
-    "backup_plan": "ถ่ายรูปมุมไฮไลต์สวนน้ำตกและสระน้ำกลางวัดดารุมะ",
+    "backup_plan": "ที่เที่ยวสำรอง: ถ่ายรูปมุมไฮไลต์สวนน้ำตกและสระน้ำกลางวัดดารุมะ Katsuoji\nร้านอาหาร/ของว่างสำรอง: Katsuoji Daruma Teahouse (จิบชาร้อนและทานโมจิตุ๊กตาดารุมะนำโชค)\nจุดชมวิวสำรอง: Meiji no Mori Minoh Quasi-National Park",
     "backup_links": [
-      "https://maps.google.com/?q=Katsuoji+Temple+Minoh"
+      "https://maps.google.com/?q=Katsuoji+Temple+Minoh",
+      "https://maps.google.com/?q=Katsuoji+Teahouse",
+      "https://maps.google.com/?q=Meiji+no+Mori+Minoh"
     ],
     "transport_info": "Hankyu Bus หรือ Taxi ระหว่าง Minoh Falls - Katsuoji | แตะ ICOCA / เงินสด (500 - 1,500 เยน)"
   },
@@ -589,9 +662,11 @@
     "food_links": [
       "https://maps.google.com/?q=Hashimoto-tei+Minoh"
     ],
-    "backup_plan": "ที่เที่ยวสำรองในมิโนะ: แวะแช่น้ำพุร้อนบ่อแช่เท้าหน้าสถานี Minoh Station Footbath (Yuzuru-an)",
+    "backup_plan": "ที่เที่ยวสำรองในมิโนะ: แวะแช่น้ำพุร้อนบ่อแช่เท้าหน้าสถานี Minoh Station Footbath (Yuzuru-an)\nคาเฟ่สำรอง: Franc et elegant Yuzuru Cafe (คาเฟ่ขนมยูซุขึ้นชื่อของเมืองมิโนะ)\nร้านขนมสำรอง: Hisakuni Soushindou (ร้านต้นตำรับโมมิจิเทมปุระทอดสดสูตรกว่า 80 ปี)",
     "backup_links": [
-      "https://maps.google.com/?q=Minoh+Station+Footbath"
+      "https://maps.google.com/?q=Minoh+Station+Footbath",
+      "https://maps.google.com/?q=Minoh+Station+Yuzuru+Cafe",
+      "https://maps.google.com/?q=Hisakuni+Soushindou+Minoh"
     ],
     "transport_info": "เดินเท้าเลียบธารน้ำธรรมชาติมิโนะ | ฟรี"
   },
@@ -606,8 +681,12 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "แผนสำรอง (หากไม่แวะปราสาท): เดินทางตรงกลับเข้าย่านชินไซบาชิ พักผ่อนเก็บของที่โรงแรม Quintessa",
-    "backup_links": [],
+    "backup_plan": "แผนสำรอง (หากไม่แวะปราสาท): เดินทางตรงกลับเข้าย่านชินไซบาชิ พักผ่อนเก็บของที่โรงแรม Quintessa\nคาเฟ่สำรอง: Miraiza Osaka-jo (อาคารประวัติศาสตร์สไตล์ยุโรปหน้าปราสาท รวมคาเฟ่และร้านขนม)\nร้านอาหารสำรอง: The Landmark Square Osaka (มื้ออาหารพร้อมวิวตัวปราสาทโอซาก้าแบบพาโนรามา)",
+    "backup_links": [
+      "https://maps.google.com/?q=Quintessa+Hotel+Osaka+Shinsaibashi",
+      "https://maps.google.com/?q=Miraiza+Osakajo",
+      "https://maps.google.com/?q=The+Landmark+Square+Osaka"
+    ],
     "transport_info": "Osaka Metro | แตะ ICOCA (240 เยน)"
   },
   {
@@ -623,9 +702,11 @@
     "food_links": [
       "https://maps.google.com/?q=On+Yasai+Shabu+Shabu+Osaka"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 11: ไก่ย่างเสียบไม้เตาถ่านชื่อดังของคนท้องถิ่น Yakitori Rikimaru Namba",
+    "backup_plan": "ร้านอาหารสำรอง 11: ไก่ย่างเสียบไม้เตาถ่านชื่อดังของคนท้องถิ่น Yakitori Rikimaru Namba\nคาเฟ่ของหวานสำรอง: Gram Cafe & Pancakes Shinsaibashi (แพนเค้กซูเฟล่ 3 ชั้นนุ่มเด้งละลายในปาก)\nร้านราเมนดึกสำรอง: Zundoya Ramen Shinsaibashi (ราเมนซุปกระดูกหมูเข้มข้นเปิด 24 ชม.)",
     "backup_links": [
-      "https://maps.google.com/?q=Yakitori+Rikimaru+Osaka"
+      "https://maps.google.com/?q=Yakitori+Rikimaru+Osaka",
+      "https://maps.google.com/?q=Gram+Cafe+Pancakes+Shinsaibashi",
+      "https://maps.google.com/?q=Zundoya+Shinsaibashi"
     ],
     "transport_info": "Osaka Metro / เดินเท้า | แตะ ICOCA (190 เยน)"
   },
@@ -640,8 +721,12 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "ไม่ต้องรีบร้อน พักผ่อนและเตรียมสัมภาระสำหรับวันเดินทางกลับ",
-    "backup_links": [],
+    "backup_plan": "แผนสำรอง: พักผ่อนและเตรียมสัมภาระสำหรับวันเดินทางกลับในห้องพัก Odysis Suites\nร้านกาแฟสำรอง: Tully's Coffee Rinku Pleasure Town Seacle\nจุดเดินเล่นสำรอง: Rinku Park Symbol Green (สวนสาธารณะริมอ่าว ลานปิคนิคชมวิวสะพานข้ามทะเล)",
+    "backup_links": [
+      "https://maps.google.com/?q=Odysis+Suites+Osaka+Airport+Hotel",
+      "https://maps.google.com/?q=Tullys+Coffee+Seacle+Rinku",
+      "https://maps.google.com/?q=Rinku+Park+Symbol+Green"
+    ],
     "transport_info": "รถไฟ Nankai Line (Namba -> Rinku-Town) | แตะ ICOCA (780 เยน)"
   },
   {
@@ -657,10 +742,12 @@
     "food_links": [
       "https://maps.google.com/?q=Rinku+Dining+Outlets"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 12: Kura Sushi Rinku Town\n\nที่เที่ยวสำรอง: เดินห้างติดสถานี Rinku Pleasure Town Seacle และขึ้นชิงช้าสวรรค์ยักษ์",
+    "backup_plan": "ร้านอาหารสำรอง 12: Kura Sushi Rinku Town (ซูชิสายพานจานละ 100 เยนยอดฮิต)\nที่เที่ยวสำรอง: เดินห้างติดสถานี Rinku Pleasure Town Seacle และขึ้นชิงช้าสวรรค์ยักษ์\nคาเฟ่สำรอง: Godiva Cafe Rinku Outlets (ช็อกโกแลตปั่นเข้มข้นและซอฟต์เสิร์ฟพรีเมียม)\nร้านอาหารสำรองเสริม: Bagel & Bagel Rinku Outlets (เบเกิลแซนด์วิชและกาแฟพักช้อป)",
     "backup_links": [
       "https://maps.google.com/?q=Kura+Sushi+Rinku",
-      "https://maps.google.com/?q=Seacle"
+      "https://maps.google.com/?q=Seacle",
+      "https://maps.google.com/?q=Godiva+Rinku+Premium+Outlets",
+      "https://maps.google.com/?q=Bagel+and+Bagel+Rinku+Outlets"
     ],
     "transport_info": "เดินเท้าจากโรงแรม | ฟรี"
   },
@@ -675,8 +762,12 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "บรรยากาศเงียบสงบและสวยงามมาก เหมาะกับค่ำคืนสุดท้ายของทริป",
-    "backup_links": [],
+    "backup_plan": "แผนสำรอง: เดินเล่นชมวิวพระอาทิตย์ตกดินดวงโตๆ ริมหาดหินอ่อนสีขาว Marble Beach\nคาเฟ่วิวทะเลสำรอง: Starbucks Coffee Rinku Outlets Seaside (สตาร์บัคส์ริมทะเล นั่งชมแสงทไวไลท์)\nจุดถ่ายรูปสำรอง: สวนหินอ่อน Love The Beach Monument (ป้ายรูปหัวใจแลนด์มาร์กหาดหินอ่อน)",
+    "backup_links": [
+      "https://maps.google.com/?q=Marble+Beach+Rinku",
+      "https://maps.google.com/?q=Starbucks+Coffee+Rinku+Outlets+Seaside",
+      "https://maps.google.com/?q=Marble+Beach+Heart+Monument"
+    ],
     "transport_info": "เดินเท้า / Bus / Taxi | แตะ ICOCA (ประมาณ 200 - 300 เยน)"
   },
   {
@@ -692,9 +783,11 @@
     "food_links": [
       "https://maps.google.com/?q=Tennen+Onsen+Rinkunoyu+Restaurant"
     ],
-    "backup_plan": "กิจกรรมสำรอง: เดินเล่นพักผ่อนรับลมที่สวนริมชายฝั่ง Rinku Park ชมแสงไฟรันเวย์สนามบินคันไซตอนกลางคืน",
+    "backup_plan": "กิจกรรมสำรอง: เดินเล่นพักผ่อนรับลมที่สวนริมชายฝั่ง Rinku Park ชมแสงไฟรันเวย์สนามบินคันไซ\nร้านอาหารสำรอง: Izakaya Maru Rinku (อิซากายะซีฟู้ดและปลาสดจากอ่าวโอซาก้า)\nร้านขนมสำรอง: Mister Donut Rinku Seacle",
     "backup_links": [
-      "https://maps.google.com/?q=Rinku+Park"
+      "https://maps.google.com/?q=Rinku+Park",
+      "https://maps.google.com/?q=Rinku+Seafood+Izakaya",
+      "https://maps.google.com/?q=Mister+Donut+Rinku+Seacle"
     ],
     "transport_info": "เดินเท้าจากสถานี / ห้าง | ฟรี"
   },
@@ -707,8 +800,12 @@
     "main_place_links": [],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "เตรียมตัวออกเดินทางข้ามไปสนามบิน KIX ล่วงหน้า 3 ชั่วโมง",
-    "backup_links": [],
+    "backup_plan": "แผนสำรอง: จัดกระเป๋าเดินทางและเตรียมตัวออกเดินทางข้ามไปสนามบิน KIX ล่วงหน้า 3 ชั่วโมง\nคาเฟ่อาหารเช้าสำรอง: Cafe de Crié Rinku-Town Station (เซตอาหารเช้า ครัวซองต์และกาแฟร้อน)\nร้านสะดวกซื้อสำรอง: 7-Eleven Rinku-Town Station (ซื้อขนมของฝากรอบสุดท้าย)",
+    "backup_links": [
+      "https://maps.google.com/?q=Odysis+Suites+Osaka+Airport+Hotel",
+      "https://maps.google.com/?q=Cafe+de+Crie+Rinku+Town+Station",
+      "https://maps.google.com/?q=7-Eleven+Rinku+Town+Station"
+    ],
     "transport_info": "พักผ่อนภายในโรงแรม | ฟรี"
   },
   {
@@ -720,8 +817,12 @@
     "main_place_links": [],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "เดินทางถึงสนามบินล่วงหน้า 3 ชั่วโมง เพื่อเตรียมตัวเช็กอินสัมภาระสำหรับเที่ยวบิน 12:00 น.",
-    "backup_links": [],
+    "backup_plan": "แผนสำรอง: เดินทางถึงสนามบินล่วงหน้า 3 ชั่วโมง เพื่อเตรียมตัวเช็กอินสัมภาระสำหรับเที่ยวบิน 12:00 น.\nจุดชมวิวสำรอง: KIX Observation Hall Sky View (จุดชมเครื่องบินขึ้นลงแบบใกล้ชิดพร้อมพิพิธภัณฑ์การบิน)\nคาเฟ่สำรอง: PRONTO KIX Airport Terminal 1 (คาเฟ่และเบเกอรี่นั่งรอเช็กอิน ชั้น 3)",
+    "backup_links": [
+      "https://maps.google.com/?q=Kansai+International+Airport",
+      "https://maps.google.com/?q=KIX+Observation+Hall+Sky+View",
+      "https://maps.google.com/?q=PRONTO+Kansai+Airport"
+    ],
     "transport_info": "รถไฟ Nankai Line (Rinku-Town -> KIX) | แตะ ICOCA (370 เยน)"
   },
   {
@@ -733,8 +834,12 @@
     "main_place_links": [],
     "food_recommendation": "ขนมและของว่างที่ซื้อจากด้านในจุดพักเครื่อง / อาหารบนเครื่อง",
     "food_links": [],
-    "backup_plan": "แวะเปลี่ยนเครื่องที่ไทเป (14:15 - 15:15 น.) เดินทางถึงสนามบินสุวรรณภูมิ เวลา 18:10 น. / ชอปปิง Duty Free ก่อนขึ้นเครื่อง",
-    "backup_links": [],
+    "backup_plan": "ร้านอาหารสำรอง (ช่วงต่อเครื่องไทเป TPE): Chun Shui Tang TPE Airport (ต้นตำรับชานมไข่มุกและบะหมี่เนื้อไต้หวัน)\nคาเฟ่สำรอง (สนามบินเถาหยวน): Starbucks Taoyuan Airport Terminal 1\nจุดพักผ่อนสำรอง: Plaza Premium Lounge TPE (ห้องรับรองพร้อมโซนนอนพักระหว่างต่อเครื่อง)",
+    "backup_links": [
+      "https://maps.google.com/?q=Chun+Shui+Tang+Taoyuan+Airport",
+      "https://maps.google.com/?q=Starbucks+Taoyuan+Airport+Terminal+1",
+      "https://maps.google.com/?q=Plaza+Premium+Lounge+Taoyuan+Airport"
+    ],
     "transport_info": "เครื่องบิน Thai VietJet Air (VZ-567) | จ่ายรวมในตั๋วเครื่องบินแล้ว"
   }
 ]
