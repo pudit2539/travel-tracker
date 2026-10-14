@@ -4,11 +4,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  X, DollarSign, Plus, Trash2, Check, Sparkles, 
-  Coins, AlertCircle, CheckCircle2, PieChart, Sliders, 
-  Tag, ShieldAlert, ArrowRight, Layers, History, Users, User, 
-  Divide, Calculator, ArrowDownRight, ArrowUpRight, RefreshCw,
-  Building, Plane, Ticket, Utensils, Train, ShoppingBag, Box, HelpCircle
+  X, Building, Clock, Users, Sliders, History, 
+  ChevronDown, ChevronRight, Wallet, RotateCcw, Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -27,17 +24,16 @@ import { supabase } from '@/lib/supabase';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { convertToThb, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
-import { triggerConfetti } from '@/lib/confetti';
 
 export const SUPPORTED_CURRENCIES = [
-  { code: 'JPY', symbol: '¥', name: 'เยนญี่ปุ่น (JPY)', flag: '🇯🇵' },
   { code: 'THB', symbol: '฿', name: 'บาทไทย (THB)', flag: '🇹🇭' },
+  { code: 'JPY', symbol: '¥', name: 'เยนญี่ปุ่น (JPY)', flag: '🇯🇵' },
   { code: 'USD', symbol: '$', name: 'ดอลลาร์สหรัฐ (USD)', flag: '🇺🇸' },
-  { code: 'CNY', symbol: '元', name: 'หยวนจีน (CNY)', flag: '🇨🇳' },
   { code: 'EUR', symbol: '€', name: 'ยูโร (EUR)', flag: '🇪🇺' },
   { code: 'KRW', symbol: '₩', name: 'วอนเกาหลี (KRW)', flag: '🇰🇷' },
-  { code: 'GBP', symbol: '£', name: 'ปอนด์สเตอร์ลิง (GBP)', flag: '🇬🇧' },
+  { code: 'CNY', symbol: '元', name: 'หยวนจีน (CNY)', flag: '🇨🇳' },
   { code: 'SGD', symbol: 'S$', name: 'ดอลลาร์สิงคโปร์ (SGD)', flag: '🇸🇬' },
+  { code: 'GBP', symbol: '£', name: 'ปอนด์สเตอร์ลิง (GBP)', flag: '🇬🇧' },
 ];
 
 interface BudgetCategoryModalProps {
@@ -55,8 +51,6 @@ interface BudgetCategoryModalProps {
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-const EMOJI_PRESETS = ['🍱', '🚅', '🛍️', '🏨', '🎟️', '📦', '🎢', '🎁', '☕', '🏮', '✈️', '🎮', '🍣', '🍫', '⛩️', '💊'];
-
 export default function BudgetCategoryModal({
   isOpen,
   onClose,
@@ -66,21 +60,35 @@ export default function BudgetCategoryModal({
   currentUser,
   userDisplayName = 'ฉัน',
   fxRate = 0.210,
-  initialTab = 'categories',
   onUpdated,
   onOpenRollback,
   onShowToast,
 }: BudgetCategoryModalProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'categories' | 'budget' | 'members' | 'custom'>(
-    initialTab === 'budget' ? 'budget' : initialTab === 'members' ? 'members' : initialTab === 'custom' ? 'custom' : 'categories'
-  );
   const [mounted, setMounted] = useState(false);
+  const [currency, setCurrency] = useState<string>('THB');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Section 1: Fixed / Pre-paid Costs (Flights, Accommodations, Passes)
+  const [fixedCostsInput, setFixedCostsInput] = useState<string>('0');
+
+  // Section 2: Daily Allowance & Pocket Money
+  const [dailyPerPersonInput, setDailyPerPersonInput] = useState<string>('2500');
+  const [dailyTotalInput, setDailyTotalInput] = useState<string>('0');
+
+  // Section 3: Member Budgets
+  const [splitMode, setSplitMode] = useState<'even' | 'custom'>('even');
+  const [memberBudgets, setMemberBudgets] = useState<MemberBudgetMap>({});
+
+  // Section 4 (Optional): Category Budgets
+  const [showCategorySection, setShowCategorySection] = useState(false);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetMap>({});
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Lock background scroll and handle Escape key on mobile/iPad
+  // Lock background scroll and handle Escape key
   useEffect(() => {
     if (isOpen && typeof document !== 'undefined') {
       const prev = document.body.style.overflow;
@@ -95,25 +103,18 @@ export default function BudgetCategoryModal({
       };
     }
   }, [isOpen, onClose]);
-  
-  // Total trip budget state (optional - can be 0 or empty)
-  const [totalBudget, setTotalBudget] = useState<string>('');
-  const [currency, setCurrency] = useState<string>('JPY');
-  const [savingTotal, setSavingTotal] = useState(false);
-  const [totalSuccess, setTotalSuccess] = useState(false);
 
-  // Category & Member Budgets
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetMap>({});
-  const [memberBudgets, setMemberBudgets] = useState<MemberBudgetMap>({});
-  const [budgetSuccess, setBudgetSuccess] = useState(false);
+  // Trip duration in days
+  const tripDays = useMemo(() => {
+    if (!trip?.start_date || !trip?.end_date) return 7;
+    const s = new Date(trip.start_date);
+    const e = new Date(trip.end_date);
+    const diffTime = Math.abs(e.getTime() - s.getTime());
+    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return isNaN(days) || days <= 0 ? 7 : days;
+  }, [trip?.start_date, trip?.end_date]);
 
-  // New Custom Category Form
-  const [newCatLabel, setNewCatLabel] = useState('');
-  const [newCatIcon, setNewCatIcon] = useState('🎢');
-  const [showAddCatForm, setShowAddCatForm] = useState(false);
-
-  // List of all members (Owner + Trip Members) with strict deduplication
+  // Deduplicated Member list
   const allMembersList = useMemo(() => {
     const myId = currentUser?.id?.toLowerCase();
     const myName = userDisplayName?.trim().toLowerCase();
@@ -137,7 +138,7 @@ export default function BudgetCategoryModal({
     });
 
     return [
-      { key: 'me', name: userDisplayName + ' (ฉัน)', email: currentUser?.email, avatar: 'cat_trio', isMe: true },
+      { key: 'me', name: `${userDisplayName} (ฉัน)`, email: currentUser?.email, avatar: 'cat_trio', isMe: true },
       ...otherMems.map(m => ({
         key: m.user_id || m.id,
         name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
@@ -148,55 +149,145 @@ export default function BudgetCategoryModal({
     ];
   }, [members, currentUser, userDisplayName]);
 
+  const memberCount = Math.max(1, allMembersList.length);
+
+  // Auto-detect pre-paid expenses already logged in the trip (hotel, flights, tickets)
+  const detectedFixedFromExpenses = useMemo(() => {
+    let sum = 0;
+    expenses.forEach((e) => {
+      const cat = (e.category || '').toLowerCase();
+      const title = (e.title || '').toLowerCase();
+      if (
+        cat.includes('hotel') || cat.includes('พัก') || cat.includes('accommodat') ||
+        cat.includes('flight') || cat.includes('ตั๋ว') || cat.includes('plane') || cat.includes('ticket') ||
+        title.includes('โรงแรม') || title.includes('hotel') || title.includes('flight') || title.includes('ตั๋วเครื่องบิน')
+      ) {
+        const amt = Number(e.amount || 0);
+        const inSelected = convertCurrency(amt, e.currency || trip?.currency || 'THB', currency, fxRate);
+        sum += inSelected;
+      }
+    });
+    return Math.round(sum);
+  }, [expenses, currency, trip?.currency, fxRate]);
+
+  // Initial populate from trip & storage
   useEffect(() => {
     if (isOpen && trip) {
-      if (initialTab) {
-        setActiveSubTab(initialTab === 'budget' ? 'budget' : initialTab === 'members' ? 'members' : initialTab === 'custom' ? 'custom' : 'categories');
-      }
-      const rawTripBudget = trip.total_budget ?? trip.budget ?? 0;
-      setTotalBudget(rawTripBudget > 0 ? String(rawTripBudget) : '');
-      setCurrency(trip.currency || 'JPY');
+      const activeCur = trip.currency || 'THB';
+      setCurrency(activeCur);
 
-      const cats = getTripCategories(trip.id);
-      setCategories(cats);
+      const rawTripBudget = Number(trip.total_budget ?? trip.budget ?? 0);
+      const mBudgets = getMemberBudgets(trip.id);
+      setMemberBudgets(mBudgets);
 
       const cBudgets = getCategoryBudgets(trip.id);
       setCategoryBudgets(cBudgets);
+      setCategories(getTripCategories(trip.id));
 
-      const mBudgets = getMemberBudgets(trip.id);
-      setMemberBudgets(mBudgets);
+      if (rawTripBudget > 0) {
+        // If trip already has a total budget, assign fixed costs from detected or zero, remainder to daily
+        const fixed = detectedFixedFromExpenses;
+        const dailyTotal = Math.max(0, rawTripBudget - fixed);
+        const dailyPerPerson = Math.round(dailyTotal / (tripDays * memberCount));
+
+        setFixedCostsInput(String(fixed));
+        setDailyTotalInput(String(dailyTotal));
+        setDailyPerPersonInput(String(dailyPerPerson));
+      } else {
+        // Default smart estimation
+        const fixed = detectedFixedFromExpenses;
+        const defaultDailyPerPerson = activeCur === 'JPY' ? 12000 : 2500;
+        const dailyTotal = defaultDailyPerPerson * tripDays * memberCount;
+
+        setFixedCostsInput(String(fixed));
+        setDailyPerPersonInput(String(defaultDailyPerPerson));
+        setDailyTotalInput(String(dailyTotal));
+      }
     }
-  }, [isOpen, trip, initialTab]);
+  }, [isOpen, trip, detectedFixedFromExpenses, tripDays, memberCount]);
+
+  // Synchronize Daily Allowance <-> Daily Total
+  const handleDailyPerPersonChange = (val: string) => {
+    setDailyPerPersonInput(val);
+    const num = Number(val);
+    if (!isNaN(num) && num >= 0) {
+      const total = num * tripDays * memberCount;
+      setDailyTotalInput(String(total));
+    }
+  };
+
+  const handleDailyTotalChange = (val: string) => {
+    setDailyTotalInput(val);
+    const num = Number(val);
+    if (!isNaN(num) && num >= 0) {
+      const perPerson = Math.round(num / (tripDays * memberCount));
+      setDailyPerPersonInput(String(perPerson));
+    }
+  };
+
+  // Total Computed Budget
+  const fixedNumber = Math.max(0, Number(fixedCostsInput) || 0);
+  const dailyNumber = Math.max(0, Number(dailyTotalInput) || 0);
+  const totalComputedBudget = fixedNumber + dailyNumber;
+
+  // Auto split members whenever total budget changes and splitMode is 'even'
+  useEffect(() => {
+    if (splitMode === 'even') {
+      const perPerson = Math.round(totalComputedBudget / memberCount);
+      const updated: MemberBudgetMap = {};
+      allMembersList.forEach((m) => {
+        updated[m.key] = perPerson;
+      });
+      setMemberBudgets(updated);
+    }
+  }, [totalComputedBudget, splitMode, memberCount, allMembersList]);
+
+  const handleMemberBudgetChange = (key: string, val: string) => {
+    const num = Number(val);
+    setMemberBudgets((prev) => ({
+      ...prev,
+      [key]: isNaN(num) ? 0 : num,
+    }));
+  };
+
+  const handleCategoryBudgetChange = (catId: string, val: string) => {
+    const num = Number(val);
+    setCategoryBudgets((prev) => ({
+      ...prev,
+      [catId]: isNaN(num) ? 0 : num,
+    }));
+  };
 
   // Helper for secondary currency conversion preview
-  const formatSecondaryPreview = (val: number, cur: string) => {
+  const formatSecondaryPreview = (val: number) => {
     if (!val || isNaN(val) || val <= 0) return null;
-    if (cur === 'JPY') {
-      const thb = Math.round(convertToThb(val, 'JPY', fxRate));
-      return `≈ ฿${thb.toLocaleString()} THB`;
-    }
-    if (cur === 'THB') {
+    if (currency === 'THB') {
       const jpy = Math.round(convertCurrency(val, 'THB', 'JPY', fxRate));
       return `≈ ¥${jpy.toLocaleString()} JPY`;
     }
-    const jpy = Math.round(convertCurrency(val, cur, 'JPY', fxRate));
-    const thb = Math.round(convertToThb(val, cur, fxRate));
-    return `≈ ¥${jpy.toLocaleString()} (฿${thb.toLocaleString()})`;
+    if (currency === 'JPY') {
+      const thb = Math.round(convertToThb(val, 'JPY', fxRate));
+      return `≈ ฿${thb.toLocaleString()} THB`;
+    }
+    const thb = Math.round(convertToThb(val, currency, fxRate));
+    return `≈ ฿${thb.toLocaleString()}`;
   };
 
-  // Convert all existing budget figures automatically to the new currency
-  const handleConvertAllBudgetsToNewCurrency = (newCur: string) => {
+  // Currency switcher with auto-recalculation
+  const handleCurrencyChange = (newCur: string) => {
+    if (newCur === currency) return;
     const oldCur = currency;
-    if (oldCur === newCur) return;
 
-    // Convert totalBudget if entered
-    const oldTotal = Number(totalBudget);
-    if (!isNaN(oldTotal) && oldTotal > 0) {
-      const newTotal = Math.round(convertCurrency(oldTotal, oldCur, newCur, fxRate));
-      setTotalBudget(String(newTotal));
-    }
+    const convertNum = (str: string) => {
+      const n = Number(str);
+      if (isNaN(n) || n <= 0) return '0';
+      return String(Math.round(convertCurrency(n, oldCur, newCur, fxRate)));
+    };
 
-    // Convert memberBudgets
+    setFixedCostsInput(convertNum(fixedCostsInput));
+    setDailyTotalInput(convertNum(dailyTotalInput));
+    setDailyPerPersonInput(convertNum(dailyPerPersonInput));
+
     const newMembers: MemberBudgetMap = {};
     Object.entries(memberBudgets).forEach(([k, v]) => {
       if (v !== undefined && Number(v) > 0) {
@@ -207,7 +298,6 @@ export default function BudgetCategoryModal({
     });
     setMemberBudgets(newMembers);
 
-    // Convert categoryBudgets
     const newCats: CategoryBudgetMap = {};
     Object.entries(categoryBudgets).forEach(([k, v]) => {
       if (v !== undefined && Number(v) > 0) {
@@ -221,771 +311,464 @@ export default function BudgetCategoryModal({
     setCurrency(newCur);
   };
 
-  // 1. Save Total Trip Budget to Supabase (can be 0 if unset)
-  const handleSaveTotalBudget = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  // Save All
+  const handleSaveAll = async () => {
     if (!trip?.id) return;
-    setSavingTotal(true);
+    setIsSaving(true);
     try {
-      const num = Number(totalBudget);
-      const sanitizedBudget = isNaN(num) || num < 0 ? 0 : num;
+      const sanitizedBudget = totalComputedBudget > 0 ? totalComputedBudget : 0;
+      
       const { error } = await supabase
         .from('trips')
         .update({
           total_budget: sanitizedBudget,
+          budget: sanitizedBudget,
           currency: currency,
         })
         .eq('id', trip.id);
 
-      if (!error) {
-        setTotalSuccess(true);
-        triggerConfetti();
-        onUpdated();
-        onShowToast?.('บันทึกงบประมาณรวมทริปเรียบร้อยแล้ว ✨', 'success');
-        setTimeout(() => {
-          setTotalSuccess(false);
-          onClose();
-        }, 500);
-      } else {
-        toast.error('เกิดข้อผิดพลาด: ' + error.message);
+      if (error) throw error;
+
+      saveMemberBudgets(trip.id, memberBudgets);
+      if (showCategorySection) {
+        saveCategoryBudgets(trip.id, categoryBudgets);
       }
-    } catch (err: any) {
-      toast.error('บันทึกงบประมาณล้มเหลว: ' + err.message);
-    } finally {
-      setSavingTotal(false);
-    }
-  };
 
-  // 2. Save Category Budgets (Hotel, Flights, Tickets, Food, etc.)
-  const handleSaveCategoryBudgets = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!trip?.id) return;
-    saveCategoryBudgets(trip.id, categoryBudgets);
-    if (currency !== trip.currency) {
-      await supabase.from('trips').update({ currency }).eq('id', trip.id);
-    }
-    setBudgetSuccess(true);
-    triggerConfetti();
-    onUpdated();
-    toast.success('บันทึกงบประมาณแยกหมวดเรียบร้อยแล้ว ✨');
-    setTimeout(() => {
-      setBudgetSuccess(false);
-      onClose();
-    }, 500);
-  };
-
-  // 3. Adopt sum of category budgets as the trip total budget
-  const handleAdoptCategorySumAsTotal = async () => {
-    if (!trip?.id) return;
-    const sum = totalCatAllocated;
-    if (sum <= 0) {
-      toast.warning('กรุณาใส่ตัวเลขในรายการค่าที่พัก ค่าตั๋ว หรือหมวดหมู่อื่นๆ ก่อนนำมาตั้งเป็นงบรวม');
-      return;
-    }
-    setTotalBudget(String(sum));
-    setSavingTotal(true);
-    try {
-      await supabase.from('trips').update({ total_budget: sum, currency }).eq('id', trip.id);
-      saveCategoryBudgets(trip.id, categoryBudgets);
-      setBudgetSuccess(true);
-      triggerConfetti();
       onUpdated();
-      toast.success('นำผลรวมหมวดหมู่ไปตั้งเป็นงบรวมแล้ว 🎯');
-      setTimeout(() => {
-        setBudgetSuccess(false);
-        onClose();
-      }, 500);
+      if (onShowToast) {
+        onShowToast(`บันทึกงบประมาณทริป ${sanitizedBudget.toLocaleString()} ${currency} เรียบร้อยแล้ว`, 'success');
+      } else {
+        toast.success('บันทึกงบประมาณเรียบร้อยแล้ว');
+      }
+
+      onClose();
+    } catch (err: any) {
+      toast.error(`บันทึกงบประมาณล้มเหลว: ${err.message || 'เกิดข้อผิดพลาด'}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Clear Budget
+  const handleClearBudget = async () => {
+    if (!trip?.id) return;
+    if (!confirm('ต้องการล้างเป้าหมายงบประมาณทั้งหมดใช่หรือไม่?')) return;
+    setIsSaving(true);
+    try {
+      await supabase
+        .from('trips')
+        .update({
+          total_budget: 0,
+          budget: 0,
+        })
+        .eq('id', trip.id);
+
+      saveMemberBudgets(trip.id, {});
+      saveCategoryBudgets(trip.id, {});
+
+      onUpdated();
+      if (onShowToast) onShowToast('ล้างเป้าหมายงบประมาณเรียบร้อยแล้ว', 'info');
+      onClose();
     } catch (err: any) {
       toast.error('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
-      setSavingTotal(false);
+      setIsSaving(false);
     }
   };
-
-  // 4. Save Member Budgets
-  const handleSaveMemberBudgets = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!trip?.id) return;
-    saveMemberBudgets(trip.id, memberBudgets);
-    if (currency !== trip.currency) {
-      await supabase.from('trips').update({ currency }).eq('id', trip.id);
-    }
-    setBudgetSuccess(true);
-    triggerConfetti();
-    onUpdated();
-    toast.success('บันทึกงบประมาณรายบุคคลเรียบร้อยแล้ว 👥');
-    setTimeout(() => {
-      setBudgetSuccess(false);
-      onClose();
-    }, 500);
-  };
-
-  // Auto Split Evenly from Total Trip Budget (if set) or Category Sum
-  const handleAutoSplitMembers = () => {
-    const total = Number(totalBudget || 0) > 0 ? Number(totalBudget) : totalCatAllocated;
-    if (total <= 0) {
-      toast.warning('กรุณากำหนดงบรวมหรือระบุรายการค่าใช้จ่ายก่อนทำการหารเฉลี่ย');
-      return;
-    }
-    const perPerson = Math.floor(total / allMembersList.length);
-    const updated: MemberBudgetMap = {};
-    allMembersList.forEach(m => {
-      updated[m.key] = perPerson;
-    });
-    setMemberBudgets(updated);
-  };
-
-  // 5. Add Custom Category
-  const handleAddCustomCategory = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!trip?.id || !newCatLabel.trim()) return;
-
-    const updated = saveCustomCategory(trip.id, {
-      label: newCatLabel.trim(),
-      icon: newCatIcon || '🏷️',
-    });
-    setCategories(updated);
-    setNewCatLabel('');
-    setShowAddCatForm(false);
-    onUpdated();
-    onShowToast?.('เพิ่มหมวดหมู่ใหม่เรียบร้อยแล้ว 🏷️', 'success');
-  };
-
-  // 6. Delete Custom Category
-  const handleDeleteCustomCategory = (catId: string) => {
-    if (!trip?.id) return;
-    if (confirm('ต้องการลบหมวดหมู่นี้ใช่หรือไม่?')) {
-      const updated = deleteCustomCategory(trip.id, catId);
-      setCategories(updated);
-      
-      const newBudgets = { ...categoryBudgets };
-      delete newBudgets[catId];
-      setCategoryBudgets(newBudgets);
-      saveCategoryBudgets(trip.id, newBudgets);
-      onUpdated();
-      onShowToast?.('ลบหมวดหมู่ออกจากทริปแล้ว 🗑️', 'info');
-    }
-  };
-
-  const handleBudgetChange = (catId: string, value: string) => {
-    const num = Number(value);
-    setCategoryBudgets((prev) => ({
-      ...prev,
-      [catId]: isNaN(num) ? 0 : num,
-    }));
-  };
-
-  const handleMemberBudgetChange = (memberKey: string, value: string) => {
-    const num = Number(value);
-    setMemberBudgets((prev) => ({
-      ...prev,
-      [memberKey]: isNaN(num) ? 0 : num,
-    }));
-  };
-
-  // Total allocated category budgets sum & remaining
-  const totalCatAllocated = Object.values(categoryBudgets).reduce((a, b) => a + Number(b || 0), 0);
-  const numTotalBudget = Number(totalBudget || 0);
-  const remainingCatBudget = numTotalBudget > 0 ? numTotalBudget - totalCatAllocated : 0;
-
-  // Total allocated member budgets sum & remaining
-  const totalMemberAllocated = Object.values(memberBudgets).reduce((a, b) => a + Number(b || 0), 0);
-  const remainingMemberBudget = numTotalBudget > 0 ? numTotalBudget - totalMemberAllocated : 0;
 
   if (!isOpen || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/75 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-      <div className="w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out">
-        {/* Header */}
-        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
+    <div 
+      className="fixed inset-0 z-60 flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-150" 
+      role="dialog" 
+      aria-modal="true"
+    >
+      <div 
+        className="w-full max-w-2xl rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#222c42] shadow-2xl flex flex-col overflow-hidden max-h-[92dvh] animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
+        
+        {/* Header (Clean, Corporate, Outline style) */}
+        <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-[#222c42] flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-[#151b2b]/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25 shrink-0">
-              <Sliders className="h-5 w-5" />
+            <div className="w-9 h-9 rounded-xl border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#1a2133] text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0">
+              <Wallet className="h-4 w-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                  วางแผนงบประมาณทริป 🎯
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  วางแผนงบประมาณทริป
                 </h2>
-                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50">
+                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#263147]">
                   {formatExchangeRateDisplay(currency, fxRate)}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                ใส่ค่าที่พัก ค่าตั๋ว หรือคุมงบรายบุคคลได้อิสระ (ไม่บังคับใส่งบรวมทั้งหมด)
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                คำนวณจากค่าใช้จ่ายคงที่ และงบกินเที่ยวประจำวันตลอดทริป
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
-          >
-            <X className="h-5 w-5" />
-          </button>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={currency}
+              onChange={(e) => handleCurrencyChange(e.target.value)}
+              className="py-1 px-2 rounded-lg text-xs font-mono font-bold bg-white dark:bg-[#182030] border border-slate-300 dark:border-[#2b354f] text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+            >
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+              title="ปิดหน้าต่าง"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Sub Navigation Pills */}
-        <div className="flex p-2 gap-1.5 bg-slate-50/70 dark:bg-[#111726] border-b border-slate-100 dark:border-[#222c42] overflow-x-auto custom-scrollbar">
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('categories')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              activeSubTab === 'categories'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c2438]'
-            }`}
-          >
-            <PieChart className="h-3.5 w-3.5" /> 🏨 ค่าที่พัก, ตั๋ว & หมวดหมู่
-          </button>
+        {/* Scrollable Body */}
+        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1 text-left">
 
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('budget')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              activeSubTab === 'budget'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c2438]'
-            }`}
-          >
-            <Coins className="h-3.5 w-3.5" /> 🎯 งบรวมทริป (ไม่บังคับ)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('members')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              activeSubTab === 'members'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c2438]'
-            }`}
-          >
-            <Users className="h-3.5 w-3.5" /> 👥 งบส่วนตัวรายคน
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('custom')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              activeSubTab === 'custom'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c2438]'
-            }`}
-          >
-            <Tag className="h-3.5 w-3.5" /> หมวดหมู่ ({categories.length})
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <div className="p-4 sm:p-6 pt-4 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain min-h-0 custom-scrollbar flex-1 space-y-4">
-
-          {/* ==================== TAB 1: จัดสรรงบตามรายการ (ที่พัก / ตั๋ว / หมวดหมู่) ==================== */}
-          {activeSubTab === 'categories' && (
-            <form onSubmit={handleSaveCategoryBudgets} className="space-y-4 animate-in fade-in">
-              {/* Summary & Currency Selector Banner */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/70 to-indigo-50/40 dark:from-[#1c2438] dark:to-[#151b2b] border border-blue-200/60 dark:border-[#222c42] space-y-2.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <Coins className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      <span>สกุลเงินงบประมาณ:</span>
-                    </span>
-                    <select
-                      className="px-2.5 py-1 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs font-bold outline-none cursor-pointer"
-                      value={currency}
-                      onChange={(e) => setCurrency(e.target.value)}
-                    >
-                      {SUPPORTED_CURRENCIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.flag} {c.code} ({c.symbol})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block">
-                      ยอดรวมที่จัดสรรทั้งหมด
-                    </span>
-                    <span className="text-sm font-black text-blue-600 dark:text-blue-400 font-mono">
-                      {totalCatAllocated.toLocaleString()} {currency}
-                    </span>
-                    {totalCatAllocated > 0 && (
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block font-mono">
-                        {formatSecondaryPreview(totalCatAllocated, currency)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Optional Budget comparison or quick adopt button */}
-                <div className="pt-2 border-t border-slate-200/80 dark:border-[#222c42] flex flex-wrap items-center justify-between gap-2 text-xs">
-                  {numTotalBudget > 0 ? (
-                    <div className="flex items-center gap-2 font-bold text-[11px]">
-                      <span className="text-slate-600 dark:text-slate-300">
-                        งบรวมทริปตั้งไว้: {numTotalBudget.toLocaleString()} {currency}
-                      </span>
-                      <span className={remainingCatBudget < 0 ? 'text-rose-600 font-black' : 'text-emerald-600 font-black'}>
-                        {remainingCatBudget >= 0 
-                          ? `(คงเหลือจัดสรร: ${remainingCatBudget.toLocaleString()} ${currency})` 
-                          : `(⚠️ เกินงบรวม: +${Math.abs(remainingCatBudget).toLocaleString()} ${currency})`}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap items-center justify-between w-full gap-2">
-                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        <span>ไม่บังคับใส่งบรวม ระบบจะคำนวณตามรายการที่ระบุไว้</span>
-                      </span>
-                      {totalCatAllocated > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleAdoptCategorySumAsTotal}
-                          className="px-2.5 py-1 rounded-lg bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 text-[10px] font-bold hover:bg-blue-200 transition-all cursor-pointer"
-                        >
-                          + ใช้นำไปตั้งเป็นงบรวมทริป
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+          {/* Section 1: Pre-paid & Fixed Costs */}
+          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/40 dark:bg-[#151b2b]/40 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                  1. ค่าใช้จ่ายจองล่วงหน้า (ตั๋วเครื่องบิน & ที่พัก)
+                </h3>
               </div>
-
-              {/* Category Cards List */}
-              <div className="space-y-2.5 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
-                {categories.map((cat) => {
-                  const currentVal = categoryBudgets[cat.id] !== undefined ? categoryBudgets[cat.id] : '';
-                  const numVal = Number(currentVal || 0);
-
-                  // Highlight essential travel items: Hotel, Flights, Tickets
-                  const isEssential = cat.id === 'hotel' || cat.id === 'flight' || cat.id === 'ticket';
-
-                  return (
-                    <div
-                      key={cat.id}
-                      className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                        isEssential
-                          ? 'border-blue-300 dark:border-blue-800/80 bg-blue-50/20 dark:bg-[#1a2338]'
-                          : 'border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-2xl p-2 rounded-2xl bg-white dark:bg-[#151b2b] shadow-2xs shrink-0 border border-slate-200/80 dark:border-[#222c42]">
-                          {cat.icon}
-                        </span>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
-                              {cat.label}
-                            </span>
-                            {isEssential && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 shrink-0">
-                                รายการสำคัญ ✨
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
-                            {cat.isCustom ? 'หมวดกำหนดเอง' : 'ค่าใช้จ่ายประจำทริป'}
-                            {numVal > 0 && (
-                              <span className="ml-1 text-blue-600 dark:text-blue-400 font-mono font-bold">
-                                ({formatSecondaryPreview(numVal, currency)})
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="any"
-                            placeholder="0"
-                            className="w-28 sm:w-36 p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs sm:text-sm font-black font-mono text-right outline-none focus:border-blue-500 pr-10"
-                            value={currentVal}
-                            onChange={(e) => handleBudgetChange(cat.id, e.target.value)}
-                          />
-                          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-black text-slate-400 pointer-events-none">
-                            {currency}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#222c42]">
-                {budgetSuccess && (
-                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                    <CheckCircle2 className="h-4 w-4" /> บันทึกงบรายการเรียบร้อยแล้ว
-                  </span>
-                )}
-                <button
-                  type="submit"
-                  className="ml-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 transition-all"
-                >
-                  <Check className="h-3.5 w-3.5" /> บันทึกงบประมาณ ({currency})
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* ==================== TAB 2: งบรวมทริป (Total Budget - OPTIONAL) ==================== */}
-          {activeSubTab === 'budget' && (
-            <div className="space-y-4 animate-in fade-in">
-              <form onSubmit={handleSaveTotalBudget} className="p-4 sm:p-5 rounded-2xl bg-blue-50/30 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Coins className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <span>งบประมาณรวมทั้งทริป (Total Trip Budget)</span>
-                  </span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900">
-                    ไม่บังคับใส่ (Optional) ✨
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#151b2b] border border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-300 text-xs">
-                  <p className="font-semibold leading-relaxed">
-                    💡 <b>ยังไม่แน่ใจงบรวมทั้งหมด?</b> คุณสามารถปล่อยช่องนี้ว่างไว้ได้เลยครับ ระบบจะคำนวณและแสดงสถิติตามยอด <b>ค่าที่พัก, ค่าตั๋ว, ค่ากินเที่ยว</b> ที่คุณระบุไว้ในแท็บจัดสรรงบแทนให้อัตโนมัติ
-                  </p>
-                </div>
-
-                {/* Currency Selection Grid */}
-                <div>
-                  <label className="block text-[11px] font-bold mb-1.5 text-slate-700 dark:text-slate-200">
-                    💱 สกุลเงินหลักของงบทริป:
-                  </label>
-                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                    {SUPPORTED_CURRENCIES.map((cur) => {
-                      const isSelected = currency === cur.code;
-                      return (
-                        <button
-                          key={cur.code}
-                          type="button"
-                          onClick={() => setCurrency(cur.code)}
-                          className={`p-2 rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center gap-0.5 border cursor-pointer ${
-                            isSelected
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm scale-102'
-                              : 'bg-white dark:bg-[#151b2b] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:border-blue-400'
-                          }`}
-                        >
-                          <span className="text-sm">{cur.flag}</span>
-                          <span className="font-mono">{cur.code} ({cur.symbol})</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Amount input (not required!) */}
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                      จำนวนเงินงบประมาณรวม ({currency}) (ปล่อยว่างได้)
-                    </label>
-                    {totalBudget && Number(totalBudget) > 0 && (
-                      <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 font-mono">
-                        {formatSecondaryPreview(Number(totalBudget), currency)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder={currency === 'JPY' ? 'ปล่อยว่างได้ หรือใส่ เช่น 250000 (¥)' : 'ปล่อยว่างได้ หรือใส่ เช่น 50000 (฿)'}
-                      className="w-full p-3 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-base font-black font-mono outline-none focus:border-blue-500 pr-16"
-                      value={totalBudget}
-                      onChange={(e) => setTotalBudget(e.target.value)}
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-500 dark:text-slate-400 pointer-events-none">
-                      {currency}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Auto Convert Currency Helper Button */}
-                {trip?.currency && trip.currency !== currency && (
-                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="text-[11px] text-amber-800 dark:text-amber-200">
-                      <span className="font-bold">💡 เปลี่ยนสกุลเงินจาก {trip.currency} เป็น {currency}?</span>
-                      <p className="text-[10px] text-amber-700/80 dark:text-amber-300/80">
-                        กดเพื่อแปลงตัวเลขงบเดิมตามอัตราแลกเปลี่ยน {formatExchangeRateDisplay(currency, fxRate)}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleConvertAllBudgetsToNewCurrency(currency)}
-                      className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer shrink-0"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      <span>แปลงตัวเลขเป็น {currency}</span>
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-1">
-                  <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                    {formatSecondaryPreview(Number(totalBudget || 0), currency)}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={savingTotal}
-                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95 transition-all"
-                  >
-                    {savingTotal ? 'กำลังบันทึก...' : <><Check className="h-3.5 w-3.5" /> บันทึกงบรวม ({currency})</>}
-                  </button>
-                </div>
-              </form>
-
-              {totalSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 border border-emerald-200 dark:border-emerald-900 animate-in fade-in">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  <span>บันทึกงบประมาณเรียบร้อยแล้ว</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ==================== TAB 3: งบส่วนตัวรายคน (Member Budgets) ==================== */}
-          {activeSubTab === 'members' && (
-            <form onSubmit={handleSaveMemberBudgets} className="space-y-4 animate-in fade-in">
-              <div className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-2.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-slate-900 dark:text-white">
-                      สกุลเงินงบ:
-                    </span>
-                    <select
-                      className="px-2 py-1 rounded-lg border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs font-bold outline-none cursor-pointer"
-                      value={currency}
-                      onChange={(e) => setCurrency(e.target.value)}
-                    >
-                      {SUPPORTED_CURRENCIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.flag} {c.code} ({c.symbol})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleAutoSplitMembers}
-                    className="px-2.5 py-1 rounded-xl bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 hover:bg-blue-200 border border-blue-300 dark:border-blue-800 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105"
-                  >
-                    <Divide className="h-3 w-3" /> หารเฉลี่ยให้ทุกคนเท่ากัน
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center text-[11px] font-bold pt-1.5 border-t border-slate-200/80 dark:border-[#222c42]">
-                  <span className="text-slate-600 dark:text-slate-300">
-                    รวมงบทุกคน: {totalMemberAllocated.toLocaleString()} {currency}
-                  </span>
-                  {numTotalBudget > 0 && (
-                    <span className={remainingMemberBudget < 0 ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}>
-                      {remainingMemberBudget >= 0 
-                        ? `คงเหลือจัดสรร: ${remainingMemberBudget.toLocaleString()} ${currency}` 
-                        : `⚠️ เกินงบรวม: +${Math.abs(remainingMemberBudget).toLocaleString()} ${currency}`}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2.5 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
-                {allMembersList.map((m) => {
-                  const mCat = getCatAvatar(m.avatar);
-                  const currentVal = memberBudgets[m.key] !== undefined ? memberBudgets[m.key] : '';
-                  const numVal = Number(currentVal || 0);
-
-                  return (
-                    <div
-                      key={m.key}
-                      className="p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70 flex items-center justify-between gap-3 hover:border-blue-300 dark:hover:border-blue-700 transition-all"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <CatAvatarBadge cat={mCat} size="md" />
-                        <div className="min-w-0">
-                          <span className="text-xs font-black text-slate-900 dark:text-white truncate block">
-                            {m.name}
-                          </span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block font-medium">
-                            {numVal > 0 ? (
-                              <span className="text-blue-600 dark:text-blue-400 font-mono font-bold">
-                                {formatSecondaryPreview(numVal, currency)}
-                              </span>
-                            ) : (
-                              'ยังไม่ระบุงบส่วนตัว'
-                            )}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <input
-                          type="number"
-                          step="any"
-                          placeholder="0"
-                          className="w-28 p-2 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs font-black font-mono text-right outline-none focus:border-blue-500"
-                          value={currentVal}
-                          onChange={(e) => handleMemberBudgetChange(m.key, e.target.value)}
-                        />
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{currency}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#222c42]">
-                {budgetSuccess && (
-                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                    <CheckCircle2 className="h-4 w-4" /> บันทึกงบรายคน ({currency}) แล้ว
-                  </span>
-                )}
-                <button
-                  type="submit"
-                  className="ml-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 transition-all"
-                >
-                  <Check className="h-3.5 w-3.5" /> บันทึกงบรายบุคคล ({currency})
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* ==================== TAB 4: หมวดหมู่กำหนดเอง (Custom Categories) ==================== */}
-          {activeSubTab === 'custom' && (
-            <div className="space-y-4 animate-in fade-in">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-black text-slate-900 dark:text-white">
-                  หมวดหมู่ทั้งหมดในทริปนี้ ({categories.length})
-                </span>
+              {detectedFixedFromExpenses > 0 && (
                 <button
                   type="button"
-                  onClick={() => setShowAddCatForm(!showAddCatForm)}
-                  className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-300 dark:border-blue-800 text-xs font-bold flex items-center gap-1 hover:scale-105 transition-all cursor-pointer"
+                  onClick={() => setFixedCostsInput(String(detectedFixedFromExpenses))}
+                  className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                 >
-                  <Plus className="h-3.5 w-3.5" /> เพิ่มหมวดใหม่
+                  ใช้ยอดจากบิลจริง (฿{detectedFixedFromExpenses.toLocaleString()})
                 </button>
+              )}
+            </div>
+
+            <div>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={fixedCostsInput}
+                  onChange={(e) => setFixedCostsInput(e.target.value)}
+                  className="w-full pr-16 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#182030] text-sm sm:text-base font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
+                  placeholder="0"
+                />
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold font-mono text-slate-400">
+                  {currency}
+                </span>
               </div>
 
-              {showAddCatForm && (
-                <form onSubmit={handleAddCustomCategory} className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
-                      ชื่อหมวดหมู่ *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="เช่น ของฝาก, ค่าเข้า USJ, โอมากาเสะ"
-                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs font-bold outline-none focus:border-blue-500"
-                      value={newCatLabel}
-                      onChange={(e) => setNewCatLabel(e.target.value)}
-                    />
-                  </div>
+              <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 px-0.5">
+                <span>ยอดเงินที่จ่ายไปแล้วก่อนเริ่มเดินทาง</span>
+                <span>{formatSecondaryPreview(fixedNumber)}</span>
+              </div>
+            </div>
+          </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                      เลือกไอคอน Emoji
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {EMOJI_PRESETS.map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={() => setNewCatIcon(emoji)}
-                          className={`w-8 h-8 rounded-xl text-base flex items-center justify-center transition-all cursor-pointer ${
-                            newCatIcon === emoji
-                              ? 'bg-blue-600 text-white scale-110 shadow-sm'
-                              : 'bg-white dark:bg-[#151b2b] border border-slate-200 dark:border-[#222c42] hover:bg-slate-100 dark:hover:bg-[#1c2438]'
-                          }`}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+          {/* Section 2: Daily Allowance & Pocket Money */}
+          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/40 dark:bg-[#151b2b]/40 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-1.5">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                  2. งบกินเที่ยวประจำวัน (อาหาร, เดินทาง, ช้อปปิ้ง)
+                </h3>
+              </div>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-[#1e2638] text-slate-600 dark:text-slate-300">
+                ระยะเวลา {tripDays} วัน • สมาชิก {memberCount} คน
+              </span>
+            </div>
 
-                  <div className="flex justify-end gap-2 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Field 1: Daily per Person */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                  งบเฉลี่ยต่อคน / วัน
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="100"
+                    value={dailyPerPersonInput}
+                    onChange={(e) => handleDailyPerPersonChange(e.target.value)}
+                    className="w-full pr-20 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#182030] text-sm font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
+                    placeholder="2500"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold font-mono text-slate-400">
+                    {currency}/วัน
+                  </span>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="flex items-center gap-1.5 pt-1">
+                  {(currency === 'JPY' ? [5000, 10000, 15000, 20000] : [1500, 2500, 3500, 5000]).map((preset) => (
                     <button
+                      key={preset}
                       type="button"
-                      onClick={() => setShowAddCatForm(false)}
-                      className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer hover:bg-slate-100 dark:hover:bg-[#1c2438]"
+                      onClick={() => handleDailyPerPersonChange(String(preset))}
+                      className="px-2 py-0.5 rounded-md border border-slate-200 dark:border-[#2b354f] text-[10px] font-mono font-medium text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
                     >
-                      ยกเลิก
+                      {preset.toLocaleString()}
                     </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm hover:scale-105 transition-all cursor-pointer"
-                    >
-                      สร้างหมวดหมู่
-                    </button>
-                  </div>
-                </form>
-              )}
+                  ))}
+                </div>
+              </div>
 
-              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-1">
-                {categories.map((cat) => (
-                  <div
-                    key={cat.id}
-                    className="p-3 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438]/70 flex items-center justify-between"
+              {/* Field 2: Total Daily Pocket Money */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                  งบกินเที่ยวรวมทั้งทริป ({tripDays} วัน)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="500"
+                    value={dailyTotalInput}
+                    onChange={(e) => handleDailyTotalChange(e.target.value)}
+                    className="w-full pr-16 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#182030] text-sm font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
+                    placeholder="60000"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold font-mono text-slate-400">
+                    {currency}
+                  </span>
+                </div>
+
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 pt-1 flex justify-between">
+                  <span>คำนวณอัตโนมัติ ({Number(dailyPerPersonInput || 0).toLocaleString()} × {tripDays} วัน × {memberCount} คน)</span>
+                  <span>{formatSecondaryPreview(dailyNumber)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Summary & Member Allocation */}
+          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/40 dark:bg-[#151b2b]/40 space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                  3. สรุปงบประมาณรวม & สัดส่วนรายคน
+                </h3>
+              </div>
+
+              {/* Toggle Split Mode */}
+              <div className="flex items-center gap-1 p-0.5 rounded-lg border border-slate-200 dark:border-[#2b354f] bg-white dark:bg-[#182030] text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setSplitMode('even')}
+                  className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                    splitMode === 'even'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  หารเฉลี่ยเท่ากัน
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSplitMode('custom')}
+                  className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                    splitMode === 'custom'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  กำหนดรายคน
+                </button>
+              </div>
+            </div>
+
+            {/* Total Budget Result Card */}
+            <div className="p-3.5 rounded-xl border border-blue-200/80 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider block">
+                  งบประมาณรวมทั้งทริป (Total Budget)
+                </span>
+                <div className="text-xl sm:text-2xl font-black font-mono text-blue-950 dark:text-blue-100">
+                  {totalComputedBudget.toLocaleString()} {currency}
+                </div>
+                <div className="text-[11px] text-blue-700/80 dark:text-blue-300/70 font-medium">
+                  {formatSecondaryPreview(totalComputedBudget)}
+                </div>
+              </div>
+
+              <div className="text-right text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                <div>ค่าจองล่วงหน้า: {fixedNumber.toLocaleString()} {currency}</div>
+                <div>งบกินเที่ยว: {dailyNumber.toLocaleString()} {currency}</div>
+              </div>
+            </div>
+
+            {/* Member Allocation Cards */}
+            <div className="space-y-2 pt-1">
+              {allMembersList.map((m) => {
+                const allocated = Number(memberBudgets[m.key] || 0);
+                const pct = totalComputedBudget > 0 ? Math.round((allocated / totalComputedBudget) * 100) : 0;
+                return (
+                  <div 
+                    key={m.key}
+                    className="p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#182030] flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xl p-1.5 rounded-xl bg-white dark:bg-[#151b2b] shadow-2xs">
-                        {cat.icon}
-                      </span>
-                      <div>
-                        <span className="text-xs font-black text-slate-900 dark:text-white block">
-                          {cat.label}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          {cat.isCustom ? '✨ หมวดหมู่สร้างเอง' : 'หมวดหมู่มาตรฐาน'}
-                        </span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <CatAvatarBadge avatarId={m.avatar} size="sm" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                          {m.name}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          {pct}% ของงบรวม
+                        </div>
                       </div>
                     </div>
 
-                    {cat.isCustom && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCustomCategory(cat.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
-                        title="ลบหมวดหมู่นี้"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step="100"
+                          disabled={splitMode === 'even'}
+                          value={allocated || ''}
+                          onChange={(e) => handleMemberBudgetChange(m.key, e.target.value)}
+                          className={`w-28 sm:w-36 pr-12 pl-2.5 py-1.5 rounded-lg border text-xs font-mono font-bold outline-none text-right ${
+                            splitMode === 'even'
+                              ? 'bg-slate-100 dark:bg-[#121622] border-slate-200 dark:border-[#263147] text-slate-700 dark:text-slate-300 cursor-not-allowed'
+                              : 'bg-white dark:bg-[#1c2438] border-slate-300 dark:border-[#2b354f] text-slate-900 dark:text-white focus:border-blue-500'
+                          }`}
+                          placeholder="0"
+                        />
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold font-mono text-slate-400">
+                          {currency}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-
+                );
+              })}
             </div>
-          )}
+          </div>
+
+          {/* Section 4 (Optional Collapsible): Category Breakdown */}
+          <div className="rounded-2xl border border-slate-200/80 dark:border-[#222c42] overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowCategorySection(!showCategorySection)}
+              className="w-full p-3.5 bg-slate-50/50 dark:bg-[#151b2b]/50 hover:bg-slate-100/50 dark:hover:bg-[#182030] flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Sliders className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <span>4. จัดสรรงบตามหมวดหมู่ (อาหาร, เดินทาง, ช้อปปิ้ง) — ไม่บังคับ</span>
+              </div>
+              {showCategorySection ? (
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              )}
+            </button>
+
+            {showCategorySection && (
+              <div className="p-4 bg-white dark:bg-[#121622] space-y-2.5 border-t border-slate-200/80 dark:border-[#222c42]">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+                  คุณสามารถกำหนดงบประมาณแยกตามหมวดหมู่ได้ตามต้องการ (หากไม่ระบุ ระบบจะใช้ยอดรวมหลัก)
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {categories.map((cat) => (
+                    <div 
+                      key={cat.id}
+                      className="p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50/30 dark:bg-[#182030] flex items-center justify-between gap-2"
+                    >
+                      <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
+                        {cat.label}
+                      </span>
+                      <div className="relative shrink-0">
+                        <input
+                          type="number"
+                          min="0"
+                          step="100"
+                          value={categoryBudgets[cat.id] || ''}
+                          onChange={(e) => handleCategoryBudgetChange(cat.id, e.target.value)}
+                          className="w-24 pr-8 pl-2 py-1 rounded-md border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#121622] text-xs font-mono font-bold text-right outline-none focus:border-blue-500"
+                          placeholder="0"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold font-mono text-slate-400">
+                          {currency}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-6 pt-3 border-t border-slate-100 dark:border-[#222c42] flex items-center justify-between shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
-          {onOpenRollback ? (
+        <div className="p-4 sm:p-5 border-t border-slate-200/80 dark:border-[#222c42] flex flex-wrap items-center justify-between gap-2 shrink-0 bg-slate-50/50 dark:bg-[#151b2b]/50">
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => {
-                onClose();
-                onOpenRollback();
-              }}
-              className="text-[11px] font-bold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 flex items-center gap-1.5 cursor-pointer hover:underline min-h-[44px] touch-manipulation"
+              onClick={handleClearBudget}
+              disabled={isSaving}
+              className="text-xs text-rose-600 dark:text-rose-400 hover:underline cursor-pointer disabled:opacity-50"
             >
-              <History className="h-3.5 w-3.5" />
-              <span>ประวัติ & สำรองไฟล์ (Rollback)</span>
+              ล้างงบประมาณ
             </button>
-          ) : <div />}
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2.5 min-h-[44px] rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer touch-manipulation flex items-center justify-center"
-          >
-            เสร็จสิ้น
-          </button>
+            {onOpenRollback && (
+              <button
+                type="button"
+                onClick={onOpenRollback}
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer"
+              >
+                <History className="h-3.5 w-3.5" />
+                <span>ประวัติ & สำรองไฟล์</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSaving}
+              className="py-2 px-3.5 rounded-xl border border-slate-300 dark:border-[#2b354f] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            >
+              ยกเลิก
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSaveAll}
+              disabled={isSaving}
+              className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {isSaving ? (
+                <span>กำลังบันทึก...</span>
+              ) : (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  <span>บันทึกงบประมาณ</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
       </div>
