@@ -27,6 +27,7 @@ import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { isSuperAdmin } from '@/lib/permissions';
 import { copyToClipboard } from '@/lib/clipboard';
+import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 
 export default function HomePage() {
   const router = useRouter();
@@ -92,13 +93,14 @@ export default function HomePage() {
 
   const checkUserAndFetchTrips = async (customMode?: 'my' | 'all') => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { session } = await getSafeSession();
       if (!session) {
         router.push('/login');
         return;
       }
       const currentUserId = session.user.id;
       setUser(session.user);
+      trackCurrentDevice(currentUserId);
 
       // Restore user-specific cached profile & trips
       try {
@@ -555,6 +557,7 @@ export default function HomePage() {
   };
 
   const handleQuickLogout = async () => {
+    if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?')) return;
     toast.info('กำลังออกจากระบบ...');
     try {
       await Promise.race([
@@ -565,7 +568,7 @@ export default function HomePage() {
       console.error('Signout error', err);
     } finally {
       try {
-        localStorage.clear();
+        localStorage.removeItem('travel_tracker_cached_profile');
         sessionStorage.clear();
       } catch {}
       window.location.replace('/login');

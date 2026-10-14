@@ -214,3 +214,28 @@ USING (
       )
   )
 );
+
+-- 5. ตาราง user_devices: เก็บข้อมูลอุปกรณ์ที่เข้าสู่ระบบ (Multi-device tracking)
+CREATE TABLE IF NOT EXISTS public.user_devices (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  device_id TEXT NOT NULL,
+  device_name TEXT NOT NULL,
+  browser TEXT,
+  os TEXT,
+  device_type TEXT DEFAULT 'desktop',
+  ip_address TEXT,
+  last_active_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, device_id)
+);
+
+ALTER TABLE public.user_devices ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can manage their own devices" ON public.user_devices;
+CREATE POLICY "Users can manage their own devices"
+ON public.user_devices
+FOR ALL
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);

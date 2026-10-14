@@ -25,6 +25,7 @@ import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { isSuperAdmin, TripRole, ROLE_INFO } from '@/lib/permissions';
+import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { 
   CategoryItem, 
   CategoryBudgetMap, 
@@ -308,14 +309,14 @@ export default function TripDetailPage() {
         { data: expData },
         { data: memberData, error: memErr }
       ] = await Promise.all([
-        supabase.auth.getSession(),
+        getSafeSession(),
         supabase.from('trips').select('*').eq('id', tripId).maybeSingle(),
         supabase.from('itinerary_items').select('*').eq('trip_id', tripId).order('sort_order', { ascending: true }),
         supabase.from('expenses').select('*').eq('trip_id', tripId).order('spent_at', { ascending: false }),
         supabase.from('trip_members').select('*, profiles(*)').eq('trip_id', tripId)
       ]);
 
-      const session = sessionRes.data?.session;
+      const session = sessionRes.session;
       if (!session?.user) {
         if (typeof window !== 'undefined') {
           window.location.href = `/login?returnUrl=/trips/${tripId}`;
@@ -323,6 +324,7 @@ export default function TripDetailPage() {
         return;
       }
       setCurrentUser(session.user);
+      trackCurrentDevice(session.user.id);
 
       if (!tripData) {
         setTrip(null);
@@ -1991,6 +1993,7 @@ export default function TripDetailPage() {
               {currentUser && (
                 <button
                   onClick={async () => {
+                    if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?')) return;
                     toast.info('กำลังออกจากระบบ...');
                     try {
                       await Promise.race([
@@ -2001,7 +2004,7 @@ export default function TripDetailPage() {
                       console.error('Signout error', e);
                     } finally {
                       try {
-                        localStorage.clear();
+                        localStorage.removeItem('travel_tracker_cached_profile');
                         sessionStorage.clear();
                       } catch {}
                       window.location.replace('/login');

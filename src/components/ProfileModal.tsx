@@ -7,8 +7,10 @@ import { useRouter } from 'next/navigation';
 import { CAT_AVATARS, getCatAvatar } from '@/lib/avatars';
 import { 
   X, Check, User, Lock, Mail, Key, LogOut, 
-  Loader2, Eye, EyeOff, Sparkles, Copy, CheckCircle2, Shield, AlertCircle
+  Loader2, Eye, EyeOff, Sparkles, Copy, CheckCircle2, Shield, AlertCircle,
+  Laptop, Smartphone, Tablet, Monitor, RefreshCw
 } from 'lucide-react';
+import { fetchUserDevices, removeUserDevice, signOutOtherDevices, DeviceSession } from '@/lib/sessionManager';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -39,6 +41,43 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
 
   // Copied User ID state
   const [copiedId, setCopiedId] = useState(false);
+
+  // Active Devices State
+  const [devices, setDevices] = useState<DeviceSession[]>([]);
+  const [loadingDevices, setLoadingDevices] = useState(false);
+  const [signingOutOthers, setSigningOutOthers] = useState(false);
+
+  const loadDevices = useCallback(async () => {
+    if (!user?.id) return;
+    setLoadingDevices(true);
+    try {
+      const list = await fetchUserDevices(user.id);
+      setDevices(list);
+    } catch (e) {
+      console.error('Failed to load devices', e);
+    } finally {
+      setLoadingDevices(false);
+    }
+  }, [user?.id]);
+
+  const handleSignOutOthers = async () => {
+    if (!user?.id) return;
+    if (!window.confirm('คุณต้องการออกจากระบบบนอุปกรณ์อื่นทั้งหมดใช่หรือไม่?')) return;
+    setSigningOutOthers(true);
+    try {
+      await signOutOtherDevices(user.id);
+      await loadDevices();
+    } finally {
+      setSigningOutOthers(false);
+    }
+  };
+
+  const handleRemoveDevice = async (deviceId: string) => {
+    if (!user?.id) return;
+    if (!window.confirm('ต้องการนำอุปกรณ์นี้ออกจากรายการใช่หรือไม่?')) return;
+    await removeUserDevice(user.id, deviceId);
+    await loadDevices();
+  };
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return;
@@ -90,12 +129,13 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     };
   }, [isOpen, onClose]);
 
-  // Fetch current user profile
+  // Fetch current user profile and active devices
   useEffect(() => {
     if (isOpen && user?.id) {
       fetchProfile();
+      loadDevices();
     }
-  }, [isOpen, user?.id, fetchProfile]);
+  }, [isOpen, user?.id, fetchProfile, loadDevices]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,6 +235,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?')) return;
     setLoggingOut(true);
     try {
       await Promise.race([
@@ -205,7 +246,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
       console.error('Sign out error:', err);
     } finally {
       try {
-        localStorage.clear();
+        localStorage.removeItem('travel_tracker_cached_profile');
         sessionStorage.clear();
       } catch {}
       onClose();
@@ -426,7 +467,114 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                 )}
               </div>
 
-              {/* SECTION 4: ACCOUNT INFO & LOGOUT */}
+              {/* SECTION 4: ACTIVE DEVICES & MULTI-DEVICE MANAGEMENT */}
+              <div className="border-t border-slate-100 dark:border-[#222c42] pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Laptop className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      อุปกรณ์ที่เข้าสู่ระบบอยู่ ({devices.length})
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={loadDevices}
+                    disabled={loadingDevices}
+                    className="p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    title="รีเฟรชรายการอุปกรณ์"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${loadingDevices ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  บัญชีของคุณสามารถล็อกอินได้พร้อมกันหลายเครื่อง ตรวจสอบหรือจัดการอุปกรณ์ที่ใช้งานได้ที่นี่
+                </p>
+
+                {/* Device List Cards */}
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {devices.map((dev) => {
+                    const isCurrent = dev.is_current;
+                    const Icon = dev.device_type === 'mobile' 
+                      ? Smartphone 
+                      : dev.device_type === 'tablet' 
+                        ? Tablet 
+                        : Laptop;
+
+                    return (
+                      <div
+                        key={dev.device_id}
+                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 transition-colors ${
+                          isCurrent
+                            ? 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/60'
+                            : 'bg-slate-50/60 dark:bg-[#1a202c]/50 border-slate-200/80 dark:border-[#262f40]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                            isCurrent 
+                              ? 'bg-blue-600 text-white shadow-sm' 
+                              : 'bg-slate-200 dark:bg-[#222c42] text-slate-600 dark:text-slate-300'
+                          }`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                {dev.device_name || 'อุปกรณ์ที่ไม่ระบุชื่อ'}
+                              </span>
+                              {isCurrent && (
+                                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                                  🟢 เครื่องนี้
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                              <span>{dev.browser}</span>
+                              <span>•</span>
+                              <span>
+                                {isCurrent 
+                                  ? 'กำลังใช้งานอยู่' 
+                                  : dev.last_active_at 
+                                    ? new Date(dev.last_active_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                                    : 'ล่าสุดไม่นานนี้'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!isCurrent && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDevice(dev.device_id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                            title="ออกจากระบบบนอุปกรณ์นี้"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {devices.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleSignOutOthers}
+                    disabled={signingOutOthers}
+                    className="w-full py-1.5 px-3 rounded-lg border border-slate-200 dark:border-[#262f40] hover:border-rose-300 dark:hover:border-rose-900 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {signingOutOthers ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <LogOut className="h-3.5 w-3.5" />
+                    )}
+                    <span>ออกจากระบบเครื่องอื่นทั้งหมด ({devices.length - 1} เครื่อง)</span>
+                  </button>
+                )}
+              </div>
+
+              {/* SECTION 5: ACCOUNT INFO & LOGOUT */}
               <div className="border-t border-slate-100 dark:border-[#222c42] pt-4 space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-medium">อีเมลที่ล็อกอิน:</span>

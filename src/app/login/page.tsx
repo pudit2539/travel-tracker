@@ -10,6 +10,7 @@ import {
   CheckCircle2, Users, ArrowLeft 
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
+import { setRememberMePreference, trackCurrentDevice } from '@/lib/sessionManager';
 
 function LoginForm() {
   const router = useRouter();
@@ -22,6 +23,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -105,6 +107,8 @@ function LoginForm() {
         }
 
         if (session?.user) {
+          setRememberMePreference(rememberMe);
+          await trackCurrentDevice(session.user.id);
           await autoJoinTripIfInvited(session.user.id);
           try {
             const userMeta = session.user.user_metadata;
@@ -135,6 +139,8 @@ function LoginForm() {
         }
 
         if (data.session?.user) {
+          setRememberMePreference(rememberMe);
+          await trackCurrentDevice(data.session.user.id);
           await autoJoinTripIfInvited(data.session.user.id);
           try {
             const userMeta = data.session.user.user_metadata;
@@ -331,6 +337,24 @@ function LoginForm() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+          </div>
+
+          {/* Remember Me Checkbox (1 Week Session) */}
+          <div className="flex items-center justify-between px-1 py-1">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded-md border-slate-300 dark:border-purple-800 text-pink-600 focus:ring-pink-500 accent-pink-500 cursor-pointer"
+              />
+              <span className="text-xs font-bold text-slate-700 dark:text-purple-200">
+                จดจำการเข้าสู่ระบบไว้ (1 สัปดาห์)
+              </span>
+            </label>
+            <span className="text-[10px] text-slate-400 dark:text-purple-400 font-medium">
+              ไม่ต้องล็อกอินซ้ำ
+            </span>
           </div>
 
           <button
