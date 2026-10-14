@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { 
   Users, UserPlus, X, Search, Check, Loader2, 
-  Shield, Sparkles, AlertCircle 
+  Shield, Sparkles, AlertCircle, Eye, Edit3, MapPin, Receipt 
 } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { TripRole, ROLE_INFO } from '@/lib/permissions';
@@ -34,13 +34,13 @@ export function AddMemberModal({
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<TripRole>('plan_only'); // Default plan_only for security
+  const [selectedRole, setSelectedRole] = useState<TripRole>('contributor');
 
   useEffect(() => {
     if (isOpen) {
       loadSystemUsers();
       setSelectedUserId(null);
-      setSelectedRole('plan_only');
+      setSelectedRole('contributor');
       setSearchQuery('');
     }
   }, [isOpen]);
@@ -96,7 +96,7 @@ export function AddMemberModal({
       if (error) {
         toast.error('ไม่สามารถเพิ่มสมาชิกได้: ' + error.message);
       } else {
-        toast.success(`🎉 เพิ่มคุณ "${targetName}" เข้าทริปด้วยสิทธิ์ "${ROLE_INFO[selectedRole]?.label || selectedRole}" เรียบร้อยแล้ว!`);
+        toast.success(`เพิ่มคุณ "${targetName}" เข้าทริปด้วยสิทธิ์ "${ROLE_INFO[selectedRole]?.label || selectedRole}" เรียบร้อยแล้ว`);
         onMemberAdded();
         onClose();
       }
@@ -159,47 +159,61 @@ export function AddMemberModal({
             <Shield className="h-3.5 w-3.5 text-blue-500" />
             <span>กำหนดสิทธิ์เริ่มต้นให้กับสมาชิกที่เลือก:</span>
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button
               type="button"
               onClick={() => setSelectedRole('plan_only')}
-              className={`p-2 rounded-xl text-xs font-bold transition-all border text-center ${
+              className={`p-2 rounded-xl text-xs font-bold transition-all border text-center flex flex-col items-center justify-center gap-1 ${
                 selectedRole === 'plan_only'
                   ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500 shadow-xs'
                   : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
               }`}
             >
-              <span className="block text-sm">🗺️</span>
+              <MapPin className="h-4 w-4 text-slate-400" />
               <span>Plan Only</span>
-              <span className="block text-[9px] text-slate-400 font-normal">ดูเฉพาะแผน</span>
+              <span className="text-[9px] text-slate-400 font-normal">ดูเฉพาะแผน</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedRole('viewer')}
-              className={`p-2 rounded-xl text-xs font-bold transition-all border text-center ${
+              className={`p-2 rounded-xl text-xs font-bold transition-all border text-center flex flex-col items-center justify-center gap-1 ${
                 selectedRole === 'viewer'
                   ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500 shadow-xs'
                   : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
               }`}
             >
-              <span className="block text-sm">👁️</span>
+              <Eye className="h-4 w-4 text-slate-400" />
               <span>Viewer</span>
-              <span className="block text-[9px] text-slate-400 font-normal">ดูแผน+งบ</span>
+              <span className="text-[9px] text-slate-400 font-normal">ดูอย่างเดียว</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedRole('contributor')}
+              className={`p-2 rounded-xl text-xs font-bold transition-all border text-center flex flex-col items-center justify-center gap-1 ${
+                selectedRole === 'contributor'
+                  ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500 shadow-xs'
+                  : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+              }`}
+            >
+              <Receipt className="h-4 w-4 text-blue-500" />
+              <span>Contributor</span>
+              <span className="text-[9px] text-slate-400 font-normal">ดูแผน+ลงเงิน</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedRole('editor')}
-              className={`p-2 rounded-xl text-xs font-bold transition-all border text-center ${
+              className={`p-2 rounded-xl text-xs font-bold transition-all border text-center flex flex-col items-center justify-center gap-1 ${
                 selectedRole === 'editor'
                   ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500 shadow-xs'
                   : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
               }`}
             >
-              <span className="block text-sm">✏️</span>
+              <Edit3 className="h-4 w-4 text-emerald-500" />
               <span>Editor</span>
-              <span className="block text-[9px] text-slate-400 font-normal">แก้ไขได้</span>
+              <span className="text-[9px] text-slate-400 font-normal">แก้แผน+ลงเงิน</span>
             </button>
           </div>
         </div>

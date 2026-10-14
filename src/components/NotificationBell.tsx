@@ -8,6 +8,7 @@ import {
   Receipt, CloudSun, MapPin, Calculator, AlertCircle, 
   Users, Filter, Clock 
 } from 'lucide-react';
+import { ROLE_INFO, TripRole } from '@/lib/permissions';
 
 export interface NotificationItem {
   id: string;
@@ -85,8 +86,8 @@ export default function NotificationBell({
           
           list.push({
             id: memberId,
-            title: 'สมาชิกใหม่เข้าร่วมทริป 👥',
-            message: `${mName} เข้าร่วมทริปแล้ว (สิทธิ์: ${m.role === 'owner' ? '👑 เจ้าของทริป' : m.role === 'editor' ? '✏️ ผู้แก้ไข' : '👁️ ผู้เข้าชม'})`,
+            title: 'สมาชิกใหม่เข้าร่วมทริป',
+            message: `${mName} เข้าร่วมทริปแล้ว (สิทธิ์: ${ROLE_INFO[m.role as TripRole]?.label || m.role || 'สมาชิก'})`,
             time: m.created_at ? memberTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : 'ล่าสุด',
             timestamp: m.created_at ? memberTime.getTime() : baseTimestamp - (idx * 60000),
             type: 'member',

@@ -2,7 +2,7 @@
 
 export const SUPER_ADMIN_EMAILS = ['pudit2539@gmail.com'];
 
-export type TripRole = 'owner' | 'editor' | 'viewer' | 'plan_only';
+export type TripRole = 'owner' | 'editor' | 'contributor' | 'viewer' | 'plan_only';
 
 export interface UserLike {
   id?: string;
@@ -48,10 +48,17 @@ export const ROLE_INFO: Record<TripRole, { label: string; badge: string; descrip
     canEdit: true,
     canSeeMoney: true,
   },
+  contributor: {
+    label: 'ผู้ร่วมทริป (Contributor)',
+    badge: 'Contributor',
+    description: 'ดูแผนเดินทาง และบันทึกค่าใช้จ่ายได้ (ไม่สามารถแก้ไขแผนเที่ยว)',
+    canEdit: false,
+    canSeeMoney: true,
+  },
   viewer: {
     label: 'ผู้เข้าชม (Viewer)',
     badge: 'Viewer',
-    description: 'ดูได้ทั้งแผนเที่ยวและค่าใช้จ่าย/งบประมาณ แต่ไม่สามารถแก้ไขได้',
+    description: 'ดูได้ทั้งแผนเที่ยวและค่าใช้จ่าย/งบประมาณ (ดูอย่างเดียว ไม่สามารถแก้ไขได้)',
     canEdit: false,
     canSeeMoney: true,
   },

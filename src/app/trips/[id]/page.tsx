@@ -1373,7 +1373,7 @@ export default function TripDetailPage() {
 
   const canSeeMoney = isSuper || currentUserRole !== 'plan_only';
   const canEditPlan = isSuper || currentUserRole === 'owner' || currentUserRole === 'editor';
-  const canAddExpense = canSeeMoney && (isSuper || currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'viewer');
+  const canAddExpense = canSeeMoney && (isSuper || currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'contributor');
   const canImportExcel = isOwner;
 
   const handleSwitchTab = useCallback((tab: 'plan' | 'expenses' | 'analytics' | 'members') => {

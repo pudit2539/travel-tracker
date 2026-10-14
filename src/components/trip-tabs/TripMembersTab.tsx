@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Users, Share2, Trash2, Crown, Shield, Eye, Edit3, MapPin, UserPlus, ArrowRightLeft } from 'lucide-react';
+import { Users, Share2, Trash2, Crown, Shield, Eye, Edit3, MapPin, UserPlus, ArrowRightLeft, Receipt } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { TripRole } from '@/lib/permissions';
 
@@ -73,21 +73,26 @@ export function TripMembersTab({
         </div>
 
         {/* Roles explainer banner (Clean Corporate Style) */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121622] border border-slate-200/70 dark:border-[#222c42] grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px]">
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121622] border border-slate-200/70 dark:border-[#222c42] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
           <div className="flex items-center gap-2">
             <Edit3 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             <span className="font-bold text-slate-800 dark:text-slate-200">Editor:</span>
-            <span className="text-slate-500 dark:text-slate-400">แก้ไขแผนและบันทึกค่าใช้จ่าย</span>
+            <span className="text-slate-500 dark:text-slate-400 truncate">แก้ไขแผน + รายจ่าย</span>
           </div>
           <div className="flex items-center gap-2">
-            <Eye className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+            <Receipt className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+            <span className="font-bold text-slate-800 dark:text-slate-200">Contributor:</span>
+            <span className="text-slate-500 dark:text-slate-400 truncate">ดูแผน + บันทึกรายจ่าย</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Eye className="h-3.5 w-3.5 text-slate-400 shrink-0" />
             <span className="font-bold text-slate-800 dark:text-slate-200">Viewer:</span>
-            <span className="text-slate-500 dark:text-slate-400">ดูแผนและค่าใช้จ่าย (ห้ามแก้ไข)</span>
+            <span className="text-slate-500 dark:text-slate-400 truncate">ดูอย่างเดียว (ห้ามบันทึก)</span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
             <span className="font-bold text-slate-800 dark:text-slate-200">Plan Only:</span>
-            <span className="text-slate-500 dark:text-slate-400">ดูเฉพาะแผนเที่ยว (ซ่อนเรื่องเงิน)</span>
+            <span className="text-slate-500 dark:text-slate-400 truncate">ดูเฉพาะแผน (ซ่อนเงิน)</span>
           </div>
         </div>
 
@@ -131,6 +136,8 @@ export function TripMembersTab({
                         ? 'สิทธิ์เต็ม — ผู้สร้างทริป (Owner)'
                         : m.role === 'editor'
                         ? 'สิทธิ์แก้ไขแผนและบันทึกค่าใช้จ่าย (Editor)'
+                        : m.role === 'contributor'
+                        ? 'สิทธิ์ดูแผน และ บันทึกค่าใช้จ่ายได้ (Contributor)'
                         : m.role === 'plan_only'
                         ? 'สิทธิ์ดูเฉพาะแผนเดินทาง (Plan Only)'
                         : 'สิทธิ์ดูข้อมูลอย่างเดียว (Viewer)'}
@@ -147,6 +154,7 @@ export function TripMembersTab({
                         className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-500 shadow-2xs transition-colors"
                       >
                         <option value="editor">Editor — แก้ไขแผนและรายจ่าย</option>
+                        <option value="contributor">Contributor — ดูแผน และ บันทึกรายจ่ายได้</option>
                         <option value="viewer">Viewer — ดูอย่างเดียว</option>
                         <option value="plan_only">Plan Only — ดูเฉพาะแผนเที่ยว</option>
                       </select>
@@ -183,6 +191,11 @@ export function TripMembersTab({
                           <Edit3 className="h-3 w-3 text-emerald-500" />
                           <span>Editor</span>
                         </>
+                      ) : m.role === 'contributor' ? (
+                        <>
+                          <Receipt className="h-3 w-3 text-blue-500" />
+                          <span>Contributor</span>
+                        </>
                       ) : m.role === 'plan_only' ? (
                         <>
                           <MapPin className="h-3 w-3 text-slate-400" />
@@ -190,7 +203,7 @@ export function TripMembersTab({
                         </>
                       ) : (
                         <>
-                          <Eye className="h-3 w-3 text-blue-500" />
+                          <Eye className="h-3 w-3 text-slate-400" />
                           <span>Viewer</span>
                         </>
                       )}
