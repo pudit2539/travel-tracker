@@ -190,67 +190,85 @@ function ItineraryStopCardComponent({
         </div>
 
         {/* Main Place Title */}
-        <div className="pt-0.5">
+        <div className="pt-0.5 text-left w-full">
           <a
             href={mainPlaceMapsUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-base sm:text-lg font-black text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center gap-1.5 transition-colors cursor-pointer group/title"
+            className="text-base sm:text-lg font-black text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center gap-1.5 transition-colors cursor-pointer group/title leading-relaxed text-left break-words w-full"
           >
             <span>{item.main_place}</span>
-            <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover/title:text-blue-500 transition-colors" />
+            <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover/title:text-blue-500 transition-colors shrink-0" />
           </a>
         </div>
 
         {/* Transit Details text if any */}
         {transitGuide.details && (
-          <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-            {transitGuide.details}
-          </p>
+          <div className="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-800/40 text-left flex items-start gap-2.5">
+            <div className="w-6 h-6 rounded-lg bg-indigo-500/20 dark:bg-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
+              <Bus className="h-3.5 w-3.5" />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300 mr-1.5">
+                การเดินทาง:
+              </span>
+              <span className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
+                {transitGuide.details}
+              </span>
+            </div>
+          </div>
         )}
 
         {/* Food & Dining Recommendations */}
         {item.food_recommendation && (
-          <div className="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 flex items-start gap-2.5 text-xs">
-            <Utensils className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0 flex items-center justify-between gap-2 flex-wrap">
-              <div>
-                <span className="font-black text-slate-900 dark:text-white">ร้านแนะนำ: </span>
-                <span className="font-medium text-slate-700 dark:text-slate-300">{item.food_recommendation}</span>
+          <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 text-left transition-all space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-amber-500/20 dark:bg-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                  <Utensils className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
+                  ร้านอาหารแนะนำ / ของกินเด่น
+                </span>
               </div>
               {foodSearchUrl && (
                 <a
                   href={foodSearchUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1 shrink-0"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-500 shadow-2xs hover:scale-102 active:scale-98 transition-all shrink-0 cursor-pointer"
                 >
                   <span>แผนที่ร้าน 📍</span>
-                  <ExternalLink className="h-2.5 w-2.5" />
+                  <ExternalLink className="h-2.5 w-2.5 opacity-80" />
                 </a>
               )}
             </div>
+            <p className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed pl-8 text-left">
+              {item.food_recommendation}
+            </p>
           </div>
         )}
 
         {/* Backup Plan (Plan B) */}
         {item.backup_plan && (
-          <div className="pt-1">
+          <div className="pt-1 text-left">
             <button
               type="button"
               onClick={() => onTogglePlanB(item.id)}
-              className="text-xs font-bold text-slate-600 dark:text-slate-400 inline-flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+              className="text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
             >
-              <Shield className="h-3.5 w-3.5 text-blue-500" />
+              <div className="w-5 h-5 rounded-md bg-rose-500/15 dark:bg-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                <Shield className="h-3 w-3" />
+              </div>
               <span>แผนสำรอง (Plan B)</span>
               {isPlanBOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             </button>
             {isPlanBOpen && (
-              <div className="p-3 mt-2 rounded-2xl bg-slate-50 dark:bg-[#111624] text-xs text-slate-700 dark:text-slate-200 space-y-2 border border-slate-200/70 dark:border-[#222c42]">
-                <div className="font-bold text-blue-600 dark:text-blue-400">
+              <div className="p-3.5 mt-2 rounded-2xl bg-slate-50 dark:bg-[#111624] text-xs text-slate-700 dark:text-slate-200 space-y-2.5 border border-slate-200/70 dark:border-[#222c42] text-left">
+                <div className="font-bold text-slate-900 dark:text-slate-100 text-left">
                   รายการสถานที่ & ร้านอาหารสำรอง:
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {item.backup_plan
                     .split('\n')
                     .filter((line: string) => line.trim().length > 0)
@@ -272,16 +290,16 @@ function ItineraryStopCardComponent({
                       return (
                         <div
                           key={lineIdx}
-                          className="p-2.5 rounded-xl bg-white dark:bg-[#182033] border border-slate-200/60 dark:border-[#222c42] flex items-center justify-between gap-2 shadow-2xs"
+                          className="p-2.5 rounded-xl bg-white dark:bg-[#182033] border border-slate-200/60 dark:border-[#222c42] flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left"
                         >
-                          <span className="font-medium text-slate-800 dark:text-slate-200 leading-snug">
+                          <span className="font-medium text-slate-800 dark:text-slate-200 leading-relaxed text-left flex-1">
                             {line}
                           </span>
                           <a
                             href={lineMapsUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                            className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-[#c25872] hover:text-white dark:hover:bg-[#d47087] transition-all shrink-0 cursor-pointer shadow-2xs"
                           >
                             <span>แผนที่ 📍</span>
                             <ExternalLink className="h-2.5 w-2.5" />

@@ -896,20 +896,22 @@ export function AccommodationsCard({
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-1.5">
-                        <Building className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">
+                      <div className="flex items-start gap-2.5 text-left">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/15 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
+                          <Building className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-relaxed text-left break-words">
                             {stay.name}
                           </h4>
-                          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1 text-left">
                             {stay.city && (
-                              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300">
                                 📍 {stay.city}
                               </span>
                             )}
                             {stay.roomType && (
-                              <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300">
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-900/30">
                                 🛏️ {stay.roomType}
                               </span>
                             )}

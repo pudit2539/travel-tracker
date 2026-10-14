@@ -405,16 +405,16 @@ export default function TravelHubModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-      <div className="relative w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-5 md:p-6 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none text-left" role="dialog" aria-modal="true">
+      <div className="relative w-full max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[92dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-left">
         {/* Modal Top Header */}
         <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] bg-white/80 dark:bg-[#181a20]/80 backdrop-blur-md">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 text-left">
             <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#e79b71] to-amber-500 text-white flex items-center justify-center text-lg shadow-sm shadow-[#e79b71]/20 shrink-0">
               🧭
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
+            <div className="text-left">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                   Travel Companion Hub
                 </h2>
@@ -423,14 +423,14 @@ export default function TravelHubModal({
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                กล่องเครื่องมือออนทริปสำหรับนักเดินทางตัวจริง
+                กล่องเครื่องมือออนทริปสำหรับนักเดินทางตัวจริง (iPad, Desktop & Mobile)
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#262932] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#262932] transition-colors cursor-pointer shrink-0"
             title="ปิดหน้าต่าง"
           >
             <X className="h-5 w-5" />
@@ -946,13 +946,15 @@ export default function TravelHubModal({
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center justify-between gap-1 border-t border-slate-100 dark:border-[#2b2f3d] pt-2 text-xs">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                      <div className="space-y-1 border-t border-slate-100 dark:border-[#2b2f3d] pt-2 text-xs text-left">
+                        <div className="font-bold text-slate-800 dark:text-slate-200 text-left leading-relaxed">
                           🇹🇭 {p.thai}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          💡 {p.context}
-                        </span>
+                        </div>
+                        {p.context && (
+                          <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium text-left">
+                            💡 {p.context}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -985,11 +987,11 @@ export default function TravelHubModal({
                       <span>{copiedHotel ? 'คัดลอกแล้ว' : 'คัดลอกที่อยู่'}</span>
                     </button>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                  <div className="pt-0.5 text-left">
+                    <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white text-left leading-relaxed">
                       {hotelInfo.name}
                     </h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 text-left leading-relaxed">
                       📍 {hotelInfo.address}
                     </p>
                   </div>

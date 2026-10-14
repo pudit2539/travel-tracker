@@ -59,7 +59,7 @@ function ExpenseCardComponent({
           </div>
           <div className="min-w-0 flex-1">
             <div className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
-              <span className="break-words line-clamp-2 sm:line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
+              <span className="break-words group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-relaxed text-left">
                 {expense.title}
               </span>
               {expense.receipt_url && (

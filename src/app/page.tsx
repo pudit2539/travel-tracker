@@ -858,8 +858,8 @@ export default function HomePage() {
             transition={{ duration: 0.3 }}
             className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-gradient-to-r from-slate-900 via-[#181a20] to-slate-900 text-white relative overflow-hidden shadow-md"
           >
-            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="space-y-2">
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-left">
+              <div className="space-y-2 text-left flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white border border-white/20 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#e79b71]" />
@@ -882,7 +882,7 @@ export default function HomePage() {
                   )}
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-relaxed text-left break-words">
                   {upcomingTrip.name || upcomingTrip.title}
                 </h2>
 
@@ -1151,14 +1151,14 @@ export default function HomePage() {
                   </div>
 
                   {/* Body Content */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                    <div>
-                      <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-[#e79b71] transition-colors line-clamp-1">
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3 text-left">
+                    <div className="text-left">
+                      <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white group-hover:text-[#e79b71] transition-colors leading-relaxed text-left break-words">
                         {tripName}
                       </h3>
                       {t.start_date && (
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 flex items-center gap-1.5 text-left">
+                          <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                           <span>{new Date(t.start_date).toLocaleDateString('th-TH')} - {t.end_date ? new Date(t.end_date).toLocaleDateString('th-TH') : 'ไม่ระบุวันกลับ'}</span>
                         </p>
                       )}
