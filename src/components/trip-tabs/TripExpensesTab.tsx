@@ -56,7 +56,7 @@ interface TripExpensesTabProps {
   onEditExpense?: (exp: any) => void;
 }
 
-export function TripExpensesTab({
+export const TripExpensesTab = React.memo(function TripExpensesTab({
   trip,
   tripBaseCurrency,
   fxRate,
@@ -634,6 +634,6 @@ export function TripExpensesTab({
       )}
     </div>
   );
-}
+});
 
 export default TripExpensesTab;

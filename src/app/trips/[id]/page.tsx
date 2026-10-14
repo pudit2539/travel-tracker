@@ -102,6 +102,7 @@ export default function TripDetailPage() {
   const [memberBudgets, setMemberBudgets] = useState<MemberBudgetMap>({});
   const [photosCount, setPhotosCount] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'plan' | 'expenses' | 'analytics' | 'members'>('plan');
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set(['plan']));
   const [heroBudgetView, setHeroBudgetView] = useState<'all' | 'me' | string>('all');
   const [itineraryViewMode, setItineraryViewMode] = useState<'list' | 'map'>('list');
   const [loading, setLoading] = useState(true);
@@ -1381,6 +1382,12 @@ export default function TripDetailPage() {
       toast.info('สิทธิ์ของคุณคือดูเฉพาะแผนเที่ยว (Plan Only)');
       return;
     }
+    setVisitedTabs((prev) => {
+      if (prev.has(tab)) return prev;
+      const next = new Set(prev);
+      next.add(tab);
+      return next;
+    });
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1391,6 +1398,12 @@ export default function TripDetailPage() {
     if (!canSeeMoney && (activeTab === 'expenses' || activeTab === 'analytics')) {
       setActiveTab('plan');
     }
+    setVisitedTabs((prev) => {
+      if (prev.has(activeTab)) return prev;
+      const next = new Set(prev);
+      next.add(activeTab);
+      return next;
+    });
   }, [canSeeMoney, activeTab]);
 
   const handleUpdateMemberRole = async (memberId: string, newRole: TripRole) => {
@@ -2187,15 +2200,10 @@ export default function TripDetailPage() {
           </div>
         )}
 
-        <AnimatePresence mode="wait">
-          {activeTab === 'plan' && (
-            <motion.div
-              key="plan"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
+        {/* Tab Content Panels - Keep-Alive for Zero-Latency Instant Switching */}
+        <div className="tab-panels-wrapper">
+          {visitedTabs.has('plan') && (
+            <div className={activeTab === 'plan' ? 'block' : 'hidden'} role="tabpanel">
               <TripPlanTab
                 trip={trip}
                 tripBaseCurrency={tripBaseCurrency}
@@ -2230,17 +2238,11 @@ export default function TripDetailPage() {
                 onRefreshTrip={fetchTripData}
                 onShowToast={showToast}
               />
-            </motion.div>
+            </div>
           )}
 
-          {activeTab === 'expenses' && (
-            <motion.div
-              key="expenses"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
+          {visitedTabs.has('expenses') && (
+            <div className={activeTab === 'expenses' ? 'block' : 'hidden'} role="tabpanel">
               <TripExpensesTab
                 trip={trip}
                 tripBaseCurrency={tripBaseCurrency}
@@ -2274,17 +2276,11 @@ export default function TripDetailPage() {
                 onSelectExpense={handleSelectExpense}
                 onEditExpense={handleEditExpense}
               />
-            </motion.div>
+            </div>
           )}
 
-          {activeTab === 'analytics' && (
-            <motion.div
-              key="analytics"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
+          {visitedTabs.has('analytics') && (
+            <div className={activeTab === 'analytics' ? 'block' : 'hidden'} role="tabpanel">
               <TripAnalyticsTab
                 distinctPayers={distinctPayers}
                 totalSpent={totalSpent}
@@ -2304,17 +2300,11 @@ export default function TripDetailPage() {
                   setShowBudgetCategoryModal(true);
                 }}
               />
-            </motion.div>
+            </div>
           )}
 
-          {activeTab === 'members' && (
-            <motion.div
-              key="members"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
+          {visitedTabs.has('members') && (
+            <div className={activeTab === 'members' ? 'block' : 'hidden'} role="tabpanel">
               <TripMembersTab
                 members={members}
                 isOwner={isOwner}
@@ -2329,9 +2319,9 @@ export default function TripDetailPage() {
                 }}
                 onOpenAddMemberModal={() => setShowAddMemberModal(true)}
               />
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
 
       </main>
 

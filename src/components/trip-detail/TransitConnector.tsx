@@ -13,7 +13,7 @@ interface TransitConnectorProps {
   isSameDay?: boolean;
 }
 
-export function TransitConnector({
+export const TransitConnector = React.memo(function TransitConnector({
   fromPlace,
   toPlace,
   fromCity,
@@ -57,6 +57,6 @@ export function TransitConnector({
       </div>
     </div>
   );
-}
+});
 
 export default TransitConnector;

@@ -64,7 +64,7 @@ interface TripPlanTabProps {
   canSeeMoney?: boolean;
 }
 
-export function TripPlanTab({
+export const TripPlanTab = React.memo(function TripPlanTab({
   trip,
   tripBaseCurrency,
   fxRate,
@@ -529,6 +529,6 @@ export function TripPlanTab({
       />
     </div>
   );
-}
+});
 
 export default TripPlanTab;

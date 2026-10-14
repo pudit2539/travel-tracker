@@ -32,7 +32,7 @@ interface TripAnalyticsTabProps {
   onOpenBudgetModalWithTab?: (tab: 'budget' | 'members' | 'categories') => void;
 }
 
-export function TripAnalyticsTab({
+export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
   distinctPayers,
   totalSpent,
   members,
@@ -1168,6 +1168,6 @@ export function TripAnalyticsTab({
 
     </div>
   );
-}
+});
 
 export default TripAnalyticsTab;

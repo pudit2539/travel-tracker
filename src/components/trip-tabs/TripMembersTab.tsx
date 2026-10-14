@@ -17,7 +17,7 @@ interface TripMembersTabProps {
   onOpenAddMemberModal?: () => void;
 }
 
-export function TripMembersTab({
+export const TripMembersTab = React.memo(function TripMembersTab({
   members,
   isOwner,
   currentUser,
@@ -217,6 +217,6 @@ export function TripMembersTab({
       </div>
     </div>
   );
-}
+});
 
 export default TripMembersTab;
