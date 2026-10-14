@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
   Sparkles, X, MapPin, ExternalLink, Loader2, 
-  Utensils, Coffee, CloudRain, Compass, Search, Plus
+  Utensils, Coffee, CloudRain, Compass, Search, Plus, Bot
 } from 'lucide-react';
 
 interface AIAssistantModalProps {
@@ -28,10 +28,10 @@ export default function AIAssistantModal({
   const [hasSearched, setHasSearched] = useState(false);
 
   const quickPresets = [
-    { label: '🍜 ร้านอาหารเด็ด / Street Food', query: 'ร้านอาหารเด็ดใกล้เคียง street food ยอดนิยม' },
-    { label: '☕ คาเฟ่สวย ถ่ายรูปปัง', query: 'คาเฟ่สวย บรรยากาศดี ถ่ายรูปสวย' },
-    { label: '☔ ที่เที่ยวในร่ม (ฝนตก/หนาว)', query: 'ที่เที่ยวในร่ม indoor แหล่งชอปปิงเมื่อฝนตก' },
-    { label: '⛩️ จุดถ่ายรูปและแลนด์มาร์ค', query: 'จุดถ่ายรูปสวย signature landmark' },
+    { label: 'ร้านอาหาร & สตรีทฟู้ดเด็ด', query: 'ร้านอาหารเด็ดใกล้เคียง street food ยอดนิยม' },
+    { label: 'คาเฟ่ & เบเกอรี่ถ่ายรูปสวย', query: 'คาเฟ่สวย บรรยากาศดี ถ่ายรูปสวย' },
+    { label: 'ที่เที่ยวในร่ม (ฝนตก/หนาว)', query: 'ที่เที่ยวในร่ม indoor แหล่งชอปปิงเมื่อฝนตก' },
+    { label: 'จุดเช็กอิน & แลนด์มาร์กสำคัญ', query: 'จุดถ่ายรูปสวย signature landmark' },
   ];
 
   const handleAskAI = async (queryText?: string) => {
@@ -92,14 +92,14 @@ export default function AIAssistantModal({
         {/* Header */}
         <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 dark:bg-blue-700 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/20">
-              <span>🐱</span>
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 dark:bg-blue-700 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+              <Bot className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                <span>Cat AI Travel Assistant</span>
-                <span className="text-[10px] text-[#f43f5e] dark:text-[#fb7185] bg-rose-50 dark:bg-rose-950/40 px-2 py-0.2 rounded-full font-bold border border-rose-200/60 dark:border-[#fb7185]/30">
-                  AI Co-Pilot 🐾
+                <span>AI Travel Assistant</span>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full font-bold border border-blue-200/60 dark:border-blue-800/40">
+                  Co-Pilot
                 </span>
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
@@ -177,7 +177,7 @@ export default function AIAssistantModal({
             {loading ? (
               <div className="flex flex-col items-center justify-center py-10 gap-2">
                 <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">น้องแมว AI กำลังค้นหาข้อมูลทริป... 🐾</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">ระบบ AI กำลังค้นหาข้อมูลทริป...</span>
               </div>
             ) : hasSearched && results.length === 0 ? (
               <div className="text-center py-8 text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -185,8 +185,9 @@ export default function AIAssistantModal({
               </div>
             ) : results.length > 0 ? (
               <div className="space-y-2.5">
-                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                  ✨ 3 คำแนะนำที่ดีที่สุดสำหรับคุณ:
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  <span>3 คำแนะนำที่ดีที่สุดสำหรับคุณ:</span>
                 </span>
 
                 {results.map((item, idx) => (

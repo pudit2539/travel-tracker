@@ -14,7 +14,8 @@ interface ExpenseCardProps {
   currentUserId?: string;
   userDisplayName: string;
   fxRate: number;
-  canAddExpense: boolean;
+  /** Whether the current user may edit/delete this specific expense */
+  canModify: boolean;
   onOpenReceiptPreview: (exp: any) => void;
   onDeleteExpense: (id: string, receiptUrl?: string) => void;
   onSelectExpense?: (exp: any) => void;
@@ -28,7 +29,7 @@ function ExpenseCardComponent({
   currentUserId,
   userDisplayName,
   fxRate,
-  canAddExpense,
+  canModify,
   onOpenReceiptPreview,
   onDeleteExpense,
   onSelectExpense,
@@ -99,7 +100,7 @@ function ExpenseCardComponent({
             )}
           </div>
 
-          {canAddExpense && (
+          {canModify && (
             <div className="flex items-center -mr-1">
               <button
                 type="button"

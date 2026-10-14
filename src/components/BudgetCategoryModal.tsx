@@ -51,12 +51,15 @@ interface BudgetCategoryModalProps {
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
+const EMPTY_EXPENSES: any[] = [];
+const EMPTY_MEMBERS: any[] = [];
+
 export default function BudgetCategoryModal({
   isOpen,
   onClose,
   trip,
-  expenses = [],
-  members = [],
+  expenses = EMPTY_EXPENSES,
+  members = EMPTY_MEMBERS,
   currentUser,
   userDisplayName = 'ฉัน',
   fxRate = 0.210,
@@ -385,7 +388,7 @@ export default function BudgetCategoryModal({
       aria-modal="true"
     >
       <div 
-        className="w-full max-w-2xl rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#222c42] shadow-2xl flex flex-col overflow-hidden max-h-[92dvh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#222c42] shadow-2xl flex flex-col overflow-hidden max-h-[90dvh] glow-blue animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -720,7 +723,7 @@ export default function BudgetCategoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 border-t border-slate-200/80 dark:border-[#222c42] flex flex-wrap items-center justify-between gap-2 shrink-0 bg-slate-50/50 dark:bg-[#151b2b]/50">
+        <div className="p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-200/80 dark:border-[#222c42] flex flex-wrap items-center justify-between gap-2 shrink-0 bg-slate-50/50 dark:bg-[#151b2b]/50">
           <div className="flex items-center gap-3">
             <button
               type="button"

@@ -70,3 +70,21 @@ export const ROLE_INFO: Record<TripRole, { label: string; badge: string; descrip
     canSeeMoney: false,
   },
 };
+
+/**
+ * Whether the current user may edit/delete a specific expense.
+ * Mirrors the RLS policy in supabase_rls_policies.sql:
+ *  - owner / editor (and super admin): any expense in the trip
+ *  - contributor: only expenses they recorded (created_by) or paid for (payer_id)
+ *  - viewer / plan_only: none
+ */
+export function canModifyExpense(
+  role: TripRole,
+  isSuper: boolean,
+  expense: { created_by?: string | null; payer_id?: string | null } | null | undefined,
+  userId: string | null | undefined
+): boolean {
+  if (isSuper || role === 'owner' || role === 'editor') return true;
+  if (role !== 'contributor' || !expense || !userId) return false;
+  return expense.created_by === userId || expense.payer_id === userId;
+}

@@ -175,6 +175,7 @@ USING (
 -- 4. ตาราง expenses: เปิดใช้งาน RLS
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 
+-- นโยบาย: สมาชิกในทริปดูรายการค่าใช้จ่ายได้ (ยกเว้นผู้ที่ถูกจำกัดสิทธิ์ plan_only)
 DROP POLICY IF EXISTS "Members can view expenses" ON public.expenses;
 CREATE POLICY "Members can view expenses"
 ON public.expenses
@@ -190,15 +191,40 @@ USING (
           SELECT 1 FROM public.trip_members
           WHERE public.trip_members.trip_id = public.trips.id
             AND public.trip_members.user_id = auth.uid()
+            AND public.trip_members.role != 'plan_only'
         )
       )
   )
 );
 
+-- นโยบาย: เจ้าของ, Editor, และ Contributor สามารถเพิ่มรายจ่ายได้
+DROP POLICY IF EXISTS "Members can insert expenses" ON public.expenses;
 DROP POLICY IF EXISTS "Members can manage expenses" ON public.expenses;
-CREATE POLICY "Members can manage expenses"
+CREATE POLICY "Members can insert expenses"
 ON public.expenses
-FOR ALL
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.expenses.trip_id
+      AND (
+        public.trips.created_by = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM public.trip_members
+          WHERE public.trip_members.trip_id = public.trips.id
+            AND public.trip_members.user_id = auth.uid()
+            AND public.trip_members.role IN ('owner', 'editor', 'contributor')
+        )
+      )
+  )
+);
+
+-- นโยบาย: การแก้ไขรายจ่าย (Owner/Editor แก้ได้ทุกรายการ, Contributor แก้ได้เฉพาะที่ตนเองเป็นผู้จ่าย)
+DROP POLICY IF EXISTS "Members can update expenses" ON public.expenses;
+CREATE POLICY "Members can update expenses"
+ON public.expenses
+FOR UPDATE
 TO authenticated
 USING (
   EXISTS (
@@ -210,10 +236,43 @@ USING (
           SELECT 1 FROM public.trip_members
           WHERE public.trip_members.trip_id = public.trips.id
             AND public.trip_members.user_id = auth.uid()
+            AND (
+              public.trip_members.role IN ('owner', 'editor')
+              OR (public.trip_members.role = 'contributor' AND public.expenses.payer_id = auth.uid())
+            )
         )
       )
   )
 );
+
+-- นโยบาย: การลบรายจ่าย (Owner/Editor ลบได้ทุกรายการ, Contributor ลบได้เฉพาะที่ตนเองเป็นผู้จ่าย)
+DROP POLICY IF EXISTS "Members can delete expenses" ON public.expenses;
+CREATE POLICY "Members can delete expenses"
+ON public.expenses
+FOR DELETE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE public.trips.id = public.expenses.trip_id
+      AND (
+        public.trips.created_by = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM public.trip_members
+          WHERE public.trip_members.trip_id = public.trips.id
+            AND public.trip_members.user_id = auth.uid()
+            AND (
+              public.trip_members.role IN ('owner', 'editor')
+              OR (public.trip_members.role = 'contributor' AND public.expenses.payer_id = auth.uid())
+            )
+        )
+      )
+  )
+);
+
+-- หมายเหตุสำหรับ Migration ข้อมูลเดิม:
+-- หากมีสมาชิกเก่าที่เป็น 'viewer' อยู่แล้วต้องการให้บันทึกรายจ่ายได้ ให้รันคำสั่งนี้:
+-- UPDATE public.trip_members SET role = 'contributor' WHERE role = 'viewer';
 
 -- 5. ตาราง user_devices: เก็บข้อมูลอุปกรณ์ที่เข้าสู่ระบบ (Multi-device tracking)
 CREATE TABLE IF NOT EXISTS public.user_devices (

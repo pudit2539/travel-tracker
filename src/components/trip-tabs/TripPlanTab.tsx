@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
-  BookmarkCheck
+  BookmarkCheck, List, Building2
 } from 'lucide-react';
 import LiveTripCard from '@/components/LiveTripCard';
 import WishlistDrawer from '@/components/WishlistDrawer';
@@ -342,23 +342,25 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/70 dark:border-[#222c42]">
             <button
               onClick={() => setItineraryViewMode('list')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 itineraryViewMode === 'list' 
                   ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs' 
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              📋 รายการ
+              <List className="h-3.5 w-3.5" />
+              <span>รายการ</span>
             </button>
             <button
               onClick={() => setItineraryViewMode('map')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 itineraryViewMode === 'map' 
                   ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs' 
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              🗺️ แผนที่
+              <MapPin className="h-3.5 w-3.5" />
+              <span>แผนที่</span>
             </button>
           </div>
 
@@ -435,7 +437,9 @@ export const TripPlanTab = React.memo(function TripPlanTab({
       {activeStayForSelectedDay && (
         <div className="p-3 sm:p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-xl">🏨</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <Building2 className="h-4 w-4" />
+            </div>
             <div className="min-w-0">
               <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block uppercase">
                 ที่พักของวันนี้ ({selectedDayFilter})

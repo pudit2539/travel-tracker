@@ -24,7 +24,7 @@ import { getCustomJpyToThbRate, formatCurrencyWithThb, convertCurrency, convertT
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
-import { isSuperAdmin, TripRole, ROLE_INFO } from '@/lib/permissions';
+import { isSuperAdmin, TripRole, ROLE_INFO, canModifyExpense } from '@/lib/permissions';
 import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { 
   CategoryItem, 
@@ -74,7 +74,7 @@ import {
   PlusCircle, User, Wallet, Filter, Calculator, Navigation, 
   Bot, Sliders, AlertTriangle, FileText, History, Wifi, WifiOff, 
   LogOut, ChevronRight, Eye, ShieldCheck, HardDriveDownload, Receipt,
-  Luggage, Coins, Map as MapIcon, List
+  Luggage, Coins, Map as MapIcon, List, Compass
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -1217,6 +1217,11 @@ export default function TripDetailPage() {
   };
 
   const handleDeleteExpense = async (id: string, receiptRef?: string) => {
+    const targetExp = expenses.find((e) => e.id === id);
+    if (targetExp && !checkCanModifyExpense(targetExp)) {
+      toast.error('คุณไม่มีสิทธิ์ลบรายการนี้ (ผู้ร่วมทริปสามารถแก้ไข/ลบได้เฉพาะรายการของตนเอง)');
+      return;
+    }
     if (!confirm('ต้องการลบรายการค่าใช้จ่ายนี้ใช่หรือไม่?')) return;
     if (receiptRef) {
       try {
@@ -1227,7 +1232,7 @@ export default function TripDetailPage() {
     if (!error) {
       setSelectedExpenseForDetail(null);
       fetchTripData();
-      showToast('ลบรายการค่าใช้จ่ายเรียบร้อยแล้ว 🗑️', 'info');
+      showToast('ลบรายการค่าใช้จ่ายเรียบร้อยแล้ว', 'info');
     }
   };
 
@@ -1242,6 +1247,11 @@ export default function TripDetailPage() {
   };
 
   const handleSaveUpdatedExpense = async (updatedExpense: any) => {
+    const targetExp = expenses.find((e) => e.id === updatedExpense.id) || updatedExpense;
+    if (!checkCanModifyExpense(targetExp)) {
+      toast.error('คุณไม่มีสิทธิ์แก้ไขรายการนี้ (ผู้ร่วมทริปสามารถแก้ไข/ลบได้เฉพาะรายการของตนเอง)');
+      return;
+    }
     try {
       const { error } = await supabase
         .from('expenses')
@@ -1375,6 +1385,9 @@ export default function TripDetailPage() {
   const canSeeMoney = isSuper || currentUserRole !== 'plan_only';
   const canEditPlan = isSuper || currentUserRole === 'owner' || currentUserRole === 'editor';
   const canAddExpense = canSeeMoney && (isSuper || currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'contributor');
+  const checkCanModifyExpense = useCallback((exp: any) => {
+    return canModifyExpense(currentUserRole, isSuper, exp, currentUser?.id);
+  }, [currentUserRole, isSuper, currentUser?.id]);
   const canImportExcel = isOwner;
 
   const handleSwitchTab = useCallback((tab: 'plan' | 'expenses' | 'analytics' | 'members') => {
@@ -2179,8 +2192,8 @@ export default function TripDetailPage() {
         {!currentUser && (
           <div className="p-3.5 sm:p-4 rounded-3xl bg-blue-50/95 dark:bg-[#151b2b] border border-blue-200/80 dark:border-blue-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md animate-in fade-in">
             <div className="flex items-center gap-3 text-left">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-base sm:text-lg shadow-sm shrink-0">
-                👋
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
+                <Compass className="h-5 w-5" />
               </div>
               <div>
                 <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
@@ -2258,6 +2271,7 @@ export default function TripDetailPage() {
                 categories={categories}
                 currentUser={currentUser}
                 canAddExpense={canAddExpense}
+                canModifyExpense={checkCanModifyExpense}
                 expensePayerFilter={expensePayerFilter}
                 setExpensePayerFilter={setExpensePayerFilter}
                 otherPayers={otherPayers}
@@ -2331,11 +2345,13 @@ export default function TripDetailPage() {
           type="button"
           onClick={() => setShowAIAssistantModal(true)}
           className="group flex items-center gap-2 px-3.5 py-2.5 sm:px-4.5 sm:py-3 rounded-full bg-white/95 dark:bg-[#151b2b]/95 border border-slate-200/90 dark:border-[#222c42] shadow-xl shadow-blue-900/10 hover:shadow-blue-500/20 text-slate-800 dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
-          title="ถาม Cat AI ผู้ช่วยทริป"
+          title="ถาม AI ผู้ช่วยวางแผนทริป"
         >
-          <span className="w-6 h-6 rounded-full bg-rose-500/15 dark:bg-rose-500/25 text-[#f43f5e] flex items-center justify-center text-xs animate-bounce shadow-xs">🐱</span>
+          <span className="w-6 h-6 rounded-full bg-blue-600/15 dark:bg-blue-500/25 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
+            <Bot className="h-3.5 w-3.5" />
+          </span>
           <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-            ถาม <span className="text-blue-600 dark:text-blue-400">Cat AI</span>
+            ถาม <span className="text-blue-600 dark:text-blue-400">AI ผู้ช่วย</span>
             <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
           </span>
         </button>
@@ -2608,7 +2624,7 @@ export default function TripDetailPage() {
         userDisplayName={userDisplayName}
         tripBaseCurrency={tripBaseCurrency}
         fxRate={fxRate}
-        canEdit={canAddExpense}
+        canEdit={checkCanModifyExpense(selectedExpenseForDetail)}
         startInEditMode={startInExpenseEditMode}
         tripId={tripId}
         onSaveExpense={handleSaveUpdatedExpense}

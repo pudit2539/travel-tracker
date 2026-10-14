@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { 
   saveTripSnapshot, 
   getTripSnapshots, 
@@ -6,6 +6,20 @@ import {
   exportFullBackupJSON, 
   parseBackupJSON 
 } from '../lib/versionSnapshot';
+
+vi.mock('../lib/supabase', () => ({
+  supabase: {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      update: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }),
+  },
+}));
 
 describe('Version Snapshot & Backup System', () => {
   const tripId = 'trip-test-999';

@@ -10,7 +10,7 @@ import {
   Utensils, Train, ShoppingBag, AlertTriangle, Building,
   FileCheck, Sparkle, RefreshCw, Calculator, PhoneCall,
   Percent, ArrowUpDown, ChevronRight, CheckCircle2,
-  Luggage, Info, Maximize2, ShieldAlert
+  Luggage, Info, Maximize2, ShieldAlert, Lightbulb
 } from 'lucide-react';
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
@@ -806,12 +806,12 @@ export default function TravelHubModal({
                     onChange={(e) => setTicketCategory(e.target.value as any)}
                     className="p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-xs font-bold cursor-pointer"
                   >
-                    <option value="vjw">🇯🇵 Visit Japan Web (ตม.)</option>
-                    <option value="flight">✈️ ตั๋วเครื่องบิน</option>
-                    <option value="train">🚅 Shinkansen / JR Pass</option>
-                    <option value="hotel">🏨 ใบจองที่พัก / Voucher</option>
-                    <option value="attraction">🎟️ บัตรสวนสนุก / กิจกรรม</option>
-                    <option value="other">📄 เอกสารสำคัญอื่นๆ</option>
+                    <option value="vjw">Visit Japan Web (ตม.)</option>
+                    <option value="flight">ตั๋วเครื่องบิน (Flight Ticket)</option>
+                    <option value="train">Shinkansen / JR Pass</option>
+                    <option value="hotel">ใบจองที่พัก / Voucher</option>
+                    <option value="attraction">บัตรสวนสนุก / กิจกรรม</option>
+                    <option value="other">เอกสารสำคัญอื่นๆ</option>
                   </select>
                 </div>
 
@@ -898,12 +898,12 @@ export default function TravelHubModal({
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
                   {[
                     { id: 'all', label: `ทั้งหมด (${JAPANESE_PHRASES.length})` },
-                    { id: 'conbini', label: '🏪 มินิมาร์ท & อุ่นเวฟ' },
-                    { id: 'numbers', label: '🔢 นับจำนวน & สั่งของ' },
-                    { id: 'food', label: '🍜 ร้านอาหาร & คาเฟ่' },
-                    { id: 'shopping', label: '🛍️ ช้อปปิ้ง & Tax-Free' },
-                    { id: 'transport', label: '🚅 เดินทาง & โรงแรม' },
-                    { id: 'basic', label: '💬 ทักทาย & เอาตัวรอด' },
+                    { id: 'conbini', label: 'มินิมาร์ท & อุ่นเวฟ' },
+                    { id: 'numbers', label: 'นับจำนวน & สั่งของ' },
+                    { id: 'food', label: 'ร้านอาหาร & คาเฟ่' },
+                    { id: 'shopping', label: 'ช้อปปิ้ง & Tax-Free' },
+                    { id: 'transport', label: 'เดินทาง & โรงแรม' },
+                    { id: 'basic', label: 'ทักทาย & เอาตัวรอด' },
                   ].map((cat) => (
                     <button
                       key={cat.id}
@@ -994,13 +994,15 @@ export default function TravelHubModal({
                         </div>
                       </div>
 
-                      <div className="space-y-1 border-t border-slate-100 dark:border-[#2b2f3d] pt-2 text-xs text-left">
-                        <div className="font-bold text-slate-800 dark:text-slate-200 text-left leading-relaxed">
-                          🇹🇭 {p.thai}
+                      <div className="space-y-1.5 border-t border-slate-100 dark:border-[#2b2f3d] pt-2 text-xs text-left">
+                        <div className="font-bold text-slate-800 dark:text-slate-200 text-left leading-relaxed flex items-center gap-1.5">
+                          <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-[#1a1e28] text-slate-700 dark:text-slate-300">TH</span>
+                          <span>{p.thai}</span>
                         </div>
                         {p.context && (
-                          <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium text-left">
-                            💡 {p.context}
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium text-left flex items-start gap-1.5 pt-0.5">
+                            <Lightbulb className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                            <span>{p.context}</span>
                           </div>
                         )}
                       </div>
@@ -1285,8 +1287,9 @@ export default function TravelHubModal({
               <p className="text-base sm:text-lg font-mono font-bold text-blue-600 dark:text-blue-400">
                 {bigCardPhrase.romaji}
               </p>
-              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#262932] text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
-                🇹🇭 {bigCardPhrase.thai}
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#262932] text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">TH</span>
+                <span>{bigCardPhrase.thai}</span>
               </div>
             </div>
 

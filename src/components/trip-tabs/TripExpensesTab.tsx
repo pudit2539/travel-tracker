@@ -37,6 +37,8 @@ interface TripExpensesTabProps {
   categories: CategoryItem[];
   currentUser: any;
   canAddExpense: boolean;
+  /** Per-expense edit/delete permission (contributors may only modify their own) */
+  canModifyExpense: (exp: any) => boolean;
   expensePayerFilter: string;
   setExpensePayerFilter: (filter: string) => void;
   otherPayers: any[];
@@ -71,6 +73,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
   categories,
   currentUser,
   canAddExpense,
+  canModifyExpense,
   expensePayerFilter,
   setExpensePayerFilter,
   otherPayers,
@@ -622,7 +625,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               currentUserId={currentUser?.id}
               userDisplayName={userDisplayName}
               fxRate={fxRate}
-              canAddExpense={canAddExpense}
+              canModify={canModifyExpense(exp)}
               onOpenReceiptPreview={handleOpenReceiptPreview}
               onDeleteExpense={handleDeleteExpense}
               onSelectExpense={onSelectExpense}
