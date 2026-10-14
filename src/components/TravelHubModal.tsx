@@ -32,7 +32,8 @@ interface TravelHubModalProps {
 // 1. Japanese Survival Phrases Data
 interface PhraseItem {
   id: string;
-  category: 'food' | 'shopping' | 'transport' | 'emergency';
+  category: 'conbini' | 'numbers' | 'food' | 'shopping' | 'transport' | 'basic';
+  categoryLabel?: string;
   japanese: string;
   romaji: string;
   thai: string;
@@ -40,32 +41,70 @@ interface PhraseItem {
 }
 
 const JAPANESE_PHRASES: PhraseItem[] = [
-  // Food
-  { id: 'f1', category: 'food', japanese: '英語のメニューはありますか？', romaji: 'Eigo no menyū wa arimasu ka?', thai: 'มีเมนูภาษาอังกฤษไหมครับ/ค่ะ?', context: 'ใช้ถามพนักงานเมื่อเข้าร้านอาหาร' },
-  { id: 'f2', category: 'food', japanese: 'おすすめは何ですか？', romaji: 'Osusume wa nan desu ka?', thai: 'มีเมนูแนะนำอะไรบ้างครับ/ค่ะ?', context: 'ให้พนักงานแนะนำจานเด็ด' },
-  { id: 'f3', category: 'food', japanese: 'お会計は別々でお願いします。', romaji: 'Okaikei wa betsubetsu de onegaishimasu.', thai: 'ขอเช็คบิลแยกกันครับ/ค่ะ (หารกัน)', context: 'ขอจ่ายเงินแยกรายคน' },
-  { id: 'f4', category: 'food', japanese: 'わさび抜きでお願いします。', romaji: 'Wasabi nuki de onegaishimasu.', thai: 'ขอไม่ใส่วาซาบิครับ/ค่ะ', context: 'สั่งซูชิ/อาหารแบบไม่เอาวาซาบิ' },
-  { id: 'f5', category: 'food', japanese: 'お水をください。', romaji: 'Omizu o kudasai.', thai: 'ขอน้ำดื่มหน่อยครับ/ค่ะ', context: 'ขอน้ำดื่มฟรีในร้านอาหาร' },
-  { id: 'f6', category: 'food', japanese: 'ごちそうさまでした！', romaji: 'Gochisōsama deshita!', thai: 'ขอบคุณสำหรับอาหาร (อร่อยมากครับ/ค่ะ)', context: 'พูดกับเชฟ/พนักงานตอนทานเสร็จ' },
+  // 1. Convenience Store (เซเว่น / ลอว์สัน / แฟมิลี่มาร์ท)
+  { id: 'c1', category: 'conbini', categoryLabel: 'มินิมาร์ท', japanese: '袋をお願いします。', romaji: 'Fukuro o onegaishimasu.', thai: 'ขอถุงด้วยครับ/ค่ะ (รับถุงพลาสติก)', context: 'ตอบพนักงานแคชเชียร์เวลาถามเรื่องถุงพลาสติก' },
+  { id: 'c2', category: 'conbini', categoryLabel: 'มินิมาร์ท', japanese: '袋は要りません（大丈夫です）。', romaji: 'Fukuro wa irimasen (Daijōbu desu).', thai: 'ไม่รับถุงครับ/ค่ะ (มีถุงมาเอง)', context: 'ปฏิเสธถุงพลาสติกเพื่อประหยัดเงิน' },
+  { id: 'c3', category: 'conbini', categoryLabel: 'มินิมาร์ท', japanese: '温めてください。', romaji: 'Atatamete kudasai.', thai: 'ช่วยอุ่นร้อน (เวฟ) ให้ด้วยครับ/ค่ะ', context: 'ซื้อข้าวกล่อง/เบนโตะ/ขนมปังแล้วขอให้พนักงานเวฟ' },
+  { id: 'c4', category: 'conbini', categoryLabel: 'มินิมาร์ท', japanese: '温めなくて大丈夫です。', romaji: 'Atatamenakute daijōbu desu.', thai: 'ไม่ต้องอุ่นครับ/ค่ะ (กินเย็นได้เลย)', context: 'พนักงานถามว่าจะเวฟไหม ให้ตอบอันนี้' },
+  { id: 'c5', category: 'conbini', categoryLabel: 'มินิมาร์ท', japanese: 'これをお願いします。', romaji: 'Kore o onegaishimasu.', thai: 'เอาอันนี้ครับ/ค่ะ (ชี้ของหน้าตู้/เคาน์เตอร์)', context: 'ชี้สั่งไก่ทอด คาราอาเกะ ซาลาเปา หรือโอเด้ง' },
+  { id: 'c6', category: 'conbini', categoryLabel: 'มินิมาร์ท', japanese: 'お箸をお願いします。', romaji: 'Ohashi o onegaishimasu.', thai: 'ขอตะเกียบด้วยครับ/ค่ะ', context: 'ขอตะเกียบทานบะหมี่หรือข้าว' },
+  { id: 'c7', category: 'conbini', categoryLabel: 'มินิมาร์ท', japanese: 'スプーン / フォーク をお願いします。', romaji: 'Supūn / Fōku o onegaishimasu.', thai: 'ขอช้อน / ส้อม ด้วยครับ/ค่ะ', context: 'ขอช้อนทานพุดดิ้ง/โยเกิร์ต หรือส้อมทานพาสต้า' },
+  { id: 'c8', category: 'conbini', categoryLabel: 'มินิมาร์ท', japanese: 'ストローをお願いします。', romaji: 'Sutorō o onegaishimasu.', thai: 'ขอหลอดดูดน้ำด้วยครับ/ค่ะ', context: 'ขอหลอดสำหรับเครื่องดื่ม' },
 
-  // Shopping & Tax Free
-  { id: 's1', category: 'shopping', japanese: '免税（Tax Free）できますか？', romaji: 'Menzei dekimasu ka?', thai: 'ทำเรื่องคืนภาษี (Tax Free) ได้ไหมครับ/ค่ะ?', context: 'ถามตอนจ่ายเงินในห้างหรือร้านค้า' },
-  { id: 's2', category: 'shopping', japanese: 'これの新しいものはありますか？', romaji: 'Kore no atarashii mono wa arimasu ka?', thai: 'มีของชิ้นใหม่ในสต็อกไหมครับ/ค่ะ?', context: 'ขอของใหม่ที่ไม่ใช่ตัวโชว์หน้าร้าน' },
-  { id: 's3', category: 'shopping', japanese: '試着してもいいですか？', romaji: 'Shichaku shitemo ii desu ka?', thai: 'ขอลองสวมชุดนี้ได้ไหมครับ/ค่ะ?', context: 'ขอลองเสื้อผ้าก่อนตัดสินใจซื้อ' },
-  { id: 's4', category: 'shopping', japanese: 'クレジットカードは使えますか？', romaji: 'Kurejitto kādo wa tsukaemasu ka?', thai: 'รับบัตรเครดิต / Travel Card ไหมครับ/ค่ะ?', context: 'ถามช่องทางชำระเงิน' },
-  { id: 's5', category: 'shopping', japanese: '袋は要りません。', romaji: 'Fukuro wa irimasen.', thai: 'ไม่รับถุงพลาสติกครับ/ค่ะ', context: 'ปฏิเสธถุงเพื่อประหยัดเงิน' },
+  // 2. Counting & Ordering Quantity (การนับจำนวนชิ้น & จำนวนคน)
+  { id: 'n1', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '1つ（ひとつ）お願いします。', romaji: 'Hitotsu onegaishimasu.', thai: 'ขอ 1 ชิ้น / 1 อันครับ/ค่ะ', context: 'สั่งของจำนวน 1 ชิ้น' },
+  { id: 'n2', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '2つ（ふたつ）お願いします。', romaji: 'Futatsu onegaishimasu.', thai: 'ขอ 2 ชิ้น / 2 อันครับ/ค่ะ', context: 'สั่งของจำนวน 2 ชิ้น' },
+  { id: 'n3', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '3つ（みっつ）お願いします。', romaji: 'Mittsu onegaishimasu.', thai: 'ขอ 3 ชิ้น / 3 อันครับ/ค่ะ', context: 'สั่งของจำนวน 3 ชิ้น' },
+  { id: 'n4', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '4つ（よっつ）お願いします。', romaji: 'Yottsu onegaishimasu.', thai: 'ขอ 4 ชิ้น / 4 อันครับ/ค่ะ', context: 'สั่งของจำนวน 4 ชิ้น' },
+  { id: 'n5', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '5つ（いつつ）お願いします。', romaji: 'Itsutsu onegaishimasu.', thai: 'ขอ 5 ชิ้น / 5 อันครับ/ค่ะ', context: 'สั่งของจำนวน 5 ชิ้น' },
+  { id: 'n6', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '1人です（ひとりです）。', romaji: 'Hitori desu.', thai: 'มาคนเดียวครับ/ค่ะ (1 ท่าน)', context: 'พนักงานหน้าร้านอาหารถามจำนวนคน (Nan-mei sama?)' },
+  { id: 'n7', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '2人です（ふたりです）。', romaji: 'Futari desu.', thai: 'มา 2 ท่านครับ/ค่ะ', context: 'แจ้งพนักงานต้อนรับหน้าร้านอาหาร' },
+  { id: 'n8', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '3人です（さんにんです）。', romaji: 'Sannin desu.', thai: 'มา 3 ท่านครับ/ค่ะ', context: 'แจ้งพนักงานต้อนรับหน้าร้านอาหาร' },
+  { id: 'n9', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '4人です（よにんです）。', romaji: 'Yonin desu.', thai: 'มา 4 ท่านครับ/ค่ะ', context: 'แจ้งพนักงานต้อนรับหน้าร้านอาหาร' },
+  { id: 'n10', category: 'numbers', categoryLabel: 'นับจำนวน', japanese: '同じものをもう1つください。', romaji: 'Onaji mono o mō hitotsu kudasai.', thai: 'ขอแบบเดิมอีก 1 ที่ครับ/ค่ะ (สั่งเพิ่ม)', context: 'สั่งเมนูเดิมเพิ่ม หรือสั่งเหมือนเพื่อน' },
 
-  // Transport & Station
-  { id: 't1', category: 'transport', japanese: 'この電車は空港へ行きますか？', romaji: 'Kono densha wa kūkō e ikimasu ka?', thai: 'รถไฟขบวนนี้ไปสนามบินไหมครับ/ค่ะ?', context: 'ถามเพื่อความแน่ใจก่อนขึ้นชานชาลา' },
-  { id: 't2', category: 'transport', japanese: 'コインロッカーはどこですか？', romaji: 'Koin rokkā wa doko desu ka?', thai: 'ตู้ฝากกระเป๋า (Coin Locker) อยู่ตรงไหน?', context: 'ถามหาสถานที่ฝากกระเป๋าในสถานี' },
-  { id: 't3', category: 'transport', japanese: '切符売り場はどこですか？', romaji: 'Kippu uriba wa doko desu ka?', thai: 'เคาน์เตอร์ขายตั๋วรถไฟอยู่ทางไหนครับ/ค่ะ?', context: 'หาตู้ซื้อตั๋วหรือจุดออกตั๋ว JR' },
-  { id: 't4', category: 'transport', japanese: 'トイレはどこですか？', romaji: 'Toire wa doko desu ka?', thai: 'ห้องน้ำอยู่ที่ไหนครับ/ค่ะ?', context: 'ถามหาห้องน้ำสาธารณะ' },
+  // 3. Food & Restaurant (ร้านอาหาร & คาเฟ่)
+  { id: 'f1', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: 'これを1つお願いします。', romaji: 'Kore o hitotsu onegaishimasu.', thai: 'เอาอันนี้ 1 ที่ครับ/ค่ะ (ชี้ที่รูปเมนู)', context: 'วิธีสั่งอาหารที่ง่ายและชัวร์ที่สุด แค่ชี้เมนูแล้วพูดคำนี้' },
+  { id: 'f2', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: '店内で食べます。', romaji: 'Tennai de tabemasu.', thai: 'ทานที่ร้านครับ/ค่ะ (Eat-in)', context: 'พนักงานถามว่าจะทานที่ร้านหรือห่อกลับ' },
+  { id: 'f3', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: '持ち帰りでお願いします。', romaji: 'Mochikaeri de onegaishimasu.', thai: 'สั่งกลับบ้านครับ/ค่ะ (Takeout)', context: 'สั่งอาหารกล่องกลับไปทานที่โรงแรม' },
+  { id: 'f4', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: '英語のメニューはありますか？', romaji: 'Eigo no menyū wa arimasu ka?', thai: 'มีเมนูภาษาอังกฤษไหมครับ/ค่ะ?', context: 'ใช้ถามพนักงานเมื่อเข้าร้านอาหาร' },
+  { id: 'f5', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: 'おすすめは何ですか？', romaji: 'Osusume wa nan desu ka?', thai: 'มีเมนูแนะนำอะไรบ้างครับ/ค่ะ?', context: 'ให้พนักงานแนะนำจานเด็ดประจำร้าน' },
+  { id: 'f6', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: 'お水をください。', romaji: 'Omizu o kudasai.', thai: 'ขอน้ำดื่มหน่อยครับ/ค่ะ', context: 'ขอน้ำเปล่าฟรีในร้านอาหาร' },
+  { id: 'f7', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: 'お会計をお願いします。', romaji: 'Okaikei o onegaishimasu.', thai: 'คิดเงินด้วยครับ/ค่ะ (เช็คบิล)', context: 'เรียกพนักงานเพื่อชำระเงิน' },
+  { id: 'f8', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: '別々でお会計できますか？', romaji: 'Betsubetsu de okaikei dekimasu ka?', thai: 'ขอจ่ายแยกบิลคนละส่วนได้ไหมครับ/ค่ะ?', context: 'ขอเช็คบิลแยกรายคนเวลาไปกับเพื่อน' },
+  { id: 'f9', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: 'わさび抜きでお願いします。', romaji: 'Wasabi nuki de onegaishimasu.', thai: 'ขอไม่ใส่วาซาบิครับ/ค่ะ', context: 'สั่งซูชิ/อาหารญี่ปุ่นแบบไม่เอาวาซาบิ' },
+  { id: 'f10', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: '豚肉（牛肉）は入っていますか？', romaji: 'Butaniku (Gyūniku) wa haitteimasu ka?', thai: 'มีเนื้อหมู (หรือเนื้อวัว) ผสมอยู่ไหมครับ/ค่ะ?', context: 'ถามเพื่อเช็กส่วนผสมกรณีมีข้อจำกัดด้านอาหาร' },
+  { id: 'f11', category: 'food', categoryLabel: 'ร้านอาหาร', japanese: 'ごちそうさまでした！', romaji: 'Gochisōsama deshita!', thai: 'ขอบคุณสำหรับอาหาร (อร่อยมากครับ/ค่ะ)', context: 'พูดกับเชฟ/พนักงานตอนทานเสร็จก่อนเดินออกจากร้าน' },
 
-  // Emergency & Assistance
-  { id: 'e1', category: 'emergency', japanese: 'すみません、助けてください。', romaji: 'Sumimasen, tasukete kudasai.', thai: 'ขอโทษนะครับ/ค่ะ ช่วยฉันหน่อยได้ไหม?', context: 'ขอความช่วยเหลือเร่งด่วน' },
-  { id: 'e2', category: 'emergency', japanese: '日本語が分かりません。', romaji: 'Nihongo ga wakarimasen.', thai: 'ฉันพูดภาษาญี่ปุ่นไม่ได้ครับ/ค่ะ', context: 'บอกเมื่อฟังไม่เข้าใจ' },
-  { id: 'e3', category: 'emergency', japanese: 'Wi-Fiのパスワードは何ですか？', romaji: 'Waifai no pasuwādo wa nan desu ka?', thai: 'รหัสผ่าน Wi-Fi คืออะไรครับ/ค่ะ?', context: 'ขอรหัสเชื่อมต่ออินเทอร์เน็ต' },
-  { id: 'e4', category: 'emergency', japanese: '病院はどこですか？', romaji: 'Byōin wa doko desu ka?', thai: 'โรงพยาบาล/คลินิกที่ใกล้ที่สุดอยู่ที่ไหน?', context: 'เจ็บป่วยฉุกเฉิน' },
+  // 4. Shopping & Tax Free (ช้อปปิ้ง & คืนภาษี)
+  { id: 's1', category: 'shopping', categoryLabel: 'ช้อปปิ้ง', japanese: '免税（Tax Free）できますか？', romaji: 'Menzei dekimasu ka?', thai: 'ทำเรื่องคืนภาษี (Tax Free) ได้ไหมครับ/ค่ะ?', context: 'ถามตอนจ่ายเงินในห้างหรือร้านค้าเมื่อซื้อเกิน 5,000 เยน' },
+  { id: 's2', category: 'shopping', categoryLabel: 'ช้อปปิ้ง', japanese: 'これの新しいものはありますか？', romaji: 'Kore no atarashii mono wa arimasu ka?', thai: 'มีของชิ้นใหม่ในสต็อกไหมครับ/ค่ะ?', context: 'ขอของใหม่ในกล่องที่ไม่ใช่ตัวโชว์หน้าร้าน' },
+  { id: 's3', category: 'shopping', categoryLabel: 'ช้อปปิ้ง', japanese: '試着してもいいですか？', romaji: 'Shichaku shitemo ii desu ka?', thai: 'ขอลองสวมชุดนี้ได้ไหมครับ/ค่ะ?', context: 'ขอลองเสื้อผ้าก่อนตัดสินใจซื้อ' },
+  { id: 's4', category: 'shopping', categoryLabel: 'ช้อปปิ้ง', japanese: 'これはいくらですか？', romaji: 'Kore wa ikura desu ka?', thai: 'อันนี้ราคาเท่าไหร่ครับ/ค่ะ?', context: 'ถามราคาสินค้าที่ไม่มีป้ายราคาชัดเจน' },
+  { id: 's5', category: 'shopping', categoryLabel: 'ช้อปปิ้ง', japanese: 'クレジットカードは使えますか？', romaji: 'Kurejitto kādo wa tsukaemasu ka?', thai: 'รับบัตรเครดิต / แตะบัตร Travel Card ไหมครับ/ค่ะ?', context: 'ถามช่องทางชำระเงินแบบไม่ใช้เงินสด' },
+  { id: 's6', category: 'shopping', categoryLabel: 'ช้อปปิ้ง', japanese: '現金で払います。', romaji: 'Genkin de haraimasu.', thai: 'จ่ายด้วยเงินสดครับ/ค่ะ', context: 'บอกพนักงานว่าจะชำระด้วยเงินสด' },
+  { id: 's7', category: 'shopping', categoryLabel: 'ช้อปปิ้ง', japanese: 'レシートをお願いします。', romaji: 'Reshīto o onegaishimasu.', thai: 'ขอใบเสร็จรับเงินด้วยครับ/ค่ะ', context: 'ขอใบเสร็จเพื่อนำมาสแกนบันทึกรายจ่าย AI' },
+
+  // 5. Transport & Hotel (การเดินทาง & โรงแรม)
+  { id: 't1', category: 'transport', categoryLabel: 'เดินทาง', japanese: 'トイレはどこですか？', romaji: 'Toire wa doko desu ka?', thai: 'ห้องน้ำอยู่ที่ไหนครับ/ค่ะ?', context: 'ถามหาห้องน้ำสาธารณะในสถานี ห้าง หรือร้านค้า' },
+  { id: 't2', category: 'transport', categoryLabel: 'เดินทาง', japanese: 'この電車は空港（〇〇）へ行きますか？', romaji: 'Kono densha wa kūkō e ikimasu ka?', thai: 'รถไฟขบวนนี้ไปสนามบิน (หรือสถานีนี้) ไหมครับ/ค่ะ?', context: 'ถามนายสถานีเพื่อความแน่ใจก่อนขึ้นชานชาลา' },
+  { id: 't3', category: 'transport', categoryLabel: 'เดินทาง', japanese: 'コインロッカーはどこですか？', romaji: 'Koin rokkā wa doko desu ka?', thai: 'ตู้ฝากกระเป๋า (Coin Locker) อยู่ตรงไหนครับ/ค่ะ?', context: 'หาสถานที่ฝากกระเป๋าเดินทางในสถานี' },
+  { id: 't4', category: 'transport', categoryLabel: 'เดินทาง', japanese: '荷物を預かってもらえますか？', romaji: 'Nimotsu o azukatte moraemasu ka?', thai: 'ขอฝากกระเป๋าเดินทางไว้ก่อนได้ไหมครับ/ค่ะ?', context: 'ฝากสัมภาระที่โรงแรมก่อนเวลา Check-in หรือหลัง Check-out' },
+  { id: 't5', category: 'transport', categoryLabel: 'เดินทาง', japanese: 'ここまでお願いします。', romaji: 'Koko made onegaishimasu.', thai: 'ช่วยไปส่งที่นี่หน่อยครับ/ค่ะ (ยื่นหน้าจอให้ดู)', context: 'ยื่นการ์ดโรงแรมหรือหมุดแผนที่ให้คนขับแท็กซี่' },
+  { id: 't6', category: 'transport', categoryLabel: 'เดินทาง', japanese: '一番近い駅はどこですか？', romaji: 'Ichiban chikai eki wa doko desu ka?', thai: 'สถานีรถไฟที่ใกล้ที่สุดอยู่ทางไหนครับ/ค่ะ?', context: 'ถามหาทางไปสถานีรถไฟที่ใกล้ที่สุด' },
+  { id: 't7', category: 'transport', categoryLabel: 'เดินทาง', japanese: '切符売り場はどこですか？', romaji: 'Kippu uriba wa doko desu ka?', thai: 'เคาน์เตอร์ขายตั๋วรถไฟอยู่ทางไหนครับ/ค่ะ?', context: 'หาตู้ซื้อตั๋วหรือจุดออกตั๋ว JR' },
+
+  // 6. Basic & Emergency (ทักทาย & คำสุภาพ & ขอความช่วยเหลือ)
+  { id: 'b1', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: 'すみません。', romaji: 'Sumimasen.', thai: 'ขอโทษนะครับ/ค่ะ (หรือ ขอทางหน่อย / ขออนุญาตเรียก)', context: 'คำสารพัดประโยชน์ ใช้เรียกพนักงาน หรือขอทางบนรถไฟ' },
+  { id: 'b2', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: 'ありがとうございます。', romaji: 'Arigatō gozaimasu.', thai: 'ขอบคุณมากครับ/ค่ะ', context: 'กล่าวขอบคุณเมื่อได้รับการบริการ' },
+  { id: 'b3', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: '大丈夫です / はい、お願いします。', romaji: 'Daijōbu desu / Hai, onegaishimasu.', thai: 'ได้ครับ / โอเคครับ / ตกลงครับ', context: 'ตอบตกลงเวลาพนักงานบริการหรือถามความต้องการ' },
+  { id: 'b4', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: '大丈夫です（結構です）。', romaji: 'Daijōbu desu (Kekkō desu).', thai: 'ไม่เป็นไรครับ/ค่ะ (ไม่ต้องครับ/ปฏิเสธ)', context: 'ปฏิเสธอย่างสุภาพ' },
+  { id: 'b5', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: '英語を話せますか？', romaji: 'Eigo o hanasemasu ka?', thai: 'พูดภาษาอังกฤษได้ไหมครับ/ค่ะ?', context: 'ถามก่อนเริ่มสื่อสารภาษาอังกฤษ' },
+  { id: 'b6', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: '日本語が分かりません。', romaji: 'Nihongo ga wakarimasen.', thai: 'ฉันพูดภาษาญี่ปุ่นไม่ได้ครับ/ค่ะ', context: 'บอกเมื่อฟังภาษาญี่ปุ่นไม่เข้าใจ' },
+  { id: 'b7', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: 'Wi-Fiのパスワードは何ですか？', romaji: 'Waifai no pasuwādo wa nan desu ka?', thai: 'รหัสผ่าน Wi-Fi คืออะไรครับ/ค่ะ?', context: 'ขอรหัสเชื่อมต่ออินเทอร์เน็ตในร้านหรือที่พัก' },
+  { id: 'b8', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: 'すみません、助けてください。', romaji: 'Sumimasen, tasukete kudasai.', thai: 'ขอโทษนะครับ ช่วยฉันหน่อยได้ไหมครับ/ค่ะ?', context: 'ขอความช่วยเหลือเมื่อประสบปัญหาฉุกเฉิน' },
+  { id: 'b9', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: '忘れ物をしました。', romaji: 'Wasuremono o shimashita.', thai: 'ฉันลืมของไว้ / ทำของตกหายครับ/ค่ะ', context: 'ติดต่อเจ้าหน้าที่ห้อง Lost & Found ในสถานีหรือโรงแรม' },
+  { id: 'b10', category: 'basic', categoryLabel: 'พื้นฐาน', japanese: '体調が悪いです。', romaji: 'Taichō ga warui desu.', thai: 'รู้สึกไม่ค่อยสบาย / ป่วยครับ/ค่ะ', context: 'แจ้งเจ้าหน้าที่หรือคนรอบข้างเมื่อต้องการพักผ่อนหรือพบแพทย์' },
 ];
 
 // 2. Nearby Radar Presets
@@ -305,7 +344,7 @@ export default function TravelHubModal({
   };
 
   // ==================== 3. PHRASES & BIG DISPLAY STATE ====================
-  const [phraseCategory, setPhraseCategory] = useState<'all' | 'food' | 'shopping' | 'transport' | 'emergency'>('all');
+  const [phraseCategory, setPhraseCategory] = useState<'all' | 'conbini' | 'numbers' | 'food' | 'shopping' | 'transport' | 'basic'>('all');
   const [phraseSearch, setPhraseSearch] = useState('');
   const deferredPhraseSearch = useDeferredValue(phraseSearch);
   const [bigCardPhrase, setBigCardPhrase] = useState<PhraseItem | null>(null);
@@ -859,10 +898,12 @@ export default function TravelHubModal({
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
                   {[
                     { id: 'all', label: `ทั้งหมด (${JAPANESE_PHRASES.length})` },
-                    { id: 'food', label: '🍜 ร้านอาหาร & สั่งกิน' },
+                    { id: 'conbini', label: '🏪 มินิมาร์ท & อุ่นเวฟ' },
+                    { id: 'numbers', label: '🔢 นับจำนวน & สั่งของ' },
+                    { id: 'food', label: '🍜 ร้านอาหาร & คาเฟ่' },
                     { id: 'shopping', label: '🛍️ ช้อปปิ้ง & Tax-Free' },
-                    { id: 'transport', label: '🚅 รถไฟ & สถานี' },
-                    { id: 'emergency', label: '🚨 ขอความช่วยเหลือ' },
+                    { id: 'transport', label: '🚅 เดินทาง & โรงแรม' },
+                    { id: 'basic', label: '💬 ทักทาย & เอาตัวรอด' },
                   ].map((cat) => (
                     <button
                       key={cat.id}
@@ -883,7 +924,7 @@ export default function TravelHubModal({
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="ค้นหา เช่น วาซาบิ, แยกบิล, คืนภาษี, ห้องน้ำ, สนามบิน..."
+                    placeholder="ค้นหา เช่น รับถุง, อุ่น, 1 ชิ้น, 2 คน, เอาอันนี้, เช็คบิล, คืนภาษี, ห้องน้ำ..."
                     value={phraseSearch}
                     onChange={(e) => setPhraseSearch(e.target.value)}
                     className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
@@ -904,9 +945,16 @@ export default function TravelHubModal({
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div className="space-y-1 min-w-0">
-                          <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wide">
-                            {p.japanese}
-                          </h4>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {p.categoryLabel && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
+                                {p.categoryLabel}
+                              </span>
+                            )}
+                            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wide">
+                              {p.japanese}
+                            </h4>
+                          </div>
                           <p className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
                             {p.romaji}
                           </p>
