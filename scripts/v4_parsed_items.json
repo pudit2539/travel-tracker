@@ -1,0 +1,714 @@
+[
+  {
+    "row_num": 2,
+    "date_label": "4 ธ.ค.",
+    "time_slot": "15:55 น.",
+    "city": "BKK -> HAN",
+    "main_place": "ออกเดินทางจากสนามบินสุวรรณภูมิ (สายการบิน Vietnam Airlines เที่ยวบิน VN614)",
+    "main_place_links": [],
+    "food_recommendation": "อาหารบนเครื่อง",
+    "food_links": [],
+    "backup_plan": "แวะเปลี่ยนเครื่องที่ฮานอย (รอต่อเครื่องเที่ยวบิน VN334 ประมาณ 7 ชม.)",
+    "backup_links": [],
+    "transport_info": "เครื่องบิน Vietnam Airlines (VN614) | จ่ายรวมในตั๋วเครื่องบินแล้ว"
+  },
+  {
+    "row_num": 3,
+    "date_label": "5 ธ.ค.",
+    "time_slot": "06:55 น.",
+    "city": "KIX -> Kyoto",
+    "main_place": "ถึงสนามบินคันไซ (เที่ยวบิน VN334) ผ่าน ตม. แล้วนั่งรถไฟด่วน JR Haruka ยิงยาวตรงไปเกียวโต",
+    "main_place_links": [],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "หากเพลียมาก สามารถซื้อของว่างทานบนรถไฟได้เลย",
+    "backup_links": [],
+    "transport_info": "รถไฟด่วน JR Haruka | ซื้อตั๋ว e-Ticket แยก หรือแตะ ICOCA (ประมาณ 2,200 - 3,110 เยน)"
+  },
+  {
+    "row_num": 4,
+    "date_label": "5 ธ.ค.",
+    "time_slot": "11:30 น.",
+    "city": "Kyoto Station",
+    "main_place": "Porta Underground Shopping Mall",
+    "main_place_links": [
+      "https://maps.google.com/?q=Porta+Kyoto+Station"
+    ],
+    "food_recommendation": "Katsukura Tonkatsu",
+    "food_links": [
+      "https://maps.google.com/?q=Katsukura+Kyoto+Station+The+Cube"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง: Donguri Kyoto Station (โอโคโนมิยากิ)\n\nที่เที่ยวสำรอง: ขึ้นชมวิวที่ Kyoto Tower",
+    "backup_links": [
+      "https://maps.google.com/?q=Kyoto+Tower"
+    ],
+    "transport_info": "เดินเท้าจากสถานีเกียวโต | ฟรี"
+  },
+  {
+    "row_num": 6,
+    "date_label": "5 ธ.ค.",
+    "time_slot": "15:00 น.",
+    "city": "Kyoto Station",
+    "main_place": "เช็กอินเข้าที่พัก Hotel The M's Kyoto (ใกล้สถานีเกียวโต)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Hotel+The+M%27s+Kyoto"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "นอนพักผ่อนชาร์จแบตร่างกายหลังลงเครื่อง",
+    "backup_links": [],
+    "transport_info": "เดินเท้าจากสถานีเกียวโต | ฟรี"
+  },
+  {
+    "row_num": 8,
+    "date_label": "5 ธ.ค.",
+    "time_slot": "17:30 น.",
+    "city": "Kyoto (Pontocho)",
+    "main_place": "เดินรับลมหนาวเลียบแม่น้ำคาโมะ และตรอกไม้โบราณ Pontocho Alley",
+    "main_place_links": [
+      "https://maps.google.com/?q=Pontocho+Alley"
+    ],
+    "food_recommendation": "ทานร้าน Izakaya / Yakitori โลคอลในตรอก",
+    "food_links": [],
+    "backup_plan": "ร้านอาหารสำรอง: Chao Chao Gyoza Sanjo (เกี๊ยวซ่าชื่อดังที่คนท้องถิ่นชอบไปนั่งดื่มกิน)",
+    "backup_links": [
+      "https://maps.google.com/?q=Chao+Chao+Gyoza+Sanjo+Kaiko"
+    ],
+    "transport_info": "Kyoto Subway หรือเดินเท้า | แตะ ICOCA (220 เยน)"
+  },
+  {
+    "row_num": 10,
+    "date_label": "6 ธ.ค.",
+    "time_slot": "06:00 น.",
+    "city": "Kyoto (Higashiyama)",
+    "main_place": "ออกเดินทางแต่เช้ามืดไปวัดน้ำใส Kiyomizu-dera Temple เดินถนนโบราณ Ninenzaka/Sannenzaka ช่วงคนน้อย บรรยากาศดี",
+    "main_place_links": [
+      "https://maps.google.com/?q=Kiyomizu-dera"
+    ],
+    "food_recommendation": "แวะคาเฟ่ % Arabica Kyoto Higashiyama (วิวสวย มองเห็นเจดีย์ Yasaka) พร้อมชิมของว่างริมทาง Mitarashi Dango",
+    "food_links": [
+      "https://maps.google.com/?q=Arabica+Kyoto+Higashiyama"
+    ],
+    "backup_plan": "ที่เที่ยวสำรอง: เดินต่อไปวัด Kodai-ji Temple",
+    "backup_links": [
+      "https://maps.google.com/?q=Kodai-ji"
+    ],
+    "transport_info": "Kyoto City Bus / Taxi | แตะ ICOCA (230 เยน)"
+  },
+  {
+    "row_num": 12,
+    "date_label": "6 ธ.ค.",
+    "time_slot": "09:30 น.",
+    "city": "Kyoto (Gion)",
+    "main_place": "เดินเล่นย่านประวัติศาสตร์เกอิชา Gion และถนนสายโบราณ Hanamikoji-dori ไหว้พระขอพรที่ศาลเจ้า Yasaka Shrine",
+    "main_place_links": [
+      "https://maps.google.com/?q=Hanamikoji+Street+Gion"
+    ],
+    "food_recommendation": "มื้อกลางวันร้านโซบะโบราณ หรืออาหารเซตเกียวโตในย่านกิอง",
+    "food_links": [],
+    "backup_plan": "ที่เที่ยวสำรอง 1: เดินเล่นสวน Maruyama Park ข้างศาลเจ้า\n\nร้านอาหารสำรอง 1: Gion Karyo (อาหารไคเซกิเกียวโตดั้งเดิม)",
+    "backup_links": [
+      "https://maps.google.com/?q=Yasaka+Shrine+Gion",
+      "https://maps.google.com/?q=Gion+Karyo"
+    ],
+    "transport_info": "เดินเท้าจากย่านฮิกาชิยามา / รถบัส | แตะ ICOCA (230 เยน)"
+  },
+  {
+    "row_num": 15,
+    "date_label": "6 ธ.ค.",
+    "time_slot": "13:30 น.",
+    "city": "Kyoto (Arashiyama)",
+    "main_place": "เดินทางไปอาราชิยามา เดินเล่นชมวิวสะพานไม้โบราณ Togetsukyo Bridge และชมสวนมรดกโลกวัด Tenryu-ji Temple",
+    "main_place_links": [
+      "https://maps.google.com/?q=Togetsukyo+Bridge",
+      "https://maps.google.com/?q=Tenryuji+Kyoto"
+    ],
+    "food_recommendation": "นั่งจิบกาแฟชมวิวแม่น้ำและภูเขาพาโนรามาที่คาเฟ่ระดับโลก % Arabica Kyoto Arashiyama",
+    "food_links": [
+      "https://maps.google.com/?q=Arabica+Kyoto+Arashiyama"
+    ],
+    "backup_plan": "ที่เที่ยวสำรอง 2: เดินชมป่าไผ่ Arashiyama Bamboo Grove (ปรับเป็นแผนสำรอง)\n\nที่เที่ยวสำรอง 3: ล่องเรือชมแม่น้ำโฮซึ Hozugawa River Boat Ride",
+    "backup_links": [
+      "https://maps.google.com/?q=Arashiyama+Bamboo+Grove",
+      "https://maps.google.com/?q=Hozugawa+River+Boat+Ride"
+    ],
+    "transport_info": "รถไฟ JR San-in Line (Kyoto -> Saga-Arashiyama) | แตะ ICOCA (240 เยน)"
+  },
+  {
+    "row_num": 18,
+    "date_label": "6 ธ.ค.",
+    "time_slot": "18:00 น.",
+    "city": "Kyoto Station",
+    "main_place": "เดินทางกลับเข้าสถานีเกียวโต เดินชมบันไดไฟยักษ์และบรรยากาศสถานี",
+    "main_place_links": [],
+    "food_recommendation": "มื้อเย็นราเมน Kyoto Ramen Koji (ถนนราเมนชั้น 10 สถานีเกียวโต รวบรวมราเมนดังทั่วญี่ปุ่น)",
+    "food_links": [
+      "https://maps.google.com/?q=Kyoto+Ramen+Koji"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง 2: Katsukura Tonkatsu (หมูทอดทงคัตสึต้นตำรับเกียวโต)",
+    "backup_links": [
+      "https://maps.google.com/?q=Katsukura+Kyoto+Station+The+Cube"
+    ],
+    "transport_info": "รถไฟ JR San-in Line (Saga-Arashiyama -> Kyoto) | แตะ ICOCA (240 เยน)"
+  },
+  {
+    "row_num": 20,
+    "date_label": "7 ธ.ค.",
+    "time_slot": "09:00 น.",
+    "city": "Kyoto (Kawaramachi)",
+    "main_place": "เช็กเอาต์จาก Hotel The M's Kyoto ย้ายกระเป๋ามาฝากที่ Hotel Musse Kyoto Shijo Kawaramachi Meitetsu",
+    "main_place_links": [
+      "https://maps.google.com/?q=Hotel+Musse+Kyoto+Shijo+Kawaramachi+Meitetsu"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "เดินเล่นชมตลาด Nishiki Market ตลาดเก่าแก่ใจกลางเมืองข้างโรงแรม",
+    "backup_links": [
+      "https://maps.google.com/?q=Nishiki+Market+Kyoto"
+    ],
+    "transport_info": "เดินเท้า / แท็กซี่ / รถไฟใต้ดิน | แตะ ICOCA (220 เยน)"
+  },
+  {
+    "row_num": 22,
+    "date_label": "7 ธ.ค.",
+    "time_slot": "10:30 น.",
+    "city": "Uji (ครึ่งวัน)",
+    "main_place": "นั่งรถไฟไปเมืองชาเขียวอูจิ (ทริปครึ่งวัน) เดินเล่นถนนชาเขียว Byodoin Omotesando ข้ามสะพาน Uji Bridge และไหว้พระวัดมรดกโลก Byodoin Temple (หอฟีนิกซ์)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Byodoin"
+    ],
+    "food_recommendation": "มื้อกลางวันและของหวานมัทฉะพาร์เฟต์เข้มข้นที่ร้านต้นตำรับ Nakamura Tokichi Main Branch",
+    "food_links": [
+      "https://maps.google.com/?q=Nakamura+Tokichi+Main+Branch"
+    ],
+    "backup_plan": "ที่เที่ยวสำรอง 4: ศาลเจ้าเก่าแก่ที่สุดในญี่ปุ่น Ujigami Shrine\n\nร้านอาหารสำรอง 3: Itohkyuemon Uji (คาเฟ่มัทฉะโซบะและพาร์เฟต์)",
+    "backup_links": [
+      "https://maps.google.com/?q=Ujigami+Shrine",
+      "https://maps.google.com/?q=Itohkyuemon+Uji"
+    ],
+    "transport_info": "รถไฟ Keihan Line หรือ JR Nara Line | แตะ ICOCA (330 - 430 เยน)"
+  },
+  {
+    "row_num": 25,
+    "date_label": "7 ธ.ค.",
+    "time_slot": "14:30 น.",
+    "city": "Kyoto (Recycle Shopping)",
+    "main_place": "เดินทางกลับเข้าเกียวโต ลุยร้านขายของมือสองญี่ปุ่นแนว General Recycle / Treasure Hunting (เครื่องใช้ ของสะสม แผ่นเสียง โมเดล เครื่องครัว เสื้อผ้ามือสองญี่ปุ่นคัดเกรด) ที่ 2nd STREET Kyoto Shijo-Kawaramachi และ 2nd STREET Kyoto Hachijo",
+    "main_place_links": [
+      "https://maps.google.com/?q=2nd+Street+Shijo-Kawaramachi",
+      "https://maps.google.com/?q=2nd+Street+Kyoto+Hachijo"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "ร้านของมือสองเสริม 1: Kindal Kyoto Teramachi (ร้านคัดเกรด 3 ชั้น)\n\nร้านของมือสองเสริม 2: Hard-Off / Surugaya Kyoto Teramachi (ของสะสม ฟิกเกอร์ แผ่นเกม แผ่นเสียง แก็ดเจ็ต)",
+    "backup_links": [
+      "https://maps.google.com/?q=Kindal+Kyoto",
+      "https://maps.google.com/?q=Surugaya+Kyoto+Teramachi"
+    ],
+    "transport_info": "เดินเท้าจากที่พักย่าน Shijo Kawaramachi / Teramachi | ฟรี"
+  },
+  {
+    "row_num": 28,
+    "date_label": "7 ธ.ค.",
+    "time_slot": "18:30 น.",
+    "city": "Kyoto (Kawaramachi)",
+    "main_place": "เข้าเช็กอินห้องพัก Hotel Musse Kyoto Shijo Kawaramachi Meitetsu พักผ่อนเก็บของ",
+    "main_place_links": [
+      "https://maps.google.com/?q=Hotel+Musse+Kyoto+Shijo+Kawaramachi+Meitetsu"
+    ],
+    "food_recommendation": "มื้อค่ำสุกี้ยากี้เนื้อวากิวเกียวโตชื่อดัง Moritaya Sukiyaki Shijo",
+    "food_links": [
+      "https://maps.google.com/?q=Moritaya+Sukiyaki+Kyoto"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง 4: Gyoza Hohei Gion (เกี๊ยวซ่าระดับมิชลินบิบกูร์มองด์ บรรยากาศอบอุ่น)",
+    "backup_links": [
+      "https://maps.google.com/?q=Gyoza+Hohei+Gion"
+    ],
+    "transport_info": "เดินเท้าในย่านชิโจคาวาระมาจิ | ฟรี"
+  },
+  {
+    "row_num": 30,
+    "date_label": "8 ธ.ค.",
+    "time_slot": "08:00 น.",
+    "city": "Lake Biwa (Shirahige)",
+    "main_place": "ออกเดินทางเช้าตรู่นั่งรถไฟ JR Kosei Line สู่สถานี Omi-Takashima ต่อแท็กซี่ไปชมเสาโทริอิสีแดงกลางผืนน้ำทะเลสาบบิวะที่ศาลเจ้า Shirahige Shrine (ชมวิวจากเนินศาลเจ้า บรรยากาศเงียบสงบยามเช้า)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Shirahige+Shrine"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "ที่เที่ยวสำรอง 5: แวะชมศาลาลอยน้ำโบราณ Ukimidou Mangetsu-ji (ศาลาวัดยื่นลงในทะเลสาบบิวะ)",
+    "backup_links": [
+      "https://maps.google.com/?q=Ukimidou+Mangetsuji"
+    ],
+    "transport_info": "รถไฟ JR Kosei Line (Kyoto -> Omi-Takashima) + แท็กซี่ | แตะ ICOCA + ค่าแท็กซี่ (ประมาณ 1,500 เยน/คัน)"
+  },
+  {
+    "row_num": 32,
+    "date_label": "8 ธ.ค.",
+    "time_slot": "11:30 น.",
+    "city": "Lake Biwa (Omihachiman)",
+    "main_place": "เดินทางสู่เมืองเก่าริมคลองโอมิฮาจิมัง Omihachiman เดินชมทางเดินหินเลียบคลอง Hachiman-bori Canal ชมแนวกำแพงโกดังสีขาวสมัยเอโดะ และนั่งเรือแจวโบราณล่องคลอง",
+    "main_place_links": [
+      "https://maps.google.com/?q=Hachiman-bori+Canal"
+    ],
+    "food_recommendation": "มื้อกลางวันระดับพรีเมียม ลิ้มลองเนื้อวากิวโอมิแท้ 1 ใน 3 สุดยอดเนื้อวากิวของญี่ปุ่น (สเต๊ก / สุกี้ยากี้) ที่ร้าน Sennaritei Hachimabori",
+    "food_links": [
+      "https://maps.google.com/?q=Sennaritei+Hachimabori"
+    ],
+    "backup_plan": "ที่เที่ยวสำรอง (Plan B ทะเลสาบ): ขึ้นกระเช้าลอยฟ้า Hachimanyama Ropeway ชมวิวมุมสูงแบบพาโนรามาของทะเลสาบบิวะและเมืองโอมิฮาจิมัง",
+    "backup_links": [
+      "https://maps.google.com/?q=Hachimanyama+Ropeway"
+    ],
+    "transport_info": "รถไฟ JR Line + รถบัสท้องถิ่น Omihachiman | แตะ ICOCA (ประมาณ 700 เยน)"
+  },
+  {
+    "row_num": 34,
+    "date_label": "8 ธ.ค.",
+    "time_slot": "14:30 น.",
+    "city": "Lake Biwa (La Collina)",
+    "main_place": "เดินทางต่อไปยังอาณาจักรขนมหวานและธรรมชาติ La Collina Omihachiman ชมสถาปัตยกรรมหลังคาหญ้าสุดน่ารัก ถ่ายรูปมุมฮิต และเลือกซื้อขนมของฝาก",
+    "main_place_links": [
+      "https://maps.google.com/?q=La+Collina+Omihachiman"
+    ],
+    "food_recommendation": "นั่งจิบชาและชิมขนมบามคูเฮน Club Harie อบสดใหม่ ฟูนุ่มละมุน ที่คาเฟ่ด้านใน La Collina",
+    "food_links": [
+      "https://maps.google.com/?q=Club+Harie+La+Collina"
+    ],
+    "backup_plan": "ที่เที่ยวสำรองในเมืองเกียวโต (หากต้องการกลับเร็ว): ปราสาทมรดกโลก Nijo Castle",
+    "backup_links": [
+      "https://maps.google.com/?q=Nijo+Castle"
+    ],
+    "transport_info": "รถบัสท้องถิ่น Omihachiman หรือแท็กซี่ | แตะ ICOCA / เงินสด (200 - 1,000 เยน)"
+  },
+  {
+    "row_num": 36,
+    "date_label": "8 ธ.ค.",
+    "time_slot": "17:30 น.",
+    "city": "Kyoto (Kawaramachi)",
+    "main_place": "นั่งรถไฟ JR Special Rapid (32 นาที) ยิงยาวกลับเข้าสถานีเกียวโต เดินทางกลับสู่โรงแรม Hotel Musse ย่านคาวาระมาจิ",
+    "main_place_links": [],
+    "food_recommendation": "มื้อค่ำราเมนซุปใสเกลือชื่อดัง Menya Inoichi (มิชลินบิบกูร์มองด์ ย่านคาวาระมาจิ)",
+    "food_links": [
+      "https://maps.google.com/?q=Menya+Inoichi"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง 5: Chao Chao Gyoza Shijo (เกี๊ยวซ่าทอดกระทะร้อน)",
+    "backup_links": [
+      "https://maps.google.com/?q=Chao+Chao+Gyoza+Sanjo+Kaiko"
+    ],
+    "transport_info": "รถไฟ JR Biwako Line (Omihachiman -> Kyoto) + เดินเท้า/บัส | แตะ ICOCA (680 เยน)"
+  },
+  {
+    "row_num": 38,
+    "date_label": "9 ธ.ค.",
+    "time_slot": "08:30 น.",
+    "city": "Kyoto (Fushimi)",
+    "main_place": "ตื่นเช้าเดินทางไปลอดซุ้มประตูโทริอิสีแดงนับพันต้นที่ศาลเจ้าจิ้งจอกขาว Fushimi Inari Taisha (เดินถ่ายรูปช่วงเช้าคนยังไม่แน่น)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Fushimi+Inari+Taisha"
+    ],
+    "food_recommendation": "แวะชิมคิตสึเนะอุด้งร้อนๆ และของว่างท้องถิ่นบริเวณหน้าศาลเจ้า",
+    "food_links": [],
+    "backup_plan": "ที่เที่ยวสำรอง: คาเฟ่ริมลำธาร Vermillion Cafe Fushimi",
+    "backup_links": [
+      "https://maps.google.com/?q=Vermillion+cafe+Fushimi+Kyoto"
+    ],
+    "transport_info": "รถไฟ Keihan Line หรือ JR Nara Line | แตะ ICOCA (150 - 210 เยน)"
+  },
+  {
+    "row_num": 40,
+    "date_label": "9 ธ.ค.",
+    "time_slot": "11:30 น.",
+    "city": "Kyoto -> Osaka",
+    "main_place": "เช็กเอาต์จาก Hotel Musse Kyoto Shijo Kawaramachi นั่งรถไฟด่วนมุ่งหน้าสู่โอซาก้า (ใช้เวลาประมาณ 35 นาที)",
+    "main_place_links": [],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "เตรียมตัวย้ายเข้าที่พักย่านชอปปิงใจกลางเมืองโอซาก้า",
+    "backup_links": [],
+    "transport_info": "รถไฟ Hankyu Kyoto Line (Kawaramachi -> Umeda) | แตะ ICOCA (410 เยน)"
+  },
+  {
+    "row_num": 41,
+    "date_label": "9 ธ.ค.",
+    "time_slot": "13:00 น.",
+    "city": "Osaka (Shinsaibashi)",
+    "main_place": "เข้าเช็กอินและฝากกระเป๋าเดินทางที่โรงแรม Quintessa Hotel Osaka Shinsaibashi Comic & Books (ทำเลดี ใกล้สถานีรถไฟและแหล่งช้อปปิ้ง)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Quintessa+Hotel+Osaka+Shinsaibashi+Comic+%26+Books"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "พักผ่อนจัดของในห้องพัก",
+    "backup_links": [],
+    "transport_info": "Osaka Metro | แตะ ICOCA (190 เยน)"
+  },
+  {
+    "row_num": 43,
+    "date_label": "9 ธ.ค.",
+    "time_slot": "15:00 น.",
+    "city": "Osaka (Shinsaibashi & Dotonbori)",
+    "main_place": "เดินสำรวจย่านชินไซบาชิ ถ่ายรูปคู่ป้าย Dotonbori Glico Sign และเดินชมห้างสรรพสินค้า Daimaru Shinsaibashi",
+    "main_place_links": [
+      "https://maps.google.com/?q=Dotonbori+Glico+Sign",
+      "https://maps.google.com/?q=Daimaru+Shinsaibashi"
+    ],
+    "food_recommendation": "Chibo Okonomiyaki Dotonbori (โอโคโนมิยากิกระทะร้อนต้นตำรับ)",
+    "food_links": [
+      "https://maps.google.com/?q=Chibo+Okonomiyaki+Dotonbori"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง 6: Mizuno Okonomiyaki\n\nร้านอาหารสำรอง 7: Takoyaki Wanaka Dotonbori",
+    "backup_links": [
+      "https://maps.google.com/?q=Mizuno+Okonomiyaki",
+      "https://maps.google.com/?q=Takoyaki+Wanaka+Dotonbori"
+    ],
+    "transport_info": "เดินเท้าจากโรงแรม | ฟรี"
+  },
+  {
+    "row_num": 46,
+    "date_label": "10 ธ.ค.",
+    "time_slot": "07:00 น.",
+    "city": "Osaka -> Ine / Amanohashidate",
+    "main_place": "ขึ้นรถบัสท่องเที่ยว One Day Tour จากจุดนัดพบในโอซาก้า มุ่งหน้าสู่หมู่บ้านชาวประมงริมทะเล Ine Funaya นั่งเรือชมวิวบ้านเรือนโบราณริมน้ำ และจุดชมวิวสันทรายมังกรสวรรค์ Amanohashidate (นั่งกระเช้าชมวิว)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Ine+Funaya"
+    ],
+    "food_recommendation": "รวมอาหารกลางวันในแพ็กเกจทัวร์แล้ว",
+    "food_links": [],
+    "backup_plan": "แผนสำรอง: กิจกรรมให้อาหารนกนางนวลระหว่างล่องเรือที่อ่าวอิเนะ",
+    "backup_links": [
+      "https://maps.google.com/?q=Amanohashidate"
+    ],
+    "transport_info": "รถบัสท่องเที่ยว One Day Tour | รวมในค่าแพ็กเกจทัวร์แล้ว (นัดรวมพล 07:00 น.)"
+  },
+  {
+    "row_num": 48,
+    "date_label": "10 ธ.ค.",
+    "time_slot": "18:00 น.",
+    "city": "Osaka (Umeda)",
+    "main_place": "เดินทางกลับถึงสถานีโอซาก้า/อุเมดะ ชมงานเปิดไฟประดับคริสต์มาสและชมวิวมุมสูง 360 องศาที่ตึก Umeda Sky Building",
+    "main_place_links": [
+      "https://maps.google.com/?q=Umeda+Sky+Building"
+    ],
+    "food_recommendation": "ทานบุฟเฟต์ปิ้งย่างเนื้อวากิวพรีเมียม (Premium Yakiniku) แถวสถานีอุเมดะ",
+    "food_links": [],
+    "backup_plan": "ที่เที่ยวสำรอง: เดินห้าง Grand Front Osaka\n\nร้านขนมสำรอง: Harbs Umeda (เค้กผลไม้เครปพันชั้นชื่อดัง)",
+    "backup_links": [
+      "https://maps.google.com/?q=Grand+Front+Osaka",
+      "https://maps.google.com/?q=Harbs+Umeda"
+    ],
+    "transport_info": "Osaka Metro | แตะ ICOCA (240 เยน)"
+  },
+  {
+    "row_num": 51,
+    "date_label": "11 ธ.ค.",
+    "time_slot": "08:30 น.",
+    "city": "Nara (ครึ่งวันเช้ากระชับ)",
+    "main_place": "นั่งรถไฟ Kintetsu สู่สถานีนารา เดินเล่นสวนกวาง Nara Park ถ่ายรูปกับฝูงกวาง และไหว้พระใหญ่ที่วัด Todai-ji Temple (ทริปนารากระชับครึ่งวันตามคำขอ)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Nara+Park"
+    ],
+    "food_recommendation": "แวะชิมโมจิตำสดเหนียวนุ่มหน้าร้าน Nakatanidou ระหว่างทางเดินเที่ยว",
+    "food_links": [
+      "https://maps.google.com/?q=Nakatanidou"
+    ],
+    "backup_plan": "ที่เที่ยวสำรอง: ศาลเจ้าโคมไฟโบราณ Kasuga Taisha Shrine",
+    "backup_links": [
+      "https://maps.google.com/?q=Todaiji",
+      "https://maps.google.com/?q=Kasuga+Taisha"
+    ],
+    "transport_info": "รถไฟ Kintetsu Line (Osaka-Namba -> Kintetsu-Nara) | แตะ ICOCA (680 เยน)"
+  },
+  {
+    "row_num": 54,
+    "date_label": "11 ธ.ค.",
+    "time_slot": "12:30 น.",
+    "city": "Nara -> Osaka (Honmachi)",
+    "main_place": "นั่งรถไฟด่วน Kintetsu Line กลับเข้าโอซาก้า มุ่งตรงไปยังย่าน Honmachi ทันเวลามื้อเที่ยง",
+    "main_place_links": [],
+    "food_recommendation": "ข้าวแกงกะหรี่เนื้อทงคัตสึรสจัดจ้าน Hakugintei Curry ร้านท็อปในดวงใจคนญี่ปุ่น (ช่วงบ่ายโมงคิวซาลง)",
+    "food_links": [
+      "https://maps.google.com/?q=Hakugintei+Osaka"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง 8: Curry House Nishimoto",
+    "backup_links": [],
+    "transport_info": "รถไฟ Kintetsu Line (Kintetsu-Nara -> Osaka) | แตะ ICOCA (680 เยน)"
+  },
+  {
+    "row_num": 56,
+    "date_label": "11 ธ.ค.",
+    "time_slot": "14:00 น.",
+    "city": "Osaka (Korea Town)",
+    "main_place": "นั่งรถไฟใต้ดินไปเยือนย่านชุมชนชาวเกาหลีที่ใหญ่ที่สุดในญี่ปุ่น Osaka Ikuno Korea Town (ถนน Miyuki-dori ย่าน Tsuruhashi) เดินชมบรรยากาศ ร้านค้าเกาหลี ของฝาก เครื่องสำอาง และขนมเกาหลี",
+    "main_place_links": [
+      "https://maps.google.com/?q=Miyuki-dori+Korea+Town+Osaka"
+    ],
+    "food_recommendation": "ชิมของว่างและเครื่องดื่มสไตล์เกาหลีในย่าน Tsuruhashi",
+    "food_links": [],
+    "backup_plan": "ร้านอาหารสำรอง 9: ปิ้งย่างเกาหลี / หมูย่างเกาหลีรสเด็ดย่าน Tsuruhashi",
+    "backup_links": [],
+    "transport_info": "Osaka Metro (Namba -> Tsuruhashi) | แตะ ICOCA (190 เยน)"
+  },
+  {
+    "row_num": 58,
+    "date_label": "11 ธ.ค.",
+    "time_slot": "16:30 น.",
+    "city": "Osaka (Recycle Shopping)",
+    "main_place": "กลับเข้าย่านชินไซบาชิ ลุยล่าสมบัติร้านขายของมือสองญี่ปุ่นแนว General Recycle / Treasure Hunting (เสื้อผ้า แบรนด์เนม ของใช้ โมเดล แผ่นเสียง) ที่ 2nd STREET Shinsaibashi และร้านใหญ่ Mandarake Grandchaos",
+    "main_place_links": [
+      "https://maps.google.com/?q=2nd+Street+Shinsaibashi"
+    ],
+    "food_recommendation": "มื้อค่ำเทมปุระเจ้าดัง Tenmasa Osaka หรืออาหารญี่ปุ่นโลคอลในย่านช้อปปิ้ง",
+    "food_links": [
+      "https://maps.google.com/?q=Tenmasa+Osaka"
+    ],
+    "backup_plan": "ร้านของมือสองเสริม 3: Book-Off Plus / Book-Off Super Bazaar Namba\n\nร้านของมือสองเสริม 4: Kindal Shinsaibashi Amerikamura",
+    "backup_links": [
+      "https://maps.google.com/?q=Mandarake+Grandchaos",
+      "https://maps.google.com/?q=Kindal+Shinsaibashi+Amerikamura"
+    ],
+    "transport_info": "Osaka Metro / เดินเท้า | แตะ ICOCA (190 เยน)"
+  },
+  {
+    "row_num": 61,
+    "date_label": "12 ธ.ค.",
+    "time_slot": "10:00 น.",
+    "city": "Kobe (ครึ่งวันเช้า)",
+    "main_place": "นั่งรถไฟสาย Hanshin มุ่งหน้าสู่เมืองท่าโกเบ เดินชมย่านบ้านฝรั่งโบราณบนเนินเขา Kitano Ijinkan-gai บรรยากาศโรแมนติกสไตล์ยุโรป",
+    "main_place_links": [
+      "https://maps.google.com/?q=Kitano+Ijinkan-gai"
+    ],
+    "food_recommendation": "ลิ้มลองมื้อกลางวันสุดพิเศษ สเต๊กเนื้อโกเบแท้ลายหินอ่อนย่างบนกระทะเทปปันยากิ Steakland Kobe",
+    "food_links": [
+      "https://maps.google.com/?q=Steakland+Kobe"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง 10: Steak Ishida Kobe\n\nที่เที่ยวสำรอง: นั่งกระเช้าลอยฟ้า Kobe Nunobiki Ropeway",
+    "backup_links": [
+      "https://maps.google.com/?q=Steak+Ishida+Kobe",
+      "https://maps.google.com/?q=Kobe+Nunobiki+Ropeway"
+    ],
+    "transport_info": "Osaka Metro + รถไฟ Hanshin Line | ใช้ตั๋วแตะ ICOCA (รวมประมาณ 600 เยน)"
+  },
+  {
+    "row_num": 64,
+    "date_label": "12 ธ.ค.",
+    "time_slot": "13:00 น.",
+    "city": "Kobe (Chinatown Nankinmachi)",
+    "main_place": "เดินเที่ยวชมสีสันไชน่าทาวน์โกเบ Kobe Chinatown Nankinmachi (1 ใน 3 ไชน่าทาวน์ที่ใหญ่ที่สุดในญี่ปุ่น) ชมซุ้มประตูจีนโบราณ ถ่ายรูปโคมไฟ และชิมซาลาเปานึ่งร้อนๆ Roshoki",
+    "main_place_links": [
+      "https://maps.google.com/?q=Nankinmachi"
+    ],
+    "food_recommendation": "ชิมซาลาเปาหมูสับชื่อดังร้าน Roshoki Nankinmachi หรือเป็ดปักกิ่งและชานมไข่มุก",
+    "food_links": [
+      "https://maps.google.com/?q=Roshoki+Kobe"
+    ],
+    "backup_plan": "ที่เที่ยวสำรองในโกเบ: เดินรับลมทะเลที่ห้าง Kobe Harborland และถ่ายรูปคู่กับป้าย BE KOBE ที่ Meriken Park",
+    "backup_links": [
+      "https://maps.google.com/?q=Kobe+Harborland",
+      "https://maps.google.com/?q=Meriken+Park"
+    ],
+    "transport_info": "เดินเท้าจากย่านโมโตมาจิ | ฟรี"
+  },
+  {
+    "row_num": 67,
+    "date_label": "12 ธ.ค.",
+    "time_slot": "15:00 น.",
+    "city": "Kobe -> Osaka",
+    "main_place": "นั่งรถไฟกลับเข้าโอซาก้าช่วงบ่ายแก่ๆ มีเวลาว่างพักผ่อน ช้อปปิ้งเก็บตกเสื้อผ้า รองเท้า และของสะสมในย่าน Shinsaibashi / Namba ได้แบบไม่เหนื่อย",
+    "main_place_links": [],
+    "food_recommendation": "มื้อค่ำร้าน Kushikatsu Daruma (ของทอดเสียบไม้สไตล์โอซาก้า)",
+    "food_links": [
+      "https://maps.google.com/?q=Kushikatsu+Daruma+Shinsekai"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง: Yaekatsu Kushikatsu",
+    "backup_links": [
+      "https://maps.google.com/?q=Yaekatsu"
+    ],
+    "transport_info": "รถไฟ Hanshin Line (Motomachi -> Osaka-Namba) | แตะ ICOCA (410 เยน)"
+  },
+  {
+    "row_num": 69,
+    "date_label": "13 ธ.ค.",
+    "time_slot": "09:00 น.",
+    "city": "Osaka (Minoh)",
+    "main_place": "เดินทางสู่เมืองมิโนะทางตอนเหนือของโอซาก้า เดินชมธรรมชาติในหุบเขาและธารน้ำตกสวย Minoh Falls (น้ำตกมิโนะสูง 33 เมตร)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Minoh+Falls"
+    ],
+    "food_recommendation": "ชิมขนมโมมิจิเทมปุระ (ใบเมเปิ้ลชุบแป้งทอด) ของดังประจำเมืองมิโนะ",
+    "food_links": [],
+    "backup_plan": "แผนสำรอง: นั่งแท็กซี่ขึ้นไปใกล้จุดชมน้ำตกได้โดยตรงสำหรับผู้ที่ไม่อยากเดินไกล",
+    "backup_links": [],
+    "transport_info": "Osaka Metro สาย Midosuji + Hankyu Bus หรือ Taxi | แตะ ICOCA (ประมาณ 900 เยน/ขา)"
+  },
+  {
+    "row_num": 71,
+    "date_label": "13 ธ.ค.",
+    "time_slot": "11:30 น.",
+    "city": "Osaka (Minoh - Katsuoji)",
+    "main_place": "เดินทางต่อไปยังวัดดารุมะในตำนาน Katsuoji Temple ชมตุ๊กตาดารุมะสีแดงนับพันตัวที่วางเรียงรายตามไหล่เขาและบันไดหิน พร้อมเขียนขอพรชัยชนะและความสำเร็จ",
+    "main_place_links": [
+      "https://maps.google.com/?q=Katsuoji"
+    ],
+    "food_recommendation": "มื้อกลางวันอาหารเซตญี่ปุ่น / โซบะท้องถิ่นในโซนมิโนะ-คัตสึโอจิ",
+    "food_links": [],
+    "backup_plan": "ถ่ายรูปมุมไฮไลต์สวนน้ำตกและสระน้ำกลางวัดดารุมะ",
+    "backup_links": [],
+    "transport_info": "Hankyu Bus หรือ Taxi ระหว่าง Minoh Falls - Katsuoji | แตะ ICOCA / เงินสด (500 - 1,500 เยน)"
+  },
+  {
+    "row_num": 73,
+    "date_label": "13 ธ.ค.",
+    "time_slot": "14:00 น.",
+    "city": "Osaka (Minoh - Ryuanji)",
+    "main_place": "เดินเลียบธารน้ำหุบเขาสู่สะพานไม้สีแดงซุยโงะและวัดโบราณ Ryuanji Temple (วัดเรียวอันจิ มิโนะ ต้นกำเนิดลอตเตอรี่โบราณและศาลเบ็นไซเทน บรรยากาศเงียบสงบ ร่มรื่น)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Ryuanji+Temple+Minoh"
+    ],
+    "food_recommendation": "นั่งจิบกาแฟ ชาเขียว และขนมหวานในเรือนไม้โบราณริมลำธารที่ Hashimoto-tei Cafe",
+    "food_links": [
+      "https://maps.google.com/?q=Hashimoto-tei+Minoh"
+    ],
+    "backup_plan": "ที่เที่ยวสำรองในมิโนะ: แวะแช่น้ำพุร้อนบ่อแช่เท้าหน้าสถานี Minoh Station Footbath (Yuzuru-an)",
+    "backup_links": [
+      "https://maps.google.com/?q=Minoh+Station+Footbath"
+    ],
+    "transport_info": "เดินเท้าเลียบธารน้ำธรรมชาติมิโนะ | ฟรี"
+  },
+  {
+    "row_num": 75,
+    "date_label": "13 ธ.ค.",
+    "time_slot": "17:00 น.",
+    "city": "Osaka (Osaka Castle)",
+    "main_place": "เดินทางเข้าสู่ตัวเมืองโอซาก้า ชมสวนและบรรยากาศยามเย็นเปิดไฟประดับ (Light-up) ของปราสาทโอซาก้า Osaka Castle & Park (ปรับเป็นแผนสำรองหรือแวะชมช่วง 17:00 น.)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Osaka+Castle"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "แผนสำรอง (หากไม่แวะปราสาท): เดินทางตรงกลับเข้าย่านชินไซบาชิ พักผ่อนเก็บของที่โรงแรม Quintessa",
+    "backup_links": [],
+    "transport_info": "Osaka Metro | แตะ ICOCA (240 เยน)"
+  },
+  {
+    "row_num": 77,
+    "date_label": "13 ธ.ค.",
+    "time_slot": "18:30 น.",
+    "city": "Osaka (Namba)",
+    "main_place": "มื้อเย็นส่งท้ายในเมืองโอซาก้า ชาบูหม้อเดี่ยว On Yasai Shabu Shabu (บุฟเฟต์เนื้อวากิวและผักสด หม้อส่วนตัว)",
+    "main_place_links": [
+      "https://maps.google.com/?q=On+Yasai+Shabu+Shabu+Osaka"
+    ],
+    "food_recommendation": "On Yasai Shabu Shabu Namba",
+    "food_links": [
+      "https://maps.google.com/?q=On+Yasai+Shabu+Shabu+Osaka"
+    ],
+    "backup_plan": "ร้านอาหารสำรอง 11: ไก่ย่างเสียบไม้เตาถ่านชื่อดังของคนท้องถิ่น Yakitori Rikimaru Namba",
+    "backup_links": [
+      "https://maps.google.com/?q=Yakitori+Rikimaru+Osaka"
+    ],
+    "transport_info": "Osaka Metro / เดินเท้า | แตะ ICOCA (190 เยน)"
+  },
+  {
+    "row_num": 79,
+    "date_label": "14 ธ.ค.",
+    "time_slot": "11:00 น.",
+    "city": "Osaka -> Rinku",
+    "main_place": "เช็กเอาต์จาก Quintessa Hotel นั่งรถไฟสาย Nankai มุ่งหน้าสู่สถานี Rinku-Town เข้าเช็กอินโรงแรมตึกสูง Odysis Suites Osaka Airport Hotel (เชื่อมต่อสถานี ลากกระเป๋าง่าย)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Odysis+Suites+Osaka+Airport+Hotel"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "ไม่ต้องรีบร้อน พักผ่อนและเตรียมสัมภาระสำหรับวันเดินทางกลับ",
+    "backup_links": [],
+    "transport_info": "รถไฟ Nankai Line (Namba -> Rinku-Town) | แตะ ICOCA (780 เยน)"
+  },
+  {
+    "row_num": 81,
+    "date_label": "14 ธ.ค.",
+    "time_slot": "13:00 น.",
+    "city": "Rinku Town",
+    "main_place": "ชอปปิงทิ้งทวนสินค้าแบรนด์เนมลดราคากว่า 250 ร้านที่ Rinku Premium Outlets",
+    "main_place_links": [
+      "https://maps.google.com/?q=Rinku+Premium+Outlets"
+    ],
+    "food_recommendation": "เลือกทานอาหารอร่อยพร้อมวิวทะเลที่โซน Seaside Dining หรือศูนย์อาหาร RINKU DINING ชั้น 3",
+    "food_links": [],
+    "backup_plan": "ร้านอาหารสำรอง 12: Kura Sushi Rinku Town\n\nที่เที่ยวสำรอง: เดินห้างติดสถานี Rinku Pleasure Town Seacle และขึ้นชิงช้าสวรรค์ยักษ์",
+    "backup_links": [
+      "https://maps.google.com/?q=Kura+Sushi+Rinku",
+      "https://maps.google.com/?q=Seacle"
+    ],
+    "transport_info": "เดินเท้าจากโรงแรม | ฟรี"
+  },
+  {
+    "row_num": 84,
+    "date_label": "14 ธ.ค.",
+    "time_slot": "17:00 น.",
+    "city": "Rinku Town",
+    "main_place": "เดินเล่นรับลมทะเล ชมพระอาทิตย์ตกดินดวงโตๆ สุดโรแมนติกที่หาดหินอ่อนสีขาว Marble Beach Rinku",
+    "main_place_links": [
+      "https://maps.google.com/?q=Marble+Beach+Rinku"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "บรรยากาศเงียบสงบและสวยงามมาก เหมาะกับค่ำคืนสุดท้ายของทริป",
+    "backup_links": [],
+    "transport_info": "เดินเท้า / Bus / Taxi | แตะ ICOCA (ประมาณ 200 - 300 เยน)"
+  },
+  {
+    "row_num": 86,
+    "date_label": "14 ธ.ค.",
+    "time_slot": "18:30 น.",
+    "city": "Rinku Town",
+    "main_place": "แช่น้ำพุร้อนออนเซนธรรมชาติริมทะเลเพื่อผ่อนคลายความเหนื่อยล้าสะสมที่ Tennen Onsen Rinkunoyu",
+    "main_place_links": [
+      "https://maps.google.com/?q=Tennen+Onsen+Rinkunoyu"
+    ],
+    "food_recommendation": "ทานอาหารเซตญี่ปุ่นหรือ Izakaya โลคอลภายในพื้นที่โครงการ",
+    "food_links": [],
+    "backup_plan": "กิจกรรมสำรอง: เดินเล่นพักผ่อนรับลมที่สวนริมชายฝั่ง Rinku Park ชมแสงไฟรันเวย์สนามบินคันไซตอนกลางคืน",
+    "backup_links": [],
+    "transport_info": "เดินเท้าจากสถานี / ห้าง | ฟรี"
+  },
+  {
+    "row_num": 88,
+    "date_label": "15 ธ.ค.",
+    "time_slot": "08:30 น.",
+    "city": "Rinku Town",
+    "main_place": "เช็กเอาต์และจัดกระเป๋าเดินทางรอบสุดท้าย พร้อมดื่มด่ำวิวมุมสูงจากห้องพัก Odysis Suites Osaka Airport Hotel",
+    "main_place_links": [],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "เตรียมตัวออกเดินทางข้ามไปสนามบิน KIX ล่วงหน้า 3 ชั่วโมง",
+    "backup_links": [],
+    "transport_info": "พักผ่อนภายในโรงแรม | ฟรี"
+  },
+  {
+    "row_num": 89,
+    "date_label": "15 ธ.ค.",
+    "time_slot": "09:00 น.",
+    "city": "Rinku -> KIX",
+    "main_place": "นั่งรถไฟเพียง 1 สถานี (ใช้เวลา 5 นาที) ข้ามสะพานมุ่งหน้าสู่สนามบินคันไซ (KIX)",
+    "main_place_links": [],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "เดินทางถึงสนามบินล่วงหน้า 3 ชั่วโมง เพื่อเตรียมตัวเช็กอินสัมภาระสำหรับเที่ยวบิน 12:00 น.",
+    "backup_links": [],
+    "transport_info": "รถไฟ Nankai Line (Rinku-Town -> KIX) | แตะ ICOCA (370 เยน)"
+  },
+  {
+    "row_num": 90,
+    "date_label": "15 ธ.ค.",
+    "time_slot": "12:00 น.",
+    "city": "KIX -> TPE -> BKK",
+    "main_place": "ขึ้นเครื่องบินเที่ยวบินขากลับ เดินทางกลับกรุงเทพฯ โดยสวัสดิภาพ (สายการบิน Thai VietJet Air เที่ยวบิน VZ-567 แวะเปลี่ยนเครื่องที่ไทเป TPE)",
+    "main_place_links": [],
+    "food_recommendation": "ขนมและของว่างที่ซื้อจากด้านในจุดพักเครื่อง / อาหารบนเครื่อง",
+    "food_links": [],
+    "backup_plan": "แวะเปลี่ยนเครื่องที่ไทเป (14:15 - 15:15 น.) เดินทางถึงสนามบินสุวรรณภูมิ เวลา 18:10 น. / ชอปปิง Duty Free ก่อนขึ้นเครื่อง",
+    "backup_links": [],
+    "transport_info": "เครื่องบิน Thai VietJet Air (VZ-567) | จ่ายรวมในตั๋วเครื่องบินแล้ว"
+  }
+]

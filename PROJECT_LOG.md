@@ -100,6 +100,15 @@
    - ตรวจสอบวันที่เช็คอิน/เช็คเอาท์ไม่ให้เกินช่วงของทริป (`tripStartDate` / `tripEndDate`)
    - แก้ปัญหาบันทึกผิดในครั้งแรก: ปรับปรุง `updateAccommodation` และ `addOrUpdateFlight` ให้รับ `currentStays`/`currentFlights` จาก State เพื่อป้องกันการอ่านแคชเก่าจาก `localStorage` ที่ยังโหลดไม่เสร็จ, พร้อม `await syncAccommodationsToSupabase` เพื่อรอให้ฐานข้อมูลบันทึกสำเร็จก่อนปิด Modal
    - แก้บั๊ก Date Timezone Shift: `sanitizeSpentAtDate` เปลี่ยนจากการใช้ `toISOString()` ซึ่งทำให้เวลาเที่ยงคืนของไทย (UTC+7) เลื่อนถอยหลังไป 1 วันใน UTC มาเป็นฟังก์ชันแปลงวันที่แบบ Local Calendar (`YYYY-MM-DD`) เที่ยงตรง 100%
+10. **อัปเดตแผนเที่ยวและที่พักใหม่ทั้งหมดตามไฟล์ `Japan_Osaka-Kyoto_04-15Dec2026_v4.xlsx`**:
+   - นำเข้าแผนเที่ยวกิจกรรมใหม่ 42 รายการ ครบทุกวัน (4 - 15 ธ.ค. 2026) แทนที่แผนเดิม
+   - เพิ่มลิงก์ Google Maps ครบ 100% ทุกสถานที่ ทั้งสถานที่หลัก ร้านอาหาร และแผนสำรอง
+   - ปรับปรุงการ์ดที่พัก 4 แห่งตามแผน v4:
+     1. Hotel The M's Kyoto (5 - 7 ธ.ค., 2 คืน, 6,640 THB)
+     2. Hotel Musse Kyoto Shijo Kawaramachi Meitetsu (7 - 9 ธ.ค., 2 คืน, 6,640 THB)
+     3. Quintessa Hotel Osaka Shinsaibashi Comic & Books (9 - 14 ธ.ค., 5 คืน, 12,000 THB)
+     4. Odysis Suites Osaka Airport Hotel (14 - 15 ธ.ค., 1 คืน, 1,900 THB)
+   - คัดลอกไฟล์ต้นฉบับไปไว้ที่ `Knowledge/Japan_Osaka-Kyoto_04-15Dec2026_v4.xlsx` เพื่อเป็นเอกสารอ้างอิงของโปรเจกต์
 
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน
