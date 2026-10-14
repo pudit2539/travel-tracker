@@ -273,7 +273,8 @@ export async function getSafeSession() {
   }
 
   // 1. First attempt to get active session
-  let { data: { session }, error } = await supabase.auth.getSession();
+  const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+  let session = initialSession;
 
   // 2. If no session or error, try refreshing
   if (!session) {

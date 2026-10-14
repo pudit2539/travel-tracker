@@ -5,11 +5,10 @@ import React, { useState, useMemo } from 'react';
 import { 
   Wallet, Calculator, PieChart, Coins, Sliders, 
   ArrowRight, CheckCircle2, AlertTriangle, TrendingUp,
-  Percent, ArrowUpRight, ArrowDownRight, Sparkles, Users,
-  CreditCard, Banknote, Flame, Zap, Calendar, ChevronRight,
-  Clock, Target, Scale, RefreshCw, BarChart3, HelpCircle
+  Percent, ArrowUpRight, ArrowDownRight, Sparkles,
+  CreditCard, Flame, Zap, Calendar,
+  RefreshCw, BarChart3
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CategoryItem, CategoryBudgetMap, MemberBudgetMap } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
@@ -269,9 +268,6 @@ export function TripAnalyticsTab({
     list: any[];
     topCategory: TopCategoryItem | null;
   }>(() => {
-    let topCategory: TopCategoryItem | null = null;
-    let maxSpend = 0;
-
     const list = categories.map((cat) => {
       const spentInBase = expenses
         .filter((e) => e.category === cat.id)
@@ -285,17 +281,6 @@ export function TripAnalyticsTab({
       const rawCatBudget = categoryBudgets[cat.id] || 0;
       const catBudgetInSelected = convertCurrency(rawCatBudget, tripBaseCurrency, selectedCurrency, fxRate);
 
-      if (spentInSelected > maxSpend) {
-        maxSpend = spentInSelected;
-        topCategory = {
-          id: cat.id,
-          label: cat.label,
-          icon: cat.icon,
-          amount: Math.round(spentInSelected),
-          percent: Math.round(catPercent),
-        };
-      }
-
       return {
         ...cat,
         spentInSelected: Math.round(spentInSelected),
@@ -304,6 +289,18 @@ export function TripAnalyticsTab({
         rawCatBudget,
       };
     });
+
+    let topCategory: TopCategoryItem | null = null;
+    const sortedCategories = [...list].sort((a, b) => b.spentInSelected - a.spentInSelected);
+    if (sortedCategories.length > 0 && sortedCategories[0].spentInSelected > 0) {
+      topCategory = {
+        id: sortedCategories[0].id,
+        label: sortedCategories[0].label,
+        icon: sortedCategories[0].icon,
+        amount: sortedCategories[0].spentInSelected,
+        percent: sortedCategories[0].catPercent,
+      };
+    }
 
     return { list, topCategory };
   }, [categories, expenses, categoryBudgets, totalSpent, tripBaseCurrency, selectedCurrency, fxRate]);
