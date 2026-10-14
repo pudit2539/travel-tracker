@@ -143,6 +143,8 @@ export function TripPlanTab({
         tripCurrency={tripBaseCurrency}
         fxRate={fxRate}
         currentUser={currentUser}
+        tripStartDate={trip?.start_date}
+        tripEndDate={trip?.end_date}
         onExpenseCreated={onRefreshTrip}
         onShowToast={onShowToast}
       />
@@ -154,6 +156,8 @@ export function TripPlanTab({
         fxRate={fxRate}
         members={members}
         currentUser={currentUser}
+        tripStartDate={trip?.start_date}
+        tripEndDate={trip?.end_date}
         onExpenseCreated={onRefreshTrip}
         onShowToast={onShowToast}
       />

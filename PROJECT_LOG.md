@@ -91,6 +91,15 @@
    - แสดงวันเช็คอิน วันเช็คเอาท์ จำนวนคืนที่คำนวณอัตโนมัติ และปุ่มเปิดแผนที่ Google Maps โดยตรง
 7. **ทดสอบระบบ**:
    - สร้างชุดทดสอบ `src/__tests__/flightsAndSync.test.ts` (6 tests) ผ่านทั้งหมด 100% รวมเป็น 33 passed tests
+8. **นำเข้าข้อมูลรายจ่ายเดิมที่มีอยู่แล้วเข้าสู่การ์ดที่พักและตั๋วเครื่องบิน (One-Time Existing Data Sync)**:
+   - นำเข้า 4 ที่พัก: Hotel The M's Kyoto (6,640 THB), Hotel Musse Kyoto Shijo Kawaramachi Meitetsu (6,640 THB), Quintessa Hotel Osaka Shinsaibashi Comic & Books (12,000 THB), Odysis Suites Osaka Airport Hotel (1,900 THB) พร้อมลิงก์ Google Maps, วันที่, คืนที่พัก, และเชื่อม expenseId
+   - นำเข้า 2 เที่ยวบิน: ขาไป Vietnam Airlines (12,100 THB, BKK -> KIX 4 ธ.ค.), ขากลับ Thai VietJet Air VZ-567 (18,000 THB, KIX -> BKK 15 ธ.ค.) พร้อมเชื่อม expenseId และสถานะ จ่ายเงินแล้ว (paid)
+9. **แก้ปัญหาบันทึกข้อมูลผิดในครั้งแรก และเพิ่มระบบตรวจสอบวันเช็คอิน/เช็คเอาท์ (Date Validation)**:
+   - ตรวจสอบวันเช็คอินต้องอยู่ก่อนวันเช็คเอาท์อย่างน้อย 1 คืน (`checkIn < checkOut`) ห้ามบันทึกหากเช็คอินหลังวันออกหรือวันเดียวกัน พร้อมแสดง Toast เตือน และแถบเตือนสีแดงในฟอร์ม
+   - กำหนด `min` ให้ช่องวันเช็คเอาท์ไม่สามารถเลือกวันที่ก่อนหรือเท่ากับวันเช็คอินได้ และหากเปลี่ยนวันเช็คอิน ระบบจะเลื่อนวันเช็คเอาท์ตามจำนวนคืนเดิมให้อัตโนมัติ
+   - ตรวจสอบวันที่เช็คอิน/เช็คเอาท์ไม่ให้เกินช่วงของทริป (`tripStartDate` / `tripEndDate`)
+   - แก้ปัญหาบันทึกผิดในครั้งแรก: ปรับปรุง `updateAccommodation` และ `addOrUpdateFlight` ให้รับ `currentStays`/`currentFlights` จาก State เพื่อป้องกันการอ่านแคชเก่าจาก `localStorage` ที่ยังโหลดไม่เสร็จ, พร้อม `await syncAccommodationsToSupabase` เพื่อรอให้ฐานข้อมูลบันทึกสำเร็จก่อนปิด Modal
+   - แก้บั๊ก Date Timezone Shift: `sanitizeSpentAtDate` เปลี่ยนจากการใช้ `toISOString()` ซึ่งทำให้เวลาเที่ยงคืนของไทย (UTC+7) เลื่อนถอยหลังไป 1 วันใน UTC มาเป็นฟังก์ชันแปลงวันที่แบบ Local Calendar (`YYYY-MM-DD`) เที่ยงตรง 100%
 
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน

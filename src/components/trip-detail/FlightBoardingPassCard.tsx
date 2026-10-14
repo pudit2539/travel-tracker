@@ -29,6 +29,8 @@ interface FlightBoardingPassCardProps {
   fxRate?: number;
   currentUser?: any;
   defaultOpen?: boolean;
+  tripStartDate?: string;
+  tripEndDate?: string;
   onExpenseCreated?: () => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
@@ -40,6 +42,8 @@ export function FlightBoardingPassCard({
   fxRate = 1,
   currentUser,
   defaultOpen = false,
+  tripStartDate,
+  tripEndDate,
   onExpenseCreated,
   onShowToast,
 }: FlightBoardingPassCardProps) {
@@ -233,7 +237,7 @@ export function FlightBoardingPassCard({
   // Delete flight with confirmation and Supabase sync
   const handleDelete = async (flightId: string, flightNo: string) => {
     if (confirm(`ต้องการลบตั๋วเครื่องบิน "${flightNo}" ใช่หรือไม่?`)) {
-      const updated = await deleteFlight(tripId, flightId);
+      const updated = await deleteFlight(tripId, flightId, flights);
       setFlights(updated);
       onShowToast?.(`ลบตั๋วเครื่องบิน "${flightNo}" เรียบร้อยแล้ว 🗑️`, 'info');
     }
@@ -241,7 +245,7 @@ export function FlightBoardingPassCard({
 
   // Toggle payment status checklist (Paid vs Pay Later)
   const handleTogglePayment = async (flight: FlightTicket) => {
-    const updated = await toggleFlightPaymentStatus(tripId, flight.id);
+    const updated = await toggleFlightPaymentStatus(tripId, flight.id, flights);
     setFlights(updated);
     const updatedFlight = updated.find((f) => f.id === flight.id);
     if (updatedFlight?.paymentStatus === 'paid') {
@@ -375,7 +379,7 @@ export function FlightBoardingPassCard({
         createdAt: editingFlight?.createdAt || Date.now(),
       };
 
-      const updated = await addOrUpdateFlight(tripId, flightData);
+      const updated = await addOrUpdateFlight(tripId, flightData, flights);
       setFlights(updated);
       triggerConfetti();
       setShowModal(false);

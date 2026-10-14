@@ -112,4 +112,50 @@ describe('Accommodation Voucher Features', () => {
     expect(updated.length).toBe(0);
     expect(deleteSpy).toHaveBeenCalledWith('voucher_machiya_789');
   });
+
+  it('accurately calculates date math and prevents timezone day-shifts', async () => {
+    const { 
+      calculateDaysDifference, 
+      getNextDay, 
+      addDays, 
+      sanitizeSpentAtDate 
+    } = await import('../components/trip-detail/AccommodationsCard');
+
+    // Date difference
+    expect(calculateDaysDifference('2026-12-05', '2026-12-07')).toBe(2);
+    expect(calculateDaysDifference('2026-12-05', '2026-12-05')).toBe(0);
+    expect(calculateDaysDifference('2026-12-08', '2026-12-05')).toBe(-3);
+
+    // Next day & addDays
+    expect(getNextDay('2026-12-05')).toBe('2026-12-06');
+    expect(addDays('2026-12-05', 3)).toBe('2026-12-08');
+
+    // Timezone preservation: "05-Dec-2026" must NOT shift to 2026-12-04
+    expect(sanitizeSpentAtDate('2026-12-05')).toBe('2026-12-05');
+    expect(sanitizeSpentAtDate('05-Dec-2026')).toBe('2026-12-05');
+  });
+
+  it('updates accommodation reliably even when passed currentStays state', async () => {
+    const { updateAccommodation } = await import('../lib/accommodations');
+    const tripId = 'test-trip-sync';
+    const mockStay: AccommodationStay = {
+      id: 'stay-sync-1',
+      tripId,
+      name: 'Initial Name',
+      checkInDate: '2026-12-05',
+      checkOutDate: '2026-12-07',
+      nights: 2,
+      createdAt: Date.now(),
+    };
+
+    // Update using currentStays parameter
+    const updatedStay = { ...mockStay, name: 'Updated Name', nights: 3, checkOutDate: '2026-12-08' };
+    const result = updateAccommodation(tripId, updatedStay, [mockStay]);
+
+    expect(result.length).toBe(1);
+    expect(result[0].name).toBe('Updated Name');
+    expect(result[0].nights).toBe(3);
+    expect(result[0].checkOutDate).toBe('2026-12-08');
+  });
 });
+

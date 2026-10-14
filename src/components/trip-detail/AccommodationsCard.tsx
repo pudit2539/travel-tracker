@@ -38,32 +38,97 @@ interface AccommodationsCardProps {
   members?: any[];
   currentUser?: any;
   defaultOpen?: boolean;
+  tripStartDate?: string;
+  tripEndDate?: string;
   onExpenseCreated?: () => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 /**
+ * Format Date object to local YYYY-MM-DD without timezone shifting
+ */
+function toLocalYMD(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Get next day in YYYY-MM-DD format
+ */
+export function getNextDay(dateYMD?: string): string {
+  if (!dateYMD) return '';
+  const parts = dateYMD.split('-');
+  if (parts.length === 3) {
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10) + 1);
+    return toLocalYMD(d);
+  }
+  const d = new Date(dateYMD);
+  if (isNaN(d.getTime())) return '';
+  d.setDate(d.getDate() + 1);
+  return toLocalYMD(d);
+}
+
+/**
+ * Add days to YYYY-MM-DD date
+ */
+export function addDays(dateYMD: string, days: number): string {
+  if (!dateYMD) return '';
+  const parts = dateYMD.split('-');
+  if (parts.length === 3) {
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10) + days);
+    return toLocalYMD(d);
+  }
+  const d = new Date(dateYMD);
+  if (isNaN(d.getTime())) return '';
+  d.setDate(d.getDate() + days);
+  return toLocalYMD(d);
+}
+
+/**
+ * Calculate difference in calendar days between two YYYY-MM-DD dates
+ */
+export function calculateDaysDifference(startYMD?: string, endYMD?: string): number {
+  if (!startYMD || !endYMD) return 0;
+  const sParts = startYMD.split('-');
+  const eParts = endYMD.split('-');
+  if (sParts.length === 3 && eParts.length === 3) {
+    const dStart = new Date(parseInt(sParts[0], 10), parseInt(sParts[1], 10) - 1, parseInt(sParts[2], 10)).getTime();
+    const dEnd = new Date(parseInt(eParts[0], 10), parseInt(eParts[1], 10) - 1, parseInt(eParts[2], 10)).getTime();
+    if (!isNaN(dStart) && !isNaN(dEnd)) {
+      return Math.round((dEnd - dStart) / (1000 * 60 * 60 * 24));
+    }
+  }
+  const dStart = new Date(startYMD).getTime();
+  const dEnd = new Date(endYMD).getTime();
+  if (isNaN(dStart) || isNaN(dEnd)) return 0;
+  return Math.round((dEnd - dStart) / (1000 * 60 * 60 * 24));
+}
+
+/**
  * Safely parse date into ISO YYYY-MM-DD format for PostgreSQL timestamp with time zone
+ * Uses local calendar units to avoid timezone shifts (e.g. UTC+7 midnight shifting to previous day)
  */
 export function sanitizeSpentAtDate(dateStr?: string): string {
   if (!dateStr || !dateStr.trim()) {
-    return new Date().toISOString().split('T')[0];
+    return toLocalYMD(new Date());
   }
   const trimmed = dateStr.trim();
   // 1. If already YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
     return trimmed;
   }
-  // 2. Try standard Date parse
+  // 2. Try standard Date parse without toISOString() timezone shift
   const parsed = new Date(trimmed);
   if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 2000) {
-    return parsed.toISOString().split('T')[0];
+    return toLocalYMD(parsed);
   }
   // 3. If "05-Dec" or "5-Dec" or "Dec 5"
   const currentYear = new Date().getFullYear();
   const withYear = new Date(`${trimmed} ${currentYear}`);
   if (!isNaN(withYear.getTime())) {
-    return withYear.toISOString().split('T')[0];
+    return toLocalYMD(withYear);
   }
   // 4. Try month matching (e.g. 05-Dec)
   const monthMap: Record<string, string> = {
@@ -79,7 +144,7 @@ export function sanitizeSpentAtDate(dateStr?: string): string {
     const mm = monthMap[monKey] || '12';
     return `${currentYear}-${mm}-${day}`;
   }
-  return new Date().toISOString().split('T')[0];
+  return toLocalYMD(new Date());
 }
 
 /**
@@ -121,6 +186,8 @@ export function AccommodationsCard({
   members = [],
   currentUser,
   defaultOpen = false,
+  tripStartDate,
+  tripEndDate,
   onExpenseCreated,
   onShowToast,
 }: AccommodationsCardProps) {
@@ -288,25 +355,43 @@ export function AccommodationsCard({
   // Handle date change and calculate nights automatically
   const handleCheckInChange = (val: string) => {
     setFormCheckIn(val);
-    if (val && formCheckOut) {
-      const dIn = new Date(val).getTime();
-      const dOut = new Date(formCheckOut).getTime();
-      if (!isNaN(dIn) && !isNaN(dOut) && dOut > dIn) {
-        const diffDays = Math.round((dOut - dIn) / (1000 * 60 * 60 * 24));
-        setFormNights(String(diffDays));
+    if (!val) return;
+
+    if (formCheckOut) {
+      const diff = calculateDaysDifference(val, formCheckOut);
+      if (diff <= 0) {
+        // Automatically shift checkout date forward so check-in is never on or after check-out
+        const nights = Math.max(1, parseInt(formNights) || 1);
+        const nextCheckOut = addDays(val, nights);
+        setFormCheckOut(nextCheckOut);
+        setFormNights(String(nights));
+      } else {
+        setFormNights(String(diff));
       }
+    } else {
+      const nights = Math.max(1, parseInt(formNights) || 1);
+      setFormCheckOut(addDays(val, nights));
     }
   };
 
   const handleCheckOutChange = (val: string) => {
     setFormCheckOut(val);
     if (formCheckIn && val) {
-      const dIn = new Date(formCheckIn).getTime();
-      const dOut = new Date(val).getTime();
-      if (!isNaN(dIn) && !isNaN(dOut) && dOut > dIn) {
-        const diffDays = Math.round((dOut - dIn) / (1000 * 60 * 60 * 24));
-        setFormNights(String(diffDays));
+      const diff = calculateDaysDifference(formCheckIn, val);
+      if (diff > 0) {
+        setFormNights(String(diff));
+      } else {
+        // Invalid: user selected checkout <= checkin
+        setFormNights('0');
       }
+    }
+  };
+
+  const handleNightsChange = (val: string) => {
+    setFormNights(val);
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n > 0 && formCheckIn) {
+      setFormCheckOut(addDays(formCheckIn, n));
     }
   };
 
@@ -444,7 +529,7 @@ export function AccommodationsCard({
   // Delete stay with guaranteed Supabase sync
   const handleDelete = async (stayId: string, stayName: string) => {
     if (confirm(`ต้องการลบข้อมูลที่พัก "${stayName}" ใช่หรือไม่?`)) {
-      const updated = deleteAccommodation(tripId, stayId);
+      const updated = deleteAccommodation(tripId, stayId, stays);
       setStays(updated);
       try {
         await syncAccommodationsToSupabase(tripId, updated);
@@ -457,7 +542,7 @@ export function AccommodationsCard({
 
   // Toggle payment status (Paid vs Pay Later) checklist
   const handleTogglePayment = async (stay: AccommodationStay) => {
-    const updated = toggleAccommodationPaymentStatus(tripId, stay.id);
+    const updated = toggleAccommodationPaymentStatus(tripId, stay.id, stays);
     setStays(updated);
     try {
       await syncAccommodationsToSupabase(tripId, updated);
@@ -520,8 +605,9 @@ export function AccommodationsCard({
         ...stay,
         expenseId: data?.id || 'linked',
       };
-      const updatedList = updateAccommodation(tripId, updatedStay);
+      const updatedList = updateAccommodation(tripId, updatedStay, stays);
       setStays(updatedList);
+      await syncAccommodationsToSupabase(tripId, updatedList);
       triggerConfetti();
 
       if (onExpenseCreated) {
@@ -541,10 +627,36 @@ export function AccommodationsCard({
       return;
     }
 
+    if (!formCheckIn) {
+      toast.error('กรุณาระบุวันเช็คอิน (Check-in)');
+      return;
+    }
+
+    if (!formCheckOut) {
+      toast.error('กรุณาระบุวันเช็คเอาท์ (Check-out)');
+      return;
+    }
+
+    const diffDays = calculateDaysDifference(formCheckIn, formCheckOut);
+    if (diffDays <= 0) {
+      toast.error('วันเช็คเอาท์ต้องอยู่หลังวันเช็คอินอย่างน้อย 1 คืน ไม่สามารถเช็คอินหลังหรือวันเดียวกับวันออกได้ ❌');
+      return;
+    }
+
+    if (tripEndDate && formCheckIn > tripEndDate) {
+      toast.error(`วันเช็คอิน (${formatStayDateDisplay(formCheckIn)}) อยู่หลังวันสิ้นสุดของทริป (${formatStayDateDisplay(tripEndDate)}) กรุณาตรวจสอบวันที่ ❌`);
+      return;
+    }
+
+    if (tripStartDate && formCheckOut < tripStartDate) {
+      toast.error(`วันเช็คเอาท์ (${formatStayDateDisplay(formCheckOut)}) อยู่ก่อนวันเริ่มต้นของทริป (${formatStayDateDisplay(tripStartDate)}) กรุณาตรวจสอบวันที่ ❌`);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const priceNum = formPrice ? parseFloat(formPrice) : undefined;
-      const nightsNum = parseInt(formNights) || 1;
+      const nightsNum = Math.max(1, parseInt(formNights, 10) || diffDays);
       const validSpentAt = sanitizeSpentAtDate(formCheckIn);
 
       let createdExpenseId: string | undefined = editingStay?.expenseId;
@@ -609,8 +721,9 @@ export function AccommodationsCard({
           expenseId: createdExpenseId,
           voucherFile: finalVoucher,
         };
-        const updatedList = updateAccommodation(tripId, updatedItem);
+        const updatedList = updateAccommodation(tripId, updatedItem, stays);
         setStays(updatedList);
+        await syncAccommodationsToSupabase(tripId, updatedList);
       } else {
         const updatedList = addAccommodation(tripId, {
           name: formName.trim(),
@@ -628,8 +741,9 @@ export function AccommodationsCard({
           notes: formNotes.trim(),
           expenseId: createdExpenseId,
           voucherFile: finalVoucher,
-        });
+        }, stays);
         setStays(updatedList);
+        await syncAccommodationsToSupabase(tripId, updatedList);
       }
 
       triggerConfetti();
@@ -1089,9 +1203,14 @@ export function AccommodationsCard({
                   <input
                     type="date"
                     required
+                    min={formCheckIn ? getNextDay(formCheckIn) : undefined}
                     value={formCheckOut}
                     onChange={(e) => handleCheckOutChange(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className={`w-full p-2.5 rounded-xl border text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${
+                      formCheckIn && formCheckOut && calculateDaysDifference(formCheckIn, formCheckOut) <= 0
+                        ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300'
+                        : 'border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438]'
+                    }`}
                   />
                 </div>
                 <div>
@@ -1104,13 +1223,29 @@ export function AccommodationsCard({
                       min="1"
                       required
                       value={formNights}
-                      onChange={(e) => setFormNights(e.target.value)}
+                      onChange={(e) => handleNightsChange(e.target.value)}
                       className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">คืน</span>
                   </div>
                 </div>
               </div>
+
+              {/* Inline Date Validation Warning if Check-in >= Check-out */}
+              {formCheckIn && formCheckOut && calculateDaysDifference(formCheckIn, formCheckOut) <= 0 && (
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold animate-pulse">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+                  <span>วันเช็คอินต้องอยู่ก่อนวันเช็คเอาท์ (วันออก) อย่างน้อย 1 คืน ไม่สามารถเช็คอินหลังวันกลับได้</span>
+                </div>
+              )}
+
+              {/* Inline Warning if Check-in is beyond Trip End Date */}
+              {formCheckIn && tripEndDate && formCheckIn > tripEndDate && (
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
+                  <span>วันเช็คอิน ({formatStayDateDisplay(formCheckIn)}) อยู่หลังวันสิ้นสุดของทริป ({formatStayDateDisplay(tripEndDate)}) กรุณาตรวจสอบวันที่</span>
+                </div>
+              )}
 
               {/* Payment Status Segment: Paid vs Pay Later */}
               <div>

@@ -111,8 +111,12 @@ export async function saveFlights(tripId: string, flights: FlightTicket[]): Prom
   await syncFlightsToSupabase(tripId, flights);
 }
 
-export async function addOrUpdateFlight(tripId: string, flight: FlightTicket): Promise<FlightTicket[]> {
-  const current = getFlights(tripId);
+export async function addOrUpdateFlight(
+  tripId: string, 
+  flight: FlightTicket,
+  currentFlights?: FlightTicket[]
+): Promise<FlightTicket[]> {
+  const current = (currentFlights && currentFlights.length > 0) ? currentFlights : getFlights(tripId);
   const index = current.findIndex((f) => f.id === flight.id);
   let updated: FlightTicket[];
   if (index >= 0) {
@@ -124,15 +128,23 @@ export async function addOrUpdateFlight(tripId: string, flight: FlightTicket): P
   return updated;
 }
 
-export async function deleteFlight(tripId: string, flightId: string): Promise<FlightTicket[]> {
-  const current = getFlights(tripId);
+export async function deleteFlight(
+  tripId: string, 
+  flightId: string,
+  currentFlights?: FlightTicket[]
+): Promise<FlightTicket[]> {
+  const current = (currentFlights && currentFlights.length > 0) ? currentFlights : getFlights(tripId);
   const updated = current.filter((f) => f.id !== flightId);
   await saveFlights(tripId, updated);
   return updated;
 }
 
-export async function toggleFlightPaymentStatus(tripId: string, flightId: string): Promise<FlightTicket[]> {
-  const current = getFlights(tripId);
+export async function toggleFlightPaymentStatus(
+  tripId: string, 
+  flightId: string,
+  currentFlights?: FlightTicket[]
+): Promise<FlightTicket[]> {
+  const current = (currentFlights && currentFlights.length > 0) ? currentFlights : getFlights(tripId);
   const updated = current.map((f) => {
     if (f.id === flightId) {
       const nextStatus: 'paid' | 'unpaid' = f.paymentStatus === 'paid' ? 'unpaid' : 'paid';

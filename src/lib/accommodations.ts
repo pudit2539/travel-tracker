@@ -130,9 +130,10 @@ export function saveAccommodations(tripId: string, stays: AccommodationStay[]): 
 
 export function addAccommodation(
   tripId: string, 
-  data: Omit<AccommodationStay, 'id' | 'createdAt' | 'tripId'>
+  data: Omit<AccommodationStay, 'id' | 'createdAt' | 'tripId'>,
+  currentStays?: AccommodationStay[]
 ): AccommodationStay[] {
-  const current = getAccommodations(tripId);
+  const current = (currentStays && currentStays.length > 0) ? currentStays : getAccommodations(tripId);
   const newStay: AccommodationStay = {
     ...data,
     id: 'stay_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6),
@@ -144,15 +145,30 @@ export function addAccommodation(
   return updated;
 }
 
-export function updateAccommodation(tripId: string, stay: AccommodationStay): AccommodationStay[] {
-  const current = getAccommodations(tripId);
-  const updated = current.map((s) => (s.id === stay.id ? stay : s));
+export function updateAccommodation(
+  tripId: string, 
+  stay: AccommodationStay,
+  currentStays?: AccommodationStay[]
+): AccommodationStay[] {
+  const current = (currentStays && currentStays.length > 0) ? currentStays : getAccommodations(tripId);
+  const index = current.findIndex((s) => s.id === stay.id);
+  let updated: AccommodationStay[];
+  if (index >= 0) {
+    updated = current.map((s, i) => (i === index ? stay : s));
+  } else {
+    // If not found in current list, append it so edits are never lost
+    updated = [...current, stay];
+  }
   saveAccommodations(tripId, updated);
   return updated;
 }
 
-export function deleteAccommodation(tripId: string, stayId: string): AccommodationStay[] {
-  const current = getAccommodations(tripId);
+export function deleteAccommodation(
+  tripId: string, 
+  stayId: string,
+  currentStays?: AccommodationStay[]
+): AccommodationStay[] {
+  const current = (currentStays && currentStays.length > 0) ? currentStays : getAccommodations(tripId);
   const stayToDelete = current.find((s) => s.id === stayId);
   if (stayToDelete?.voucherFile?.storageKey) {
     deleteLocalReceiptPhoto(stayToDelete.voucherFile.storageKey).catch(() => {});
@@ -162,8 +178,12 @@ export function deleteAccommodation(tripId: string, stayId: string): Accommodati
   return updated;
 }
 
-export function toggleAccommodationPaymentStatus(tripId: string, stayId: string): AccommodationStay[] {
-  const current = getAccommodations(tripId);
+export function toggleAccommodationPaymentStatus(
+  tripId: string, 
+  stayId: string,
+  currentStays?: AccommodationStay[]
+): AccommodationStay[] {
+  const current = (currentStays && currentStays.length > 0) ? currentStays : getAccommodations(tripId);
   const updated = current.map((s) => {
     if (s.id === stayId) {
       const nextStatus: 'paid' | 'unpaid' = s.paymentStatus === 'paid' ? 'unpaid' : 'paid';
