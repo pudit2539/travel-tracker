@@ -176,7 +176,7 @@ function ExpenseCardComponent({
             if (method === 'credit_card') {
               return (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-900/60">
-                  💎 บัตรเครดิต
+                  💳 บัตรเครดิต
                 </span>
               );
             }

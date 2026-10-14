@@ -571,7 +571,7 @@ export function ExpenseDetailModal({
                         : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
                     }`}
                   >
-                    <span className="text-lg">💎</span>
+                    <span className="text-lg">💳</span>
                     <span>บัตรเครดิต</span>
                   </button>
                 </div>
@@ -828,7 +828,7 @@ export function ExpenseDetailModal({
                       if (method === 'credit_card') {
                         return (
                           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400">
-                            <span>💎</span>
+                            <span>💳</span>
                             <span>บัตรเครดิต</span>
                           </span>
                         );

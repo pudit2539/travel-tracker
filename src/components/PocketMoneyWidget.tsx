@@ -33,15 +33,30 @@ export default function PocketMoneyWidget({
   const [showAddCashModal, setShowAddCashModal] = useState(false);
   const [addCashAmount, setAddCashAmount] = useState('20000');
 
+  // Starting Travel Card State (stored in LocalStorage)
+  const [startingTravelCard, setStartingTravelCard] = useState<number>(0);
+  const [isEditingTravelCard, setIsEditingTravelCard] = useState(false);
+  const [travelCardInput, setTravelCardInput] = useState('0');
+  const [showAddTravelCardModal, setShowAddTravelCardModal] = useState(false);
+  const [addTravelCardAmount, setAddTravelCardAmount] = useState('20000');
+
   useEffect(() => {
     if (tripId && typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem(`trip_starting_cash_${tripId}`);
-        if (saved) {
-          const val = Number(saved);
+        const savedCash = localStorage.getItem(`trip_starting_cash_${tripId}`);
+        if (savedCash) {
+          const val = Number(savedCash);
           if (!isNaN(val)) {
             setStartingCash(val);
             setCashInput(val.toString());
+          }
+        }
+        const savedCard = localStorage.getItem(`trip_starting_travel_card_${tripId}`);
+        if (savedCard !== null) {
+          const val = Number(savedCard);
+          if (!isNaN(val)) {
+            setStartingTravelCard(val);
+            setTravelCardInput(val.toString());
           }
         }
       } catch {}
@@ -76,6 +91,10 @@ export default function PocketMoneyWidget({
   const remainingCash = Math.max(0, startingCash - cashSpent);
   const isCashLow = remainingCash < 10000;
 
+  const hasTravelCardBudget = startingTravelCard > 0;
+  const remainingTravelCard = Math.max(0, startingTravelCard - travelCardSpent);
+  const isTravelCardLow = hasTravelCardBudget && remainingTravelCard < 10000;
+
   const handleSaveStartingCash = (e: React.FormEvent) => {
     e.preventDefault();
     const val = Number(cashInput);
@@ -108,33 +127,76 @@ export default function PocketMoneyWidget({
     }
   };
 
+  const handleSaveStartingTravelCard = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = Number(travelCardInput);
+    if (!isNaN(val) && val >= 0) {
+      setStartingTravelCard(val);
+      setIsEditingTravelCard(false);
+      if (tripId && typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`trip_starting_travel_card_${tripId}`, val.toString());
+        } catch {}
+      }
+      if (onShowToast) onShowToast(`อัปเดตยอดเงินที่แลกใส่บัตร Travel Card เป็น ¥${val.toLocaleString()} เรียบร้อยแล้ว`, 'success');
+    }
+  };
+
+  const handleAddTravelCardTopup = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = Number(addTravelCardAmount);
+    if (!isNaN(val) && val > 0) {
+      const newTotal = startingTravelCard + val;
+      setStartingTravelCard(newTotal);
+      setTravelCardInput(newTotal.toString());
+      setShowAddTravelCardModal(false);
+      if (tripId && typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`trip_starting_travel_card_${tripId}`, newTotal.toString());
+        } catch {}
+      }
+      if (onShowToast) onShowToast(`💳 เติม/แลกเงินเข้า Travel Card เพิ่ม +¥${val.toLocaleString()} แล้ว`, 'success');
+    }
+  };
+
   return (
     <div className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] p-4 sm:p-5 space-y-4 shadow-sm">
       
       {/* Widget Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base font-bold">
-            💵
+          <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base font-bold">
+            👛
           </div>
           <div>
             <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-              <span>กระเป๋าเงินสด & ช่องทางจ่ายเงิน</span>
+              <span>กระเป๋าเงิน & ช่องทางชำระเงิน</span>
             </h3>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-              แยกติดตามเงินสดในกระเป๋า vs บัตร Travel Card ชัดเจน
+              ติดตามยอดคงเหลือเงินสด vs บัตร Travel Card vs บัตรเครดิต
             </p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAddCashModal(true)}
-          className="py-1.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span>กดตู้ ATM เพิ่ม</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setShowAddTravelCardModal(true)}
+            className="py-1.5 px-2.5 sm:px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>แลก Travel Card</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowAddCashModal(true)}
+            className="py-1.5 px-2.5 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>กดตู้ ATM</span>
+          </button>
+        </div>
       </div>
 
       {/* 3 Wallet Overview Cards (Large & Easy to Read) */}
@@ -150,22 +212,30 @@ export default function PocketMoneyWidget({
             <span className="text-xs font-black text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
               <span>💵 เงินสดในกระเป๋า</span>
             </span>
-            <button
-              type="button"
-              onClick={() => setIsEditingCash(!isEditingCash)}
-              className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline flex items-center gap-0.5 cursor-pointer"
-            >
-              <Edit2 className="h-3 w-3" />
-              <span>ตั้งงบ</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditingCash(!isEditingCash);
+                  setIsEditingTravelCard(false);
+                }}
+                className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline flex items-center gap-0.5 cursor-pointer px-1 py-0.5 rounded-md hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40"
+              >
+                <Edit2 className="h-3 w-3" />
+                <span>ตั้งงบ</span>
+              </button>
+            </div>
           </div>
 
           <div>
+            <div className="text-[10px] font-bold text-emerald-700/80 dark:text-emerald-300/70 mb-0.5">
+              ยอดเงินสดคงเหลือ
+            </div>
             <div className="text-xl sm:text-2xl font-black font-mono text-emerald-950 dark:text-emerald-100 leading-tight">
               ¥<AnimatedNumber value={remainingCash} />
             </div>
             <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300/80 mt-0.5">
-              ≈ ฿<AnimatedNumber value={Math.round(convertToThb(remainingCash, currency, fxRate))} />
+              ≈ ฿<AnimatedNumber value={Math.round(convertToThb(remainingCash, currency, fxRate))} /> คงเหลือ
             </div>
           </div>
 
@@ -176,27 +246,65 @@ export default function PocketMoneyWidget({
         </div>
 
         {/* Wallet 2: Travel Card (YouTrip / Planet SCB) */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40 flex flex-col justify-between space-y-2">
+        <div className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-2 ${
+          isTravelCardLow
+            ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-300 dark:border-amber-900/60'
+            : 'bg-blue-50/60 dark:bg-blue-950/20 border-blue-200/80 dark:border-blue-900/40'
+        }`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
               <span>💳 บัตร Travel Card</span>
             </span>
-            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-200">
-              YouTrip / Planet
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100/80 dark:bg-blue-900/60 text-blue-700 dark:text-blue-200">
+                YouTrip / Planet
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditingTravelCard(!isEditingTravelCard);
+                  setIsEditingCash(false);
+                }}
+                className="text-[10px] font-bold text-blue-700 dark:text-blue-300 hover:underline flex items-center gap-0.5 cursor-pointer px-1 py-0.5 rounded-md hover:bg-blue-100/60 dark:hover:bg-blue-900/40 transition-colors"
+                title="ตั้งยอดเงินที่แลกไว้ในบัตร"
+              >
+                <Edit2 className="h-3 w-3" />
+                <span>{hasTravelCardBudget ? 'แก้ไขยอด' : 'ตั้งยอดแลก'}</span>
+              </button>
+            </div>
           </div>
 
           <div>
+            <div className="text-[10px] font-bold text-blue-700/80 dark:text-blue-300/70 mb-0.5">
+              {hasTravelCardBudget ? 'ยอดเงินคงเหลือในบัตร' : 'ยอดรูดจ่ายสะสม'}
+            </div>
             <div className="text-xl sm:text-2xl font-black font-mono text-blue-950 dark:text-blue-100 leading-tight">
-              ¥<AnimatedNumber value={travelCardSpent} />
+              ¥<AnimatedNumber value={hasTravelCardBudget ? remainingTravelCard : travelCardSpent} />
             </div>
             <div className="text-[11px] font-semibold text-blue-700 dark:text-blue-300/80 mt-0.5">
-              ≈ ฿<AnimatedNumber value={Math.round(convertToThb(travelCardSpent, currency, fxRate))} />
+              ≈ ฿<AnimatedNumber value={Math.round(convertToThb(hasTravelCardBudget ? remainingTravelCard : travelCardSpent, currency, fxRate))} />
+              {hasTravelCardBudget ? ' คงเหลือ' : ' รูดไปแล้ว'}
             </div>
           </div>
 
-          <div className="text-[10px] text-blue-800/80 dark:text-blue-300/60 pt-1 border-t border-blue-200/60 dark:border-blue-900/30">
-            <span>ยอดรูดจ่ายสะสม</span>
+          <div className="text-[10px] text-blue-800/80 dark:text-blue-300/60 pt-1 border-t border-blue-200/60 dark:border-blue-900/30 flex justify-between items-center">
+            {hasTravelCardBudget ? (
+              <>
+                <span>แลกไว้: ¥{startingTravelCard.toLocaleString()}</span>
+                <span>รูดไป: ¥{travelCardSpent.toLocaleString()}</span>
+              </>
+            ) : (
+              <>
+                <span>ยอดรูดจ่ายสะสม</span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingTravelCard(true)}
+                  className="underline text-blue-600 dark:text-blue-400 hover:text-blue-800 cursor-pointer"
+                >
+                  ตั้งยอดเงินที่แลกไว้
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -204,14 +312,17 @@ export default function PocketMoneyWidget({
         <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-900/40 flex flex-col justify-between space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
-              <span>💎 บัตรเครดิตสะสมแต้ม</span>
+              <span>💳 บัตรเครดิต</span>
             </span>
-            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-200">
-              Point & Cash
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-200">
+              Visa / Master / JCB
             </span>
           </div>
 
           <div>
+            <div className="text-[10px] font-bold text-purple-700/80 dark:text-purple-300/70 mb-0.5">
+              ยอดรูดจ่ายสะสม
+            </div>
             <div className="text-xl sm:text-2xl font-black font-mono text-purple-950 dark:text-purple-100 leading-tight">
               ¥<AnimatedNumber value={creditCardSpent} />
             </div>
@@ -220,8 +331,9 @@ export default function PocketMoneyWidget({
             </div>
           </div>
 
-          <div className="text-[10px] text-purple-800/80 dark:text-purple-300/60 pt-1 border-t border-purple-200/60 dark:border-purple-900/30">
-            <span>ยอดรูดจ่ายสะสม</span>
+          <div className="text-[10px] text-purple-800/80 dark:text-purple-300/60 pt-1 border-t border-purple-200/60 dark:border-purple-900/30 flex justify-between">
+            <span>ยอดรูดรอบบิลนี้</span>
+            <span>{expenses.filter(e => e.payment_method === 'credit_card').length} รายการ</span>
           </div>
         </div>
 
@@ -246,29 +358,84 @@ export default function PocketMoneyWidget({
         </div>
       )}
 
+      {/* Low Travel Card Warning Banner */}
+      {isTravelCardLow && (
+        <div className="p-3 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 min-w-0">
+            <AlertTriangle className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span className="truncate">ยอดเงินในบัตร Travel Card เหลือน้อยกว่า ¥10,000 แนะนำแลกเงินเพิ่มในแอป</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAddTravelCardModal(true)}
+            className="py-1 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shrink-0 cursor-pointer transition-all active:scale-95"
+          >
+            แลกเงินเพิ่ม
+          </button>
+        </div>
+      )}
+
       {/* Edit Starting Cash Modal / Inline Drawer */}
       {isEditingCash && (
-        <form onSubmit={handleSaveStartingCash} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15171e] border border-slate-200 dark:border-[#262932] space-y-2">
-          <div className="flex justify-between items-center text-xs font-bold text-slate-800 dark:text-slate-200">
-            <span>ระบุยอดเงินสดเยนที่แลกมาทั้งทริป:</span>
-            <button type="button" onClick={() => setIsEditingCash(false)} className="text-slate-400">
+        <form onSubmit={handleSaveStartingCash} className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-[#151e18] border border-emerald-200 dark:border-emerald-900/60 space-y-2 animate-in fade-in">
+          <div className="flex justify-between items-center text-xs font-bold text-emerald-950 dark:text-emerald-100">
+            <span>💵 ระบุยอดเงินสดเยน ({currency}) ที่แลกพกติดตัวมาทั้งทริป:</span>
+            <button type="button" onClick={() => setIsEditingCash(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
               <X className="h-4 w-4" />
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <input
-              type="number"
-              value={cashInput}
-              onChange={(e) => setCashInput(e.target.value)}
-              className="flex-1 p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-xs font-mono font-bold outline-none"
-              placeholder="100000"
-            />
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">¥</span>
+              <input
+                type="number"
+                value={cashInput}
+                onChange={(e) => setCashInput(e.target.value)}
+                className="w-full pl-7 pr-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-[#181a20] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="100000"
+                autoFocus
+              />
+            </div>
             <button
               type="submit"
-              className="py-2 px-3 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs cursor-pointer active:scale-95"
+              className="py-2 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer active:scale-95 transition-all"
             >
               บันทึก
             </button>
+          </div>
+        </form>
+      )}
+
+      {/* Edit Starting Travel Card Modal / Inline Drawer */}
+      {isEditingTravelCard && (
+        <form onSubmit={handleSaveStartingTravelCard} className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-[#151a28] border border-blue-200 dark:border-blue-900/60 space-y-2 animate-in fade-in">
+          <div className="flex justify-between items-center text-xs font-bold text-blue-950 dark:text-blue-100">
+            <span>💳 ระบุยอดเงินเยน ({currency}) ที่แลกใส่บัตร Travel Card (YouTrip / Planet SCB):</span>
+            <button type="button" onClick={() => setIsEditingTravelCard(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">¥</span>
+              <input
+                type="number"
+                value={travelCardInput}
+                onChange={(e) => setTravelCardInput(e.target.value)}
+                className="w-full pl-7 pr-3 py-2 rounded-xl border border-blue-300 dark:border-blue-800 bg-white dark:bg-[#181a20] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="เช่น 150000"
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              className="py-2 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer active:scale-95 transition-all"
+            >
+              บันทึก
+            </button>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+            <span>ระบบจะนำยอดแลกนี้ไปหักลบกับรายการค่าใช้จ่ายที่จ่ายด้วย &ldquo;Travel Card&rdquo; ให้อัตโนมัติ</span>
           </div>
         </form>
       )}
@@ -290,7 +457,7 @@ export default function PocketMoneyWidget({
               <button
                 type="button"
                 onClick={() => setShowAddCashModal(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -301,13 +468,16 @@ export default function PocketMoneyWidget({
                 <label className="block text-xs font-bold mb-1 text-slate-700 dark:text-slate-300">
                   จำนวนเงินสดที่กดมาเพิ่ม ({currency})
                 </label>
-                <input
-                  type="number"
-                  required
-                  value={addCashAmount}
-                  onChange={(e) => setAddCashAmount(e.target.value)}
-                  className="w-full p-3 rounded-2xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-lg font-mono font-black text-slate-900 dark:text-white outline-none focus:border-emerald-500"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">¥</span>
+                  <input
+                    type="number"
+                    required
+                    value={addCashAmount}
+                    onChange={(e) => setAddCashAmount(e.target.value)}
+                    className="w-full pl-8 pr-3 py-3 rounded-2xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-lg font-mono font-black text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-1.5">
@@ -316,7 +486,7 @@ export default function PocketMoneyWidget({
                     key={amt}
                     type="button"
                     onClick={() => setAddCashAmount(amt.toString())}
-                    className="py-1.5 rounded-xl border border-slate-200 dark:border-[#2b2f3d] text-xs font-bold hover:border-emerald-500 cursor-pointer"
+                    className="py-1.5 rounded-xl border border-slate-200 dark:border-[#2b2f3d] text-xs font-bold hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/40 cursor-pointer transition-colors"
                   >
                     +¥{amt.toLocaleString()}
                   </button>
@@ -325,9 +495,74 @@ export default function PocketMoneyWidget({
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
+                className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
               >
                 ยืนยันการเติมเงินสด
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Top up Travel Card Modal */}
+      {showAddTravelCardModal && (
+        <div 
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4 animate-in fade-in"
+          onClick={() => setShowAddTravelCardModal(false)}
+        >
+          <div 
+            className="w-full max-w-sm bg-white dark:bg-[#181a20] rounded-3xl p-5 space-y-4 border border-slate-200 dark:border-[#262932] shadow-2xl animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
+              <span className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <span>💳 แลกเงินเข้า Travel Card เพิ่ม</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAddTravelCardModal(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTravelCardTopup} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold mb-1 text-slate-700 dark:text-slate-300">
+                  จำนวนเงินเยนที่แลกใส่บัตรเพิ่มในแอป ({currency})
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">¥</span>
+                  <input
+                    type="number"
+                    required
+                    value={addTravelCardAmount}
+                    onChange={(e) => setAddTravelCardAmount(e.target.value)}
+                    className="w-full pl-8 pr-3 py-3 rounded-2xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-lg font-mono font-black text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                    placeholder="20000"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-1.5">
+                {[10000, 20000, 50000].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setAddTravelCardAmount(amt.toString())}
+                    className="py-1.5 rounded-xl border border-slate-200 dark:border-[#2b2f3d] text-xs font-bold hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/40 cursor-pointer transition-colors"
+                  >
+                    +¥{amt.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95"
+              >
+                ยืนยันการเพิ่มยอดเงินในบัตร
               </button>
             </form>
           </div>

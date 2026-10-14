@@ -2863,7 +2863,7 @@ export default function TripDetailPage() {
                           : 'bg-white dark:bg-[#151b2b] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
                       }`}
                     >
-                      <span className="text-xl">💎</span>
+                      <span className="text-xl">💳</span>
                       <span>บัตรเครดิต</span>
                     </button>
                   </div>
