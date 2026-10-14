@@ -110,20 +110,20 @@ export default function LiveTripCard({
   if (!nextUpActivity && itinerary.length === 0) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#181a20] to-[#121316] text-white border border-[#e79b71]/30 shadow-xl space-y-3.5 group">
+    <div className="relative overflow-hidden rounded-3xl p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#151b2b] to-[#0f1422] text-white border border-blue-500/30 shadow-xl space-y-3.5 group">
       
       {/* Decorative Background Glows */}
-      <div className="absolute -top-16 -right-16 w-40 h-40 bg-[#e79b71]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-16 -right-16 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Header: Live Local Time & Status */}
       <div className="relative z-10 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="flex h-2.5 w-2.5 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e79b71] opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#e79b71]" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-400" />
           </span>
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#f2a278]">
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-blue-300">
             🇯🇵 LIVE ON-TRIP • โตเกียว {destinationTimeString}
           </span>
         </div>
@@ -140,7 +140,7 @@ export default function LiveTripCard({
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-[#e79b71] text-slate-900">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-600 text-white shadow-xs">
                   {isCheckedIn ? 'เช็คอินแล้ว ✓' : 'จุดหมายถัดไป'}
                 </span>
                 {nextUpActivity.time && (
@@ -157,7 +157,7 @@ export default function LiveTripCard({
 
               {nextUpActivity.location && (
                 <p className="text-xs text-slate-300 truncate flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5 text-[#e79b71] shrink-0" />
+                  <MapPin className="h-3.5 w-3.5 text-blue-400 shrink-0" />
                   <span>{nextUpActivity.location}</span>
                 </p>
               )}
@@ -192,7 +192,7 @@ export default function LiveTripCard({
               className={`py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-95 ${
                 isCheckedIn
                   ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30'
-                  : 'bg-[#e79b71] hover:bg-[#d98254] text-slate-900 border-[#e79b71] shadow-md shadow-[#e79b71]/20'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-blue-500 shadow-md shadow-blue-500/25'
               }`}
             >
               <Stamp className="h-4 w-4" />

@@ -410,7 +410,7 @@ export default function TravelHubModal({
         {/* Modal Top Header */}
         <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] bg-white/80 dark:bg-[#181a20]/80 backdrop-blur-md">
           <div className="flex items-center gap-3 text-left">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#e79b71] to-amber-500 text-white flex items-center justify-center text-lg shadow-sm shadow-[#e79b71]/20 shrink-0">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-lg shadow-sm shadow-blue-500/20 shrink-0">
               🧭
             </div>
             <div className="text-left">
@@ -418,7 +418,7 @@ export default function TravelHubModal({
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                   Travel Companion Hub
                 </h2>
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#e79b71]/15 text-[#d98254] dark:text-[#f2a278]">
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400">
                   {trip?.currency || 'JPY'} • ฿{fxRate}
                 </span>
               </div>
@@ -443,7 +443,7 @@ export default function TravelHubModal({
             onClick={() => setActiveTab('calculator')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
               activeTab === 'calculator'
-                ? 'bg-[#e79b71] text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
             }`}
           >
@@ -455,7 +455,7 @@ export default function TravelHubModal({
             onClick={() => setActiveTab('tickets')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
               activeTab === 'tickets'
-                ? 'bg-[#e79b71] text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
             }`}
           >
@@ -472,7 +472,7 @@ export default function TravelHubModal({
             onClick={() => setActiveTab('phrases')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
               activeTab === 'phrases'
-                ? 'bg-[#e79b71] text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
             }`}
           >
@@ -484,7 +484,7 @@ export default function TravelHubModal({
             onClick={() => setActiveTab('radar')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
               activeTab === 'radar'
-                ? 'bg-[#e79b71] text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
             }`}
           >
@@ -496,7 +496,7 @@ export default function TravelHubModal({
             onClick={() => setActiveTab('story')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
               activeTab === 'story'
-                ? 'bg-[#e79b71] text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
             }`}
           >
@@ -525,7 +525,7 @@ export default function TravelHubModal({
                       onClick={() => setPriceMode('tax_included')}
                       className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         priceMode === 'tax_included'
-                          ? 'bg-[#e79b71] text-white shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
@@ -536,7 +536,7 @@ export default function TravelHubModal({
                       onClick={() => setPriceMode('tax_excluded')}
                       className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         priceMode === 'tax_excluded'
-                          ? 'bg-[#e79b71] text-white shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
@@ -589,7 +589,7 @@ export default function TravelHubModal({
                       value={calcInput}
                       onChange={(e) => setCalcInput(e.target.value)}
                       placeholder="0"
-                      className="w-full pl-9 pr-4 py-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-300 dark:border-[#2b2f3d] text-slate-900 dark:text-white font-mono text-xl sm:text-2xl font-black outline-none focus:border-[#e79b71] transition-all shadow-inner"
+                      className="w-full pl-9 pr-4 py-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-300 dark:border-[#2b2f3d] text-slate-900 dark:text-white font-mono text-xl sm:text-2xl font-black outline-none focus:border-blue-500 transition-all shadow-inner"
                     />
                     {calcInput && (
                       <button
@@ -619,7 +619,7 @@ export default function TravelHubModal({
                       onClick={() => handleAddPreset(btn.val)}
                       className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 ${
                         btn.highlight
-                          ? 'bg-[#e79b71]/15 text-[#d98254] dark:text-[#f2a278] border border-[#e79b71]/40 hover:bg-[#e79b71]/25'
+                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/40 hover:bg-blue-600/25'
                           : 'bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#2b2f3d] text-slate-700 dark:text-slate-300 hover:border-slate-400'
                       }`}
                     >
@@ -679,7 +679,7 @@ export default function TravelHubModal({
                         ฿{priceInThb.toLocaleString()}
                       </span>
                     </div>
-                    <p className="text-[11px] font-bold font-mono text-[#e79b71]">
+                    <p className="text-[11px] font-bold font-mono text-blue-600 dark:text-blue-400">
                       ¥{taxFreePrice.toLocaleString()} JPY
                     </p>
                   </div>
@@ -743,13 +743,13 @@ export default function TravelHubModal({
             <div className="space-y-4">
               
               {/* Add Ticket / QR Code Card */}
-              <div className="p-4 rounded-3xl border border-dashed border-[#e79b71] bg-[#e79b71]/5 dark:bg-[#1f222e] space-y-3">
+              <div className="p-4 rounded-3xl border border-dashed border-blue-500 bg-blue-600/5 dark:bg-[#1f222e] space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <QrCode className="h-4 w-4 text-[#e79b71]" />
+                    <QrCode className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <span>เพิ่มตั๋ว / QR Code ประจำทริป</span>
                   </span>
-                  <span className="text-[10px] font-bold text-[#e79b71]">
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
                     🔒 เก็บในเครื่อง ปลอดภัย ดูได้แม้ออฟไลน์
                   </span>
                 </div>
@@ -760,7 +760,7 @@ export default function TravelHubModal({
                     placeholder="ชื่อตั๋ว เช่น Visit Japan Web QR"
                     value={ticketTitle}
                     onChange={(e) => setTicketTitle(e.target.value)}
-                    className="sm:col-span-2 p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-xs font-bold outline-none focus:border-[#e79b71]"
+                    className="sm:col-span-2 p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-xs font-bold outline-none focus:border-blue-500"
                   />
                   <select
                     value={ticketCategory}
@@ -776,7 +776,7 @@ export default function TravelHubModal({
                   </select>
                 </div>
 
-                <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#e79b71] to-amber-500 hover:from-[#d98254] hover:to-amber-600 text-white font-bold text-xs shadow-md shadow-[#e79b71]/20 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer">
+                <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer">
                   <Camera className="h-4 w-4" />
                   <span>{uploadingTicket ? 'กำลังประมวลผลรูปภาพ...' : 'ถ่ายภาพ หรือ เลือกภาพ QR Code / ตั๋ว'}</span>
                   <input type="file" accept="image/*" className="hidden" disabled={uploadingTicket} onChange={handleUploadPass} />
@@ -797,7 +797,7 @@ export default function TravelHubModal({
                   tickets.map((t) => (
                     <div
                       key={t.id}
-                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] flex items-center justify-between gap-3 shadow-2xs hover:border-[#e79b71] transition-all group"
+                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] flex items-center justify-between gap-3 shadow-2xs hover:border-blue-500 transition-all group"
                     >
                       <div
                         onClick={() => t.imageUrl && setPreviewPassImage(t.imageUrl)}
@@ -807,7 +807,7 @@ export default function TravelHubModal({
                           {t.imageUrl ? (
                             <img src={t.imageUrl} alt={t.title} className="w-full h-full object-cover" />
                           ) : (
-                            <QrCode className="h-6 w-6 text-[#e79b71]" />
+                            <QrCode className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                           )}
                         </div>
 
@@ -815,7 +815,7 @@ export default function TravelHubModal({
                           <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
                             {t.title}
                           </h4>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#e79b71] mt-0.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
                             <Maximize2 className="h-3 w-3" />
                             <span>แตะเพื่อขยายสแกนเต็มจอ</span>
                           </span>
@@ -826,7 +826,7 @@ export default function TravelHubModal({
                         <button
                           type="button"
                           onClick={() => t.imageUrl && setPreviewPassImage(t.imageUrl)}
-                          className="p-2 text-slate-600 dark:text-slate-300 hover:text-[#e79b71] hover:bg-slate-100 dark:hover:bg-[#2b2f3d] rounded-xl transition-colors cursor-pointer"
+                          className="p-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-[#2b2f3d] rounded-xl transition-colors cursor-pointer"
                           title="ดูแบบเต็มจอ"
                         >
                           <Eye className="h-4 w-4" />
@@ -870,7 +870,7 @@ export default function TravelHubModal({
                       onClick={() => setPhraseCategory(cat.id as any)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                         phraseCategory === cat.id
-                          ? 'bg-[#e79b71] text-white shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'bg-slate-100 dark:bg-[#1f222e] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
@@ -886,7 +886,7 @@ export default function TravelHubModal({
                     placeholder="ค้นหา เช่น วาซาบิ, แยกบิล, คืนภาษี, ห้องน้ำ, สนามบิน..."
                     value={phraseSearch}
                     onChange={(e) => setPhraseSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-[#e79b71] font-medium"
+                    className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
                   />
                 </div>
               </div>
@@ -900,14 +900,14 @@ export default function TravelHubModal({
                   return (
                     <div
                       key={p.id}
-                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] space-y-2 hover:border-[#e79b71] transition-all shadow-2xs group"
+                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] space-y-2 hover:border-blue-500 transition-all shadow-2xs group"
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div className="space-y-1 min-w-0">
                           <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wide">
                             {p.japanese}
                           </h4>
-                          <p className="text-xs font-mono font-bold text-[#e79b71]">
+                          <p className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
                             {p.romaji}
                           </p>
                         </div>
@@ -918,8 +918,8 @@ export default function TravelHubModal({
                             onClick={() => speakJapanese(p)}
                             className={`p-2 rounded-xl border transition-all cursor-pointer ${
                               isSpeaking
-                                ? 'bg-[#e79b71] text-white border-[#e79b71] animate-pulse'
-                                : 'border-slate-200 dark:border-[#2b2f3d] hover:border-[#e79b71] text-slate-600 dark:text-slate-300'
+                                ? 'bg-blue-600 text-white border-blue-500 animate-pulse'
+                                : 'border-slate-200 dark:border-[#2b2f3d] hover:border-blue-500 text-slate-600 dark:text-slate-300'
                             }`}
                             title="ฟังเสียงออกเสียงภาษาญี่ปุ่น"
                           >
@@ -929,7 +929,7 @@ export default function TravelHubModal({
                           <button
                             type="button"
                             onClick={() => setBigCardPhrase(p)}
-                            className="p-2 rounded-xl border border-slate-200 dark:border-[#2b2f3d] hover:border-[#e79b71] text-slate-600 dark:text-slate-300 hover:text-[#e79b71] transition-all cursor-pointer"
+                            className="p-2 rounded-xl border border-slate-200 dark:border-[#2b2f3d] hover:border-blue-500 text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-all cursor-pointer"
                             title="โหมดโชว์หน้าจอใหญ่ (ยื่นให้พนักงานอ่าน)"
                           >
                             <Maximize2 className="h-4 w-4" />
@@ -938,7 +938,7 @@ export default function TravelHubModal({
                           <button
                             type="button"
                             onClick={() => copyPhraseText(p)}
-                            className="p-2 rounded-xl border border-slate-200 dark:border-[#2b2f3d] hover:border-[#e79b71] text-slate-400 hover:text-[#e79b71] transition-all cursor-pointer"
+                            className="p-2 rounded-xl border border-slate-200 dark:border-[#2b2f3d] hover:border-blue-500 text-slate-400 hover:text-blue-600 transition-all cursor-pointer"
                             title="คัดลอกข้อความ"
                           >
                             {isCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
@@ -1049,7 +1049,7 @@ export default function TravelHubModal({
                     <div
                       key={item.id}
                       onClick={() => openNearbyGoogleMaps(item.query)}
-                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] hover:border-[#e79b71] hover:bg-[#e79b71]/5 transition-all cursor-pointer group shadow-2xs flex items-center justify-between gap-2"
+                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] hover:border-blue-500 hover:bg-blue-600/5 transition-all cursor-pointer group shadow-2xs flex items-center justify-between gap-2"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -1065,7 +1065,7 @@ export default function TravelHubModal({
                         </div>
                       </div>
 
-                      <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#262932] text-slate-500 group-hover:text-[#e79b71] group-hover:scale-110 transition-transform shrink-0">
+                      <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#262932] text-slate-500 group-hover:text-blue-600 group-hover:scale-110 transition-transform shrink-0">
                         <ExternalLink className="h-3.5 w-3.5" />
                       </div>
                     </div>
@@ -1089,28 +1089,28 @@ export default function TravelHubModal({
                   <button
                     onClick={() => setStoryBgColor('midnight')}
                     className={`w-6 h-6 rounded-full bg-slate-900 border-2 transition-all cursor-pointer ${
-                      storyBgColor === 'midnight' ? 'border-[#e79b71] scale-110' : 'border-slate-300'
+                      storyBgColor === 'midnight' ? 'border-blue-500 scale-110' : 'border-slate-300'
                     }`}
                     title="Midnight Theme"
                   />
                   <button
                     onClick={() => setStoryBgColor('sakura')}
                     className={`w-6 h-6 rounded-full bg-gradient-to-tr from-pink-400 to-rose-400 border-2 transition-all cursor-pointer ${
-                      storyBgColor === 'sakura' ? 'border-[#e79b71] scale-110' : 'border-slate-300'
+                      storyBgColor === 'sakura' ? 'border-blue-500 scale-110' : 'border-slate-300'
                     }`}
                     title="Sakura Theme"
                   />
                   <button
                     onClick={() => setStoryBgColor('sunset')}
                     className={`w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 border-2 transition-all cursor-pointer ${
-                      storyBgColor === 'sunset' ? 'border-[#e79b71] scale-110' : 'border-slate-300'
+                      storyBgColor === 'sunset' ? 'border-blue-500 scale-110' : 'border-slate-300'
                     }`}
                     title="Sunset Theme"
                   />
                   <button
                     onClick={() => setStoryBgColor('fuji')}
                     className={`w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-700 border-2 transition-all cursor-pointer ${
-                      storyBgColor === 'fuji' ? 'border-[#e79b71] scale-110' : 'border-slate-300'
+                      storyBgColor === 'fuji' ? 'border-blue-500 scale-110' : 'border-slate-300'
                     }`}
                     title="Mount Fuji Theme"
                   />
@@ -1161,7 +1161,7 @@ export default function TravelHubModal({
                 <div className="space-y-2 relative z-10 bg-black/30 backdrop-blur-md p-3 rounded-2xl border border-white/10">
                   <div className="flex justify-between text-xs font-bold">
                     <span>ยอดรวมทริป:</span>
-                    <span className="font-black text-[#f2a278]">
+                    <span className="font-black text-blue-400">
                       {totalSpent.toLocaleString()} {trip?.currency || 'JPY'}
                     </span>
                   </div>
@@ -1179,7 +1179,7 @@ export default function TravelHubModal({
                   triggerConfetti();
                   toast.info('🎉 แคปหน้าจอการ์ดใบนี้เพื่อนำไปโพสต์ลง Instagram Story หรือแชร์เข้ากลุ่ม LINE ได้ทันที!');
                 }}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#e79b71] to-amber-500 hover:from-[#d98254] hover:to-amber-600 text-white font-black text-xs sm:text-sm shadow-lg shadow-[#e79b71]/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Share2 className="h-4 w-4" />
                 <span>แชร์ลง Instagram Story / Line</span>
@@ -1193,9 +1193,9 @@ export default function TravelHubModal({
                     onClose();
                     onOpenPacking();
                   }}
-                  className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1f222e] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 hover:border-[#e79b71] transition-all cursor-pointer"
+                  className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1f222e] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 hover:border-blue-500 transition-all cursor-pointer"
                 >
-                  <Luggage className="h-4 w-4 text-[#e79b71]" />
+                  <Luggage className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span>เปิดเช็คลิสต์จัดกระเป๋าอัจฉริยะ (AI Packing List)</span>
                 </button>
               )}
@@ -1215,11 +1215,11 @@ export default function TravelHubModal({
           onClick={() => setBigCardPhrase(null)}
         >
           <div 
-            className="w-full max-w-lg bg-white dark:bg-[#181a20] rounded-3xl p-6 sm:p-8 text-center space-y-6 border border-[#e79b71]/50 shadow-2xl animate-in zoom-in-95"
+            className="w-full max-w-lg bg-white dark:bg-[#181a20] rounded-3xl p-6 sm:p-8 text-center space-y-6 border border-blue-500/50 shadow-2xl animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-[#e79b71] bg-[#e79b71]/15 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-600/15 px-3 py-1 rounded-full">
                 โหมดโชว์หน้าจอใหญ่ (ยื่นให้พนักงานอ่าน)
               </span>
               <button
@@ -1234,7 +1234,7 @@ export default function TravelHubModal({
               <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white leading-relaxed tracking-wide">
                 {bigCardPhrase.japanese}
               </h1>
-              <p className="text-base sm:text-lg font-mono font-bold text-[#e79b71]">
+              <p className="text-base sm:text-lg font-mono font-bold text-blue-600 dark:text-blue-400">
                 {bigCardPhrase.romaji}
               </p>
               <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#262932] text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
@@ -1244,7 +1244,7 @@ export default function TravelHubModal({
 
             <button
               onClick={() => speakJapanese(bigCardPhrase)}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#e79b71] to-amber-500 text-white font-black text-sm shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <Volume2 className="h-5 w-5" />
               <span>กดเพื่อออกเสียงภาษาญี่ปุ่น</span>
@@ -1267,7 +1267,7 @@ export default function TravelHubModal({
           >
             <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
               <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                <QrCode className="h-4 w-4 text-[#e79b71]" />
+                <QrCode className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span>โหมดสแกน QR Code / ตั๋วคมชัดสูง</span>
               </span>
               <button

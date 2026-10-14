@@ -28,7 +28,7 @@ export default function CurrencyPillSwitcher({
           onClick={() => onToggle('foreign')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeView === 'foreign'
-              ? 'bg-[#e79b71] text-white shadow-xs scale-[1.03]'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 scale-[1.03]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
           title={`สลับดูยอดเป็นเงิน ${primaryCurrency}`}

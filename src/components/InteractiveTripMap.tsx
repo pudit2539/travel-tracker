@@ -126,7 +126,7 @@ export default function InteractiveTripMap({
               href={multiStopMapsUrl}
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-1.5 rounded-xl bg-[#c25872] hover:bg-[#b04a63] dark:bg-[#d47087] dark:hover:bg-[#c25872] text-white font-bold text-xs shadow-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-bold text-xs shadow-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Navigation className="h-3.5 w-3.5" />
               <span>เปิดเส้นทางรวมใน Google Maps</span>
@@ -156,7 +156,7 @@ export default function InteractiveTripMap({
                   <div className={`px-2 py-1 rounded-xl flex flex-col items-center justify-center shrink-0 min-w-[34px] ${
                     isSelected 
                       ? 'bg-white/20 dark:bg-slate-900/15 text-white dark:text-slate-900' 
-                      : 'bg-rose-50 dark:bg-slate-800/80 text-rose-600 dark:text-rose-300 font-bold'
+                      : 'bg-blue-50 dark:bg-slate-800/80 text-blue-600 dark:text-blue-400 font-bold'
                   }`}>
                     <span className="text-[8px] font-black uppercase tracking-tight leading-none opacity-80">จุดที่</span>
                     <span className="text-xs font-black leading-tight">#{idx + 1}</span>
@@ -190,15 +190,15 @@ export default function InteractiveTripMap({
           <div className="flex flex-wrap items-center justify-between gap-2.5">
             <div className="flex items-center gap-1.5 flex-wrap">
               {/* Stop Number Badge */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-rose-500 to-[#c25872] text-white text-xs font-black shadow-xs">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black shadow-xs">
                 <MapPin className="h-3 w-3" />
                 <span>จุดที่ #{selectedStopIdx + 1}</span>
               </div>
 
               {/* Date */}
               {activeStop.date_label && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/80 dark:border-rose-900/60 shadow-2xs">
-                  <Calendar className="h-3 w-3 text-rose-500" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 shadow-2xs">
+                  <Calendar className="h-3 w-3 text-blue-500" />
                   <span>{activeStop.date_label}</span>
                 </span>
               )}
@@ -206,7 +206,7 @@ export default function InteractiveTripMap({
               {/* Time */}
               {activeStop.time_slot && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                  <Clock className="h-3 w-3 text-rose-500" />
+                  <Clock className="h-3 w-3 text-blue-500" />
                   <span>เวลา {activeStop.time_slot}</span>
                 </span>
               )}
@@ -232,7 +232,7 @@ export default function InteractiveTripMap({
               }
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-1.5 rounded-xl bg-[#c25872] hover:bg-[#b04a63] dark:bg-[#d47087] dark:hover:bg-[#c25872] text-white font-bold text-xs shadow-xs hover:shadow-md hover:scale-102 active:scale-98 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-bold text-xs shadow-xs hover:shadow-md hover:scale-102 active:scale-98 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
             >
               <Navigation className="h-3.5 w-3.5" />
               <span>นำทางจุดนี้ 📍</span>
@@ -317,7 +317,7 @@ export default function InteractiveTripMap({
             {activeStop.backup_plan && (
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1a1e2b] border border-slate-200/80 dark:border-[#262c3d] text-left space-y-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-rose-500/15 dark:bg-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+                  <div className="w-6 h-6 rounded-lg bg-blue-500/15 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                     <Sparkles className="h-3.5 w-3.5" />
                   </div>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -347,7 +347,7 @@ export default function InteractiveTripMap({
                           href={lineMapsUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-[#c25872] hover:text-white dark:hover:bg-[#d47087] transition-all shrink-0 cursor-pointer shadow-2xs"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition-all shrink-0 cursor-pointer shadow-2xs"
                           title="เปิด Google Maps สำหรับรายการนี้"
                         >
                           <span>แผนที่ 📍</span>

@@ -316,7 +316,7 @@ export default function WishlistDrawer({
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-2.5 py-1.5 rounded-xl bg-[#e79b71] hover:bg-[#d98254] text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-xs"
+              className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-xs"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>เพิ่มร้านเอง</span>
@@ -339,7 +339,7 @@ export default function WishlistDrawer({
               placeholder="ค้นหาร้าน เช่น ราเมง, ซูชิ, ดองกี้, ชิบูย่า, teamLab..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-[#e79b71] font-medium"
+              className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
             />
           </div>
 
@@ -357,7 +357,7 @@ export default function WishlistDrawer({
                 onClick={() => setCategoryFilter(cat.id as any)}
                 className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                   categoryFilter === cat.id
-                    ? 'bg-[#e79b71] text-white shadow-xs'
+                    ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#2b2f3d] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -372,16 +372,16 @@ export default function WishlistDrawer({
           {filteredItems.map((item) => (
             <div
               key={item.id}
-              className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] hover:border-[#e79b71]/60 transition-all shadow-2xs group space-y-2.5"
+              className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] hover:border-blue-500/60 transition-all shadow-2xs group space-y-2.5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-[#e79b71]/15 text-[#d98254] dark:text-[#f2a278]">
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400">
                       {item.category === 'food' ? '🍜 อาหาร' : item.category === 'shopping' ? '🛍️ ช้อปปิ้ง' : item.category === 'sight' ? '⛩️ ท่องเที่ยว' : '☕ คาเฟ่'}
                     </span>
                     <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-[#e79b71]" />
+                      <MapPin className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                       <span>{item.district}</span>
                     </span>
                     <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
@@ -433,7 +433,7 @@ export default function WishlistDrawer({
               <button
                 type="button"
                 onClick={() => handleAddDirectlyToDay(item)}
-                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-[#e79b71] to-amber-500 hover:from-[#d98254] hover:to-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>+ เพิ่มเข้าแพลน {targetDay} ทันที</span>
@@ -456,7 +456,7 @@ export default function WishlistDrawer({
           >
             <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
               <span className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <BookmarkCheck className="h-4 w-4 text-[#e79b71]" />
+                <BookmarkCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span>เพิ่มร้านเด็ดใน Wishlist</span>
               </span>
               <button
@@ -479,7 +479,7 @@ export default function WishlistDrawer({
                   placeholder="เช่น ราเมงข้อสอบ Shinjuku, คาเฟ่แมว"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold outline-none focus:border-[#e79b71]"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -505,7 +505,7 @@ export default function WishlistDrawer({
                     placeholder="เช่น Shibuya, Osaka"
                     value={newDistrict}
                     onChange={(e) => setNewDistrict(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold outline-none focus:border-[#e79b71]"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -517,7 +517,7 @@ export default function WishlistDrawer({
                   placeholder="เช่น ¥1,500 - ¥2,000"
                   value={newCost}
                   onChange={(e) => setNewCost(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold outline-none focus:border-[#e79b71]"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -528,13 +528,13 @@ export default function WishlistDrawer({
                   placeholder="เช่น เมนูแนะนำคือข้าวหน้าเนื้อ, ต้องจองก่อน 1 วัน..."
                   value={newHighlight}
                   onChange={(e) => setNewHighlight(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-medium outline-none focus:border-[#e79b71]"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-medium outline-none focus:border-blue-500"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-[#e79b71] hover:bg-[#d98254] text-white font-bold text-xs shadow-md shadow-[#e79b71]/20 cursor-pointer transition-all active:scale-95"
+                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95"
               >
                 บันทึกลง Wishlist
               </button>

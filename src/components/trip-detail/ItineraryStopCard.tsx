@@ -299,7 +299,7 @@ function ItineraryStopCardComponent({
                             href={lineMapsUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-[#c25872] hover:text-white dark:hover:bg-[#d47087] transition-all shrink-0 cursor-pointer shadow-2xs"
+                            className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition-all shrink-0 cursor-pointer shadow-2xs"
                           >
                             <span>แผนที่ 📍</span>
                             <ExternalLink className="h-2.5 w-2.5" />

@@ -1804,7 +1804,7 @@ export default function TripDetailPage() {
   if (loading && !trip) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-3">
-        <Loader2 className="h-9 w-9 animate-spin text-[#e79b71]" />
+        <Loader2 className="h-9 w-9 animate-spin text-blue-600" />
         <p className="text-xs font-bold text-slate-500 dark:text-slate-400">กำลังโหลดข้อมูลทริป...</p>
       </div>
     );
@@ -1852,13 +1852,13 @@ export default function TripDetailPage() {
                   placeholder="วางรหัสเชิญที่นี่..."
                   value={manualJoinCode}
                   onChange={(e) => setManualJoinCode(e.target.value)}
-                  className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#e79b71]"
+                  className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   type="button"
                   onClick={() => handleJoinTripDirectly(manualJoinCode)}
                   disabled={joiningTrip || !manualJoinCode.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-[#e79b71] hover:bg-[#d98254] text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   ยืนยัน
                 </button>
@@ -1875,7 +1875,7 @@ export default function TripDetailPage() {
                 type="button"
                 onClick={() => handleJoinTripDirectly()}
                 disabled={joiningTrip}
-                className="w-full py-3 rounded-2xl bg-[#e79b71] hover:bg-[#d98254] text-white text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {joiningTrip ? (
                   <>
@@ -1912,7 +1912,7 @@ export default function TripDetailPage() {
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">ทริปนี้อาจถูกลบไปแล้ว หรือรหัสทริปไม่ถูกต้อง</p>
           <Link
             href="/"
-            className="inline-block px-5 py-2.5 rounded-2xl bg-[#e79b71] text-white text-xs font-bold shadow-md"
+            className="inline-block px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md"
           >
             กลับสู่หน้าหลัก
           </Link>
@@ -1946,7 +1946,7 @@ export default function TripDetailPage() {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <Link
                 href="/"
-                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:text-[#e79b71] dark:hover:text-[#e79b71] hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
                 title="กลับไปหน้าทริปทั้งหมด"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -1975,7 +1975,7 @@ export default function TripDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold truncate">
-                  <span className="text-[#e79b71] font-mono font-bold">{trip?.currency || 'JPY'}</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-mono font-bold">{trip?.currency || 'JPY'}</span>
                   <span>•</span>
                   <span>{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
                 </div>
@@ -1988,7 +1988,7 @@ export default function TripDetailPage() {
 
               <button
                 onClick={() => setShowProfileModal(true)}
-                className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-[#e79b71] hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
+                className="flex items-center gap-1.5 p-1 sm:p-1.5 sm:pr-2.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 hover:scale-105 active:scale-95 shadow-2xs transition-all cursor-pointer group"
                 title="ตั้งค่าโปรไฟล์"
               >
                 <CatAvatarBadge cat={userCat} size="xs" className="group-hover:scale-110 transition-transform shadow-xs" />
@@ -2000,24 +2000,24 @@ export default function TripDetailPage() {
               {isOwner && (
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:text-[#e79b71] hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
                   title="แชร์ทริป / ชวนเพื่อนเข้าทริป (เฉพาะเจ้าของทริป)"
                 >
-                  <Share2 className="h-3.5 w-3.5 text-[#e79b71]" />
+                  <Share2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   <span className="hidden sm:inline">แชร์</span>
                 </button>
               )}
 
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-[#e79b71] hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer min-w-8 min-h-8 flex items-center justify-center"
+                className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:rotate-45 active:scale-95 shadow-2xs transition-all duration-300 cursor-pointer min-w-8 min-h-8 flex items-center justify-center"
                 title="สลับโหมด มืด/สว่าง"
                 aria-label="Toggle theme"
               >
                 {!mounted ? (
                   <span className="w-4 h-4 block" />
                 ) : theme === 'dark' ? (
-                  <Sun className="h-4 w-4 text-[#e79b71]" />
+                  <Sun className="h-4 w-4 text-amber-400" />
                 ) : (
                   <Moon className="h-4 w-4 text-slate-700" />
                 )}
@@ -2066,7 +2066,7 @@ export default function TripDetailPage() {
               {activeTab === 'plan' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-md shadow-blue-500/30 border border-white/20 ring-1 ring-black/5"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -2094,7 +2094,7 @@ export default function TripDetailPage() {
                 {activeTab === 'expenses' && (
                   <motion.div
                     layoutId="activeTopTabPill"
-                    className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
+                    className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-md shadow-blue-500/30 border border-white/20 ring-1 ring-black/5"
                     transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                   />
                 )}
@@ -2123,7 +2123,7 @@ export default function TripDetailPage() {
                 {activeTab === 'analytics' && (
                   <motion.div
                     layoutId="activeTopTabPill"
-                    className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
+                    className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-md shadow-blue-500/30 border border-white/20 ring-1 ring-black/5"
                     transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                   />
                 )}
@@ -2146,7 +2146,7 @@ export default function TripDetailPage() {
               {activeTab === 'members' && (
                 <motion.div
                   layoutId="activeTopTabPill"
-                  className="absolute inset-0 bg-gradient-to-r from-[#e79b71] to-[#d98254] rounded-xl sm:rounded-2xl shadow-md shadow-[#e79b71]/25 border border-white/20 ring-1 ring-black/5"
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 rounded-xl sm:rounded-2xl shadow-md shadow-blue-500/30 border border-white/20 ring-1 ring-black/5"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}

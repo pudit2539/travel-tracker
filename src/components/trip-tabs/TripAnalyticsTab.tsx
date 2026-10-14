@@ -1,12 +1,15 @@
 // src/components/trip-tabs/TripAnalyticsTab.tsx
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Wallet, Calculator, PieChart, Coins, Sliders, 
   ArrowRight, CheckCircle2, AlertTriangle, TrendingUp,
-  Percent, ArrowUpRight, ArrowDownRight, Edit3, Sparkles, Users
+  Percent, ArrowUpRight, ArrowDownRight, Sparkles, Users,
+  CreditCard, Banknote, Flame, Zap, Calendar, ChevronRight,
+  Clock, Target, Scale, RefreshCw, BarChart3, HelpCircle
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CategoryItem, CategoryBudgetMap, MemberBudgetMap } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
@@ -37,7 +40,7 @@ export function TripAnalyticsTab({
   memberBudgets,
   categories,
   categoryBudgets,
-  expenses,
+  expenses = [],
   trip,
   tripBaseCurrency,
   fxRate,
@@ -46,14 +49,18 @@ export function TripAnalyticsTab({
   setShowBudgetCategoryModal,
   onOpenBudgetModalWithTab,
 }: TripAnalyticsTabProps) {
-  // Allow user to view all statistics and budgets in ANY currency (e.g. JPY, THB, USD, etc.)
+  // 1. Currency View State
   const [userSelectedCurrency, setUserSelectedCurrency] = useState<string | null>(null);
   const selectedCurrency = userSelectedCurrency ?? (tripBaseCurrency || 'JPY');
   const setSelectedCurrency = (curr: string) => setUserSelectedCurrency(curr);
 
+  // Selected Day in Daily Wave Bar Chart
+  const [selectedWaveDay, setSelectedWaveDay] = useState<string | null>(null);
+
+  // Raw Target Budget
   const rawBudget = propTargetBudget !== undefined ? propTargetBudget : Number(trip?.total_budget ?? trip?.budget ?? 0);
 
-  // Convert main totals from tripBaseCurrency into the selected view currency
+  // Convert main totals into the selected view currency
   const convertedTotalBudget = useMemo(() => {
     return convertCurrency(rawBudget, tripBaseCurrency, selectedCurrency, fxRate);
   }, [rawBudget, tripBaseCurrency, selectedCurrency, fxRate]);
@@ -66,13 +73,13 @@ export function TripAnalyticsTab({
   const overBudget = convertedTotalBudget > 0 && convertedTotalSpent > convertedTotalBudget ? convertedTotalSpent - convertedTotalBudget : 0;
   const budgetProgress = convertedTotalBudget > 0 ? Math.min(Math.round((convertedTotalSpent / convertedTotalBudget) * 100), 100) : 0;
 
-  // Sum of category budgets (Accommodation, Ticket, etc.)
+  // Sum of category budgets
   const totalCatBudgetsInSelected = useMemo(() => {
     const rawSum = Object.values(categoryBudgets).reduce((acc, b) => acc + (Number(b) || 0), 0);
     return convertCurrency(rawSum, tripBaseCurrency, selectedCurrency, fxRate);
   }, [categoryBudgets, tripBaseCurrency, selectedCurrency, fxRate]);
 
-  // Secondary currency preview helper (shows THB if viewing in JPY, or JPY if viewing in THB)
+  // Secondary currency preview helper (THB if JPY, JPY if THB)
   const formatSecondary = (val: number, cur: string) => {
     if (!val || isNaN(val) || val <= 0) return null;
     if (cur === 'JPY') {
@@ -96,26 +103,358 @@ export function TripAnalyticsTab({
     }
   };
 
-  return (
-    <div className="space-y-4 sm:space-y-6">
+  // ==================== DASHLET 1: DAILY BUDGET VELOCITY & SAFE RADAR ====================
+  const velocityData = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
-      {/* ==================== 1. CURRENCY SELECTOR PILLS ==================== */}
-      <div className="p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+    const startD = trip?.start_date ? new Date(trip.start_date) : null;
+    const endD = trip?.end_date ? new Date(trip.end_date) : null;
+
+    let totalDays = 1;
+    if (startD && endD) {
+      const diffMs = endD.getTime() - startD.getTime();
+      totalDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
+    } else {
+      // Fallback: estimate from unique dates in expenses or default to 10 days
+      const uniqueExpenseDates = new Set(expenses.map(e => (e.date || '').split('T')[0]).filter(Boolean));
+      totalDays = Math.max(1, uniqueExpenseDates.size || 10);
+    }
+
+    let elapsedDays = 1;
+    let remainingDays = totalDays;
+
+    if (startD) {
+      if (now < startD) {
+        // Trip hasn't started yet
+        elapsedDays = 0;
+        remainingDays = totalDays;
+      } else if (endD && now > endD) {
+        // Trip is finished
+        elapsedDays = totalDays;
+        remainingDays = 0;
+      } else {
+        // Trip is currently active
+        const diffMs = now.getTime() - startD.getTime();
+        elapsedDays = Math.min(totalDays, Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1));
+        remainingDays = Math.max(0, totalDays - elapsedDays);
+      }
+    } else {
+      elapsedDays = Math.max(1, Math.round(totalDays / 2));
+      remainingDays = Math.max(1, totalDays - elapsedDays);
+    }
+
+    // Safe Daily Quota: Remaining Budget divided by remaining days
+    const effectiveRemainingDays = Math.max(1, remainingDays);
+    const safeDailyQuota = convertedTotalBudget > 0 ? Math.round(remainingBudget / effectiveRemainingDays) : 0;
+
+    // Actual Daily Average spent so far
+    const effectiveElapsedDays = Math.max(1, elapsedDays);
+    const actualDailyAvg = convertedTotalSpent > 0 ? Math.round(convertedTotalSpent / effectiveElapsedDays) : 0;
+
+    // Daily Target Quota (Original planned daily budget)
+    const targetDailyQuota = convertedTotalBudget > 0 ? Math.round(convertedTotalBudget / totalDays) : 0;
+
+    // Burn status: Safe (under target quota), Warning (within 10-20% excess), Critical (high burn)
+    let burnStatus: 'safe' | 'optimal' | 'critical' = 'safe';
+    let burnMessage = 'กำลังคุมงบได้ยอดเยี่ยม ช้อปสบายใจ!';
+    if (convertedTotalBudget > 0) {
+      if (actualDailyAvg > safeDailyQuota * 1.25 || overBudget > 0) {
+        burnStatus = 'critical';
+        burnMessage = 'อัตราการใช้จ่ายสูงกว่าโควตา แนะนำจำกัดงบในวันถัดไป!';
+      } else if (actualDailyAvg > safeDailyQuota) {
+        burnStatus = 'optimal';
+        burnMessage = 'ใช้จ่ายแตะเกณฑ์โควตารายวัน อยู่ในระดับเฝ้าระวัง';
+      }
+    }
+
+    return {
+      totalDays,
+      elapsedDays,
+      remainingDays,
+      safeDailyQuota,
+      actualDailyAvg,
+      targetDailyQuota,
+      burnStatus,
+      burnMessage,
+    };
+  }, [trip, expenses, convertedTotalBudget, convertedTotalSpent, remainingBudget, overBudget]);
+
+  // ==================== DASHLET 2: INTERACTIVE DAILY SPENDING WAVE ====================
+  interface DailyWaveItem {
+    dayLabel: string;
+    total: number;
+    count: number;
+    items: Array<{ title: string; amount: number; category: string }>;
+  }
+
+  const dailyWaveData = useMemo<{
+    list: DailyWaveItem[];
+    peakDay: { dayLabel: string; total: number } | null;
+    maxTotal: number;
+  }>(() => {
+    const dayMap: Record<string, { total: number; count: number; items: any[] }> = {};
+
+    expenses.forEach((e) => {
+      let rawDate = e.date ? e.date.split('T')[0] : 'ไม่ระบุวัน';
+      if (!rawDate || rawDate === 'null') rawDate = 'ไม่ระบุวัน';
+
+      // Friendly display label
+      let label = rawDate;
+      if (rawDate !== 'ไม่ระบุวัน') {
+        try {
+          const d = new Date(rawDate);
+          if (!isNaN(d.getTime())) {
+            label = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+          }
+        } catch {}
+      }
+
+      if (!dayMap[label]) {
+        dayMap[label] = { total: 0, count: 0, items: [] };
+      }
+
+      const itemInSelected = convertCurrency(
+        Number(e.amount || 0),
+        e.currency || tripBaseCurrency,
+        selectedCurrency,
+        fxRate
+      );
+
+      dayMap[label].total += itemInSelected;
+      dayMap[label].count += 1;
+      dayMap[label].items.push({
+        title: e.title,
+        amount: itemInSelected,
+        category: e.category,
+      });
+    });
+
+    const list = Object.entries(dayMap).map(([dayLabel, data]) => ({
+      dayLabel,
+      total: Math.round(data.total),
+      count: data.count,
+      items: data.items.sort((a, b) => b.amount - a.amount),
+    }));
+
+    // Find peak day
+    let peakDay: { dayLabel: string; total: number } | null = null;
+    let maxTotal = 0;
+    list.forEach((d) => {
+      if (d.total > maxTotal) {
+        maxTotal = d.total;
+        peakDay = { dayLabel: d.dayLabel, total: d.total };
+      }
+    });
+
+    return { list, peakDay, maxTotal: Math.max(1, maxTotal) };
+  }, [expenses, tripBaseCurrency, selectedCurrency, fxRate]);
+
+  // Selected Day Details
+  const activeWaveDayDetail = useMemo(() => {
+    if (!selectedWaveDay) return dailyWaveData.list[0] || null;
+    return dailyWaveData.list.find((d) => d.dayLabel === selectedWaveDay) || dailyWaveData.list[0] || null;
+  }, [selectedWaveDay, dailyWaveData]);
+
+  // ==================== DASHLET 3: CATEGORY MATRIX & TOP DRIVER ====================
+  interface TopCategoryItem {
+    id: string;
+    label: string;
+    icon: string;
+    amount: number;
+    percent: number;
+  }
+
+  const categoryMatrixData = useMemo<{
+    list: any[];
+    topCategory: TopCategoryItem | null;
+  }>(() => {
+    let topCategory: TopCategoryItem | null = null;
+    let maxSpend = 0;
+
+    const list = categories.map((cat) => {
+      const spentInBase = expenses
+        .filter((e) => e.category === cat.id)
+        .reduce(
+          (acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate),
+          0
+        );
+      const spentInSelected = convertCurrency(spentInBase, tripBaseCurrency, selectedCurrency, fxRate);
+      const catPercent = totalSpent > 0 ? (spentInBase / totalSpent) * 100 : 0;
+
+      const rawCatBudget = categoryBudgets[cat.id] || 0;
+      const catBudgetInSelected = convertCurrency(rawCatBudget, tripBaseCurrency, selectedCurrency, fxRate);
+
+      if (spentInSelected > maxSpend) {
+        maxSpend = spentInSelected;
+        topCategory = {
+          id: cat.id,
+          label: cat.label,
+          icon: cat.icon,
+          amount: Math.round(spentInSelected),
+          percent: Math.round(catPercent),
+        };
+      }
+
+      return {
+        ...cat,
+        spentInSelected: Math.round(spentInSelected),
+        catPercent: Math.round(catPercent),
+        catBudgetInSelected: Math.round(catBudgetInSelected),
+        rawCatBudget,
+      };
+    });
+
+    return { list, topCategory };
+  }, [categories, expenses, categoryBudgets, totalSpent, tripBaseCurrency, selectedCurrency, fxRate]);
+
+  // ==================== DASHLET 4: LIVE NET BALANCE & SMART DEBT MINIMIZER ====================
+  const liveSettlementData = useMemo(() => {
+    const memberCount = Math.max(1, members.length || distinctPayers.length || 1);
+    const equalShare = convertedTotalSpent / memberCount;
+
+    // Build balances
+    const balances: Array<{ name: string; avatar: any; paid: number; net: number; isMe: boolean }> = [];
+
+    // Ensure all members are present
+    members.forEach((m) => {
+      const mName = m.profiles?.display_name || m.name || 'สมาชิก';
+      const mPayer = distinctPayers.find(
+        (p) => p.name.toLowerCase() === mName.toLowerCase() || p.key === m.user_id || p.key === m.id
+      );
+
+      const paidInSelected = mPayer
+        ? convertCurrency(mPayer.total, tripBaseCurrency, selectedCurrency, fxRate)
+        : 0;
+
+      const net = paidInSelected - equalShare;
+      balances.push({
+        name: mName,
+        avatar: getCatAvatar(m.profiles?.avatar || mPayer?.avatar),
+        paid: Math.round(paidInSelected),
+        net: Math.round(net),
+        isMe: Boolean(mPayer?.isMe),
+      });
+    });
+
+    // If distinctPayers has people not in members array
+    distinctPayers.forEach((p) => {
+      if (!balances.some((b) => b.name.toLowerCase() === p.name.toLowerCase())) {
+        const paidInSelected = convertCurrency(p.total, tripBaseCurrency, selectedCurrency, fxRate);
+        const net = paidInSelected - equalShare;
+        balances.push({
+          name: p.name,
+          avatar: getCatAvatar(p.avatar),
+          paid: Math.round(paidInSelected),
+          net: Math.round(net),
+          isMe: Boolean(p.isMe),
+        });
+      }
+    });
+
+    // Compute optimal transfers
+    const debtors = balances.filter((b) => b.net < -5).map((b) => ({ ...b, debt: Math.abs(b.net) }));
+    const creditors = balances.filter((b) => b.net > 5).map((b) => ({ ...b, credit: b.net }));
+
+    const transfers: Array<{ from: string; to: string; amount: number }> = [];
+    let dIdx = 0;
+    let cIdx = 0;
+
+    while (dIdx < debtors.length && cIdx < creditors.length) {
+      const debtor = debtors[dIdx];
+      const creditor = creditors[cIdx];
+      const settleAmount = Math.min(debtor.debt, creditor.credit);
+
+      if (settleAmount > 0) {
+        transfers.push({
+          from: debtor.name,
+          to: creditor.name,
+          amount: Math.round(settleAmount),
+        });
+      }
+
+      debtor.debt -= settleAmount;
+      creditor.credit -= settleAmount;
+
+      if (debtor.debt <= 1) dIdx++;
+      if (creditor.credit <= 1) cIdx++;
+    }
+
+    return { balances, transfers, equalShare: Math.round(equalShare) };
+  }, [members, distinctPayers, convertedTotalSpent, tripBaseCurrency, selectedCurrency, fxRate]);
+
+  // ==================== DASHLET 6: PAYMENT METHOD BREAKDOWN ====================
+  const paymentMethodData = useMemo(() => {
+    let creditTotal = 0;
+    let cashTotal = 0;
+    let icCardTotal = 0;
+
+    expenses.forEach((e) => {
+      const amountInSelected = convertCurrency(
+        Number(e.amount || 0),
+        e.currency || tripBaseCurrency,
+        selectedCurrency,
+        fxRate
+      );
+
+      const method = (e.payment_method || '').toLowerCase();
+      const title = (e.title || '').toLowerCase();
+
+      if (method.includes('cash') || method.includes('เงินสด') || title.includes('เงินสด') || title.includes('ตู้ atm')) {
+        cashTotal += amountInSelected;
+      } else if (method.includes('ic') || method.includes('suica') || method.includes('icoca') || title.includes('suica') || title.includes('icoca')) {
+        icCardTotal += amountInSelected;
+      } else {
+        // Default to Card / Digital
+        creditTotal += amountInSelected;
+      }
+    });
+
+    const sum = creditTotal + cashTotal + icCardTotal || 1;
+    const creditPct = Math.round((creditTotal / sum) * 100);
+    const cashPct = Math.round((cashTotal / sum) * 100);
+    const icCardPct = Math.max(0, 100 - creditPct - cashPct);
+
+    return {
+      creditTotal: Math.round(creditTotal),
+      cashTotal: Math.round(cashTotal),
+      icCardTotal: Math.round(icCardTotal),
+      creditPct,
+      cashPct,
+      icCardPct,
+    };
+  }, [expenses, tripBaseCurrency, selectedCurrency, fxRate]);
+
+  // ==================== DASHLET 7: WHAT-IF BUDGET SIMULATOR ====================
+  const [simulatedBudgetDelta, setSimulatedBudgetDelta] = useState<number>(0);
+
+  const effectiveSimulatedBudget = Math.max(0, convertedTotalBudget + simulatedBudgetDelta);
+  const simulatedRemainingBudget = effectiveSimulatedBudget > convertedTotalSpent ? effectiveSimulatedBudget - convertedTotalSpent : 0;
+  const simulatedSafeDailyQuota = Math.round(simulatedRemainingBudget / Math.max(1, velocityData.remainingDays));
+
+  const peakDay = dailyWaveData.peakDay;
+  const topCategory = categoryMatrixData.topCategory;
+
+  return (
+    <div className="space-y-4 sm:space-y-6 text-left">
+
+      {/* ==================== 1. TOP HUD: CURRENCY SWITCHER & RATE ==================== */}
+      <div className="p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-3 text-left">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
               <Coins className="h-4 w-4" />
             </div>
-            <div>
+            <div className="text-left">
               <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white block">
-                แสดงสถิติและงบในสกุลเงิน (Currency View)
+                แดชบอร์ดสถิติ & สกุลเงินแสดงผล (Currency Hub)
               </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                เลือกสกุลเงินเพื่อดูยอดแปลงอัตโนมัติแบบเรียลไทม์
+                เลือกสกุลเงินเพื่อคำนวณและแปลงสถิติอัตโนมัติทั้งระบบ
               </span>
             </div>
           </div>
-          <span className="text-[11px] font-black text-blue-600 dark:text-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/40 px-3 py-1 rounded-xl border border-blue-200/80 dark:border-blue-900/60 font-mono shadow-2xs">
+          <span className="text-[11px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-3 py-1 rounded-xl border border-blue-200/80 dark:border-blue-900/60 font-mono shadow-2xs">
             {formatExchangeRateDisplay(selectedCurrency, fxRate)}
           </span>
         </div>
@@ -131,7 +470,7 @@ export function TripAnalyticsTab({
                 onClick={() => setSelectedCurrency(cur.code)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95 ${
                   isSelected
-                    ? 'btn-luxury-primary text-white scale-102 ring-2 ring-blue-500/30'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-500/30'
                     : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#222c42] hover:border-blue-400 hover:bg-white dark:hover:bg-[#222c42]'
                 }`}
               >
@@ -146,22 +485,22 @@ export function TripAnalyticsTab({
         </div>
       </div>
 
-      {/* ==================== 2. TOTAL BUDGET & SPENDING OVERVIEW HERO CARD ==================== */}
-      <div className="p-5 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-gradient-to-br from-blue-50/70 via-indigo-50/30 to-white dark:from-[#151b2b] dark:via-[#1c2438] dark:to-[#151b2b] card-elevation space-y-5 relative overflow-hidden">
-        {/* Floating Ambient Glow */}
-        <div className="absolute top-0 right-0 w-56 h-56 bg-blue-500/10 dark:bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* ==================== 2. HERO DASHBOARD: TARGET VS ACTUAL SPENT ==================== */}
+      <div className="p-5 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-gradient-to-br from-blue-50/70 via-indigo-50/25 to-white dark:from-[#151b2b] dark:via-[#1c2438] dark:to-[#151b2b] card-elevation space-y-5 relative overflow-hidden text-left">
+        {/* Deep Navy/Blue Glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-2xl p-2 rounded-2xl bg-white/80 dark:bg-[#1c2438] shadow-sm border border-slate-200/60 dark:border-[#222c42]">🎯</span>
-            <div>
+          <div className="flex items-center gap-2.5 text-left">
+            <span className="text-2xl p-2 rounded-2xl bg-white/80 dark:bg-[#1c2438] shadow-sm border border-slate-200/60 dark:border-[#222c42] shrink-0">🎯</span>
+            <div className="text-left">
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                <span>ภาพรวมงบประมาณ & การใช้จ่าย</span>
-                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                <span>ภาพรวมงบประมาณ & การใช้จ่ายรวม</span>
+                <Sparkles className="h-3.5 w-3.5 text-blue-500" />
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                เปรียบเทียบยอดใช้จ่ายจริงกับเป้าหมายงบทริป
+                เปรียบเทียบงบประมาณเป้าหมาย ยอดจ่ายจริง และสถานะคงเหลือ
               </p>
             </div>
           </div>
@@ -169,7 +508,7 @@ export function TripAnalyticsTab({
           <button
             type="button"
             onClick={() => handleOpenBudget('budget')}
-            className="btn-luxury-primary px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/25 active:scale-95"
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/25 active:scale-95 transition-all"
             title="กำหนดหรือแก้ไขงบประมาณรวมทริป"
           >
             <Sliders className="h-3.5 w-3.5" />
@@ -177,19 +516,19 @@ export function TripAnalyticsTab({
           </button>
         </div>
 
-        {/* 3 Metric Columns */}
+        {/* 3 Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Target Budget */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-sm hover:shadow-md transition-all duration-200 space-y-1 relative overflow-hidden backdrop-blur-md">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-xs space-y-1 text-left">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 {convertedTotalBudget > 0 ? 'งบประมาณรวมตั้งไว้' : 'งบรวมทริป'}
               </span>
-              <span className="w-5 h-5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[11px]">
+              <span className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs">
                 🎯
               </span>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight text-left">
               {convertedTotalBudget > 0 ? (
                 <>
                   {convertedTotalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
@@ -201,55 +540,51 @@ export function TripAnalyticsTab({
                     ≈ {totalCatBudgetsInSelected.toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
                     <span className="text-xs font-sans text-slate-500 font-bold">{selectedCurrency}</span>
                   </div>
-                  <span className="text-[10px] text-slate-500 font-sans block font-semibold">ตามรายการที่พัก/ตั๋ว</span>
+                  <span className="text-[10px] text-slate-500 font-sans block font-semibold">ตามหมวดหมู่</span>
                 </div>
               ) : (
-                <span className="text-xs font-bold text-slate-400 font-sans">ยังไม่ได้ตั้งงบ (ไม่บังคับ)</span>
+                <span className="text-xs font-bold text-slate-400 font-sans">ยังไม่ได้ตั้งงบ</span>
               )}
             </div>
-            {convertedTotalBudget > 0 ? (
-              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 block font-mono">
+            {convertedTotalBudget > 0 && (
+              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 block font-mono text-left">
                 {formatSecondary(convertedTotalBudget, selectedCurrency)}
               </span>
-            ) : totalCatBudgetsInSelected > 0 ? (
-              <span className="text-[11px] font-bold text-slate-400 block font-mono">
-                {formatSecondary(totalCatBudgetsInSelected, selectedCurrency)}
-              </span>
-            ) : null}
+            )}
           </div>
 
           {/* Total Spent */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-sm hover:shadow-md transition-all duration-200 space-y-1 relative overflow-hidden backdrop-blur-md">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-xs space-y-1 text-left">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 ใช้จ่ายไปแล้ว
               </span>
-              <span className="w-5 h-5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-[11px]">
+              <span className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs">
                 💸
               </span>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight text-left">
               {convertedTotalSpent.toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
               <span className="text-xs font-sans text-slate-500 font-bold">{selectedCurrency}</span>
             </div>
             {convertedTotalSpent > 0 && (
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block font-mono">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block font-mono text-left">
                 {formatSecondary(convertedTotalSpent, selectedCurrency)}
               </span>
             )}
           </div>
 
           {/* Remaining / Over */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-sm hover:shadow-md transition-all duration-200 space-y-1 relative overflow-hidden backdrop-blur-md">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-xs space-y-1 text-left">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 {convertedTotalBudget > 0 ? (overBudget > 0 ? 'เกินงบประมาณ' : 'งบคงเหลือ') : 'สถานะงบทริป'}
               </span>
-              <span className="w-5 h-5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[11px]">
+              <span className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
                 {convertedTotalBudget > 0 ? (overBudget > 0 ? '⚠️' : '💎') : '✨'}
               </span>
             </div>
-            <div className={`text-xl sm:text-2xl font-black font-mono tracking-tight ${
+            <div className={`text-xl sm:text-2xl font-black font-mono tracking-tight text-left ${
               convertedTotalBudget > 0 ? (overBudget > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400') : 'text-slate-700 dark:text-slate-300'
             }`}>
               {convertedTotalBudget > 0 ? (
@@ -257,27 +592,23 @@ export function TripAnalyticsTab({
                   {overBudget > 0 ? `+${overBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : remainingBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
                   <span className="text-xs font-sans text-slate-500 font-bold">{selectedCurrency}</span>
                 </>
-              ) : totalCatBudgetsInSelected > 0 ? (
-                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 font-sans">
-                  คุมตามหมวดหมู่ ✨
-                </span>
               ) : (
                 <span className="text-xs font-bold text-slate-400 font-sans">ทริปยืดหยุ่น ✨</span>
               )}
             </div>
             {convertedTotalBudget > 0 && (
-              <span className={`text-[11px] font-black block font-mono ${overBudget > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+              <span className={`text-[11px] font-black block font-mono text-left ${overBudget > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                 {overBudget > 0 ? formatSecondary(overBudget, selectedCurrency) : formatSecondary(remainingBudget, selectedCurrency)}
               </span>
             )}
           </div>
         </div>
 
-        {/* Progress Bar with Luxury Gradient & Shimmer */}
+        {/* Progress Bar with Royal Blue & Indigo Gradient */}
         {convertedTotalBudget > 0 && (
-          <div className="space-y-2 pt-1">
+          <div className="space-y-2 pt-1 text-left">
             <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-slate-600 dark:text-slate-300 font-bold">ความคืบหน้าการใช้งบ</span>
+              <span className="text-slate-600 dark:text-slate-300 font-bold">ความคืบหน้าการใช้งบรวม ({budgetProgress}%)</span>
               <span className={`text-sm font-black font-mono ${budgetProgress >= 100 ? 'text-rose-600' : 'text-blue-600 dark:text-blue-400'}`}>
                 {budgetProgress}%
               </span>
@@ -286,200 +617,555 @@ export function TripAnalyticsTab({
               <div
                 className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
                   budgetProgress >= 100
-                    ? 'bg-gradient-to-r from-amber-500 to-rose-600 shadow-sm shadow-rose-500/50'
-                    : budgetProgress >= 80
-                    ? 'bg-gradient-to-r from-blue-500 to-amber-500 shadow-sm shadow-amber-500/50'
-                    : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 shadow-sm shadow-blue-500/50'
+                    ? 'bg-gradient-to-r from-amber-500 to-rose-600'
+                    : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-400 shadow-sm shadow-blue-500/50'
                 }`}
                 style={{ width: `${Math.min(budgetProgress, 100)}%` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent animate-shimmer-sweep" />
-              </div>
+              />
             </div>
           </div>
         )}
       </div>
 
-      {/* ==================== 3. สรุปยอดจ่ายแยกตามรายคน (WHO PAID) ==================== */}
-      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-              <Wallet className="h-4 w-4" />
+      {/* ==================== DASHLET 1: DAILY BUDGET VELOCITY & SAFE RADAR ==================== */}
+      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-left">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <Zap className="h-4 w-4" />
             </div>
-            <span>สรุปยอดจ่ายแยกตามรายคน (Who Paid)</span>
-          </h2>
+            <div className="text-left">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                มาตรวัดความเร็ว & โควตาใช้จ่ายต่อวัน (Budget Velocity)
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                คำนวณเงินที่ใช้ได้ต่อวันที่ปลอดภัย เพื่อให้ทริปไม่เกินงบ
+              </p>
+            </div>
+          </div>
 
-          <div className="flex items-center gap-2">
+          <span className={`px-3 py-1 rounded-full text-xs font-black border flex items-center gap-1.5 shadow-2xs ${
+            velocityData.burnStatus === 'safe'
+              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+              : velocityData.burnStatus === 'optimal'
+              ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+              : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+          }`}>
+            <span className="w-2 h-2 rounded-full animate-pulse bg-current" />
+            <span>{velocityData.burnMessage}</span>
+          </span>
+        </div>
+
+        {/* Velocity Telemetry Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-[#1c2438] border border-blue-200/70 dark:border-blue-900/40 text-left">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+              โควตาปลอดภัยวันนี้
+            </span>
+            <div className="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400 font-mono mt-0.5">
+              {velocityData.safeDailyQuota > 0 ? (
+                `${velocityData.safeDailyQuota.toLocaleString()} ${selectedCurrency}`
+              ) : (
+                'ตามสะดวก'
+              )}
+            </div>
+            <span className="text-[10px] text-slate-400 block mt-0.5">
+              {formatSecondary(velocityData.safeDailyQuota, selectedCurrency) || 'ไม่จำกัด'}
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] text-left">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+              ใช้จริงเฉลี่ย / วัน
+            </span>
+            <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono mt-0.5">
+              {velocityData.actualDailyAvg.toLocaleString()} {selectedCurrency}
+            </div>
+            <span className="text-[10px] text-slate-400 block mt-0.5">
+              {formatSecondary(velocityData.actualDailyAvg, selectedCurrency)}
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] text-left">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+              จำนวนวันในทริป
+            </span>
+            <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono mt-0.5">
+              {velocityData.totalDays} วัน
+            </div>
+            <span className="text-[10px] text-slate-400 block mt-0.5">
+              ผ่านไป {velocityData.elapsedDays} วัน
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] text-left">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+              วันที่เหลือให้เที่ยว
+            </span>
+            <div className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
+              {velocityData.remainingDays} วัน
+            </div>
+            <span className="text-[10px] text-slate-400 block mt-0.5">
+              {velocityData.remainingDays > 0 ? 'เตรียมวางแผนให้คุ้ม' : 'จบทริปแล้ว'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ==================== DASHLET 2: INTERACTIVE DAILY SPENDING WAVE ==================== */}
+      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <BarChart3 className="h-4 w-4" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                คลื่นการใช้จ่ายรายวัน (Daily Spending Wave)
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                แตะที่แท่งของแต่ละวันเพื่อดูสรุปยอดและรายการใช้จ่าย
+              </p>
+            </div>
+          </div>
+
+          {peakDay && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-2xs">
+              <Flame className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <span>Peak Day 🏔️ {peakDay.dayLabel} ({peakDay.total.toLocaleString()} {selectedCurrency})</span>
+            </div>
+          )}
+        </div>
+
+        {/* Daily Wave Bar Chart Visualizer */}
+        {dailyWaveData.list.length === 0 ? (
+          <div className="py-8 text-center text-xs text-slate-400 font-bold border border-dashed rounded-2xl border-slate-200 dark:border-[#222c42]">
+            ยังไม่มีรายการค่าใช้จ่ายในแต่ละวัน
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-end gap-2 overflow-x-auto pb-2 pt-6 custom-scrollbar h-48 border-b border-slate-100 dark:border-[#222c42]">
+              {dailyWaveData.list.map((d) => {
+                const heightPct = Math.max(12, Math.round((d.total / dailyWaveData.maxTotal) * 100));
+                const isPeak = peakDay?.dayLabel === d.dayLabel;
+                const isSelected = activeWaveDayDetail?.dayLabel === d.dayLabel;
+
+                return (
+                  <div
+                    key={d.dayLabel}
+                    onClick={() => setSelectedWaveDay(d.dayLabel)}
+                    className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group min-w-[56px] sm:min-w-[64px]"
+                  >
+                    {/* Top value badge on hover or selected */}
+                    <span className={`text-[9.5px] font-mono font-bold transition-all ${
+                      isSelected || isPeak
+                        ? 'text-blue-600 dark:text-blue-400 font-black scale-105'
+                        : 'text-slate-400 opacity-60 group-hover:opacity-100'
+                    }`}>
+                      {d.total > 0 ? (d.total >= 1000 ? `${(d.total / 1000).toFixed(0)}k` : d.total) : '0'}
+                    </span>
+
+                    {/* Bar Pillar */}
+                    <div className="w-7 sm:w-8 h-32 bg-slate-100 dark:bg-[#1c2438] rounded-xl flex items-end p-0.5 overflow-hidden transition-all group-hover:ring-2 group-hover:ring-blue-400/50">
+                      <div
+                        className={`w-full rounded-lg transition-all duration-500 ${
+                          isPeak
+                            ? 'bg-gradient-to-t from-blue-600 via-indigo-600 to-amber-400'
+                            : isSelected
+                            ? 'bg-gradient-to-t from-blue-600 to-cyan-400 shadow-sm shadow-blue-500/40'
+                            : 'bg-gradient-to-t from-blue-500/80 to-indigo-500/80 group-hover:from-blue-600 group-hover:to-indigo-600'
+                        }`}
+                        style={{ height: `${heightPct}%` }}
+                      />
+                    </div>
+
+                    {/* Day label */}
+                    <span className={`text-[10px] font-bold truncate max-w-[56px] text-center ${
+                      isSelected ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-slate-500 dark:text-slate-400'
+                    }`}>
+                      {d.dayLabel}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Selected Day Inspector Spotlight */}
+            {activeWaveDayDetail && (
+              <div className="p-3.5 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438]/80 border border-blue-200/70 dark:border-blue-900/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                  <span className="font-black text-slate-900 dark:text-white">
+                    รายละเอียดวันที่ {activeWaveDayDetail.dayLabel}:
+                  </span>
+                  <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm">
+                    {activeWaveDayDetail.total.toLocaleString()} {selectedCurrency}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    ({activeWaveDayDetail.count} รายการบิล)
+                  </span>
+                </div>
+
+                {activeWaveDayDetail.items.length > 0 && (
+                  <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+                    <span className="font-bold">รายการสูงสุด:</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[150px] sm:max-w-[200px]">
+                      {activeWaveDayDetail.items[0].title}
+                    </span>
+                    <span className="font-mono font-black text-blue-600 dark:text-blue-400">
+                      ({activeWaveDayDetail.items[0].amount.toLocaleString()} {selectedCurrency})
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ==================== 2 COLUMNS: CATEGORY MATRIX & LIVE NET BALANCE ==================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        {/* ==================== DASHLET 3: CATEGORY MATRIX & TOP DRIVER ==================== */}
+        <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <PieChart className="h-4 w-4" />
+              </div>
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                สัดส่วนค่าใช้จ่ายตามหมวดหมู่
+              </h3>
+            </div>
+
             <button
               type="button"
-              onClick={() => handleOpenBudget('members')}
-              className="btn-luxury-glass px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer active:scale-95"
-              title="กำหนดงบส่วนตัวรายคน"
+              onClick={() => handleOpenBudget('categories')}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <Users className="h-3.5 w-3.5 text-blue-500" />
-              <span>กำหนดงบรายคน</span>
+              <Sliders className="h-3 w-3" />
+              <span>จัดสรรงบ</span>
             </button>
+          </div>
+
+          {/* Top Spend Driver Callout */}
+          {topCategory && (
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-transparent border border-blue-200/80 dark:border-blue-900/40 flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xl shrink-0">{topCategory.icon}</span>
+                <div className="min-w-0 text-left">
+                  <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 block">
+                    Top Spend Driver (หมวดดูดเงินอันดับ 1) 👑
+                  </span>
+                  <span className="font-black text-slate-900 dark:text-white text-xs truncate block">
+                    {topCategory.label} • {topCategory.percent}% ของทริป
+                  </span>
+                </div>
+              </div>
+              <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm shrink-0">
+                {topCategory.amount.toLocaleString()} {selectedCurrency}
+              </span>
+            </div>
+          )}
+
+          {/* Category List */}
+          <div className="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar pr-1">
+            {categoryMatrixData.list.map((cat) => (
+              <div
+                key={cat.id}
+                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438]/60 border border-slate-200/80 dark:border-[#222c42] space-y-1.5 text-left hover:border-blue-400 transition-all"
+              >
+                <div className="flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base p-1 rounded-lg bg-white dark:bg-[#111624] shadow-2xs border border-slate-200/60 dark:border-[#222c42]">{cat.icon}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{cat.label}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono font-black text-slate-900 dark:text-white text-sm">
+                      {cat.spentInSelected.toLocaleString()} {selectedCurrency}
+                    </span>
+                    <span className="text-[10px] text-slate-400 ml-1.5 font-bold">
+                      ({cat.catPercent}%)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-full bg-slate-200 dark:bg-[#111624] rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(cat.catPercent, 100)}%` }}
+                  />
+                </div>
+
+                {cat.rawCatBudget > 0 && (
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 pt-0.5 font-mono">
+                    <span>งบหมวดนี้: {cat.catBudgetInSelected.toLocaleString()} {selectedCurrency}</span>
+                    {cat.spentInSelected > cat.catBudgetInSelected ? (
+                      <span className="text-rose-600 font-black">เกิน +{(cat.spentInSelected - cat.catBudgetInSelected).toLocaleString()} {selectedCurrency}</span>
+                    ) : (
+                      <span className="text-emerald-600 font-bold">เหลือ {(cat.catBudgetInSelected - cat.spentInSelected).toLocaleString()} {selectedCurrency}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ==================== DASHLET 4: LIVE NET BALANCE & SMART DEBT MINIMIZER ==================== */}
+        <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <Wallet className="h-4 w-4" />
+              </div>
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                สรุปยอดจ่าย & แผนผังเคลียร์เงิน (Who Paid)
+              </h3>
+            </div>
 
             <button
               onClick={() => setShowSettlementModal(true)}
-              className="btn-luxury-primary px-4 py-1.5 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/25 active:scale-95"
+              className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/25 active:scale-95 transition-all"
             >
               <Calculator className="h-3.5 w-3.5" /> เคลียร์บิล
             </button>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {distinctPayers.map((p) => {
-            const pCat = getCatAvatar(p.avatar);
-            const sharePercent = totalSpent > 0 ? (p.total / totalSpent) * 100 : 0;
-            
-            const targetMemberObj = members.find(
-              (m) => m.profiles?.display_name?.toLowerCase() === p.name.toLowerCase() || m.user_id === p.key
-            );
-            const pKey = p.isMe ? 'me' : (targetMemberObj?.user_id || targetMemberObj?.id || p.key);
-            
-            // Raw budget in tripBaseCurrency
-            const rawPBudget = memberBudgets[pKey] || 0;
+          <div className="p-2.5 rounded-2xl bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 flex items-center justify-between text-xs">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+              หารเท่ากันตกคนละ:
+            </span>
+            <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm">
+              ≈ {liveSettlementData.equalShare.toLocaleString()} {selectedCurrency}
+            </span>
+          </div>
 
-            // Convert to selectedCurrency
-            const pTotalInSelected = convertCurrency(p.total, tripBaseCurrency, selectedCurrency, fxRate);
-            const pBudgetInSelected = convertCurrency(rawPBudget, tripBaseCurrency, selectedCurrency, fxRate);
-            const pRemainingInSelected = pBudgetInSelected > pTotalInSelected ? pBudgetInSelected - pTotalInSelected : 0;
-            const pOverInSelected = pBudgetInSelected > 0 && pTotalInSelected > pBudgetInSelected ? pTotalInSelected - pBudgetInSelected : 0;
-
-            return (
-              <div key={p.key} className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md space-y-2.5">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <CatAvatarBadge cat={pCat} size="sm" />
-                    <div>
-                      <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate block">{p.name}</span>
-                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
-                        สัดส่วน {sharePercent.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white font-mono block">
-                      {pTotalInSelected.toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
-                      <span className="text-xs font-sans text-slate-500 font-bold">{selectedCurrency}</span>
+          {/* Member Net Balance List */}
+          <div className="space-y-2.5">
+            {liveSettlementData.balances.map((b) => (
+              <div
+                key={b.name}
+                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438]/60 border border-slate-200/80 dark:border-[#222c42] flex items-center justify-between gap-3 text-left"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <CatAvatarBadge cat={b.avatar} size="sm" />
+                  <div className="min-w-0 text-left">
+                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate block">
+                      {b.name} {b.isMe ? '(ฉัน)' : ''}
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-bold font-mono">
-                      {formatSecondary(pTotalInSelected, selectedCurrency)}
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                      จ่ายไปแล้ว {b.paid.toLocaleString()} {selectedCurrency}
                     </span>
                   </div>
                 </div>
 
-                {rawPBudget > 0 ? (
-                  <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex justify-between items-center border-t border-slate-200/70 dark:border-[#222c42] pt-2 font-mono">
-                    <span>งบ: {pBudgetInSelected.toLocaleString(undefined, { maximumFractionDigits: 0 })} {selectedCurrency}</span>
-                    {pOverInSelected > 0 ? (
-                      <span className="px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 border border-rose-200 dark:border-rose-900/60 font-bold text-[10px]">
-                        เกินงบ +{pOverInSelected.toLocaleString(undefined, { maximumFractionDigits: 0 })} {selectedCurrency}
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 border border-emerald-200 dark:border-emerald-900/60 font-bold text-[10px]">
-                        เหลือ {pRemainingInSelected.toLocaleString(undefined, { maximumFractionDigits: 0 })} {selectedCurrency}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-[11px] text-slate-400 flex justify-between items-center border-t border-slate-200/70 dark:border-[#222c42] pt-2">
-                    <span>ยังไม่กำหนดงบส่วนตัว</span>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenBudget('members')}
-                      className="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer text-xs"
-                    >
-                      + กำหนดงบ ({selectedCurrency})
-                    </button>
-                  </div>
-                )}
+                <div className="text-right shrink-0">
+                  {b.net > 0 ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-black font-mono">
+                      <ArrowDownRight className="h-3.5 w-3.5" />
+                      ได้รับคืน +{b.net.toLocaleString()}
+                    </span>
+                  ) : b.net < 0 ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-black font-mono">
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                      ต้องโอน -{Math.abs(b.net).toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold text-slate-400 font-mono">พอดี 0</span>
+                  )}
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
+            ))}
+          </div>
 
-      {/* ==================== 4. หมวดหมู่ค่าใช้จ่าย (CATEGORY BREAKDOWN) ==================== */}
-      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-              <PieChart className="h-4 w-4" />
-            </div>
-            <span>สัดส่วนค่าใช้จ่ายตามหมวดหมู่</span>
-          </h2>
-          <button
-            type="button"
-            onClick={() => handleOpenBudget('categories')}
-            className="btn-luxury-glass px-3 py-1.5 rounded-xl text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 cursor-pointer active:scale-95"
-          >
-            <Sliders className="h-3 w-3" />
-            <span>จัดสรรงบหมวดหมู่ ({selectedCurrency})</span>
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {categories.map((cat) => {
-            const spentInBase = expenses
-              .filter((e) => e.category === cat.id)
-              .reduce(
-                (acc, curr) => acc + convertCurrency(Number(curr.amount || 0), curr.currency || tripBaseCurrency, tripBaseCurrency, fxRate),
-                0
-              );
-            const spentInSelected = convertCurrency(spentInBase, tripBaseCurrency, selectedCurrency, fxRate);
-            const catPercent = totalSpent > 0 ? (spentInBase / totalSpent) * 100 : 0;
-
-            const rawCatBudget = categoryBudgets[cat.id] || 0;
-            const catBudgetInSelected = convertCurrency(rawCatBudget, tripBaseCurrency, selectedCurrency, fxRate);
-
-            return (
-              <div key={cat.id} className="space-y-1.5 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-[#1c2438]/50 transition-colors border border-transparent hover:border-slate-200/60 dark:hover:border-[#222c42]">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
-                    <span className="text-base p-1 rounded-lg bg-white dark:bg-[#111624] shadow-2xs border border-slate-200/60 dark:border-[#222c42]">{cat.icon}</span>
-                    <span className="font-black">{cat.label}</span>
-                  </span>
-                  <div className="text-right">
-                    <span className="text-slate-900 dark:text-white font-mono font-black text-sm">
-                      {spentInSelected.toLocaleString(undefined, { maximumFractionDigits: 0 })} {selectedCurrency}
-                    </span>
-                    <span className="text-[10px] text-slate-400 ml-1.5 font-sans font-bold">
-                      ({catPercent.toFixed(0)}%)
-                    </span>
-                    {spentInSelected > 0 && (
-                      <span className="text-[10px] text-blue-600 dark:text-blue-400 block font-mono font-bold">
-                        {formatSecondary(spentInSelected, selectedCurrency)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="w-full bg-slate-100 dark:bg-[#111624] rounded-full h-2.5 overflow-hidden p-0.5 shadow-inner">
+          {/* Smart Optimal Transfer Flow */}
+          {liveSettlementData.transfers.length > 0 && (
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#111624] border border-slate-200/80 dark:border-[#222c42] space-y-2 text-left">
+              <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 block tracking-wider">
+                ⚡ สเต็ปโอนเงินที่น้อยที่สุด (Optimal Transfers)
+              </span>
+              <div className="space-y-1.5">
+                {liveSettlementData.transfers.map((t, tIdx) => (
                   <div
-                    className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(catPercent, 100)}%` }}
-                  />
-                </div>
-
-                {rawCatBudget > 0 && (
-                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 pt-0.5 font-mono">
-                    <span>งบหมวดนี้: {catBudgetInSelected.toLocaleString(undefined, { maximumFractionDigits: 0 })} {selectedCurrency}</span>
-                    {spentInSelected > catBudgetInSelected ? (
-                      <span className="text-rose-600">เกินงบ +{(spentInSelected - catBudgetInSelected).toLocaleString(undefined, { maximumFractionDigits: 0 })} {selectedCurrency}</span>
-                    ) : (
-                      <span className="text-emerald-600">เหลือ {(catBudgetInSelected - spentInSelected).toLocaleString(undefined, { maximumFractionDigits: 0 })} {selectedCurrency}</span>
-                    )}
+                    key={tIdx}
+                    className="p-2 rounded-xl bg-white dark:bg-[#181a20] border border-slate-200/60 dark:border-[#262c3d] flex items-center justify-between text-xs font-bold"
+                  >
+                    <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                      <span>{t.from}</span>
+                      <ArrowRight className="h-3 w-3 text-blue-500" />
+                      <span>{t.to}</span>
+                    </div>
+                    <span className="font-mono font-black text-blue-600 dark:text-blue-400">
+                      {t.amount.toLocaleString()} {selectedCurrency}
+                    </span>
                   </div>
-                )}
+                ))}
               </div>
-            );
-          })}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* ==================== DASHLET 6: PAYMENT METHOD BREAKDOWN ==================== */}
+      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <CreditCard className="h-4 w-4" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                สัดส่วนการชำระเงิน (Cash vs Card vs IC Card)
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                ติดตามการใช้เงินสดและบัตร เพื่อบริหารเงินสำรองในกระเป๋า
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Triple Split Bar */}
+        <div className="w-full bg-slate-100 dark:bg-[#111624] h-3.5 rounded-full overflow-hidden flex p-0.5 shadow-inner">
+          <div
+            className="h-full bg-blue-600 rounded-l-full transition-all"
+            style={{ width: `${paymentMethodData.creditPct}%` }}
+            title={`บัตรเครดิต ${paymentMethodData.creditPct}%`}
+          />
+          <div
+            className="h-full bg-amber-500 transition-all"
+            style={{ width: `${paymentMethodData.cashPct}%` }}
+            title={`เงินสด ${paymentMethodData.cashPct}%`}
+          />
+          <div
+            className="h-full bg-emerald-500 rounded-r-full transition-all"
+            style={{ width: `${paymentMethodData.icCardPct}%` }}
+            title={`IC Card ${paymentMethodData.icCardPct}%`}
+          />
+        </div>
+
+        {/* Method Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-[#1c2438] border border-blue-200/70 dark:border-blue-900/40 text-left space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                💳 บัตรเครดิต / Travel Card
+              </span>
+              <span className="text-xs font-black font-mono text-blue-600">
+                {paymentMethodData.creditPct}%
+              </span>
+            </div>
+            <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
+              {paymentMethodData.creditTotal.toLocaleString()} {selectedCurrency}
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-amber-50/50 dark:bg-[#1c2438] border border-amber-200/70 dark:border-amber-900/40 text-left space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                💴 เงินสด (Cash)
+              </span>
+              <span className="text-xs font-black font-mono text-amber-600">
+                {paymentMethodData.cashPct}%
+              </span>
+            </div>
+            <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
+              {paymentMethodData.cashTotal.toLocaleString()} {selectedCurrency}
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-[#1c2438] border border-emerald-200/70 dark:border-emerald-900/40 text-left space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                📲 IC Card / Suica
+              </span>
+              <span className="text-xs font-black font-mono text-emerald-600">
+                {paymentMethodData.icCardPct}%
+              </span>
+            </div>
+            <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
+              {paymentMethodData.icCardTotal.toLocaleString()} {selectedCurrency}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ==================== DASHLET 7: WHAT-IF BUDGET SIMULATOR ==================== */}
+      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <Sliders className="h-4 w-4" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                เครื่องมือจำลองการปรับงบ (What-If Budget Simulator)
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                ลองเลื่อนสไลเดอร์เพื่อดูว่าการปรับงบจะส่งผลต่อเงินที่ใช้ได้ต่อวันอย่างไร
+              </p>
+            </div>
+          </div>
+
+          {simulatedBudgetDelta !== 0 && (
+            <button
+              type="button"
+              onClick={() => setSimulatedBudgetDelta(0)}
+              className="px-3 py-1 rounded-xl text-xs font-bold text-slate-500 hover:text-blue-600 dark:text-slate-400 flex items-center gap-1 cursor-pointer"
+            >
+              <RefreshCw className="h-3 w-3" />
+              <span>รีเซ็ต</span>
+            </button>
+          )}
+        </div>
+
+        {/* Live Simulator Slider */}
+        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] space-y-3">
+          <div className="flex justify-between items-center text-xs font-bold">
+            <span className="text-slate-600 dark:text-slate-300">
+              จำลองงบประมาณรวมใหม่:
+            </span>
+            <div className="text-right">
+              <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-base">
+                {effectiveSimulatedBudget.toLocaleString()} {selectedCurrency}
+              </span>
+              {simulatedBudgetDelta !== 0 && (
+                <span className={`text-[11px] ml-1.5 font-bold font-mono ${simulatedBudgetDelta > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  ({simulatedBudgetDelta > 0 ? `+${simulatedBudgetDelta.toLocaleString()}` : simulatedBudgetDelta.toLocaleString()})
+                </span>
+              )}
+            </div>
+          </div>
+
+          <input
+            type="range"
+            min={Math.round(-convertedTotalBudget * 0.5)}
+            max={Math.round(convertedTotalBudget > 0 ? convertedTotalBudget : 200000)}
+            step={1000}
+            value={simulatedBudgetDelta}
+            onChange={(e) => setSimulatedBudgetDelta(Number(e.target.value))}
+            className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+          />
+
+          <div className="pt-2 border-t border-slate-200/60 dark:border-[#262c3d] flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span className="text-slate-500 dark:text-slate-400">
+              โควตาที่ใช้ได้ต่อวัน (ที่เหลือ {velocityData.remainingDays} วัน):
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                ≈ {simulatedSafeDailyQuota.toLocaleString()} {selectedCurrency} / วัน
+              </span>
+              {simulatedBudgetDelta !== 0 && (
+                <span className="text-[10px] text-slate-400 font-bold">
+                  ({simulatedSafeDailyQuota > velocityData.safeDailyQuota ? 'เพิ่มขึ้น +' : 'ลดลง -'}
+                  {Math.abs(simulatedSafeDailyQuota - velocityData.safeDailyQuota).toLocaleString()})
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }

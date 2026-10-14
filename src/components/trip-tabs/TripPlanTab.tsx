@@ -165,7 +165,7 @@ export function TripPlanTab({
       {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub (Travo + TravelGo Hybrid) */}
       <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#e79b71]/10 text-[#d98254] dark:text-[#f2a278] border border-[#e79b71]/25">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25">
             {tripBaseCurrency} Workspace
           </span>
           <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#121316] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932] font-mono">
@@ -179,7 +179,7 @@ export function TripPlanTab({
             onClick={() => setShowWeatherSection(!showWeatherSection)}
             className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
               showWeatherSection 
-                ? 'bg-[#e79b71]/10 text-[#d98254] border-[#e79b71]/30 dark:bg-[#e79b71]/15 dark:text-[#f2a278]' 
+                ? 'bg-blue-500/10 text-blue-600 border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-400' 
                 : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
             }`}
           >
@@ -199,7 +199,7 @@ export function TripPlanTab({
           <button
             type="button"
             onClick={() => setShowTravelHubModal(true)}
-            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-white bg-[#e79b71] hover:bg-[#d98254] px-3 py-1.5 rounded-xl shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-xl shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <Compass className="h-3.5 w-3.5" />
             <span>Travel Hub</span>
@@ -221,18 +221,18 @@ export function TripPlanTab({
       {/* Aesthetic 3-Block Travel Budget Overview Card (Travo Editorial Card Box) */}
       <div 
         onClick={() => onSwitchTab('expenses')}
-        className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] space-y-3 cursor-pointer hover:border-[#e79b71]/60 transition-all group shadow-2xs"
+        className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] space-y-3 cursor-pointer hover:border-blue-500/50 transition-all group shadow-2xs"
       >
         {/* Card Header */}
         <div className="flex items-center justify-between px-0.5">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
-            <div className="p-1 rounded-lg bg-[#e79b71]/10 text-[#e79b71]">
+            <div className="p-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Coins className="h-4 w-4" />
             </div>
             <span>สรุปงบประมาณทริป</span>
             <span className="text-[10px] font-medium text-slate-400">({heroDisplayData.title})</span>
           </div>
-          <div className="flex items-center gap-1 text-[11px] font-bold text-[#e79b71] group-hover:translate-x-0.5 transition-transform">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
             <span>ไปหน้ารายจ่าย</span>
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
@@ -240,9 +240,9 @@ export function TripPlanTab({
 
         {/* 3 Summary Blocks */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {/* Block 1: Used / จ่ายแล้ว (Terracotta) */}
-          <div className="rounded-2xl p-2.5 sm:p-3 bg-[#e79b71]/10 border border-[#e79b71]/25 flex flex-col justify-between">
-            <div className="text-[10px] sm:text-[11px] font-bold text-[#d98254] dark:text-[#f2a278]">
+          {/* Block 1: Used / จ่ายแล้ว (Royal Blue) */}
+          <div className="rounded-2xl p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
+            <div className="text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400">
               ใช้ไปแล้ว
             </div>
             <div className="mt-1">

@@ -68,7 +68,7 @@ export function TripHeroCover({
           type: 'countdown',
           text: `⏳ อีก ${diffDays} วันจะออกเดินทาง!`,
           subtext: `${new Date(trip.start_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} - ${trip.end_date ? new Date(trip.end_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}`,
-          badgeColor: 'bg-rose-500 text-white',
+          badgeColor: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-blue-500/30 border border-white/20',
         };
       }
 
