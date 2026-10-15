@@ -121,12 +121,8 @@ export default function DynamicIslandHUD({
     `https://maps.google.com/?q=${encodeURIComponent(activeStop.main_place + ' ' + (activeStop.city || 'Japan'))}`;
 
   return (
-    <div 
-      className="fixed inset-x-0 z-50 flex justify-center pointer-events-none px-3 select-none"
-      style={{ top: 'max(env(safe-area-inset-top, 0px) + 0.35rem, 0.65rem)' }}
-    >
-      <div ref={islandRef} className="pointer-events-auto max-w-md w-full flex justify-center">
-        
+    <>
+      <div ref={islandRef} className="relative z-30 flex justify-center items-center w-full select-none min-h-[34px]">
         <AnimatePresence initial={false} mode="wait">
           {!isExpanded ? (
             /* ========================================================
@@ -136,35 +132,35 @@ export default function DynamicIslandHUD({
               key="compact-island"
               layoutId="dynamic-island-container"
               onClick={() => setIsExpanded(true)}
-              className="bg-black/90 dark:bg-black/95 text-white backdrop-blur-2xl border border-white/20 shadow-2xl rounded-full px-3.5 py-1.5 flex items-center justify-between gap-3 cursor-pointer hover:scale-102 active:scale-98 transition-all ring-1 ring-black/40 group max-w-xs sm:max-w-sm w-auto"
+              className="bg-black/90 dark:bg-black/95 text-white backdrop-blur-2xl border border-white/20 shadow-xl rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 flex items-center justify-between gap-2 sm:gap-2.5 cursor-pointer hover:scale-102 active:scale-98 transition-all ring-1 ring-black/40 group max-w-[240px] xs:max-w-[260px] sm:max-w-[280px] md:max-w-[310px] w-auto shrink-0"
               style={{ borderRadius: 9999 }}
               transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               title="แตะเพื่อเปิด Dynamic Island HUD"
             >
               {/* Left Side: Live Dot + Icon + Title */}
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                 <span className="relative flex h-2 w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
 
-                <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                  <Navigation className="h-3 w-3 text-blue-400 group-hover:rotate-45 transition-transform" />
+                <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <Navigation className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-400 group-hover:rotate-45 transition-transform" />
                 </div>
 
-                <div className="text-left min-w-0 pr-1">
-                  <span className="text-[11px] font-black truncate block max-w-[130px] sm:max-w-[170px] text-white">
+                <div className="text-left min-w-0 pr-0.5 sm:pr-1">
+                  <span className="text-[10px] sm:text-[11px] font-black truncate block max-w-[95px] xs:max-w-[115px] sm:max-w-[135px] md:max-w-[155px] text-white">
                     {activeStop.main_place}
                   </span>
                 </div>
               </div>
 
               {/* Right Side: Next Time or Action */}
-              <div className="flex items-center gap-1.5 shrink-0 pl-1 border-l border-white/15">
-                <span className="text-[10px] font-mono font-bold text-amber-300">
+              <div className="flex items-center gap-1 shrink-0 pl-1 border-l border-white/15">
+                <span className="text-[9px] sm:text-[10px] font-mono font-bold text-amber-300">
                   {activeStop.time_slot || activeStop.date_label || 'LIVE'}
                 </span>
-                <ChevronDown className="h-3 w-3 text-white/60 group-hover:translate-y-0.5 transition-transform" />
+                <ChevronDown className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white/60 group-hover:translate-y-0.5 transition-transform" />
               </div>
             </motion.button>
           ) : (
@@ -174,8 +170,11 @@ export default function DynamicIslandHUD({
             <motion.div
               key="expanded-island"
               layoutId="dynamic-island-container"
-              className="w-full bg-black/95 text-white backdrop-blur-3xl rounded-3xl p-4 sm:p-5 border border-white/20 shadow-2xl space-y-3.5 ring-2 ring-black/50"
-              style={{ borderRadius: 28 }}
+              className="fixed inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 w-auto sm:w-[420px] max-w-lg bg-black/95 text-white backdrop-blur-3xl rounded-3xl p-4 sm:p-5 border border-white/20 shadow-2xl space-y-3.5 ring-2 ring-black/50"
+              style={{
+                top: 'max(calc(env(safe-area-inset-top, 0px) + 0.85rem), 1.75rem)',
+                borderRadius: 28,
+              }}
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             >
               {/* Header inside Island */}
@@ -319,6 +318,19 @@ export default function DynamicIslandHUD({
         </AnimatePresence>
 
       </div>
-    </div>
+
+      {/* Dimmed backdrop when expanded */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsExpanded(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 select-none"
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
