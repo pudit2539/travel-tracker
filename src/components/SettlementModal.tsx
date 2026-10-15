@@ -8,6 +8,7 @@ import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
 import { getTripExpenseSplits, saveTripExpenseSplits } from '@/lib/expenseSplits';
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { 
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
   Users, DollarSign, Calculator, ChevronRight, SlidersHorizontal,
@@ -194,6 +195,7 @@ export default function SettlementModal({
       try {
         localStorage.setItem(`travel_tracker_settled_transfers_${effectiveTripId}`, JSON.stringify(next));
       } catch {}
+      syncTripMetadataToSupabase(effectiveTripId, { settledTransfers: next }).catch(() => {});
     }
   };
 

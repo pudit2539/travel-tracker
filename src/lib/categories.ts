@@ -43,6 +43,8 @@ export function getTripCategories(tripId: string): CategoryItem[] {
   }
 }
 
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+
 export function saveCustomCategory(tripId: string, category: { label: string; icon: string }): CategoryItem[] {
   if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
   try {
@@ -57,6 +59,7 @@ export function saveCustomCategory(tripId: string, category: { label: string; ic
     };
     const updated = [...existing, newCat];
     localStorage.setItem(CUSTOM_CAT_KEY(tripId), JSON.stringify(updated));
+    syncTripMetadataToSupabase(tripId, { customCategories: updated }).catch(() => {});
     return [...DEFAULT_CATEGORIES, ...updated];
   } catch (e) {
     console.error('Failed to save custom category', e);
@@ -69,6 +72,7 @@ export function deleteCustomCategory(tripId: string, categoryId: string): Catego
   try {
     const existing = getTripCategories(tripId).filter(c => c.isCustom && c.id !== categoryId);
     localStorage.setItem(CUSTOM_CAT_KEY(tripId), JSON.stringify(existing));
+    syncTripMetadataToSupabase(tripId, { customCategories: existing }).catch(() => {});
     return [...DEFAULT_CATEGORIES, ...existing];
   } catch (e) {
     console.error('Failed to delete custom category', e);
@@ -91,6 +95,7 @@ export function saveCategoryBudgets(tripId: string, budgets: CategoryBudgetMap) 
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(CAT_BUDGET_KEY(tripId), JSON.stringify(budgets));
+    syncTripMetadataToSupabase(tripId, { categoryBudgets: budgets }).catch(() => {});
   } catch (e) {
     console.error('Failed to save category budgets', e);
   }
@@ -111,6 +116,7 @@ export function saveMemberBudgets(tripId: string, budgets: MemberBudgetMap) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(MEMBER_BUDGET_KEY(tripId), JSON.stringify(budgets));
+    syncTripMetadataToSupabase(tripId, { memberBudgets: budgets }).catch(() => {});
   } catch (e) {
     console.error('Failed to save member budgets', e);
   }

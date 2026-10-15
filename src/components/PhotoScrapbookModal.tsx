@@ -46,6 +46,12 @@ export default function PhotoScrapbookModal({
     }
   }, [isOpen, tripId, loadPhotos]);
 
+  useEffect(() => {
+    const handleUpdated = () => loadPhotos();
+    window.addEventListener('travel_tracker_photos_updated', handleUpdated);
+    return () => window.removeEventListener('travel_tracker_photos_updated', handleUpdated);
+  }, [loadPhotos]);
+
   // Body scroll lock and ESC key listener
   useEffect(() => {
     if (!isOpen) return;

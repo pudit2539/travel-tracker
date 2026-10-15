@@ -96,7 +96,11 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
   React.useEffect(() => {
     const handleSplitsUpdated = () => setSplitsVersion((v) => v + 1);
     window.addEventListener('travel_tracker_splits_updated', handleSplitsUpdated);
-    return () => window.removeEventListener('travel_tracker_splits_updated', handleSplitsUpdated);
+    window.addEventListener('travel_tracker_payment_methods_updated', handleSplitsUpdated);
+    return () => {
+      window.removeEventListener('travel_tracker_splits_updated', handleSplitsUpdated);
+      window.removeEventListener('travel_tracker_payment_methods_updated', handleSplitsUpdated);
+    };
   }, []);
 
   const splitsMap = React.useMemo(() => getTripExpenseSplits(trip?.id), [trip?.id, expenses, splitsVersion]);

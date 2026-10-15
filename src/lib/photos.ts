@@ -1,4 +1,5 @@
 // src/lib/photos.ts
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 
 export interface PhotoMemory {
   id: string;
@@ -42,10 +43,16 @@ export function saveTripPhoto(
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(`${PHOTO_STORAGE_PREFIX}${tripId}`, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('travel_tracker_photos_updated', { detail: { tripId, photos: updated } }));
     } catch (e) {
       console.error('Failed to save photo memory', e);
     }
   }
+
+  syncTripMetadataToSupabase(tripId, { photos: updated }).catch((err) => {
+    console.warn('Failed to sync photos to Supabase:', err);
+  });
+
   return updated;
 }
 
@@ -54,9 +61,16 @@ export function deleteTripPhoto(tripId: string, photoId: string): PhotoMemory[] 
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(`${PHOTO_STORAGE_PREFIX}${tripId}`, JSON.stringify(existing));
+      window.dispatchEvent(new CustomEvent('travel_tracker_photos_updated', { detail: { tripId, photos: existing } }));
     } catch (e) {
       console.error('Failed to delete photo', e);
     }
   }
+
+  syncTripMetadataToSupabase(tripId, { photos: existing }).catch((err) => {
+    console.warn('Failed to sync photo deletion to Supabase:', err);
+  });
+
   return existing;
 }
+

@@ -1,5 +1,4 @@
-// src/lib/expenseSplits.ts
-import { supabase } from '@/lib/supabase';
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 
 export interface ExpenseSplitMap {
   // expenseId -> array of member keys (member.id or member.name normalized)
@@ -31,46 +30,7 @@ export async function syncExpenseSplitsToSupabase(
   tripId: string,
   splits: ExpenseSplitMap
 ): Promise<void> {
-  if (!tripId) return;
-  try {
-    const { data: existing } = await supabase
-      .from('itinerary_items')
-      .select('id, backup_plan')
-      .eq('trip_id', tripId)
-      .eq('date_label', '__meta_trip_data__')
-      .maybeSingle();
-
-    let payload: any = {};
-    if (existing?.backup_plan) {
-      try {
-        payload = JSON.parse(existing.backup_plan);
-      } catch {
-        // ignore parse error
-      }
-    }
-    payload.splits = splits;
-
-    if (existing?.id) {
-      await supabase
-        .from('itinerary_items')
-        .update({ backup_plan: JSON.stringify(payload) })
-        .eq('id', existing.id);
-    } else {
-      await supabase
-        .from('itinerary_items')
-        .insert([
-          {
-            trip_id: tripId,
-            date_label: '__meta_trip_data__',
-            main_place: 'SYSTEM_TRIP_METADATA',
-            backup_plan: JSON.stringify(payload),
-            sort_order: -9999,
-          },
-        ]);
-    }
-  } catch (err) {
-    console.warn('Failed to sync expense splits to Supabase:', err);
-  }
+  await syncTripMetadataToSupabase(tripId, { splits });
 }
 
 /**

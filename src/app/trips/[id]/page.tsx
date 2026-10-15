@@ -20,7 +20,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
-import { getCustomJpyToThbRate, formatCurrencyWithThb, convertCurrency, convertToThb } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb, convertCurrency, convertToThb } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -44,7 +44,7 @@ import {
 import { compressReceiptImage } from '@/lib/imageCompressor';
 import ItemizedReceiptSplitter, { ItemizedDish } from '@/components/ItemizedReceiptSplitter';
 import { parseTransitInfo, formatTransitInfo } from '@/lib/transitGuide';
-import { getTripExpenseSplits, setExpenseSplitMembers } from '@/lib/expenseSplits';
+import { getTripExpenseSplits, setExpenseSplitMembers, deleteExpenseSplit } from '@/lib/expenseSplits';
 import { getTripPaymentMethods, setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
 import { syncExpenseToAccommodation } from '@/lib/accommodations';
 import { syncExpenseToFlight } from '@/lib/flights';
@@ -395,6 +395,41 @@ export default function TripDetailPage() {
               const localSplits = getTripExpenseSplits(tripId);
               const mergedSplits = { ...parsed.splits, ...localSplits };
               localStorage.setItem(`travel_tracker_expense_splits_${tripId}`, JSON.stringify(mergedSplits));
+            }
+            if (parsed.paymentMethods && typeof window !== 'undefined') {
+              const localMethods = getTripPaymentMethods(tripId);
+              const mergedMethods = { ...parsed.paymentMethods, ...localMethods };
+              localStorage.setItem(`travel_tracker_expense_payment_methods_${tripId}`, JSON.stringify(mergedMethods));
+            }
+            if (parsed.customCategories && Array.isArray(parsed.customCategories) && typeof window !== 'undefined') {
+              localStorage.setItem(`travel_tracker_custom_categories_${tripId}`, JSON.stringify(parsed.customCategories));
+              setCategories(getTripCategories(tripId));
+            }
+            if (parsed.categoryBudgets && typeof window !== 'undefined') {
+              localStorage.setItem(`travel_tracker_cat_budgets_${tripId}`, JSON.stringify(parsed.categoryBudgets));
+              setCategoryBudgets(parsed.categoryBudgets);
+            }
+            if (parsed.memberBudgets && typeof window !== 'undefined') {
+              localStorage.setItem(`travel_tracker_member_budgets_${tripId}`, JSON.stringify(parsed.memberBudgets));
+              setMemberBudgets(parsed.memberBudgets);
+            }
+            if (parsed.photos && Array.isArray(parsed.photos) && typeof window !== 'undefined') {
+              localStorage.setItem(`travel_tracker_photos_${tripId}`, JSON.stringify(parsed.photos));
+              setPhotosCount(parsed.photos.length);
+            }
+            if (parsed.settledTransfers && typeof window !== 'undefined') {
+              const localSettled = (() => {
+                try {
+                  const raw = localStorage.getItem(`travel_tracker_settled_transfers_${tripId}`);
+                  return raw ? JSON.parse(raw) : {};
+                } catch { return {}; }
+              })();
+              const mergedSettled = { ...parsed.settledTransfers, ...localSettled };
+              localStorage.setItem(`travel_tracker_settled_transfers_${tripId}`, JSON.stringify(mergedSettled));
+            }
+            if (parsed.fxRate && typeof window !== 'undefined') {
+              setFxRate(parsed.fxRate);
+              setCustomJpyToThbRate(parsed.fxRate);
             }
           } catch (e) {
             console.warn('Trip meta parse error:', e);
@@ -1243,6 +1278,9 @@ export default function TripDetailPage() {
       try {
         await deleteLocalReceiptPhoto(receiptRef);
       } catch {}
+    }
+    if (tripId) {
+      deleteExpenseSplit(tripId, id);
     }
     const { error } = await supabase.from('expenses').delete().eq('id', id);
     if (!error) {
