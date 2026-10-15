@@ -121,7 +121,10 @@ export default function DynamicIslandHUD({
     `https://maps.google.com/?q=${encodeURIComponent(activeStop.main_place + ' ' + (activeStop.city || 'Japan'))}`;
 
   return (
-    <div className="fixed top-2 sm:top-3 inset-x-0 z-50 flex justify-center pointer-events-none px-3 select-none">
+    <div 
+      className="fixed inset-x-0 z-50 flex justify-center pointer-events-none px-3 select-none"
+      style={{ top: 'max(env(safe-area-inset-top, 0px) + 0.35rem, 0.65rem)' }}
+    >
       <div ref={islandRef} className="pointer-events-auto max-w-md w-full flex justify-center">
         
         <AnimatePresence initial={false} mode="wait">

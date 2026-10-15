@@ -208,6 +208,16 @@ export default function GourmetRadarModal({
     });
   }, [allSpots, selectedCity, selectedCategory, filterType, searchQuery, checkedSpots]);
 
+  const [displayLimit, setDisplayLimit] = useState(30);
+
+  useEffect(() => {
+    setDisplayLimit(30);
+  }, [selectedCity, selectedCategory, filterType, searchQuery]);
+
+  const visibleSpots = useMemo(() => {
+    return filteredSpots.slice(0, displayLimit);
+  }, [filteredSpots, displayLimit]);
+
   const checkedCount = useMemo(() => {
     return Object.values(checkedSpots).filter(Boolean).length;
   }, [checkedSpots]);
@@ -405,7 +415,7 @@ export default function GourmetRadarModal({
               </p>
             </div>
           ) : (
-            filteredSpots.map((spot) => {
+            visibleSpots.map((spot) => {
               const isChecked = !!checkedSpots[spot.id];
               return (
                 <div
@@ -497,6 +507,16 @@ export default function GourmetRadarModal({
                 </div>
               );
             })
+          )}
+
+          {filteredSpots.length > displayLimit && (
+            <button
+              type="button"
+              onClick={() => setDisplayLimit((prev) => prev + 30)}
+              className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1a2234] dark:hover:bg-[#25304a] text-slate-700 dark:text-slate-300 font-bold text-xs transition-all border border-slate-200 dark:border-[#222c42] cursor-pointer"
+            >
+              โหลดร้านอาหารเพิ่มเติม (+30 ร้าน) • เหลืออีก {filteredSpots.length - displayLimit} ร้าน
+            </button>
           )}
         </div>
 
