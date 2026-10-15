@@ -62,6 +62,7 @@ const QuickCurrencyCalculator = dynamic(() => import('@/components/QuickCurrency
 const GourmetRadarModal = dynamic(() => import('@/components/GourmetRadarModal'), { ssr: false });
 const DiningDecisionPickerModal = dynamic(() => import('@/components/DiningDecisionPickerModal'), { ssr: false });
 const TicketPassLockerModal = dynamic(() => import('@/components/TicketPassLockerModal'), { ssr: false });
+const DynamicIslandHUD = dynamic(() => import('@/components/DynamicIslandHUD'), { ssr: false });
 const PackingChecklistModal = dynamic(() => import('@/components/PackingChecklistModal'), { ssr: false });
 const TravelHubModal = dynamic(() => import('@/components/TravelHubModal'), { ssr: false });
 const ExpenseDetailModal = dynamic(() => import('@/components/ExpenseDetailModal'), { ssr: false });
@@ -2025,6 +2026,20 @@ export default function TripDetailPage() {
       {/* Background Floating Ambient Orbs */}
       <div className="absolute top-20 left-10 w-80 sm:w-96 h-80 sm:h-96 bg-blue-400/6 dark:bg-blue-500/8 rounded-full blur-3xl pointer-events-none animate-float-slow" />
       <div className="absolute top-80 right-10 w-80 sm:w-96 h-80 sm:h-96 bg-indigo-500/6 dark:bg-indigo-500/8 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
+
+      {/* ==================== IN-APP DYNAMIC ISLAND SMART HUD HEADER ==================== */}
+      <DynamicIslandHUD
+        trip={trip}
+        itinerary={itinerary}
+        fxRate={fxRate}
+        onOpenCurrencyCalc={() => setShowCurrencyCalculator(true)}
+        onOpenTicketLocker={() => setShowTicketPassLockerModal(true)}
+        onOpenGourmetRadar={() => setShowGourmetRadarModal(true)}
+        onOpenDiningDecision={(city) => {
+          setDiningPickerDefaultCity(city);
+          setShowDiningDecisionModal(true);
+        }}
+      />
 
       {/* ==================== TOP NAVIGATION & STICKY APP HEADER (Travo + TravelGo Hybrid) ==================== */}
       <nav className="sticky top-0 z-40 border-b border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
