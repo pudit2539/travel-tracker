@@ -62,7 +62,6 @@ const QuickCurrencyCalculator = dynamic(() => import('@/components/QuickCurrency
 const GourmetRadarModal = dynamic(() => import('@/components/GourmetRadarModal'), { ssr: false });
 const DiningDecisionPickerModal = dynamic(() => import('@/components/DiningDecisionPickerModal'), { ssr: false });
 const TicketPassLockerModal = dynamic(() => import('@/components/TicketPassLockerModal'), { ssr: false });
-const DynamicIslandHUD = dynamic(() => import('@/components/DynamicIslandHUD'), { ssr: false });
 const PackingChecklistModal = dynamic(() => import('@/components/PackingChecklistModal'), { ssr: false });
 const TravelHubModal = dynamic(() => import('@/components/TravelHubModal'), { ssr: false });
 const ExpenseDetailModal = dynamic(() => import('@/components/ExpenseDetailModal'), { ssr: false });
@@ -2029,31 +2028,13 @@ export default function TripDetailPage() {
 
       {/* ==================== TOP NAVIGATION & STICKY APP HEADER (Travo + TravelGo Hybrid) ==================== */}
       <nav className="sticky top-0 z-40 border-b border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
-        <div className="max-w-5xl mx-auto safe-nav-container pb-2 sm:pb-2.5 space-y-2">
+        <div className="max-w-5xl mx-auto safe-nav-container px-3.5 sm:px-4 pb-2 sm:pb-2.5 space-y-2">
           
-          {/* Header Row: Responsive Grid */}
-          {/* Mobile (< md / iPhone Portrait): Row 1 = Dynamic Island HUD, Row 2 = Back + Title on Left, Actions on Right */}
-          {/* Tablet & Desktop (>= md / iPad Pro M2 Portrait/Landscape, iPhone Landscape): Row 1 = Left | Dynamic Island HUD | Right */}
-          <div className="pt-0.5 sm:pt-1 grid grid-cols-2 md:grid-cols-[auto_1fr_auto] items-center gap-2">
+          {/* Row 1: Back Arrow, Trip Title & Action Icons */}
+          <div className="pt-1 sm:pt-1.5 flex items-center justify-between gap-2.5 sm:gap-4">
             
-            {/* Center Slot: Dynamic Island HUD */}
-            <div className="col-span-2 md:col-span-1 md:col-start-2 row-start-1 flex justify-center items-center min-w-0 pb-1 md:pb-0">
-              <DynamicIslandHUD
-                trip={trip}
-                itinerary={itinerary}
-                fxRate={fxRate}
-                onOpenCurrencyCalc={() => setShowCurrencyCalculator(true)}
-                onOpenTicketLocker={() => setShowTicketPassLockerModal(true)}
-                onOpenGourmetRadar={() => setShowGourmetRadarModal(true)}
-                onOpenDiningDecision={(city) => {
-                  setDiningPickerDefaultCity(city);
-                  setShowDiningDecisionModal(true);
-                }}
-              />
-            </div>
-
-            {/* Left Slot: Back & Title */}
-            <div className="col-start-1 row-start-2 md:row-start-1 flex items-center gap-2 sm:gap-2.5 min-w-0">
+            {/* Left: Back Arrow & Trip Details */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <Link
                 href="/"
                 className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
@@ -2064,34 +2045,33 @@ export default function TripDetailPage() {
               
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="text-xs sm:text-sm md:text-base font-black text-slate-900 dark:text-white truncate max-w-[110px] xs:max-w-[140px] sm:max-w-[170px] md:max-w-[190px] lg:max-w-xs">
+                  <h1 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white truncate max-w-[140px] xs:max-w-[200px] sm:max-w-xs md:max-w-sm lg:max-w-md">
                     {(trip?.name || trip?.title) || 'รายละเอียดทริป'}
                   </h1>
                   
                   <span 
-                    title={isOnline ? 'ออนไลน์' : 'ออฟไลน์ (แคชเครื่อง)'}
-                    className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 ${
+                    title={isOnline ? 'สถานะ: ออนไลน์' : 'สถานะ: ออฟไลน์ (แคชเครื่อง)'}
+                    className={`inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full border shrink-0 ${
                       isOnline 
                         ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900' 
                         : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900'
                     }`}
                   >
-                    {isOnline ? <Wifi className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-500" /> : <WifiOff className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-500" />}
-                    <span className="hidden lg:inline">{isOnline ? 'ออนไลน์' : 'ออฟไลน์ (แคช)'}</span>
+                    {isOnline ? <Wifi className="h-3 w-3 text-emerald-500" /> : <WifiOff className="h-3 w-3 text-amber-500" />}
+                    <span className="hidden sm:inline">{isOnline ? 'ออนไลน์' : 'ออฟไลน์'}</span>
                   </span>
 
                   {isSuper && (
                     <span 
                       title="Super Admin"
-                      className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0"
+                      className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0"
                     >
-                      <span>👑</span>
-                      <span className="hidden lg:inline">Super Admin</span>
+                      👑 <span className="hidden sm:inline">Super Admin</span>
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-semibold truncate">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-semibold truncate pt-0.5">
                   <span className="text-blue-600 dark:text-blue-400 font-mono font-bold">{trip?.currency || 'JPY'}</span>
                   <span>•</span>
                   <span>{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
@@ -2099,8 +2079,8 @@ export default function TripDetailPage() {
               </div>
             </div>
 
-            {/* Right Slot: Action Icons */}
-            <div className="col-start-2 row-start-2 md:row-start-1 flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+            {/* Right: Action Icons */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <NotificationBell expenses={expenses} itinerary={itinerary} members={members} tripTitle={trip?.name || trip?.title} />
 
               <button
@@ -2109,7 +2089,7 @@ export default function TripDetailPage() {
                 title="ตั้งค่าโปรไฟล์"
               >
                 <CatAvatarBadge cat={userCat} size="xs" className="group-hover:scale-110 transition-transform shadow-xs" />
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 hidden xl:inline max-w-[80px] truncate">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 hidden md:inline max-w-[90px] truncate">
                   {userDisplayName}
                 </span>
               </button>
@@ -2121,7 +2101,7 @@ export default function TripDetailPage() {
                   title="แชร์ทริป / ชวนเพื่อนเข้าทริป (เฉพาะเจ้าของทริป)"
                 >
                   <Share2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="hidden xl:inline">แชร์</span>
+                  <span className="hidden sm:inline">แชร์</span>
                 </button>
               )}
 
