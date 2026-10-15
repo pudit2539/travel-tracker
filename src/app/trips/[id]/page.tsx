@@ -392,7 +392,9 @@ export default function TripDetailPage() {
               localStorage.setItem(`flight_pass_${tripId}`, JSON.stringify(parsed.flight));
             }
             if (parsed.splits && typeof window !== 'undefined') {
-              localStorage.setItem(`travel_tracker_expense_splits_${tripId}`, JSON.stringify(parsed.splits));
+              const localSplits = getTripExpenseSplits(tripId);
+              const mergedSplits = { ...parsed.splits, ...localSplits };
+              localStorage.setItem(`travel_tracker_expense_splits_${tripId}`, JSON.stringify(mergedSplits));
             }
           } catch (e) {
             console.warn('Trip meta parse error:', e);
@@ -1260,13 +1262,17 @@ export default function TripDetailPage() {
     setStartInExpenseEditMode(true);
   };
 
-  const handleSaveUpdatedExpense = async (updatedExpense: any) => {
+  const handleSaveUpdatedExpense = async (updatedExpense: any, customSplits?: string[]) => {
     const targetExp = expenses.find((e) => e.id === updatedExpense.id) || updatedExpense;
     if (!checkCanModifyExpense(targetExp)) {
       toast.error('คุณไม่มีสิทธิ์แก้ไขรายการนี้ (ผู้ร่วมทริปสามารถแก้ไข/ลบได้เฉพาะรายการของตนเอง)');
       return;
     }
     try {
+      if (customSplits && updatedExpense.id && tripId) {
+        setExpenseSplitMembers(tripId, updatedExpense.id, customSplits);
+      }
+
       const { error } = await supabase
         .from('expenses')
         .update({

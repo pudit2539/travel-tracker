@@ -92,7 +92,14 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
   onSelectExpense,
   onEditExpense,
 }: TripExpensesTabProps) {
-  const splitsMap = React.useMemo(() => getTripExpenseSplits(trip?.id), [trip?.id, expenses]);
+  const [splitsVersion, setSplitsVersion] = React.useState(0);
+  React.useEffect(() => {
+    const handleSplitsUpdated = () => setSplitsVersion((v) => v + 1);
+    window.addEventListener('travel_tracker_splits_updated', handleSplitsUpdated);
+    return () => window.removeEventListener('travel_tracker_splits_updated', handleSplitsUpdated);
+  }, []);
+
+  const splitsMap = React.useMemo(() => getTripExpenseSplits(trip?.id), [trip?.id, expenses, splitsVersion]);
 
   // Build unified member list & lookup map to resolve split member names and avatars
   const allMembersList = React.useMemo(() => {

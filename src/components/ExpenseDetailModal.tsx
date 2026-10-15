@@ -35,7 +35,7 @@ interface ExpenseDetailModalProps {
   canEdit?: boolean;
   startInEditMode?: boolean;
   tripId?: string;
-  onSaveExpense: (updatedExpense: any) => Promise<void>;
+  onSaveExpense: (updatedExpense: any, customSplits?: string[]) => Promise<void>;
   onDeleteExpense: (id: string, receiptUrl?: string) => Promise<void> | void;
   onOpenReceiptFullscreen?: (imgUrl: string) => void;
 }
@@ -328,6 +328,15 @@ export function ExpenseDetailModal({
         }
       }
 
+      // 1. Calculate and save custom split & payment method FIRST
+      const effectiveTripId = tripId || expense.trip_id || '';
+      const finalSplit = splitWith.length > 0 ? splitWith : memberOptions.map((m) => m.id);
+      if (effectiveTripId && expense.id) {
+        setExpenseSplitMembers(effectiveTripId, expense.id, finalSplit);
+        setExpensePaymentMethod(effectiveTripId, expense.id, form.payment_method);
+      }
+
+      // 2. Call onSaveExpense with the updated splits
       await onSaveExpense({
         ...expense,
         title: form.title.trim(),
@@ -340,15 +349,7 @@ export function ExpenseDetailModal({
         payer_avatar: selectedPayerAvatar,
         receipt_url: form.receipt_url,
         payment_method: form.payment_method,
-      });
-
-      // Save custom split & payment method configuration
-      const effectiveTripId = tripId || expense.trip_id || '';
-      if (effectiveTripId && expense.id) {
-        const finalSplit = splitWith.length > 0 ? splitWith : memberOptions.map((m) => m.id);
-        setExpenseSplitMembers(effectiveTripId, expense.id, finalSplit);
-        setExpensePaymentMethod(effectiveTripId, expense.id, form.payment_method);
-      }
+      }, finalSplit);
 
       setIsEditing(false);
       onClose();
