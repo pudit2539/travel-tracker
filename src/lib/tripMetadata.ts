@@ -13,6 +13,8 @@ export interface TripMetadataPayload {
   photos?: any[];
   settledTransfers?: Record<string, boolean>;
   fxRate?: number;
+  checkedInSpots?: Record<string, boolean>;
+  ticketsVault?: any[];
 }
 
 /**
@@ -52,6 +54,8 @@ export async function syncTripMetadataToSupabase(
       categoryBudgets: updates.categoryBudgets ? { ...payload.categoryBudgets, ...updates.categoryBudgets } : payload.categoryBudgets,
       memberBudgets: updates.memberBudgets ? { ...payload.memberBudgets, ...updates.memberBudgets } : payload.memberBudgets,
       settledTransfers: updates.settledTransfers ? { ...payload.settledTransfers, ...updates.settledTransfers } : payload.settledTransfers,
+      checkedInSpots: updates.checkedInSpots ? { ...payload.checkedInSpots, ...updates.checkedInSpots } : payload.checkedInSpots,
+      ticketsVault: updates.ticketsVault !== undefined ? updates.ticketsVault : payload.ticketsVault,
     };
 
     const jsonString = JSON.stringify(merged);

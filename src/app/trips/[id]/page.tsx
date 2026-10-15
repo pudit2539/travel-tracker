@@ -59,6 +59,9 @@ const PrintableItineraryModal = dynamic(() => import('@/components/PrintableItin
 const PhotoScrapbookModal = dynamic(() => import('@/components/PhotoScrapbookModal'), { ssr: false });
 const VersionRollbackModal = dynamic(() => import('@/components/VersionRollbackModal'), { ssr: false });
 const QuickCurrencyCalculator = dynamic(() => import('@/components/QuickCurrencyCalculator'), { ssr: false });
+const GourmetRadarModal = dynamic(() => import('@/components/GourmetRadarModal'), { ssr: false });
+const DiningDecisionPickerModal = dynamic(() => import('@/components/DiningDecisionPickerModal'), { ssr: false });
+const TicketPassLockerModal = dynamic(() => import('@/components/TicketPassLockerModal'), { ssr: false });
 const PackingChecklistModal = dynamic(() => import('@/components/PackingChecklistModal'), { ssr: false });
 const TravelHubModal = dynamic(() => import('@/components/TravelHubModal'), { ssr: false });
 const ExpenseDetailModal = dynamic(() => import('@/components/ExpenseDetailModal'), { ssr: false });
@@ -148,6 +151,10 @@ export default function TripDetailPage() {
   const [showPackingModal, setShowPackingModal] = useState(false);
   const [showCurrencyCalculator, setShowCurrencyCalculator] = useState(false);
   const [showTravelHubModal, setShowTravelHubModal] = useState(false);
+  const [showGourmetRadarModal, setShowGourmetRadarModal] = useState(false);
+  const [showDiningDecisionModal, setShowDiningDecisionModal] = useState(false);
+  const [showTicketPassLockerModal, setShowTicketPassLockerModal] = useState(false);
+  const [diningPickerDefaultCity, setDiningPickerDefaultCity] = useState<string | undefined>(undefined);
 
   const [showScanModal, setShowScanModal] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -2308,6 +2315,12 @@ export default function TripDetailPage() {
                 currentUser={currentUser}
                 onRefreshTrip={fetchTripData}
                 onShowToast={showToast}
+                onOpenGourmetRadar={() => setShowGourmetRadarModal(true)}
+                onOpenDiningDecision={(city) => {
+                  setDiningPickerDefaultCity(city);
+                  setShowDiningDecisionModal(true);
+                }}
+                onOpenTicketLocker={() => setShowTicketPassLockerModal(true)}
               />
             </div>
           )}
@@ -2535,12 +2548,18 @@ export default function TripDetailPage() {
 
       {/* ==================== MODALS ==================== */}
 
-      {/* 1. Quick Currency Calculator Modal */}
+      {/* 1. Quick Currency & Tax-Free Calculator Modal */}
       <QuickCurrencyCalculator
         isOpen={showCurrencyCalculator}
         onClose={() => setShowCurrencyCalculator(false)}
         defaultCurrency={tripBaseCurrency}
         fxRate={fxRate}
+        tripId={tripId}
+        currentUser={currentUser}
+        userDisplayName={userDisplayName}
+        userProfile={userProfile}
+        allMembers={allMembersForSplit}
+        onExpenseLogged={fetchTripData}
         onApplyExpense={(amount, curr, note) => {
           setScannedData((prev: any) => ({
             ...prev,
@@ -2550,6 +2569,37 @@ export default function TripDetailPage() {
           }));
           setShowScanModal(true);
         }}
+      />
+
+      {/* Gourmet & Cafe Radar Modal */}
+      <GourmetRadarModal
+        isOpen={showGourmetRadarModal}
+        onClose={() => setShowGourmetRadarModal(false)}
+        itinerary={itinerary}
+        tripId={tripId}
+        fxRate={fxRate}
+        onOpenDecisionPicker={(city) => {
+          setDiningPickerDefaultCity(city);
+          setShowDiningDecisionModal(true);
+        }}
+      />
+
+      {/* Dining Decision Concierge / Smart Picker Modal */}
+      <DiningDecisionPickerModal
+        isOpen={showDiningDecisionModal}
+        onClose={() => setShowDiningDecisionModal(false)}
+        itinerary={itinerary}
+        defaultCity={diningPickerDefaultCity}
+        tripId={tripId}
+        onOpenRadar={() => setShowGourmetRadarModal(true)}
+      />
+
+      {/* Pass & Offline Ticket Locker Modal */}
+      <TicketPassLockerModal
+        isOpen={showTicketPassLockerModal}
+        onClose={() => setShowTicketPassLockerModal(false)}
+        tripId={tripId}
+        tripName={trip?.name}
       />
 
       {/* 2. Packing Checklist Modal */}

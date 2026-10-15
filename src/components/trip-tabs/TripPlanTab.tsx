@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
-  BookmarkCheck, List, Building2
+  BookmarkCheck, List, Building2, Utensils, Dices, QrCode
 } from 'lucide-react';
 import LiveTripCard from '@/components/LiveTripCard';
 import WishlistDrawer from '@/components/WishlistDrawer';
@@ -62,6 +62,9 @@ interface TripPlanTabProps {
   onRefreshTrip?: () => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
   canSeeMoney?: boolean;
+  onOpenGourmetRadar?: () => void;
+  onOpenDiningDecision?: (city?: string) => void;
+  onOpenTicketLocker?: () => void;
 }
 
 export const TripPlanTab = React.memo(function TripPlanTab({
@@ -97,6 +100,9 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   onRefreshTrip,
   onShowToast,
   canSeeMoney = true,
+  onOpenGourmetRadar,
+  onOpenDiningDecision,
+  onOpenTicketLocker,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
 
@@ -185,6 +191,36 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           >
             <span>เส้นทาง & อากาศ</span>
             {showWeatherSection ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenGourmetRadar}
+            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-orange-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title="คู่มือร้านอาหาร คาเฟ่ & แผนสำรองทั้งหมดของทริป"
+          >
+            <Utensils className="h-3.5 w-3.5 text-orange-500" />
+            <span>เรดาร์อาหาร & คาเฟ่</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onOpenDiningDecision?.()}
+            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-blue-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title="ตัวช่วยตัดสินใจเลือกร้านอาหารและของหวานตามโซน/มื้อ"
+          >
+            <Dices className="h-3.5 w-3.5 text-blue-500" />
+            <span>สุ่มมื้อนี้</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenTicketLocker}
+            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-indigo-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title="ตู้เซฟเก็บตั๋ว QR ตม., ตั๋วรถไฟ และบัตร USJ ออฟไลน์ 100%"
+          >
+            <QrCode className="h-3.5 w-3.5 text-indigo-500" />
+            <span>ตั๋ว & QR Pass</span>
           </button>
 
           <button
