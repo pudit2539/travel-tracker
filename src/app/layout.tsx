@@ -2,6 +2,7 @@ import type { Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import PWAHandler from '@/components/PWAHandler';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Toaster } from 'sonner';
 
 export const viewport: Viewport = {
@@ -64,7 +65,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen antialiased bg-[#faf8fd] text-[#1e293b] dark:bg-[#181b2a] dark:text-[#f1f5f9] selection:bg-rose-400 selection:text-white">
         <ThemeProvider>
           <PWAHandler />
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
           <Toaster 
             position="top-center" 
             richColors 

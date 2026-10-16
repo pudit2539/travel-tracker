@@ -53,6 +53,8 @@ export function TripHeroCover({
   const tripCountdown = useMemo(() => {
     if (!trip?.start_date) return null;
 
+    let countdownData: { type: 'countdown' | 'today' | 'in_progress' | 'completed'; text: string; badgeColor: string } | null = null;
+
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -64,47 +66,56 @@ export function TripHeroCover({
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
       if (diffDays > 0) {
-        return {
+        countdownData = {
           type: 'countdown',
           text: `อีก ${diffDays} วันจะออกเดินทาง`,
-          icon: <Clock className="h-3.5 w-3.5 shrink-0" />,
           badgeColor: 'bg-blue-600/90 text-white shadow-md border border-white/20',
         };
-      }
-
-      if (diffDays === 0) {
-        return {
+      } else if (diffDays === 0) {
+        countdownData = {
           type: 'today',
           text: 'เริ่มออกเดินทางวันนี้',
-          icon: <Compass className="h-3.5 w-3.5 shrink-0" />,
           badgeColor: 'bg-emerald-600/90 text-white border border-white/20',
         };
-      }
-
-      // Past start date: check end date
-      if (trip?.end_date) {
+      } else if (trip?.end_date) {
         const end = new Date(trip.end_date);
         end.setHours(0, 0, 0, 0);
         if (today <= end) {
           const currentDay = Math.abs(diffDays) + 1;
-          return {
+          countdownData = {
             type: 'in_progress',
             text: `กำลังเดินทาง — วันที่ ${currentDay} ของทริป`,
-            icon: <Calendar className="h-3.5 w-3.5 shrink-0" />,
             badgeColor: 'bg-indigo-600/90 text-white border border-white/20',
           };
+        } else {
+          countdownData = {
+            type: 'completed',
+            text: 'สิ้นสุดการเดินทาง',
+            badgeColor: 'bg-slate-700/90 text-white border border-white/10',
+          };
         }
+      } else {
+        countdownData = {
+          type: 'completed',
+          text: 'สิ้นสุดการเดินทาง',
+          badgeColor: 'bg-slate-700/90 text-white border border-white/10',
+        };
       }
-
-      return {
-        type: 'completed',
-        text: 'สิ้นสุดการเดินทาง',
-        icon: <Check className="h-3.5 w-3.5 shrink-0" />,
-        badgeColor: 'bg-slate-700/90 text-white border border-white/10',
-      };
     } catch {
       return null;
     }
+
+    if (!countdownData) return null;
+
+    let icon = <Clock className="h-3.5 w-3.5 shrink-0" />;
+    if (countdownData.type === 'today') icon = <Compass className="h-3.5 w-3.5 shrink-0" />;
+    else if (countdownData.type === 'in_progress') icon = <Calendar className="h-3.5 w-3.5 shrink-0" />;
+    else if (countdownData.type === 'completed') icon = <Check className="h-3.5 w-3.5 shrink-0" />;
+
+    return {
+      ...countdownData,
+      icon,
+    };
   }, [trip]);
 
   // Dynamic Travel Assistant Advice based on current hour (Clean Corporate Style)

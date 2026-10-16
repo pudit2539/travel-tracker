@@ -43,6 +43,7 @@ const SUPPORTED_FOREIGN_CURRENCIES = [
 ];
 
 const SHOPPING_PRESETS = [
+  { label: 'Yodobashi Camera', icon: '🏬', defaultTax: '10' as const, category: 'shopping' },
   { label: 'ดองกี้ (Donki)', icon: '🐧', defaultTax: '10' as const, category: 'shopping' },
   { label: 'Bic Camera', icon: '📷', defaultTax: '10' as const, category: 'shopping' },
   { label: 'Matsumoto Kiyoshi', icon: '💊', defaultTax: '10' as const, category: 'shopping' },
