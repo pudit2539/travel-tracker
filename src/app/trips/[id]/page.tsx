@@ -1,7 +1,7 @@
 // src/app/trips/[id]/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useDeferredValue } from 'react';
+import { useState, useEffect, useCallback, useMemo, useDeferredValue, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -117,6 +117,12 @@ export default function TripDetailPage() {
   const [fxRate, setFxRate] = useState<number>(0.235);
   const [currencyView, setCurrencyView] = useState<'foreign' | 'thb'>('foreign');
   const [showWeatherSection, setShowWeatherSection] = useState(true);
+
+  // Track timestamps of self-initiated user actions to prevent duplicate/spammy Realtime toasts
+  const lastLocalActionTime = useRef<number>(0);
+  const markLocalAction = useCallback(() => {
+    lastLocalActionTime.current = Date.now();
+  }, []);
 
   // Filter states
   const [selectedDayFilter, setSelectedDayFilter] = useState<string>('all');
@@ -533,20 +539,26 @@ export default function TripDetailPage() {
         },
         (payload: any) => {
           console.log('[Realtime] trip_members event:', payload);
+          const isSelf = Date.now() - lastLocalActionTime.current < 4500;
+
           if (payload.eventType === 'INSERT') {
-            toast.info('✨ มีสมาชิกใหม่เข้าร่วมทริปแล้ว!');
+            if (!isSelf && payload.new?.user_id !== currentUser?.id) {
+              toast.info('✨ มีสมาชิกใหม่เข้าร่วมทริปแล้ว!');
+            }
           } else if (payload.eventType === 'UPDATE') {
             if (currentUser && payload.new?.user_id === currentUser.id) {
               const newRole = payload.new?.role;
               const roleLabel = ROLE_INFO[newRole as TripRole]?.label || newRole;
-              toast.success(`✨ สิทธิ์การเข้าถึงของคุณถูกปรับปรุงเป็น "${roleLabel}"`);
-            } else {
+              if (!isSelf) {
+                toast.success(`✨ สิทธิ์การเข้าถึงของคุณถูกปรับปรุงเป็น "${roleLabel}"`);
+              }
+            } else if (!isSelf) {
               toast.info('มีการอัปเดตสิทธิ์หรือข้อมูลสมาชิกในทริป');
             }
           } else if (payload.eventType === 'DELETE') {
             if (currentUser && payload.old?.user_id === currentUser.id) {
               toast.error('คุณถูกนำออกจากทริปนี้แล้ว');
-            } else {
+            } else if (!isSelf) {
               toast.info('มีสมาชิกออกจากทริป');
             }
           }
@@ -563,7 +575,8 @@ export default function TripDetailPage() {
         },
         (payload: any) => {
           console.log('[Realtime] trips event:', payload);
-          if (payload.eventType === 'UPDATE') {
+          const isSelf = Date.now() - lastLocalActionTime.current < 4500;
+          if (payload.eventType === 'UPDATE' && !isSelf) {
             toast.info('มีการอัปเดตข้อมูลทริป');
           }
           fetchTripData();
@@ -578,12 +591,19 @@ export default function TripDetailPage() {
           filter: `trip_id=eq.${tripId}`,
         },
         (payload: any) => {
-          if (payload.eventType === 'INSERT') {
-            toast.info('💸 มีการบันทึกรายการใช้จ่ายใหม่');
-          } else if (payload.eventType === 'UPDATE') {
-            toast.info('✏️ มีการแก้ไขรายการใช้จ่าย');
-          } else if (payload.eventType === 'DELETE') {
-            toast.info('🗑️ มีการลบรายการใช้จ่าย');
+          const isSelf = 
+            Date.now() - lastLocalActionTime.current < 4500 || 
+            (currentUser?.id && (payload.new?.created_by === currentUser.id || payload.new?.payer_id === currentUser.id));
+
+          // Only notify when another member makes changes
+          if (!isSelf) {
+            if (payload.eventType === 'INSERT') {
+              toast.info('💸 เพื่อนร่วมทริปบันทึกรายการใช้จ่ายใหม่');
+            } else if (payload.eventType === 'UPDATE') {
+              toast.info('✏️ เพื่อนร่วมทริปแก้ไขรายการใช้จ่าย');
+            } else if (payload.eventType === 'DELETE') {
+              toast.info('🗑️ เพื่อนร่วมทริปลบรายการใช้จ่าย');
+            }
           }
           fetchTripData();
         }
@@ -597,9 +617,13 @@ export default function TripDetailPage() {
           filter: `trip_id=eq.${tripId}`,
         },
         (payload: any) => {
+          const isSelf = 
+            Date.now() - lastLocalActionTime.current < 4500 || 
+            (currentUser?.id && payload.new?.updated_by === currentUser.id);
+
           if (payload.new?.date_label !== '__meta_trip_data__' && payload.old?.date_label !== '__meta_trip_data__') {
-            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-              toast.info('🗓️ แผนการเดินทางได้รับการอัปเดต');
+            if (!isSelf && (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE')) {
+              toast.info('🗓️ เพื่อนร่วมทริปอัปเดตแผนการเดินทาง');
             }
           }
           fetchTripData();
@@ -806,6 +830,7 @@ export default function TripDetailPage() {
           .eq('id', editingActivity.id);
 
         if (!error) {
+          markLocalAction();
           setShowActivityModal(false);
           fetchTripData();
           toast.success(editingActivity ? 'แก้ไขกิจกรรมเรียบร้อยแล้ว' : 'เพิ่มกิจกรรมในแผนเที่ยวแล้ว');
@@ -836,6 +861,7 @@ export default function TripDetailPage() {
         ]);
 
         if (!error) {
+          markLocalAction();
           setShowActivityModal(false);
           fetchTripData();
           toast.success('เพิ่มกิจกรรมในแผนเที่ยวแล้ว');
@@ -897,6 +923,7 @@ export default function TripDetailPage() {
 
   const handleDeleteActivity = async (id: string) => {
     if (!confirm('ต้องการลบกิจกรรมนี้ออกจากแผนเที่ยวใช่หรือไม่?')) return;
+    markLocalAction();
     const { error } = await supabase.from('itinerary_items').delete().eq('id', id);
     if (!error) {
       fetchTripData();
@@ -1186,6 +1213,7 @@ export default function TripDetailPage() {
         }).catch(() => {});
       }
 
+      markLocalAction();
       triggerConfetti();
       setShowScanModal(false);
       setOcrSuccessToast(null);
@@ -1303,6 +1331,7 @@ export default function TripDetailPage() {
     if (tripId) {
       deleteExpenseSplit(tripId, id);
     }
+    markLocalAction();
     const { error } = await supabase.from('expenses').delete().eq('id', id);
     if (!error) {
       setSelectedExpenseForDetail(null);
@@ -1349,6 +1378,7 @@ export default function TripDetailPage() {
 
       if (error) throw error;
 
+      markLocalAction();
       // Update in-memory state immediately for instant feedback
       setExpenses((prev) =>
         prev.map((e) => (e.id === updatedExpense.id ? { ...e, ...updatedExpense } : e))
@@ -1539,6 +1569,7 @@ export default function TripDetailPage() {
         .eq('id', memberId);
 
       if (!error) {
+        markLocalAction();
         setMembers((prev) =>
           prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
         );
@@ -1556,6 +1587,7 @@ export default function TripDetailPage() {
     if (!confirm(`คุณต้องการลบ "${memberName}" ออกจากทริปใช่หรือไม่?`)) return;
 
     try {
+      markLocalAction();
       const { error } = await supabase
         .from('trip_members')
         .delete()
@@ -2127,7 +2159,14 @@ export default function TripDetailPage() {
 
             {/* Right: Action Icons */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <NotificationBell expenses={expenses} itinerary={itinerary} members={members} tripTitle={trip?.name || trip?.title} />
+              <NotificationBell 
+                expenses={expenses} 
+                itinerary={itinerary} 
+                members={members} 
+                tripTitle={trip?.name || trip?.title}
+                currentUser={currentUser}
+                userDisplayName={userDisplayName}
+              />
 
               <button
                 onClick={() => setShowProfileModal(true)}

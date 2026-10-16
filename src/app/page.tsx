@@ -657,7 +657,7 @@ export default function HomePage() {
             )}
 
             {/* Notification Bell */}
-            <NotificationBell tripTitle="Travel Hub" />
+            <NotificationBell tripTitle="Travel Hub" currentUser={user} userDisplayName={userDisplayName} />
 
             {/* Profile Avatar Button */}
             <button
