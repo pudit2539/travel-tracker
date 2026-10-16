@@ -48,6 +48,8 @@ import { getTripExpenseSplits, setExpenseSplitMembers, deleteExpenseSplit } from
 import { getTripPaymentMethods, setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
 import { syncExpenseToAccommodation } from '@/lib/accommodations';
 import { syncExpenseToFlight } from '@/lib/flights';
+import { calculateSettlement } from '@/lib/settlement';
+import { exportExpensesToExcel as runExportExpensesToExcel } from '@/lib/exportExpensesExcel';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
@@ -438,6 +440,9 @@ export default function TripDetailPage() {
               setFxRate(parsed.fxRate);
               setCustomJpyToThbRate(parsed.fxRate);
             }
+            if (parsed.ticketsVault && Array.isArray(parsed.ticketsVault) && typeof window !== 'undefined') {
+              localStorage.setItem(`ticket_vault_${tripId}`, JSON.stringify(parsed.ticketsVault));
+            }
           } catch (e) {
             console.warn('Trip meta parse error:', e);
           }
@@ -575,6 +580,10 @@ export default function TripDetailPage() {
         (payload: any) => {
           if (payload.eventType === 'INSERT') {
             toast.info('💸 มีการบันทึกรายการใช้จ่ายใหม่');
+          } else if (payload.eventType === 'UPDATE') {
+            toast.info('✏️ มีการแก้ไขรายการใช้จ่าย');
+          } else if (payload.eventType === 'DELETE') {
+            toast.info('🗑️ มีการลบรายการใช้จ่าย');
           }
           fetchTripData();
         }
@@ -587,7 +596,12 @@ export default function TripDetailPage() {
           table: 'itinerary_items',
           filter: `trip_id=eq.${tripId}`,
         },
-        () => {
+        (payload: any) => {
+          if (payload.new?.date_label !== '__meta_trip_data__' && payload.old?.date_label !== '__meta_trip_data__') {
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              toast.info('🗓️ แผนการเดินทางได้รับการอัปเดต');
+            }
+          }
           fetchTripData();
         }
       )
@@ -1388,42 +1402,74 @@ export default function TripDetailPage() {
     XLSX.writeFile(wb, `${tripTitle}_export.xlsx`);
   };
 
-  // ส่งออกเฉพาะค่าใช้จ่ายเป็น Excel อย่างละเอียดพร้อมแปลง THB
+  // ส่งออกเฉพาะค่าใช้จ่ายและแผนเคลียร์หนี้เป็น Excel 4 Sheet ละเอียด
   const exportExpensesToExcel = () => {
-    const wb = XLSX.utils.book_new();
+    try {
+      const currentTripCurrency = trip?.currency || 'THB';
+      const myDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
+      const seenNames = new Set<string>();
+      const seenIds = new Set<string>();
+      const allMembersList: { name: string; avatar: string; id?: string }[] = [];
 
-    const expenseRows = expenses.map((e, idx) => {
-      const catMeta = getCategoryMeta(categories, e.category);
-      const thbAmount = Math.round(convertToThb(Number(e.amount || 0), e.currency || tripBaseCurrency, fxRate));
-      return {
-        'ลำดับ': idx + 1,
-        'วันที่': e.spent_at || '-',
-        'รายการ / ร้านค้า': e.title || '-',
-        'ผู้จ่าย': e.payer_name || '-',
-        'หมวดหมู่': catMeta.label,
-        'จำนวนเงิน': Number(e.amount || 0),
-        'สกุลเงิน': e.currency || tripBaseCurrency,
-        'เทียบเท่าเงินบาท (THB)': thbAmount,
-        'มีรูปใบเสร็จ': e.receipt_url ? 'มี' : 'ไม่มี',
-      };
-    });
+      // 1. Current user
+      const myAvatar = userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id || 'cat_pink';
+      allMembersList.push({ name: myDisplayName, avatar: myAvatar, id: currentUser?.id });
+      seenNames.add(myDisplayName.toLowerCase().trim());
+      if (currentUser?.id) seenIds.add(currentUser.id.toLowerCase());
+      if (currentUser?.email) seenNames.add(currentUser.email.toLowerCase().trim());
 
-    const expSheet = XLSX.utils.json_to_sheet(expenseRows);
-    expSheet['!cols'] = [
-      { wch: 6 },
-      { wch: 12 },
-      { wch: 28 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 14 },
-      { wch: 10 },
-      { wch: 20 },
-      { wch: 12 },
-    ];
-    XLSX.utils.book_append_sheet(wb, expSheet, 'Expenses_Summary');
+      // 2. Members from trip_members
+      members.forEach((m) => {
+        const name = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก').trim();
+        const mUserId = m.user_id?.toLowerCase();
+        const isAlreadyIn = (mUserId && seenIds.has(mUserId)) || seenNames.has(name.toLowerCase());
+        if (!isAlreadyIn) {
+          allMembersList.push({
+            name,
+            avatar: m.profiles?.avatar_id || 'cat_purple',
+            id: m.user_id,
+          });
+          seenNames.add(name.toLowerCase());
+          if (m.user_id) seenIds.add(m.user_id.toLowerCase());
+          if (m.profiles?.email) seenNames.add(m.profiles.email.toLowerCase().trim());
+        }
+      });
 
-    const tripTitle = (trip?.name || trip?.title || 'trip').replace(/[/\\?%*:|"<>]/g, '-');
-    XLSX.writeFile(wb, `${tripTitle}_Expenses_${new Date().toISOString().split('T')[0]}.xlsx`);
+      // 3. Any payers in expenses
+      expenses.forEach((e) => {
+        const pName = (e.payer_name || '').trim();
+        const pId = e.payer_id?.toLowerCase();
+        const isAlreadyIn = (pId && seenIds.has(pId)) || (pName && seenNames.has(pName.toLowerCase()));
+        if (pName && !isAlreadyIn) {
+          allMembersList.push({
+            name: pName,
+            avatar: e.payer_avatar || 'cat_blue',
+            id: e.payer_id,
+          });
+          seenNames.add(pName.toLowerCase());
+          if (e.payer_id) seenIds.add(e.payer_id.toLowerCase());
+        }
+      });
+
+      const splitsMap = getTripExpenseSplits(tripId);
+      const settlement = calculateSettlement(expenses, allMembersList, currentTripCurrency, fxRate, splitsMap);
+      const catNames: Record<string, string> = {};
+      categories.forEach((c) => { catNames[c.id] = c.label; });
+
+      runExportExpensesToExcel({
+        tripName: trip?.name || 'Trip',
+        expenses,
+        membersList: allMembersList,
+        settlementSummary: settlement,
+        tripCurrency: currentTripCurrency,
+        fxRate,
+        categoryNames: catNames,
+      });
+      toast.success('ดาวน์โหลดไฟล์ Excel (.xlsx) สรุปค่าใช้จ่ายและเคลียร์หนี้แล้ว 📥✨');
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error('ไม่สามารถส่งออกไฟล์ Excel ได้');
+    }
   };
 
   // Permissions & Super Admin

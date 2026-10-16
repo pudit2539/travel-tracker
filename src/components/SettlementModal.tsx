@@ -9,11 +9,13 @@ import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
 import { getTripExpenseSplits, saveTripExpenseSplits } from '@/lib/expenseSplits';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+import { exportExpensesToExcel } from '@/lib/exportExpensesExcel';
+import { toast } from 'sonner';
 import { 
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
   Users, DollarSign, Calculator, ChevronRight, SlidersHorizontal,
   QrCode, Utensils, Split, Edit2, CheckCircle2, Circle, AlertCircle, 
-  Share2, ArrowUpRight, UserCheck, CheckSquare, Square
+  Share2, ArrowUpRight, UserCheck, CheckSquare, Square, Download
 } from 'lucide-react';
 
 interface SettlementModalProps {
@@ -668,15 +670,37 @@ export default function SettlementModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 dark:border-[#222c42] flex justify-between items-center gap-2 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
-          <button
-            type="button"
-            onClick={copySettlementSummary}
-            className="px-4 py-2.5 min-h-[44px] rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 touch-manipulation"
-          >
-            {copiedText ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span>{copiedText ? 'คัดลอกสรุปแล้ว!' : 'คัดลอกสรุปส่งเข้า LINE'}</span>
-          </button>
+        <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 dark:border-[#222c42] flex flex-wrap justify-between items-center gap-2 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={copySettlementSummary}
+              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 touch-manipulation"
+            >
+              {copiedText ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              <span>{copiedText ? 'คัดลอกสรุปแล้ว!' : 'ส่งเข้า LINE'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                exportExpensesToExcel({
+                  tripName: tripId || 'Trip_Settlement',
+                  expenses,
+                  membersList: members,
+                  settlementSummary: settlement,
+                  tripCurrency: currency,
+                  fxRate,
+                });
+                toast.success('ดาวน์โหลดไฟล์ Excel (.xlsx) สรุปเคลียร์บิลแล้ว 📥✨');
+              }}
+              className="px-3.5 py-2.5 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 touch-manipulation"
+              title="ส่งออกรายงานการเงินและแผนเคลียร์หนี้เป็น Excel (.xlsx)"
+            >
+              <Download className="h-4 w-4" />
+              <span>Export Excel</span>
+            </button>
+          </div>
 
           <button
             type="button"
