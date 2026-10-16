@@ -397,3 +397,26 @@ input::-ms-clear {
     display: none !important;
   }
 }
+
+/* ========================================================
+   UNIVERSAL MOBILE SAFE-AREA PROTECTION (NOTCH & TOASTS)
+   ======================================================== */
+[data-sonner-toaster] {
+  z-index: 999999 !important;
+}
+[data-sonner-toaster][data-y-position="top"] {
+  top: max(env(safe-area-inset-top, 0px) + 16px, 58px) !important;
+}
+[data-sonner-toaster][data-y-position="bottom"] {
+  bottom: max(env(safe-area-inset-bottom, 0px) + 20px, 32px) !important;
+}
+
+.modal-safe-overlay {
+  padding-top: max(env(safe-area-inset-top, 0px) + 12px, 52px) !important;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px) + 14px, 24px) !important;
+}
+
+.modal-safe-card {
+  max-height: calc(100dvh - max(env(safe-area-inset-top, 0px) + 12px, 52px) - max(env(safe-area-inset-bottom, 0px) + 14px, 24px)) !important;
+}
+

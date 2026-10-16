@@ -73,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             richColors 
             closeButton
             theme="system"
+            offset="max(env(safe-area-inset-top, 0px) + 16px, 58px)"
             toastOptions={{
               className: '!rounded-2xl !backdrop-blur-xl !shadow-2xl !border !border-white/20 !font-sans',
             }}

@@ -275,8 +275,8 @@ export default function QuickCurrencyCalculator({
   const isSmallUnit = foreignCurrency === 'USD' || foreignCurrency === 'EUR' || foreignCurrency === 'CNY' || foreignCurrency === 'SGD';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-      <div className="w-full sm:max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-4 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] animate-in zoom-in-95 duration-200 space-y-4 max-h-[92dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
+      <div className="w-full sm:max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-4 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] animate-in zoom-in-95 duration-200 space-y-4 max-h-[92dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain modal-safe-card">
         
         {/* Header */}
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#222c42]">

@@ -444,8 +444,8 @@ export default function TravelHubModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-5 md:p-6 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none text-left" role="dialog" aria-modal="true">
-      <div className="relative w-full max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[92dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-left">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-5 md:p-6 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none text-left modal-safe-overlay" role="dialog" aria-modal="true">
+      <div className="relative w-full max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[92dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-left modal-safe-card">
         {/* Modal Top Header */}
         <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] bg-white/80 dark:bg-[#181a20]/80 backdrop-blur-md">
           <div className="flex items-center gap-3 text-left">

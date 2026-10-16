@@ -376,13 +376,13 @@ export function ExpenseDetailModal({
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[105] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-[105] flex items-start sm:items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div 
-        className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out"
+        className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out modal-safe-card"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

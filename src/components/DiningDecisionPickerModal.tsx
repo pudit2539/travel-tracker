@@ -334,6 +334,8 @@ export default function DiningDecisionPickerModal({
     }
   }, [activeKind]);
 
+  const winnerSectionRef = useRef<HTMLDivElement>(null);
+
   // Handle Pick Random with card shuffle animation
   const handlePickRandom = () => {
     if (pool.length === 0) {
@@ -367,6 +369,9 @@ export default function DiningDecisionPickerModal({
         setIsShuffling(false);
         setHasPicked(true);
         toast.success(`สุ่มได้: ${winner.name.slice(0, 32)} ✨`);
+        setTimeout(() => {
+          winnerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 80);
       }
     }, speed);
   };
@@ -377,11 +382,11 @@ export default function DiningDecisionPickerModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-5 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" 
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-5 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" 
       role="dialog" 
       aria-modal="true"
     >
-      <div className="w-full sm:max-w-xl rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] flex flex-col max-h-[92dvh] overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="w-full sm:max-w-xl rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] flex flex-col max-h-[92dvh] overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-[#222c42] flex items-center justify-between shrink-0 bg-white/50 dark:bg-[#151b2b]/50 backdrop-blur-md">
@@ -566,7 +571,7 @@ export default function DiningDecisionPickerModal({
             </div>
           ) : hasPicked && pickedItem ? (
             /* Picked Winner Result Card */
-            <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+            <div ref={winnerSectionRef} className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
               
               {/* Winner Header */}
               <div className="flex items-center justify-between">

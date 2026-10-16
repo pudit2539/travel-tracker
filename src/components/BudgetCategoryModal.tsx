@@ -383,12 +383,12 @@ export default function BudgetCategoryModal({
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-60 flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-150" 
+      className="fixed inset-0 z-60 flex items-start sm:items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-150 modal-safe-overlay" 
       role="dialog" 
       aria-modal="true"
     >
       <div 
-        className="w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#222c42] shadow-2xl flex flex-col overflow-hidden max-h-[90dvh] glow-blue animate-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#222c42] shadow-2xl flex flex-col overflow-hidden max-h-[90dvh] glow-blue animate-in zoom-in-95 duration-150 modal-safe-card"
         onClick={(e) => e.stopPropagation()}
       >
         
