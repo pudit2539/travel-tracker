@@ -169,75 +169,83 @@ export const TripPlanTab = React.memo(function TripPlanTab({
       />
 
       {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub (Travo + TravelGo Hybrid) */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25">
-            {tripBaseCurrency} Workspace
-          </span>
-          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#121316] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932] font-mono">
-            {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
-          </span>
+      <div className="flex flex-col gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25 shrink-0">
+              {tripBaseCurrency} Workspace
+            </span>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#121316] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932] font-mono shrink-0">
+              {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
+            </span>
+          </div>
+
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium sm:hidden shrink-0">
+            แตะเลื่อนซ้าย-ขวาได้ ➔
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        {/* Action Buttons Row: Smooth Horizontal Scroll on Mobile, Flex on Desktop */}
+        <div className="w-full flex items-center gap-2 overflow-x-auto custom-scrollbar no-scrollbar pb-1 pt-0.5 overscroll-x-contain">
           <button
             type="button"
             onClick={() => setShowWeatherSection(!showWeatherSection)}
-            className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 sm:py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               showWeatherSection 
                 ? 'bg-blue-500/10 text-blue-600 border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-400' 
                 : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
             }`}
           >
             <span>เส้นทาง & อากาศ</span>
-            {showWeatherSection ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            {showWeatherSection ? <ChevronUp className="h-3 w-3 shrink-0" /> : <ChevronDown className="h-3 w-3 shrink-0" />}
           </button>
 
           <button
             type="button"
             onClick={onOpenGourmetRadar}
-            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-orange-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-orange-400 px-3 py-2 sm:py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
             title="คู่มือร้านอาหาร คาเฟ่ & แผนสำรองทั้งหมดของทริป"
           >
-            <Utensils className="h-3.5 w-3.5 text-orange-500" />
+            <Utensils className="h-3.5 w-3.5 text-orange-500 shrink-0" />
             <span>เรดาร์อาหาร & คาเฟ่</span>
           </button>
 
           <button
             type="button"
             onClick={() => onOpenDiningDecision?.()}
-            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-blue-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-blue-400 px-3 py-2 sm:py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
             title="ตัวช่วยสุ่มร้านอาหาร คาเฟ่ และสถานที่เที่ยว/ช้อปปิ้ง นอกแพลนหรือในแพลน"
           >
-            <Dices className="h-3.5 w-3.5 text-blue-500" />
+            <Dices className="h-3.5 w-3.5 text-blue-500 shrink-0" />
             <span>สุ่มมื้อ & ที่เที่ยว</span>
           </button>
 
           <button
             type="button"
             onClick={onOpenTicketLocker}
-            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-indigo-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-indigo-400 px-3 py-2 sm:py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
             title="ตู้เซฟเก็บตั๋ว QR ตม., ตั๋วรถไฟ และบัตร USJ ออฟไลน์ 100%"
           >
-            <QrCode className="h-3.5 w-3.5 text-indigo-500" />
+            <QrCode className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
             <span>ตั๋ว & QR Pass</span>
           </button>
 
           <button
             type="button"
             onClick={() => setShowWishlistDrawer(true)}
-            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-amber-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-amber-400 px-3 py-2 sm:py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
           >
-            <BookmarkCheck className="h-3.5 w-3.5 text-amber-500" />
+            <BookmarkCheck className="h-3.5 w-3.5 text-amber-500 shrink-0" />
             <span>Wishlist ร้านเด็ด</span>
           </button>
 
           <button
             type="button"
             onClick={() => setShowTravelHubModal(true)}
-            className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-xl shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-3.5 py-2 sm:py-1.5 rounded-xl shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0 mr-3"
+            title="เปิด Travel Hub แดชบอร์ดสรุปทริป"
           >
-            <Compass className="h-3.5 w-3.5" />
+            <Compass className="h-3.5 w-3.5 shrink-0" />
             <span>Travel Hub</span>
           </button>
         </div>

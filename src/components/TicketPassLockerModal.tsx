@@ -6,7 +6,8 @@ import {
   X, QrCode, Plus, Trash2, Camera, Download, 
   Sun, Sparkles, Copy, Check, Eye, 
   Upload, ShieldCheck, Ticket, AlertCircle, Maximize2,
-  ZoomIn, ZoomOut, RotateCcw, ImageIcon, RefreshCw, FileText
+  ZoomIn, ZoomOut, RotateCcw, ImageIcon, RefreshCw, FileText,
+  User, Users, UserPlus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
@@ -20,6 +21,7 @@ export interface VaultPassItem {
   barcodeData?: string;
   note?: string;
   validDate?: string;
+  holderName?: string; // ชื่อผู้ถือตั๋ว / ผู้เดินทาง เช่น "ปูดิท (ฉัน)", "คุณแม่", "แฟน", "น้อง"
   createdAt: number;
 }
 
@@ -30,6 +32,9 @@ interface TicketPassLockerModalProps {
   tripName?: string;
   initialPasses?: VaultPassItem[];
   onPassesUpdated?: (passes: VaultPassItem[]) => void;
+  members?: any[];
+  currentUser?: any;
+  userDisplayName?: string;
 }
 
 const DEFAULT_PRESET_PASSES: VaultPassItem[] = [
@@ -40,6 +45,7 @@ const DEFAULT_PRESET_PASSES: VaultPassItem[] = [
     bookingRef: 'VJW-ENTRY-JP',
     note: 'เปิดสแกนที่ด่านตรวจคนเข้าเมืองและศุลกากรสนามบินคันไซ (KIX) สแกนติดเร็วแม้ออฟไลน์',
     validDate: '10 ธ.ค. 2026',
+    holderName: 'ปูดิท (ฉัน)',
     createdAt: Date.now() - 120000,
   },
   {
@@ -49,6 +55,7 @@ const DEFAULT_PRESET_PASSES: VaultPassItem[] = [
     bookingRef: 'K-ETA-APPROVED',
     note: 'เอกสารอนุมัติเข้าเกาหลีใต้ พร้อม QR Code สำหรับสแกนที่สนามบินอินชอน/เชจู',
     validDate: 'ใช้ได้ตลอดอายุอนุมัติ',
+    holderName: 'ปูดิท (ฉัน)',
     createdAt: Date.now() - 100000,
   },
   {
@@ -58,6 +65,7 @@ const DEFAULT_PRESET_PASSES: VaultPassItem[] = [
     bookingRef: 'RAPIT-KIX-NAMBA-RSV',
     note: 'รถไฟด่วนพิเศษจากสนามบินคันไซเข้าโอซาก้า ที่นั่ง Reserved Seat ตู้ 4',
     validDate: '10 ธ.ค. 2026',
+    holderName: 'ผู้เดินทางทุกคน',
     createdAt: Date.now() - 80000,
   },
   {
@@ -67,6 +75,7 @@ const DEFAULT_PRESET_PASSES: VaultPassItem[] = [
     bookingRef: 'USJ-EXP-2026',
     note: 'บัตรเข้า USJ + Super Nintendo World Area Timed Entry Pass',
     validDate: '12 ธ.ค. 2026',
+    holderName: 'ปูดิท (ฉัน)',
     createdAt: Date.now() - 60000,
   },
 ];
@@ -133,6 +142,9 @@ export default function TicketPassLockerModal({
   tripName,
   initialPasses,
   onPassesUpdated,
+  members,
+  currentUser,
+  userDisplayName,
 }: TicketPassLockerModalProps) {
   const [passes, setPasses] = useState<VaultPassItem[]>(() => {
     if (typeof window !== 'undefined' && tripId) {
@@ -148,16 +160,57 @@ export default function TicketPassLockerModal({
   });
 
   const [selectedCategory, setSelectedCategory] = useState<'all' | VaultPassItem['category']>('all');
+  const [selectedTravelerFilter, setSelectedTravelerFilter] = useState<'all' | string>('all');
   const [activeViewingPass, setActiveViewingPass] = useState<VaultPassItem | null>(null);
   const [isMaxBrightness, setIsMaxBrightness] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Default traveler name derived from logged in user
+  const myDefaultName = useMemo(() => {
+    const raw = (userDisplayName || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || '').trim();
+    return raw || 'ฉัน';
+  }, [userDisplayName, currentUser]);
+
+  // Available traveler suggestions from trip members + existing passes
+  const travelerOptions = useMemo(() => {
+    const list: string[] = [];
+    const myPrimary = `${myDefaultName} (ฉัน)`;
+    list.push(myPrimary);
+
+    if (Array.isArray(members)) {
+      members.forEach((m) => {
+        const mName = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || m.name || '').trim();
+        if (mName && mName !== myDefaultName && !list.includes(mName)) {
+          list.push(mName);
+        }
+      });
+    }
+
+    passes.forEach((p) => {
+      if (p.holderName && !list.includes(p.holderName)) {
+        list.push(p.holderName);
+      }
+    });
+
+    return list;
+  }, [members, myDefaultName, passes]);
+
+  // Unique traveler names present in saved passes for filtering
+  const existingTravelers = useMemo(() => {
+    const set = new Set<string>();
+    passes.forEach((p) => {
+      if (p.holderName?.trim()) set.add(p.holderName.trim());
+    });
+    return Array.from(set);
+  }, [passes]);
 
   // New Pass Form state
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState<VaultPassItem['category']>('vjw');
   const [newRef, setNewRef] = useState('');
+  const [newHolderName, setNewHolderName] = useState('');
   const [newNote, setNewNote] = useState('');
   const [newValidDate, setNewValidDate] = useState('');
   const [newQrImage, setNewQrImage] = useState<string | null>(null);
@@ -279,39 +332,71 @@ export default function TicketPassLockerModal({
     toast.info('นำรูปภาพออกจากตั๋วแล้ว');
   };
 
+  const handleOpenAddForm = (defaultHolder?: string) => {
+    if (!showAddForm) {
+      if (!newHolderName) {
+        setNewHolderName(defaultHolder || `${myDefaultName} (ฉัน)`);
+      }
+      setShowAddForm(true);
+    } else {
+      setShowAddForm(false);
+    }
+  };
+
   const handleApplyPresetTemplate = (templateType: 'vjw' | 'keta' | 'usj' | 'train' | 'flight') => {
+    const personSuffix = newHolderName.trim() ? ` - ${newHolderName.replace(/\s*\(ฉัน\)/, '')}` : '';
     if (templateType === 'vjw') {
-      setNewTitle('Visit Japan Web (ตม. & ศุลกากร ญี่ปุ่น)');
+      setNewTitle(`Visit Japan Web (ตม. & ศุลกากร ญี่ปุ่น)${personSuffix}`);
       setNewCategory('vjw');
       setNewRef('VJW-ENTRY-QR');
       setNewNote('เปิดสแกนที่ด่านตรวจคนเข้าเมืองและศุลกากรสนามบินญี่ปุ่น สแกนได้แม้ออฟไลน์');
       setNewValidDate('ใช้ได้ตามวันเดินทาง');
     } else if (templateType === 'keta') {
-      setNewTitle('K-ETA (เกาหลีใต้) / Travel Authorization');
+      setNewTitle(`K-ETA (เกาหลีใต้) / Travel Authorization${personSuffix}`);
       setNewCategory('keta');
       setNewRef('K-ETA-APPROVED');
       setNewNote('เอกสารอนุมัติเข้าประเทศเกาหลีใต้ พร้อม QR Code');
       setNewValidDate('ใช้ได้ 3 ปี');
     } else if (templateType === 'usj') {
-      setNewTitle('USJ 1-Day Studio Pass & Timed Entry');
+      setNewTitle(`USJ 1-Day Studio Pass & Timed Entry${personSuffix}`);
       setNewCategory('attraction');
       setNewRef('USJ-PASS-2026');
       setNewNote('บัตรเข้าสวนสนุก Universal Studios Japan + Super Nintendo World');
       setNewValidDate('12 ธ.ค. 2026');
     } else if (templateType === 'train') {
-      setNewTitle('Nankai Rapi:t / JR Kansai Pass');
+      setNewTitle(`Nankai Rapi:t / JR Kansai Pass${personSuffix}`);
       setNewCategory('train');
       setNewRef('RAPIT-RESERVED');
       setNewNote('ตั๋วรถไฟด่วนสนามบินหรือพาสเดินทางรถไฟ');
       setNewValidDate('10 ธ.ค. 2026');
     } else if (templateType === 'flight') {
-      setNewTitle('Flight Boarding Pass (ตั๋วขึ้นเครื่องบิน)');
+      setNewTitle(`Flight Boarding Pass (ตั๋วขึ้นเครื่องบิน)${personSuffix}`);
       setNewCategory('flight');
       setNewRef('TICKET-ETKT');
       setNewNote('บอร์ดดิ้งพาสสำหรับแสดงที่เกตและจุดตรวจสัมภาระ');
       setNewValidDate('วันเดินทาง');
     }
     toast.info('เลือกเทมเพลตเรียบร้อย กรุณาแนบรูปภาพหรือกรอกรหัสเพิ่มเติม');
+  };
+
+  /**
+   * Fast 1-click duplication to add another person's QR/pass (e.g., Mom, Friend, Child)
+   */
+  const handleDuplicateForOther = (pass: VaultPassItem) => {
+    setNewCategory(pass.category);
+    // Clean base title without traveler suffix
+    const baseTitle = pass.title
+      .replace(/\s*-\s*[^-(]+$/, '')
+      .replace(/\s*\([^)]*\)\s*$/, '')
+      .trim();
+    setNewTitle(baseTitle || pass.title);
+    setNewRef(pass.bookingRef || '');
+    setNewValidDate(pass.validDate || '');
+    setNewNote(pass.note || '');
+    setNewHolderName('');
+    setNewQrImage(null);
+    setShowAddForm(true);
+    toast.info('เตรียมข้อมูลสำหรับสมาชิกอีกคนแล้ว กรุณาระบุชื่อผู้เดินทางและแนบรูป QR 📸');
   };
 
   const handleCreatePass = () => {
@@ -325,6 +410,7 @@ export default function TicketPassLockerModal({
       title: newTitle.trim(),
       category: newCategory,
       bookingRef: newRef.trim() || undefined,
+      holderName: newHolderName.trim() || `${myDefaultName} (ฉัน)`,
       note: newNote.trim() || undefined,
       validDate: newValidDate.trim() || undefined,
       qrCodeUrl: newQrImage || undefined,
@@ -336,6 +422,7 @@ export default function TicketPassLockerModal({
     setShowAddForm(false);
     setNewTitle('');
     setNewRef('');
+    setNewHolderName('');
     setNewNote('');
     setNewValidDate('');
     setNewQrImage(null);
@@ -352,9 +439,18 @@ export default function TicketPassLockerModal({
   };
 
   const filteredPasses = useMemo(() => {
-    if (selectedCategory === 'all') return passes;
-    return passes.filter((p) => p.category === selectedCategory);
-  }, [passes, selectedCategory]);
+    return passes.filter((p) => {
+      const matchCat = selectedCategory === 'all' || p.category === selectedCategory;
+      const matchTraveler = selectedTravelerFilter === 'all' || (p.holderName || 'ไม่ระบุชื่อ') === selectedTravelerFilter;
+      return matchCat && matchTraveler;
+    });
+  }, [passes, selectedCategory, selectedTravelerFilter]);
+
+  // Sibling passes of the active viewing pass (e.g. all Visit Japan Web QRs in the locker)
+  const siblingPasses = useMemo(() => {
+    if (!activeViewingPass) return [];
+    return passes.filter((p) => p.category === activeViewingPass.category);
+  }, [passes, activeViewingPass]);
 
   const categoryMeta: Record<VaultPassItem['category'], { label: string; icon: string }> = {
     vjw: { label: 'Visit Japan Web (ตม. ญี่ปุ่น)', icon: '🇯🇵' },
@@ -371,7 +467,11 @@ export default function TicketPassLockerModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-5 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" 
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-5 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" 
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px) + 14px, 54px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 14px, 24px)',
+      }}
       role="dialog" 
       aria-modal="true"
     >
@@ -384,33 +484,38 @@ export default function TicketPassLockerModal({
         className="hidden"
       />
 
-      <div className="w-full sm:max-w-2xl rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] flex flex-col max-h-[92dvh] overflow-hidden animate-in zoom-in-95 duration-200">
+      <div 
+        className="w-full sm:max-w-2xl rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        style={{
+          maxHeight: 'calc(100dvh - max(env(safe-area-inset-top, 0px) + 14px, 54px) - max(env(safe-area-inset-bottom, 0px) + 14px, 24px))',
+        }}
+      >
         
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-[#222c42] flex items-center justify-between shrink-0 bg-white/50 dark:bg-[#151b2b]/50 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0">
+        {/* Header - safe area protected from iOS status bar & notch */}
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-[#222c42] flex items-center justify-between shrink-0 bg-white/70 dark:bg-[#151b2b]/70 backdrop-blur-md">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0">
               <QrCode className="h-5 w-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                  Pass & Offline Ticket Locker
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h2 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white truncate">
+                  Ticket & QR Locker
                 </h2>
-                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-950/70 px-2 py-0.5 rounded-full font-mono">
+                <span className="text-[9px] sm:text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-950/70 px-2 py-0.5 rounded-full font-mono shrink-0">
                   100% Offline
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                ตู้เซฟเก็บบัตร QR Visit Japan Web, K-ETA, ตั๋วรถไฟ และบัตร USJ พร้อมภาพสแกน
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                ตู้เซฟเก็บบัตร QR Visit Japan Web, K-ETA, ตั๋วรถไฟ และบัตร USJ รายคน
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95"
+              onClick={() => handleOpenAddForm()}
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95 shrink-0"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>{showAddForm ? 'ปิดฟอร์ม' : 'เพิ่มตั๋วใหม่'}</span>
@@ -425,7 +530,7 @@ export default function TicketPassLockerModal({
         </div>
 
         {/* Category Filter Pills */}
-        <div className="p-3 border-b border-slate-100 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#111726]/60 flex items-center gap-1.5 overflow-x-auto pb-2 custom-scrollbar shrink-0">
+        <div className="px-3 py-2 border-b border-slate-100 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#111726]/60 flex items-center gap-1.5 overflow-x-auto pb-2 custom-scrollbar shrink-0">
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
@@ -437,24 +542,76 @@ export default function TicketPassLockerModal({
           >
             ทั้งหมด ({passes.length})
           </button>
-          {Object.entries(categoryMeta).map(([catKey, meta]) => (
-            <button
-              key={catKey}
-              type="button"
-              onClick={() => setSelectedCategory(catKey as any)}
-              className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
-                selectedCategory === catKey
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                  : 'bg-white dark:bg-[#151b2b] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:bg-slate-100'
-              }`}
-            >
-              {meta.icon} {meta.label}
-            </button>
-          ))}
+          {Object.entries(categoryMeta).map(([catKey, meta]) => {
+            const count = passes.filter((p) => p.category === catKey).length;
+            if (count === 0 && selectedCategory !== catKey) return null;
+            return (
+              <button
+                key={catKey}
+                type="button"
+                onClick={() => setSelectedCategory(catKey as any)}
+                className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border flex items-center gap-1 ${
+                  selectedCategory === catKey
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                    : 'bg-white dark:bg-[#151b2b] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:bg-slate-100'
+                }`}
+              >
+                <span>{meta.icon}</span>
+                <span>{meta.label}</span>
+                {count > 0 && (
+                  <span className={`text-[10px] ml-0.5 px-1.5 py-0.2 rounded-full ${
+                    selectedCategory === catKey ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
+        {/* Secondary Traveler Filter Bar (Appears when passes have multiple travelers tagged) */}
+        {existingTravelers.length > 1 && (
+          <div className="px-3 py-1.5 border-b border-slate-100 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#111726]/40 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shrink-0">
+            <span className="text-[10px] font-bold text-slate-400 shrink-0 flex items-center gap-1 pl-1">
+              <Users className="h-3 w-3 text-indigo-500" />
+              <span>ผู้เดินทาง:</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedTravelerFilter('all')}
+              className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold shrink-0 transition-all cursor-pointer border ${
+                selectedTravelerFilter === 'all'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                  : 'bg-white dark:bg-[#151b2b] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#222c42]'
+              }`}
+            >
+              ทุกคน ({passes.length})
+            </button>
+            {existingTravelers.map((t) => {
+              const tCount = passes.filter((p) => p.holderName === t).length;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setSelectedTravelerFilter(t)}
+                  className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold shrink-0 transition-all cursor-pointer border flex items-center gap-1 ${
+                    selectedTravelerFilter === t
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                      : 'bg-white dark:bg-[#151b2b] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#222c42]'
+                  }`}
+                >
+                  <span>👤</span>
+                  <span>{t}</span>
+                  <span className="text-[10px] opacity-75">({tCount})</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Content Area */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar">
+        <div className="p-3.5 sm:p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar">
           
           {/* Add Pass Form */}
           {showAddForm && (
@@ -462,7 +619,7 @@ export default function TicketPassLockerModal({
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
                   <Ticket className="h-4 w-4" />
-                  <span>เพิ่มตั๋วหรือเอกสารสำคัญใหม่</span>
+                  <span>เพิ่มตั๋วหรือเอกสารสำคัญ (รองรับหลายคน)</span>
                 </h3>
 
                 <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
@@ -477,7 +634,7 @@ export default function TicketPassLockerModal({
                   onClick={() => handleApplyPresetTemplate('vjw')}
                   className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
                 >
-                  🇯🇵 Visit Japan Web
+                  🇯🇵 Visit Japan Web (ตม.)
                 </button>
                 <button
                   type="button"
@@ -507,6 +664,58 @@ export default function TicketPassLockerModal({
                 >
                   ✈️ Boarding Pass
                 </button>
+              </div>
+
+              {/* Multi-Person Traveler Tagging Section */}
+              <div className="p-3 rounded-xl bg-white/80 dark:bg-[#181d2c]/80 border border-indigo-200/80 dark:border-indigo-900/60 space-y-2">
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+                    <User className="h-3.5 w-3.5" />
+                    <span>ผู้ถือตั๋ว / ผู้เดินทาง (ระบุชื่อสำหรับแยกหลายคน)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    แตะชิปด้านล่างหรือพิมพ์ชื่อใหม่
+                  </span>
+                </label>
+
+                {/* Quick traveler suggestion pills */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {travelerOptions.map((tName) => (
+                    <button
+                      key={tName}
+                      type="button"
+                      onClick={() => setNewHolderName(tName)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+                        newHolderName === tName
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                          : 'bg-white dark:bg-[#151b2b] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>👤</span>
+                      <span>{tName}</span>
+                    </button>
+                  ))}
+
+                  {/* Family / Friend quick presets */}
+                  {['คุณแม่', 'คุณพ่อ', 'แฟน', 'น้อง / เด็ก', 'เพื่อน'].filter(c => !travelerOptions.includes(c)).map((extra) => (
+                    <button
+                      key={extra}
+                      type="button"
+                      onClick={() => setNewHolderName(extra)}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-medium border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-[#151b2b]/60 text-slate-600 dark:text-slate-400 hover:text-indigo-600 hover:border-indigo-400 cursor-pointer`}
+                    >
+                      + {extra}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={newHolderName}
+                  onChange={(e) => setNewHolderName(e.target.value)}
+                  placeholder="เช่น ปูดิท (ฉัน), คุณแม่, แฟน, น้องพอล (ตั้งชื่อผู้เดินทางได้อิสระ)"
+                  className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -633,7 +842,7 @@ export default function TicketPassLockerModal({
             <div className="text-center py-12 space-y-2">
               <p className="text-3xl">🎫</p>
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                ยังไม่มีตั๋วหรือบัตรในหมวดนี้
+                ยังไม่มีตั๋วหรือบัตรในตัวกรองนี้
               </h3>
               <p className="text-xs text-slate-400">
                 คลิกปุ่ม &quot;เพิ่มตั๋วใหม่&quot; เพื่ออัปโหลดรูป QR หรือบันทึกรหัสอ้างอิง
@@ -643,18 +852,31 @@ export default function TicketPassLockerModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {filteredPasses.map((pass) => {
                 const meta = categoryMeta[pass.category] || categoryMeta.other;
+                const isMe = pass.holderName?.includes('(ฉัน)') || pass.holderName === myDefaultName;
                 return (
                   <div
                     key={pass.id}
                     className="p-4 rounded-3xl bg-white dark:bg-[#181d2c] border border-slate-200 dark:border-[#222c42] shadow-sm hover:border-indigo-400 dark:hover:border-indigo-500/50 transition-all flex flex-col justify-between gap-3 relative overflow-hidden"
                   >
-                    {/* Header Row */}
+                    {/* Header Row: Category Badge & Multi-Traveler Name Tag */}
                     <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-1">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#111726] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#222c42]">
-                          <span>{meta.icon}</span>
-                          <span>{meta.label}</span>
-                        </span>
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#111726] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#222c42]">
+                            <span>{meta.icon}</span>
+                            <span>{meta.label}</span>
+                          </span>
+
+                          {/* Prominent Traveler Name Pill */}
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                            isMe
+                              ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+                              : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                          }`}>
+                            <User className="h-3 w-3" />
+                            <span className="truncate max-w-[140px]">{pass.holderName || 'ไม่ระบุผู้เดินทาง'}</span>
+                          </span>
+                        </div>
 
                         <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug">
                           {pass.title}
@@ -667,13 +889,24 @@ export default function TicketPassLockerModal({
                         )}
                       </div>
 
-                      <button
-                        onClick={() => handleDeletePass(pass.id)}
-                        className="text-slate-300 hover:text-rose-500 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
-                        title="ลบตั๋วนี้"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {/* Quick Add For Another Person button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDuplicateForOther(pass)}
+                          className="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 p-1.5 rounded-lg border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800 transition-all cursor-pointer"
+                          title="เพิ่ม QR / ตั๋วประเภทนี้ให้เพื่อนร่วมทริปคนอื่น"
+                        >
+                          <UserPlus className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePass(pass.id)}
+                          className="text-slate-300 hover:text-rose-500 p-1.5 rounded-lg transition-colors cursor-pointer"
+                          title="ลบตั๋วนี้"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Booking Reference Box */}
@@ -727,7 +960,7 @@ export default function TicketPassLockerModal({
                               <span>มีรูปตั๋ว / QR Code</span>
                             </span>
                             <span className="text-[10px] text-slate-400 block truncate group-hover:text-indigo-500">
-                              แตะเพื่อเปิดสแกนเต็มจอ
+                              แตะเพื่อเปิดสแกนเต็มจอ ({pass.holderName || 'ผู้เดินทาง'})
                             </span>
                           </div>
                         </div>
@@ -758,7 +991,7 @@ export default function TicketPassLockerModal({
                         className="w-full p-2.5 rounded-2xl border border-dashed border-indigo-300 dark:border-indigo-800/80 bg-indigo-50/50 dark:bg-indigo-950/20 hover:bg-indigo-100/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
                       >
                         <Camera className="h-4 w-4 text-indigo-500" />
-                        <span>📸 แนบรูปตั๋ว / QR (Visit Japan, K-ETA, Pass)</span>
+                        <span>📸 แนบรูปตั๋ว / QR Code ของ {pass.holderName || 'ผู้เดินทาง'}</span>
                       </button>
                     )}
 
@@ -789,10 +1022,10 @@ export default function TicketPassLockerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-[#222c42] bg-slate-50/80 dark:bg-[#111726]/80 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+        <div className="p-3.5 sm:p-4 border-t border-slate-100 dark:border-[#222c42] bg-slate-50/80 dark:bg-[#111726]/80 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 min-w-0 pr-2">
             <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-            <span className="truncate">เข้าถึงได้ตลอดเวลา แม้ไม่มีสัญญาณอินเทอร์เน็ตในรถไฟใต้ดิน</span>
+            <span className="truncate text-[11px] sm:text-xs">เข้าถึงได้ตลอดเวลา แม้ไม่มีเน็ตในตู้รถไฟใต้ดิน</span>
           </div>
 
           <button
@@ -807,14 +1040,19 @@ export default function TicketPassLockerModal({
 
       {/* ========================================================
           FULLSCREEN HIGH-CONTRAST MAX-BRIGHTNESS SCANNER MODAL
+          Safe area protected for notch, Dynamic Island, and home bar
       ======================================================== */}
       {activeViewingPass && (
         <div 
           className={`fixed inset-0 z-[60] flex flex-col items-center justify-center p-3 sm:p-5 transition-colors overflow-y-auto ${
             isMaxBrightness ? 'bg-white text-black' : 'bg-black/95 text-white'
           }`}
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px) + 14px, 54px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 14px, 24px)',
+          }}
         >
-          <div className="w-full max-w-md rounded-3xl p-5 sm:p-6 bg-white text-slate-900 shadow-2xl border-4 border-black space-y-4 text-center my-auto">
+          <div className="w-full max-w-md rounded-3xl p-4 sm:p-6 bg-white text-slate-900 shadow-2xl border-4 border-black space-y-3.5 text-center my-auto">
             
             {/* Header */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-200">
@@ -829,8 +1067,47 @@ export default function TicketPassLockerModal({
               </button>
             </div>
 
+            {/* Sibling Passes Switcher Tabs (e.g. switch between Mom, Dad, Pudit VJW QR in 1 tap!) */}
+            {siblingPasses.length > 1 && (
+              <div className="w-full flex items-center gap-1.5 overflow-x-auto p-1.5 bg-slate-100 rounded-2xl border border-slate-200 text-xs custom-scrollbar">
+                <span className="text-[10px] font-black text-slate-500 shrink-0 pl-1 flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  <span>สลับคน:</span>
+                </span>
+                {siblingPasses.map((sp) => {
+                  const isCurrent = sp.id === activeViewingPass.id;
+                  const label = sp.holderName || sp.title;
+                  return (
+                    <button
+                      key={sp.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveViewingPass(sp);
+                        setZoomLevel(1);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl font-bold text-xs shrink-0 transition-all cursor-pointer flex items-center gap-1 ${
+                        isCurrent
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                      }`}
+                    >
+                      <span>👤</span>
+                      <span className="truncate max-w-[110px]">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pass Title & Traveler Name */}
             <div className="space-y-1">
-              <h3 className="text-base font-black leading-tight">
+              {activeViewingPass.holderName && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-900 font-black text-xs">
+                  <User className="h-3.5 w-3.5 text-indigo-600" />
+                  <span>ผู้เดินทาง: {activeViewingPass.holderName}</span>
+                </div>
+              )}
+              <h3 className="text-sm sm:text-base font-black leading-tight">
                 {activeViewingPass.title}
               </h3>
               {activeViewingPass.validDate && (
@@ -851,16 +1128,16 @@ export default function TicketPassLockerModal({
                   <img
                     src={activeViewingPass.qrCodeUrl}
                     alt={activeViewingPass.title}
-                    className="max-h-72 max-w-full object-contain rounded-lg shadow-sm"
+                    className="max-h-64 sm:max-h-72 max-w-full object-contain rounded-lg shadow-sm"
                     style={{
                       filter: isMaxBrightness ? 'contrast(1.08) brightness(1.04)' : 'none',
                     }}
                   />
                 </div>
               ) : (
-                <div className="w-52 h-52 bg-slate-100 flex flex-col items-center justify-center rounded-xl p-4 border border-dashed border-slate-400">
-                  <QrCode className="h-28 w-28 text-slate-800" />
-                  <span className="text-[10px] font-mono text-slate-600 mt-2 font-bold">
+                <div className="w-48 h-48 sm:w-52 sm:h-52 bg-slate-100 flex flex-col items-center justify-center rounded-xl p-4 border border-dashed border-slate-400">
+                  <QrCode className="h-24 w-24 sm:h-28 sm:w-28 text-slate-800" />
+                  <span className="text-[10px] font-mono text-slate-600 mt-2 font-bold truncate max-w-full px-2">
                     {activeViewingPass.bookingRef || 'SCAN AT GATE'}
                   </span>
                   <button
@@ -916,18 +1193,18 @@ export default function TicketPassLockerModal({
             {/* Booking Ref */}
             {activeViewingPass.bookingRef && (
               <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-300 flex items-center justify-between">
-                <div className="text-left">
+                <div className="text-left min-w-0 pr-2">
                   <span className="text-[9px] text-slate-500 block uppercase font-mono">
                     BOOKING REFERENCE NUMBER
                   </span>
-                  <span className="text-xs sm:text-sm font-black font-mono tracking-widest text-indigo-700">
+                  <span className="text-xs sm:text-sm font-black font-mono tracking-widest text-indigo-700 truncate block">
                     {activeViewingPass.bookingRef}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleCopy(activeViewingPass.bookingRef!, 'scanner_modal')}
-                  className="p-1.5 rounded-lg bg-white border border-slate-300 text-slate-600 hover:text-indigo-600 cursor-pointer"
+                  className="p-1.5 rounded-lg bg-white border border-slate-300 text-slate-600 hover:text-indigo-600 cursor-pointer shrink-0"
                   title="คัดลอกรหัส"
                 >
                   <Copy className="h-3.5 w-3.5" />

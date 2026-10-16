@@ -26,10 +26,39 @@ describe('Pass & Ticket Locker with VJW / K-ETA / Train / Flight', () => {
       createdAt: Date.now(),
     };
 
+    const momVjwPass: VaultPassItem = {
+      id: 'pass_vjw_mom',
+      title: 'Visit Japan Web (Immigration & Customs QR) - คุณแม่',
+      category: 'vjw',
+      bookingRef: 'VJW-MOM-QR',
+      holderName: 'คุณแม่',
+      qrCodeUrl: 'data:image/jpeg;base64,momQrData',
+      validDate: '10 ธ.ค. 2026',
+      createdAt: Date.now(),
+    };
+
     expect(vjwPass.category).toBe('vjw');
     expect(vjwPass.qrCodeUrl).toContain('data:image/jpeg');
     expect(ketaPass.category).toBe('keta');
     expect(ketaPass.bookingRef).toBe('KETA-2026-KR');
+    expect(momVjwPass.holderName).toBe('คุณแม่');
+    expect(momVjwPass.category).toBe('vjw');
+  });
+
+  it('supports multi-traveler filtering and sibling grouping for instant gate switching', () => {
+    const passes: VaultPassItem[] = [
+      { id: '1', title: 'VJW Pudit', category: 'vjw', holderName: 'ปูดิท (ฉัน)', createdAt: 1 },
+      { id: '2', title: 'VJW Mom', category: 'vjw', holderName: 'คุณแม่', createdAt: 2 },
+      { id: '3', title: 'USJ Pass Pudit', category: 'attraction', holderName: 'ปูดิท (ฉัน)', createdAt: 3 },
+    ];
+
+    const vjwSiblings = passes.filter((p) => p.category === 'vjw');
+    expect(vjwSiblings).toHaveLength(2);
+    expect(vjwSiblings.map((p) => p.holderName)).toEqual(['ปูดิท (ฉัน)', 'คุณแม่']);
+
+    const momPasses = passes.filter((p) => p.holderName === 'คุณแม่');
+    expect(momPasses).toHaveLength(1);
+    expect(momPasses[0].title).toBe('VJW Mom');
   });
 });
 

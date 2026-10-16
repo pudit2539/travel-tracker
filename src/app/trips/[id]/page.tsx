@@ -2691,6 +2691,9 @@ export default function TripDetailPage() {
         onClose={() => setShowTicketPassLockerModal(false)}
         tripId={tripId}
         tripName={trip?.name}
+        members={members}
+        currentUser={currentUser}
+        userDisplayName={userDisplayName}
       />
 
       {/* 2. Packing Checklist Modal */}
