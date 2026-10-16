@@ -7,7 +7,7 @@ import {
   Sun, Sparkles, Copy, Check, Eye, 
   Upload, ShieldCheck, Ticket, AlertCircle, Maximize2,
   ZoomIn, ZoomOut, RotateCcw, ImageIcon, RefreshCw, FileText,
-  User, Users, UserPlus
+  User, Users, UserPlus, Pencil, PlusCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
@@ -205,8 +205,9 @@ export default function TicketPassLockerModal({
     return Array.from(set);
   }, [passes]);
 
-  // New Pass Form state
+  // Form & Edit state
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingPassId, setEditingPassId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState<VaultPassItem['category']>('vjw');
   const [newRef, setNewRef] = useState('');
@@ -216,7 +217,8 @@ export default function TicketPassLockerModal({
   const [newQrImage, setNewQrImage] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
 
-  // Hidden file inputs for direct card image replacement
+  // Form container ref for smooth auto-scroll into view
+  const formContainerRef = useRef<HTMLDivElement>(null);
   const newFileInputRef = useRef<HTMLInputElement>(null);
   const cardFileInputRef = useRef<HTMLInputElement>(null);
   const [activeCardAttachId, setActiveCardAttachId] = useState<string | null>(null);
@@ -333,14 +335,50 @@ export default function TicketPassLockerModal({
   };
 
   const handleOpenAddForm = (defaultHolder?: string) => {
+    setEditingPassId(null);
     if (!showAddForm) {
-      if (!newHolderName) {
-        setNewHolderName(defaultHolder || `${myDefaultName} (ฉัน)`);
-      }
+      setNewTitle('');
+      setNewRef('');
+      setNewNote('');
+      setNewValidDate('');
+      setNewQrImage(null);
+      setNewHolderName(defaultHolder || `${myDefaultName} (ฉัน)`);
       setShowAddForm(true);
+      setTimeout(() => {
+        formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
     } else {
       setShowAddForm(false);
     }
+  };
+
+  /**
+   * Start editing an existing pass
+   */
+  const handleStartEditPass = (pass: VaultPassItem) => {
+    setEditingPassId(pass.id);
+    setNewTitle(pass.title);
+    setNewCategory(pass.category);
+    setNewHolderName(pass.holderName || '');
+    setNewRef(pass.bookingRef || '');
+    setNewValidDate(pass.validDate || '');
+    setNewNote(pass.note || '');
+    setNewQrImage(pass.qrCodeUrl || null);
+    setShowAddForm(true);
+    setTimeout(() => {
+      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
+  const handleCancelForm = () => {
+    setShowAddForm(false);
+    setEditingPassId(null);
+    setNewTitle('');
+    setNewRef('');
+    setNewHolderName('');
+    setNewNote('');
+    setNewValidDate('');
+    setNewQrImage(null);
   };
 
   const handleApplyPresetTemplate = (templateType: 'vjw' | 'keta' | 'usj' | 'train' | 'flight') => {
@@ -376,15 +414,14 @@ export default function TicketPassLockerModal({
       setNewNote('บอร์ดดิ้งพาสสำหรับแสดงที่เกตและจุดตรวจสัมภาระ');
       setNewValidDate('วันเดินทาง');
     }
-    toast.info('เลือกเทมเพลตเรียบร้อย กรุณาแนบรูปภาพหรือกรอกรหัสเพิ่มเติม');
   };
 
   /**
    * Fast 1-click duplication to add another person's QR/pass (e.g., Mom, Friend, Child)
    */
   const handleDuplicateForOther = (pass: VaultPassItem) => {
+    setEditingPassId(null);
     setNewCategory(pass.category);
-    // Clean base title without traveler suffix
     const baseTitle = pass.title
       .replace(/\s*-\s*[^-(]+$/, '')
       .replace(/\s*\([^)]*\)\s*$/, '')
@@ -396,37 +433,54 @@ export default function TicketPassLockerModal({
     setNewHolderName('');
     setNewQrImage(null);
     setShowAddForm(true);
-    toast.info('เตรียมข้อมูลสำหรับสมาชิกอีกคนแล้ว กรุณาระบุชื่อผู้เดินทางและแนบรูป QR 📸');
+    setTimeout(() => {
+      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
-  const handleCreatePass = () => {
+  const handleSavePass = () => {
     if (!newTitle.trim()) {
-      toast.error('กรุณาระบุชื่อตั๋วหรือเอกสาร');
+      toast.error('กรุณาระบุชื่อตั๋วหรือบริการ');
       return;
     }
 
-    const newPass: VaultPassItem = {
-      id: `pass_${Date.now()}`,
-      title: newTitle.trim(),
-      category: newCategory,
-      bookingRef: newRef.trim() || undefined,
-      holderName: newHolderName.trim() || `${myDefaultName} (ฉัน)`,
-      note: newNote.trim() || undefined,
-      validDate: newValidDate.trim() || undefined,
-      qrCodeUrl: newQrImage || undefined,
-      createdAt: Date.now(),
-    };
-
-    const next = [newPass, ...passes];
-    savePassesList(next);
-    setShowAddForm(false);
-    setNewTitle('');
-    setNewRef('');
-    setNewHolderName('');
-    setNewNote('');
-    setNewValidDate('');
-    setNewQrImage(null);
-    toast.success('บันทึกตั๋วเข้าตู้เซฟเรียบร้อยแล้ว 🎟️');
+    if (editingPassId) {
+      // Update existing pass
+      const updated = passes.map((p) => {
+        if (p.id === editingPassId) {
+          return {
+            ...p,
+            title: newTitle.trim(),
+            category: newCategory,
+            bookingRef: newRef.trim() || undefined,
+            holderName: newHolderName.trim() || undefined,
+            note: newNote.trim() || undefined,
+            validDate: newValidDate.trim() || undefined,
+            qrCodeUrl: newQrImage || undefined,
+          };
+        }
+        return p;
+      });
+      savePassesList(updated);
+      handleCancelForm();
+      toast.success('บันทึกการแก้ไขเรียบร้อยแล้ว ✨');
+    } else {
+      // Create new pass
+      const newPass: VaultPassItem = {
+        id: `pass_${Date.now()}`,
+        title: newTitle.trim(),
+        category: newCategory,
+        bookingRef: newRef.trim() || undefined,
+        holderName: newHolderName.trim() || `${myDefaultName} (ฉัน)`,
+        note: newNote.trim() || undefined,
+        validDate: newValidDate.trim() || undefined,
+        qrCodeUrl: newQrImage || undefined,
+        createdAt: Date.now(),
+      };
+      savePassesList([newPass, ...passes]);
+      handleCancelForm();
+      toast.success('เพิ่มตั๋วใหม่เรียบร้อยแล้ว 🎟️');
+    }
   };
 
   const handleDeletePass = (id: string) => {
@@ -434,6 +488,7 @@ export default function TicketPassLockerModal({
       const next = passes.filter((p) => p.id !== id);
       savePassesList(next);
       if (activeViewingPass?.id === id) setActiveViewingPass(null);
+      if (editingPassId === id) handleCancelForm();
       toast.info('ลบเอกสารแล้ว');
     }
   };
@@ -515,10 +570,14 @@ export default function TicketPassLockerModal({
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => handleOpenAddForm()}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95 shrink-0"
+              className={`flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs shadow-md cursor-pointer transition-all active:scale-95 shrink-0 ${
+                showAddForm
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+              }`}
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>{showAddForm ? 'ปิดฟอร์ม' : 'เพิ่มตั๋วใหม่'}</span>
+              <span>{showAddForm ? (editingPassId ? 'ยกเลิกแก้ไข' : 'ปิดฟอร์ม') : '+ เพิ่มตั๋วใหม่'}</span>
             </button>
             <button
               onClick={onClose}
@@ -613,68 +672,107 @@ export default function TicketPassLockerModal({
         {/* Content Area */}
         <div className="p-3.5 sm:p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar">
           
-          {/* Add Pass Form */}
-          {showAddForm && (
-            <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 space-y-3.5 animate-in fade-in">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-                  <Ticket className="h-4 w-4" />
-                  <span>เพิ่มตั๋วหรือเอกสารสำคัญ (รองรับหลายคน)</span>
-                </h3>
+          {/* Quick Add Row Action Card when form is closed */}
+          {!showAddForm && (
+            <button
+              type="button"
+              onClick={() => handleOpenAddForm()}
+              className="w-full p-3 rounded-2xl border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 hover:bg-indigo-100/50 dark:hover:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer group shadow-2xs"
+            >
+              <PlusCircle className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform" />
+              <span>+ เพิ่มแถวตั๋ว / QR Code ใหม่ (Add Pass Row)</span>
+            </button>
+          )}
 
-                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
-                  เลือกเทมเพลตสำเร็จรูปได้ทันที 👇
-                </span>
+          {/* Add / Edit Pass Form (Smooth Inline Card Builder) */}
+          {showAddForm && (
+            <div 
+              ref={formContainerRef}
+              className={`p-4 sm:p-5 rounded-3xl border space-y-4 animate-in fade-in transition-all ${
+                editingPassId 
+                  ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/80 ring-2 ring-amber-400/30' 
+                  : 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900/60 ring-2 ring-indigo-500/20'
+              }`}
+            >
+              <div className="flex items-center justify-between pb-2 border-b border-indigo-200/60 dark:border-indigo-900/40">
+                <div className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-white ${
+                    editingPassId ? 'bg-amber-600' : 'bg-indigo-600'
+                  }`}>
+                    {editingPassId ? <Pencil className="h-3.5 w-3.5" /> : <Ticket className="h-3.5 w-3.5" />}
+                  </div>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                      {editingPassId ? 'แก้ไขข้อมูลตั๋ว / เอกสาร' : 'เพิ่มตั๋วหรือ QR ใหม่ (รองรับหลายคน)'}
+                    </h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {editingPassId ? 'ปรับปรุงรายละเอียดหรือเปลี่ยนรูปภาพ แล้วกดบันทึก' : 'เลือกเทมเพลตด่วนหรือพิมพ์ข้อมูลได้ทันที'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCancelForm}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
 
               {/* Quick Template Chips */}
-              <div className="flex flex-wrap items-center gap-1.5 pb-1">
-                <button
-                  type="button"
-                  onClick={() => handleApplyPresetTemplate('vjw')}
-                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
-                >
-                  🇯🇵 Visit Japan Web (ตม.)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyPresetTemplate('keta')}
-                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
-                >
-                  🇰🇷 K-ETA เกาหลี
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyPresetTemplate('usj')}
-                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
-                >
-                  🎟️ บัตร USJ Pass
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyPresetTemplate('train')}
-                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
-                >
-                  🚆 ตั๋วรถไฟ / Pass
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyPresetTemplate('flight')}
-                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
-                >
-                  ✈️ Boarding Pass
-                </button>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  เทมเพลตสำเร็จรูปด่วน:
+                </label>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPresetTemplate('vjw')}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
+                  >
+                    🇯🇵 Visit Japan Web (ตม.)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPresetTemplate('keta')}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
+                  >
+                    🇰🇷 K-ETA เกาหลี
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPresetTemplate('usj')}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
+                  >
+                    🎟️ บัตร USJ Pass
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPresetTemplate('train')}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
+                  >
+                    🚆 ตั๋วรถไฟ / Pass
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPresetTemplate('flight')}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#151b2b] hover:bg-indigo-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
+                  >
+                    ✈️ Boarding Pass
+                  </button>
+                </div>
               </div>
 
               {/* Multi-Person Traveler Tagging Section */}
-              <div className="p-3 rounded-xl bg-white/80 dark:bg-[#181d2c]/80 border border-indigo-200/80 dark:border-indigo-900/60 space-y-2">
+              <div className="p-3 rounded-2xl bg-white/90 dark:bg-[#181d2c]/90 border border-indigo-200/80 dark:border-indigo-900/60 space-y-2">
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
                   <span className="flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
                     <User className="h-3.5 w-3.5" />
                     <span>ผู้ถือตั๋ว / ผู้เดินทาง (ระบุชื่อสำหรับแยกหลายคน)</span>
                   </span>
                   <span className="text-[10px] text-slate-400 font-normal">
-                    แตะชิปด้านล่างหรือพิมพ์ชื่อใหม่
+                    แตะชิปหรือพิมพ์ชื่อใหม่
                   </span>
                 </label>
 
@@ -718,6 +816,7 @@ export default function TicketPassLockerModal({
                 />
               </div>
 
+              {/* Form Input Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300">ชื่อตั๋ว / บริการ *</label>
@@ -801,15 +900,19 @@ export default function TicketPassLockerModal({
                   </button>
 
                   {newQrImage && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                        <Check className="h-3.5 w-3.5" />
+                    <div className="flex items-center gap-2 bg-white dark:bg-[#151b2b] px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#222c42]">
+                      <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={newQrImage} alt="preview" className="w-full h-full object-cover" />
+                      </div>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                        <Check className="h-3 w-3" />
                         <span>แนบรูปแล้ว</span>
                       </span>
                       <button
                         type="button"
                         onClick={() => setNewQrImage(null)}
-                        className="text-[10px] text-rose-500 hover:underline font-bold"
+                        className="text-[10px] text-rose-500 hover:underline font-bold ml-1 cursor-pointer"
                       >
                         ลบรูป
                       </button>
@@ -818,20 +921,26 @@ export default function TicketPassLockerModal({
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              {/* Form Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-indigo-200/60 dark:border-indigo-900/40">
                 <button
                   type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer"
+                  onClick={handleCancelForm}
+                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="button"
-                  onClick={handleCreatePass}
-                  className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer shadow-xs transition-all active:scale-95"
+                  onClick={handleSavePass}
+                  className={`px-5 py-2 rounded-xl text-white text-xs font-black cursor-pointer shadow-md transition-all active:scale-95 flex items-center gap-1.5 ${
+                    editingPassId
+                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
+                      : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/25'
+                  }`}
                 >
-                  บันทึกตั๋วเข้าตู้เซฟ
+                  <Check className="h-3.5 w-3.5" />
+                  <span>{editingPassId ? 'บันทึกการแก้ไข' : 'บันทึกตั๋วเข้าตู้เซฟ'}</span>
                 </button>
               </div>
             </div>
@@ -845,7 +954,7 @@ export default function TicketPassLockerModal({
                 ยังไม่มีตั๋วหรือบัตรในตัวกรองนี้
               </h3>
               <p className="text-xs text-slate-400">
-                คลิกปุ่ม &quot;เพิ่มตั๋วใหม่&quot; เพื่ออัปโหลดรูป QR หรือบันทึกรหัสอ้างอิง
+                แตะปุ่ม &quot;+ เพิ่มแถวตั๋ว / QR Code ใหม่&quot; ด้านบนเพื่อบันทึกรายการ
               </p>
             </div>
           ) : (
@@ -853,10 +962,15 @@ export default function TicketPassLockerModal({
               {filteredPasses.map((pass) => {
                 const meta = categoryMeta[pass.category] || categoryMeta.other;
                 const isMe = pass.holderName?.includes('(ฉัน)') || pass.holderName === myDefaultName;
+                const isCurrentlyEditing = editingPassId === pass.id;
                 return (
                   <div
                     key={pass.id}
-                    className="p-4 rounded-3xl bg-white dark:bg-[#181d2c] border border-slate-200 dark:border-[#222c42] shadow-sm hover:border-indigo-400 dark:hover:border-indigo-500/50 transition-all flex flex-col justify-between gap-3 relative overflow-hidden"
+                    className={`p-4 rounded-3xl bg-white dark:bg-[#181d2c] border shadow-sm transition-all flex flex-col justify-between gap-3 relative overflow-hidden ${
+                      isCurrentlyEditing 
+                        ? 'border-amber-400 ring-2 ring-amber-400/40 bg-amber-50/20' 
+                        : 'border-slate-200 dark:border-[#222c42] hover:border-indigo-400 dark:hover:border-indigo-500/50'
+                    }`}
                   >
                     {/* Header Row: Category Badge & Multi-Traveler Name Tag */}
                     <div className="flex items-start justify-between gap-2">
@@ -889,7 +1003,18 @@ export default function TicketPassLockerModal({
                         )}
                       </div>
 
+                      {/* Card Action Buttons: Edit, Add For Other, Delete */}
                       <div className="flex items-center gap-1 shrink-0">
+                        {/* Edit Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditPass(pass)}
+                          className="text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50 p-1.5 rounded-lg border border-transparent hover:border-amber-200 dark:hover:border-amber-800 transition-all cursor-pointer"
+                          title="แก้ไขข้อมูลตั๋วใบนี้"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+
                         {/* Quick Add For Another Person button */}
                         <button
                           type="button"
@@ -899,6 +1024,8 @@ export default function TicketPassLockerModal({
                         >
                           <UserPlus className="h-3.5 w-3.5" />
                         </button>
+
+                        {/* Delete Button */}
                         <button
                           onClick={() => handleDeletePass(pass.id)}
                           className="text-slate-300 hover:text-rose-500 p-1.5 rounded-lg transition-colors cursor-pointer"
@@ -912,11 +1039,11 @@ export default function TicketPassLockerModal({
                     {/* Booking Reference Box */}
                     {pass.bookingRef && (
                       <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-[#111726] border border-slate-200/80 dark:border-[#222c42] flex items-center justify-between">
-                        <div>
+                        <div className="min-w-0 pr-2">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                             รหัสจอง / Booking Ref:
                           </span>
-                          <span className="text-xs font-black font-mono text-indigo-600 dark:text-indigo-400">
+                          <span className="text-xs font-black font-mono text-indigo-600 dark:text-indigo-400 truncate block">
                             {pass.bookingRef}
                           </span>
                         </div>
@@ -924,7 +1051,7 @@ export default function TicketPassLockerModal({
                         <button
                           type="button"
                           onClick={() => handleCopy(pass.bookingRef!, pass.id)}
-                          className="p-1.5 rounded-xl bg-white dark:bg-[#1c2438] text-slate-600 dark:text-slate-300 hover:text-indigo-600 border border-slate-200 dark:border-[#222c42] shadow-2xs transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl bg-white dark:bg-[#1c2438] text-slate-600 dark:text-slate-300 hover:text-indigo-600 border border-slate-200 dark:border-[#222c42] shadow-2xs transition-all cursor-pointer shrink-0"
                           title="คัดลอกรหัสจอง"
                         >
                           {copiedId === pass.id ? (

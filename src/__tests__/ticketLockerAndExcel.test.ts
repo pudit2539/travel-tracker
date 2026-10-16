@@ -60,6 +60,32 @@ describe('Pass & Ticket Locker with VJW / K-ETA / Train / Flight', () => {
     expect(momPasses).toHaveLength(1);
     expect(momPasses[0].title).toBe('VJW Mom');
   });
+
+  it('allows editing an existing pass in place without creating duplicates', () => {
+    const originalPasses: VaultPassItem[] = [
+      { id: 'pass_1', title: 'Old Title', category: 'vjw', holderName: 'Bestky', createdAt: 100 },
+      { id: 'pass_2', title: 'USJ Pass', category: 'attraction', holderName: 'Pudit', createdAt: 200 },
+    ];
+
+    const editingPassId = 'pass_1';
+    const updatedPasses = originalPasses.map((p) => {
+      if (p.id === editingPassId) {
+        return {
+          ...p,
+          title: 'Visit Japan Web (Immigration & Customs)',
+          holderName: 'Bestky (ฉัน)',
+          bookingRef: 'VJW-UPDATED-2026',
+        };
+      }
+      return p;
+    });
+
+    expect(updatedPasses).toHaveLength(2);
+    expect(updatedPasses[0].title).toBe('Visit Japan Web (Immigration & Customs)');
+    expect(updatedPasses[0].holderName).toBe('Bestky (ฉัน)');
+    expect(updatedPasses[0].bookingRef).toBe('VJW-UPDATED-2026');
+    expect(updatedPasses[1].title).toBe('USJ Pass');
+  });
 });
 
 describe('Export Expenses to Excel (.xlsx)', () => {
