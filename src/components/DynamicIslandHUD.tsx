@@ -296,7 +296,7 @@ export default function DynamicIslandHUD({
                   className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white flex flex-col items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 border border-white/10"
                 >
                   <Dices className="h-3.5 w-3.5 text-blue-400" />
-                  <span className="text-[9px] font-bold">สุ่มมื้อนี้</span>
+                  <span className="text-[9px] font-bold">สุ่มมื้อ/เที่ยว</span>
                 </button>
               </div>
 

@@ -592,20 +592,25 @@
     "row_num": 67,
     "date_label": "12 ธ.ค.",
     "time_slot": "15:00 น.",
-    "city": "Kobe -> Osaka",
-    "main_place": "นั่งรถไฟกลับเข้าโอซาก้าช่วงบ่ายแก่ๆ มีเวลาว่างพักผ่อน ช้อปปิ้งเก็บตกเสื้อผ้า รองเท้า และของสะสมในย่าน Shinsaibashi / Namba ได้แบบไม่เหนื่อย",
-    "main_place_links": [],
-    "food_recommendation": "มื้อค่ำร้าน Kushikatsu Daruma (ของทอดเสียบไม้สไตล์โอซาก้า)",
+    "city": "Kobe -> Osaka (Umeda)",
+    "main_place": "นั่งรถไฟมุ่งหน้าสู่ศูนย์กลางมหานครโอซาก้าย่าน Umeda (อุเมดะ) ช้อปปิ้งห้างไอทีและของเล่นอันดับ 1 Yodobashi Camera Multimedia Umeda & LINKS UMEDA เก็บตกเสื้อผ้า กล้อง แก็ดเจ็ต และโมเดลของสะสม",
+    "main_place_links": [
+      "https://maps.google.com/?q=Yodobashi+Camera+Multimedia+Umeda"
+    ],
+    "food_recommendation": "Kiji Okonomiyaki (โอโคโนมิยากิมิชลิน บิบ กูร์มองด์ ชั้น B1 Umeda Sky Building) หรือ Gyukatsu Motomura Umeda (เนื้อวากิวทอดกระทะร้อน)",
     "food_links": [
-      "https://maps.google.com/?q=Kushikatsu+Daruma+Shinsekai"
+      "https://maps.google.com/?q=Kiji+Okonomiyaki+Umeda",
+      "https://maps.google.com/?q=Gyukatsu+Motomura+Umeda"
     ],
-    "backup_plan": "ร้านอาหารสำรอง: Yaekatsu Kushikatsu (คุชิคัตสึทอดไม่อมน้ำมันเจ้าดังย่านชินเซไก)\nที่เที่ยวสำรอง: Tsutenkaku Tower & Slider (หอคอยซึเทนคาคุและสไลเดอร์ยักษ์ Tower Slider)\nคาเฟ่สำรอง: Sennari Kissa Shinsekai (คาเฟ่ย้อนยุคโชวะ ชิมพาร์เฟต์ผลไม้และกาแฟโบราณ)",
+    "backup_plan": "ห้างไอทีสำรอง: Yodobashi Camera Multimedia Umeda & LINKS UMEDA (สวรรค์ 9 ชั้นรวมแก็ดเจ็ต กล้อง อนิเมะ ของเล่น)\nจุดชมวิวสำรอง: Umeda Sky Building (Kuchu Teien Observatory) จุดชมวิวตึกแฝดลอยฟ้า 360 องศา\nห้างแฟชั่นสำรอง: Grand Front Osaka & Lucua 1100 (ศูนย์รวมแฟชั่นและคาเฟ่ชิคติดสถานี JR Osaka)\nคาเฟ่ขนมหวานสำรอง: Harbs Hankyu Sanbangai Umeda (เค้กเครปผลไม้สด Mille-crepes ในตำนาน)\nช้อปปิ้งของเล่นสำรอง: Pokemon Center & Nintendo OSAKA (Daimaru Umeda ชั้น 13)",
     "backup_links": [
-      "https://maps.google.com/?q=Yaekatsu",
-      "https://maps.google.com/?q=Tsutenkaku+Tower+Osaka",
-      "https://maps.google.com/?q=Sennari+Kissa+Shinsekai"
+      "https://maps.google.com/?q=Yodobashi+Camera+Multimedia+Umeda",
+      "https://maps.google.com/?q=Umeda+Sky+Building",
+      "https://maps.google.com/?q=Grand+Front+Osaka",
+      "https://maps.google.com/?q=Harbs+Hankyu+Sanbangai",
+      "https://maps.google.com/?q=Nintendo+OSAKA"
     ],
-    "transport_info": "รถไฟ Hanshin Line (Motomachi -> Osaka-Namba) | แตะ ICOCA (410 เยน)"
+    "transport_info": "รถไฟ Hanshin Line (Motomachi -> Osaka-Umeda) | แตะ ICOCA (330 เยน)"
   },
   {
     "row_num": 69,
@@ -681,8 +686,9 @@
     ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "แผนสำรอง (หากไม่แวะปราสาท): เดินทางตรงกลับเข้าย่านชินไซบาชิ พักผ่อนเก็บของที่โรงแรม Quintessa\nคาเฟ่สำรอง: Miraiza Osaka-jo (อาคารประวัติศาสตร์สไตล์ยุโรปหน้าปราสาท รวมคาเฟ่และร้านขนม)\nร้านอาหารสำรอง: The Landmark Square Osaka (มื้ออาหารพร้อมวิวตัวปราสาทโอซาก้าแบบพาโนรามา)",
+    "backup_plan": "แผนสำรอง Umeda & Yodobashi: เดินทางสู่ย่าน Umeda ช้อปปิ้งเก็บตกห้าง Yodobashi Camera & LINKS UMEDA และชมวิวเมืองตึกแฝด Umeda Sky Building\nแผนสำรอง Shinsaibashi: เดินทางตรงกลับเข้าย่านชินไซบาชิ พักผ่อนเก็บของที่โรงแรม Quintessa\nคาเฟ่สำรอง: Miraiza Osaka-jo (อาคารประวัติศาสตร์สไตล์ยุโรปหน้าปราสาท รวมคาเฟ่และร้านขนม)\nร้านอาหารสำรอง: The Landmark Square Osaka (มื้ออาหารพร้อมวิวตัวปราสาทโอซาก้าแบบพาโนรามา)",
     "backup_links": [
+      "https://maps.google.com/?q=Yodobashi+Camera+Multimedia+Umeda",
       "https://maps.google.com/?q=Quintessa+Hotel+Osaka+Shinsaibashi",
       "https://maps.google.com/?q=Miraiza+Osakajo",
       "https://maps.google.com/?q=The+Landmark+Square+Osaka"

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+import { CURATED_EXPLORE_SPOTS } from '@/data/curatedExploreSpots';
 
 interface GourmetRadarModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface GourmetRadarModalProps {
 export interface DiningSpot {
   id: string;
   name: string;
+  japaneseName?: string;
   category: 'ramen' | 'wagyu' | 'cafe' | 'street' | 'izakaya' | 'general';
   categoryLabel: string;
   categoryIcon: string;
@@ -31,7 +33,9 @@ export interface DiningSpot {
   cityGroup: 'Osaka' | 'Kyoto' | 'Nara' | 'Other';
   dateLabel: string;
   timeSlot?: string;
-  type: 'main' | 'backup';
+  type: 'main' | 'backup' | 'curated';
+  highlight?: string;
+  priceEstimate?: string;
   mapLink: string;
   rawText: string;
 }
@@ -128,6 +132,27 @@ export function extractDiningSpots(itinerary: any[]): DiningSpot[] {
     }
   });
 
+  // 3. Curated recommendations outside itinerary (Osaka, Umeda, Kyoto, Nara, Kobe)
+  CURATED_EXPLORE_SPOTS.filter((s) => s.kind === 'dining').forEach((c) => {
+    spots.push({
+      id: c.id,
+      name: c.name,
+      japaneseName: c.japaneseName,
+      category: (c.category as any) || 'general',
+      categoryLabel: c.categoryLabel,
+      categoryIcon: c.categoryIcon,
+      city: `${c.city} (${c.area})`,
+      cityGroup: c.cityGroup === 'Kobe' ? 'Other' : (c.cityGroup as any),
+      dateLabel: 'นอกแพลนแนะนำ',
+      timeSlot: c.recommendedTime,
+      type: 'curated',
+      highlight: c.highlight,
+      priceEstimate: c.priceEstimate,
+      mapLink: c.mapLink,
+      rawText: `${c.name} ${c.japaneseName || ''} ${c.highlight}`,
+    });
+  });
+
   return spots;
 }
 
@@ -144,7 +169,7 @@ export default function GourmetRadarModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState<'all' | 'Osaka' | 'Kyoto' | 'Nara'>('all');
   const [selectedCategory, setSelectedCategory] = useState<'all' | DiningSpot['category']>('all');
-  const [filterType, setFilterType] = useState<'all' | 'checked' | 'unchecked'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'plan' | 'curated' | 'checked'>('all');
 
   // Checked-in / Visited spots tracking
   const [checkedSpots, setCheckedSpots] = useState<Record<string, boolean>>(() => {
@@ -188,19 +213,22 @@ export default function GourmetRadarModal({
       // Category filter
       if (selectedCategory !== 'all' && s.category !== selectedCategory) return false;
 
-      // Check-in filter
+      // Filter type
       const isChecked = !!checkedSpots[s.id];
       if (filterType === 'checked' && !isChecked) return false;
-      if (filterType === 'unchecked' && isChecked) return false;
+      if (filterType === 'plan' && s.type === 'curated') return false;
+      if (filterType === 'curated' && s.type !== 'curated') return false;
 
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
           s.name.toLowerCase().includes(q) ||
+          (s.japaneseName && s.japaneseName.toLowerCase().includes(q)) ||
           s.city.toLowerCase().includes(q) ||
           s.dateLabel.toLowerCase().includes(q) ||
-          s.categoryLabel.toLowerCase().includes(q)
+          s.categoryLabel.toLowerCase().includes(q) ||
+          (s.highlight && s.highlight.toLowerCase().includes(q))
         );
       }
 
@@ -373,8 +401,8 @@ export default function GourmetRadarModal({
           </div>
 
           {/* Status Filter Pills (Check-in ⭐) */}
-          <div className="flex items-center justify-between text-[11px] pt-0.5">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-0.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setFilterType('all')}
@@ -386,12 +414,30 @@ export default function GourmetRadarModal({
               </button>
               <button
                 type="button"
-                onClick={() => setFilterType('checked')}
-                className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                  filterType === 'checked' ? 'bg-amber-600 text-white' : 'text-slate-500 hover:text-slate-800'
+                onClick={() => setFilterType('plan')}
+                className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  filterType === 'plan' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <span>⭐ แวะกินแล้ว ({checkedCount})</span>
+                🗓️ ในแพลน
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType('curated')}
+                className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  filterType === 'curated' ? 'bg-amber-600 text-white' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                ⭐ นอกแพลนแนะนำ
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType('checked')}
+                className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  filterType === 'checked' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span>✓ แวะแล้ว ({checkedCount})</span>
               </button>
             </div>
 
@@ -443,6 +489,10 @@ export default function GourmetRadarModal({
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
                             ★ แผนหลัก
                           </span>
+                        ) : spot.type === 'curated' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60">
+                            ⭐ นอกแพลนแนะนำ
+                          </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/60">
                             Plan B สำรอง
@@ -457,14 +507,32 @@ export default function GourmetRadarModal({
                       </div>
 
                       {/* Name */}
-                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug break-words">
-                        {spot.name}
-                      </h4>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug break-words">
+                          {spot.name}
+                        </h4>
+                        {spot.japaneseName && (
+                          <p className="text-[11px] text-slate-400 font-sans mt-0.5">
+                            {spot.japaneseName}
+                          </p>
+                        )}
+                      </div>
+
+                      {spot.highlight && (
+                        <p className="text-[11px] text-amber-800 dark:text-amber-300/90 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/40 rounded-lg px-2 py-1 leading-relaxed">
+                          💡 {spot.highlight}
+                        </p>
+                      )}
 
                       {/* City Detail */}
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                         <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
                         <span className="truncate">{spot.city}</span>
+                        {spot.priceEstimate && (
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono ml-1">
+                            • {spot.priceEstimate}
+                          </span>
+                        )}
                       </p>
                     </div>
 

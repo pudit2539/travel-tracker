@@ -207,10 +207,10 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             type="button"
             onClick={() => onOpenDiningDecision?.()}
             className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-blue-400 px-3 py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            title="ตัวช่วยตัดสินใจเลือกร้านอาหารและของหวานตามโซน/มื้อ"
+            title="ตัวช่วยสุ่มร้านอาหาร คาเฟ่ และสถานที่เที่ยว/ช้อปปิ้ง นอกแพลนหรือในแพลน"
           >
             <Dices className="h-3.5 w-3.5 text-blue-500" />
-            <span>สุ่มมื้อนี้</span>
+            <span>สุ่มมื้อ & ที่เที่ยว</span>
           </button>
 
           <button
