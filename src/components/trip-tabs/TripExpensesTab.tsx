@@ -3,9 +3,9 @@
 import React from 'react';
 import { 
   Users, AlertCircle, CheckCircle2, Camera, Calculator, 
-  Search, Download, Edit3 
+  Search, Download, Edit3, Calendar, LayoutGrid, AlignJustify 
 } from 'lucide-react';
-import { ExpenseCard } from '@/components/trip-detail/ExpenseCard';
+import { ExpenseCard, ExpenseThumbnailCard, ExpenseCompactRow } from '@/components/trip-detail/ExpenseCard';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { CategoryItem } from '@/lib/categories';
 import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
@@ -14,6 +14,7 @@ import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getTripExpenseSplits } from '@/lib/expenseSplits';
 import { resolveDisplayCurrency } from '@/lib/tripStatus';
 import PocketMoneyWidget from '@/components/PocketMoneyWidget';
+import { triggerViewTransition } from '@/lib/placeThumbnails';
 
 interface TripExpensesTabProps {
   trip: any;
@@ -97,6 +98,14 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
   onEditExpense,
 }: TripExpensesTabProps) {
   const [splitsVersion, setSplitsVersion] = React.useState(0);
+  const [expenseViewMode, setExpenseViewMode] = React.useState<'grouped' | 'thumbnail' | 'compact'>('grouped');
+
+  const handleSwitchExpenseView = (mode: 'grouped' | 'thumbnail' | 'compact') => {
+    triggerViewTransition(() => {
+      setExpenseViewMode(mode);
+    }, 'expenses-view-container');
+  };
+
   React.useEffect(() => {
     const handleSplitsUpdated = () => setSplitsVersion((v) => v + 1);
     window.addEventListener('travel_tracker_splits_updated', handleSplitsUpdated);
@@ -240,9 +249,35 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
     return found?.name || expensePayerFilter;
   }, [expensePayerFilter, userDisplayName, otherPayersWithCounts]);
 
+  // Group filteredExpenses by spent_at date for Splitwise/Tricount-style Date Grouping
+  const groupedExpensesByDate = React.useMemo(() => {
+    const map = new Map<string, { dateKey: string; label: string; items: any[]; dayTotal: number }>();
+    filteredExpenses.forEach((exp) => {
+      const rawDate = exp.spent_at ? String(exp.spent_at).slice(0, 10) : 'ไม่ระบุวันที่';
+      if (!map.has(rawDate)) {
+        let label = rawDate;
+        if (rawDate !== 'ไม่ระบุวันที่') {
+          try {
+            label = new Date(rawDate).toLocaleDateString('th-TH', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            });
+          } catch {}
+        }
+        map.set(rawDate, { dateKey: rawDate, label, items: [], dayTotal: 0 });
+      }
+      const group = map.get(rawDate)!;
+      group.items.push(exp);
+      group.dayTotal += convertCurrency(Number(exp.amount || 0), exp.currency || tripBaseCurrency, tripBaseCurrency, fxRate);
+    });
+    return Array.from(map.values());
+  }, [filteredExpenses, tripBaseCurrency, fxRate]);
+
   return (
     <div className="space-y-4">
-      {/* HERO BUDGET & QUICK ACTION CARD */}
+      {/* HERO BUDGET & QUICK ACTION CARD (Decluttered: 1 clean metric & 3 primary actions) */}
       <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation p-4 sm:p-6 md:p-7 space-y-4">
         {/* Row 1: Badges & Quick Tool Pills */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
@@ -267,68 +302,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           </div>
         </div>
 
-        {/* Row 2: Member Quick View Pills */}
-        <div className="relative z-10 flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-          <button
-            type="button"
-            onClick={() => {
-              setHeroBudgetView('all');
-              setExpensePayerFilter('all');
-            }}
-            className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 ${
-              heroBudgetView === 'all'
-                ? 'btn-luxury-primary text-white scale-102 ring-2 ring-blue-500/30'
-                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#222c42] hover:border-blue-400'
-            }`}
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span>รวมทุกคน</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setHeroBudgetView('me');
-              setExpensePayerFilter('me');
-            }}
-            className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 ${
-              heroBudgetView === 'me'
-                ? 'btn-luxury-primary text-white scale-102 ring-2 ring-blue-500/30'
-                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#222c42] hover:border-blue-400'
-            }`}
-          >
-            <CatAvatarBadge cat={userCat} size="xs" />
-            <span>ของฉัน ({userDisplayName})</span>
-          </button>
-
-          {otherMembers.map((m) => {
-            const mName = m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'เพื่อน';
-            const mCat = getCatAvatar(m.profiles?.avatar_id);
-            const mKey = m.user_id || m.id;
-            const isSelected = heroBudgetView === m.user_id || heroBudgetView === m.id;
-
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => {
-                  setHeroBudgetView(mKey);
-                  setExpensePayerFilter(mKey);
-                }}
-                className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 ${
-                  isSelected
-                    ? 'btn-luxury-primary text-white scale-102 ring-2 ring-blue-500/30'
-                    : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#222c42] hover:border-blue-400'
-                }`}
-              >
-                <CatAvatarBadge cat={mCat} size="xs" />
-                <span>{mName}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Row 3: Spent Metric with Animated Counter */}
+        {/* Row 2: Spent Metric with Animated Counter */}
         {(() => {
           const spentDisplay = resolveDisplayCurrency(heroDisplayData.spent, tripBaseCurrency, fxRate, currencyView);
           const diffDisplay = resolveDisplayCurrency(heroDisplayData.diff, tripBaseCurrency, fxRate, currencyView);
@@ -366,7 +340,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 </div>
               </div>
 
-              {/* Row 4: Progress Bar */}
+              {/* Row 3: Progress Bar */}
               <div className="relative z-10 space-y-1.5">
                 <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
                   <span>
@@ -404,7 +378,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 </div>
               </div>
 
-              {/* Row 5: Remaining Ribbon & Primary Action Buttons */}
+              {/* Row 4: Remaining Ribbon & Primary Action Buttons */}
               <div className="relative z-10 pt-1 space-y-3">
                 {heroDisplayData.targetBudget > 0 && (
                   <div className={`p-2.5 sm:p-3 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-2xs ${
@@ -472,7 +446,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
         })()}
       </div>
 
-      {/* Multi-Wallet Pocket Money & Payment Method Tracker */}
+      {/* Multi-Wallet Pocket Money & Payment Method Tracker (Collapsible Summary Bar) */}
       <PocketMoneyWidget
         tripId={trip?.id || ''}
         currency={tripBaseCurrency}
@@ -481,17 +455,14 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
         currencyView={currencyView}
       />
 
-      {/* Horizontal Filter Row (Trip.com style) */}
-      <div className="p-3.5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-3">
+      {/* Unified Filter & 3-Mode View Switcher Toolbar */}
+      <div className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="text-xs font-black text-slate-900 dark:text-slate-200 flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 text-blue-500" />
-              <span>กรองตามคนร่วมหาร:</span>
+              <span>มุมมองตามสมาชิก:</span>
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              (ดูรายการที่แต่ละคนร่วมแชร์)
-            </span>
           </div>
 
           {(() => {
@@ -502,7 +473,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 <div className="text-xs font-black text-blue-600 dark:text-blue-400">
                   {expensePayerFilter === 'all' ? (
                     <>
-                      <span>ยอดรวมทั้งทริป: {filteredTotalDisplay.primaryText}</span>
+                      <span>ยอดรวม: {filteredTotalDisplay.primaryText}</span>
                       {filteredTotalDisplay.secondaryText && (
                         <span className="font-normal text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ml-1">
                           {filteredTotalDisplay.secondaryText}
@@ -530,7 +501,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           })()}
         </div>
 
-        {/* Swipeable Filter Chips */}
+        {/* Single Unified Swipeable Member Filter Chips */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
           <button
             type="button"
@@ -544,7 +515,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#222c42]'
             }`}
           >
-            📋 ทั้งหมด ({expenses.length} รายการ)
+            📋 รวมทุกคน ({expenses.length})
           </button>
 
           <button
@@ -588,9 +559,9 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           })}
         </div>
 
-        {/* Search & Category Filter */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-          <div className="relative">
+        {/* Search, Category Filter & 3-Mode View Switcher */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 pt-1">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
@@ -604,7 +575,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           <select
             value={expenseCategoryFilter}
             onChange={(e) => setExpenseCategoryFilter(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#111624] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold cursor-pointer"
+            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#111624] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold cursor-pointer md:w-44"
           >
             <option value="all">📁 ทุกหมวดหมู่</option>
             {categories.map((c) => (
@@ -613,63 +584,180 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               </option>
             ))}
           </select>
+
+          {/* 3-Mode Expense View Switcher */}
+          <div
+            role="group"
+            aria-label="สลับมุมมองรายการค่าใช้จ่าย"
+            className="inline-flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#111624] border border-slate-200/80 dark:border-[#222c42] shrink-0 self-start md:self-auto"
+          >
+            <button
+              type="button"
+              onClick={() => handleSwitchExpenseView('grouped')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                expenseViewMode === 'grouped'
+                  ? 'bg-white dark:bg-[#1c2438] text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="จัดกลุ่มตามวันที่"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              <span>ตามวัน</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchExpenseView('thumbnail')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                expenseViewMode === 'thumbnail'
+                  ? 'bg-white dark:bg-[#1c2438] text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="มุมมองการ์ดใบเสร็จ Thumbnail"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Thumbnail</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchExpenseView('compact')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                expenseViewMode === 'compact'
+                  ? 'bg-white dark:bg-[#1c2438] text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="มุมมองตารางรายการย่อ"
+            >
+              <AlignJustify className="h-3.5 w-3.5" />
+              <span>รายการย่อ</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Expenses List */}
-      {filteredExpenses.length === 0 ? (
-        <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-[#222c42] rounded-3xl p-6 bg-white dark:bg-[#151b2b]">
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่ายที่ตรงกับเงื่อนไข</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
-            กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกน และบันทึกรายจ่าย หรือล้างตัวกรอง
-          </p>
-          <div className="flex items-center justify-center gap-2">
-            {expensePayerFilter !== 'all' || expenseCategoryFilter !== 'all' ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setExpensePayerFilter('all');
-                  setExpenseCategoryFilter('all');
-                }}
-                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
-              >
-                ล้างตัวกรองทั้งหมด
-              </button>
-            ) : null}
-            {canAddExpense && (
-              <button
-                onClick={() => {
-                  setOcrSuccessToast(null);
-                  setShowScanModal(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                <Camera className="h-4 w-4" /> บันทึกรายจ่ายแรก
-              </button>
-            )}
+      {/* Expenses List Container */}
+      <div id="expenses-view-container" tabIndex={-1} className="outline-none">
+        {filteredExpenses.length === 0 ? (
+          <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-[#222c42] rounded-3xl p-6 bg-white dark:bg-[#151b2b]">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่ายที่ตรงกับเงื่อนไข</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
+              กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกน และบันทึกรายจ่าย หรือล้างตัวกรอง
+            </p>
+            <div className="flex items-center justify-center gap-2">
+              {expensePayerFilter !== 'all' || expenseCategoryFilter !== 'all' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExpensePayerFilter('all');
+                    setExpenseCategoryFilter('all');
+                  }}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
+                >
+                  ล้างตัวกรองทั้งหมด
+                </button>
+              ) : null}
+              {canAddExpense && (
+                <button
+                  onClick={() => {
+                    setOcrSuccessToast(null);
+                    setShowScanModal(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Camera className="h-4 w-4" /> บันทึกรายจ่ายแรก
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="divide-y divide-slate-100 dark:divide-[#222c42] rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] overflow-hidden card-elevation">
-          {filteredExpenses.map((exp, idx) => (
-            <ExpenseCard
-              key={exp.id || idx}
-              expense={exp}
-              categories={categories}
-              currentUserId={currentUser?.id}
-              userDisplayName={userDisplayName}
-              fxRate={fxRate}
-              currencyView={currencyView}
-              canModify={canModifyExpense(exp)}
-              onOpenReceiptPreview={handleOpenReceiptPreview}
-              onDeleteExpense={handleDeleteExpense}
-              onSelectExpense={onSelectExpense}
-              onEditExpense={onEditExpense}
-              splitMembers={getSplitMembersForExp(exp.id)}
-            />
-          ))}
-        </div>
-      )}
+        ) : expenseViewMode === 'thumbnail' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {filteredExpenses.map((exp, idx) => (
+              <ExpenseThumbnailCard
+                key={exp.id || idx}
+                expense={exp}
+                categories={categories}
+                currentUserId={currentUser?.id}
+                userDisplayName={userDisplayName}
+                fxRate={fxRate}
+                currencyView={currencyView}
+                canModify={canModifyExpense(exp)}
+                onOpenReceiptPreview={handleOpenReceiptPreview}
+                onDeleteExpense={handleDeleteExpense}
+                onSelectExpense={onSelectExpense}
+                onEditExpense={onEditExpense}
+                splitMembers={getSplitMembersForExp(exp.id)}
+              />
+            ))}
+          </div>
+        ) : expenseViewMode === 'compact' ? (
+          <div className="divide-y divide-slate-100 dark:divide-[#222c42] rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] overflow-hidden card-elevation">
+            {filteredExpenses.map((exp, idx) => (
+              <ExpenseCompactRow
+                key={exp.id || idx}
+                expense={exp}
+                categories={categories}
+                currentUserId={currentUser?.id}
+                userDisplayName={userDisplayName}
+                fxRate={fxRate}
+                currencyView={currencyView}
+                canModify={canModifyExpense(exp)}
+                onOpenReceiptPreview={handleOpenReceiptPreview}
+                onDeleteExpense={handleDeleteExpense}
+                onSelectExpense={onSelectExpense}
+                onEditExpense={onEditExpense}
+                splitMembers={getSplitMembersForExp(exp.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {groupedExpensesByDate.map((group) => {
+              const dayDisp = resolveDisplayCurrency(group.dayTotal, tripBaseCurrency, fxRate, currencyView);
+              return (
+                <div
+                  key={group.dateKey}
+                  className="rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] overflow-hidden card-elevation"
+                >
+                  <div className="px-4 py-2.5 bg-slate-50/90 dark:bg-[#111624] border-b border-slate-200/70 dark:border-[#222c42] flex items-center justify-between gap-2 text-xs">
+                    <div className="font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <span>📅 {group.label}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                        {group.items.length} รายการ
+                      </span>
+                    </div>
+                    <div className="font-mono font-black text-slate-900 dark:text-white">
+                      รวม {dayDisp.primaryText}
+                      {dayDisp.secondaryText && (
+                        <span className="text-[10px] font-normal text-slate-500 dark:text-slate-400 ml-1">
+                          {dayDisp.secondaryText}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="divide-y divide-slate-100 dark:divide-[#222c42]">
+                    {group.items.map((exp, idx) => (
+                      <ExpenseCard
+                        key={exp.id || idx}
+                        expense={exp}
+                        categories={categories}
+                        currentUserId={currentUser?.id}
+                        userDisplayName={userDisplayName}
+                        fxRate={fxRate}
+                        currencyView={currencyView}
+                        canModify={canModifyExpense(exp)}
+                        onOpenReceiptPreview={handleOpenReceiptPreview}
+                        onDeleteExpense={handleDeleteExpense}
+                        onSelectExpense={onSelectExpense}
+                        onEditExpense={onEditExpense}
+                        splitMembers={getSplitMembersForExp(exp.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 });

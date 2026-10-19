@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Wallet, CreditCard, Sparkles, Plus, AlertTriangle, 
-  ArrowRight, DollarSign, RefreshCw, Check, Edit2, X, Store 
+  ArrowRight, DollarSign, RefreshCw, Check, Edit2, X, Store, ChevronDown, ChevronUp 
 } from 'lucide-react';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { convertToThb } from '@/lib/currency';
@@ -29,6 +29,9 @@ export default function PocketMoneyWidget({
   onOpenAtmRadar,
   onShowToast,
 }: PocketMoneyWidgetProps) {
+  // Collapsible state so the Expenses tab stays clean and uncluttered by default
+  const [isWalletExpanded, setIsWalletExpanded] = useState(false);
+
   // Starting Cash State (stored in LocalStorage)
   const [startingCash, setStartingCash] = useState<number>(100000);
   const [isEditingCash, setIsEditingCash] = useState(false);
@@ -162,48 +165,81 @@ export default function PocketMoneyWidget({
     }
   };
 
+  const cashSummaryDisp = resolveDisplayCurrency(remainingCash, currency, fxRate, currencyView);
+  const cardTargetVal = hasTravelCardBudget ? remainingTravelCard : travelCardSpent;
+  const cardSummaryDisp = resolveDisplayCurrency(cardTargetVal, currency, fxRate, currencyView);
+  const creditSummaryDisp = resolveDisplayCurrency(creditCardSpent, currency, fxRate, currencyView);
+
   return (
-    <div className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] p-4 sm:p-5 space-y-4 shadow-sm">
+    <div className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] p-3.5 sm:p-4.5 space-y-3.5 shadow-sm transition-all">
       
-      {/* Widget Header */}
+      {/* Compact Summary Bar & Toggle Header */}
       <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base font-bold">
+        <button
+          type="button"
+          onClick={() => setIsWalletExpanded((prev) => !prev)}
+          className="flex items-center gap-2.5 text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base font-bold shrink-0">
             👛
           </div>
           <div>
-            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               <span>กระเป๋าเงิน & ช่องทางชำระเงิน</span>
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#222836] text-slate-600 dark:text-slate-300">
+                {isWalletExpanded ? (
+                  <>ย่อเก็บ <ChevronUp className="h-3 w-3" /></>
+                ) : (
+                  <>จัดการกระเป๋า <ChevronDown className="h-3 w-3" /></>
+                )}
+              </span>
             </h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-              ติดตามยอดคงเหลือเงินสด vs บัตร Travel Card vs บัตรเครดิต
-            </p>
+            {!isWalletExpanded && (
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-[11px] font-bold">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border ${
+                  isCashLow
+                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                    : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/70 dark:border-emerald-800/60'
+                }`}>
+                  💵 เงินสดเหลือ {cashSummaryDisp.primarySymbol}{cashSummaryDisp.primaryAmount.toLocaleString()}
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60">
+                  💳 Travel Card {hasTravelCardBudget ? 'เหลือ' : 'ใช้ไป'} {cardSummaryDisp.primarySymbol}{cardSummaryDisp.primaryAmount.toLocaleString()}
+                </span>
+                {creditCardSpent > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/60">
+                    💳 เครดิต {creditSummaryDisp.primarySymbol}{creditSummaryDisp.primaryAmount.toLocaleString()}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-        </div>
+        </button>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 ml-auto">
           <button
             type="button"
             onClick={() => setShowAddTravelCardModal(true)}
-            className="py-1.5 px-2.5 sm:px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
+            className="py-1.5 px-2.5 sm:px-3 rounded-xl bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-600 hover:text-white text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-3 w-3" />
             <span>แลก Travel Card</span>
           </button>
 
           <button
             type="button"
             onClick={() => setShowAddCashModal(true)}
-            className="py-1.5 px-2.5 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
+            className="py-1.5 px-2.5 sm:px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-3 w-3" />
             <span>กดตู้ ATM</span>
           </button>
         </div>
       </div>
 
-      {/* 3 Wallet Overview Cards (Large & Easy to Read) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* 3 Wallet Overview Cards (Visible when expanded) */}
+      {isWalletExpanded && (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in duration-200">
         
         {/* Wallet 1: Cash in Pocket (Highlighted) */}
         <div className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-2 ${
@@ -357,6 +393,7 @@ export default function PocketMoneyWidget({
         </div>
 
       </div>
+      )}
 
       {/* Low Cash Warning Banner */}
       {isCashLow && (

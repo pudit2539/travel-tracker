@@ -14,7 +14,8 @@ import {
   Trash2, Users, Sparkles, TrendingUp, AlertCircle, 
   Share2, CheckCircle2, Loader2, X, User, Bell, Coins, 
   Check, ArrowUpRight, Shield, Globe2, KeyRound, Sparkle,
-  MapPin, Clock, CloudSun, Heart, Shuffle, ChevronRight, BookmarkCheck
+  MapPin, Clock, CloudSun, Heart, Shuffle, ChevronRight, BookmarkCheck,
+  LayoutGrid, AlignJustify
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/ThemeProvider';
@@ -31,6 +32,7 @@ import { isSuperAdmin } from '@/lib/permissions';
 import { copyToClipboard } from '@/lib/clipboard';
 import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { getTripStatusBadge } from '@/lib/tripStatus';
+import { getPlaceVisualMeta, triggerViewTransition } from '@/lib/placeThumbnails';
 
 export default function HomePage() {
   const router = useRouter();
@@ -43,6 +45,13 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [fxRate, setFxRate] = useState<number>(0.235);
+  const [homeTripViewMode, setHomeTripViewMode] = useState<'thumbnail' | 'list'>('thumbnail');
+
+  const handleSwitchHomeTripView = (mode: 'thumbnail' | 'list') => {
+    triggerViewTransition(() => {
+      setHomeTripViewMode(mode);
+    }, 'home-trips-container');
+  };
   
   // Super Admin state
   const [showSuperAdminModal, setShowSuperAdminModal] = useState(false);
@@ -1050,6 +1059,40 @@ export default function HomePage() {
             </button>
           </div>
 
+          {/* Home Trip View Switcher (Thumbnail Cover Grid vs Compact Boarding List) */}
+          <div
+            role="group"
+            aria-label="สลับมุมมองรายการทริป"
+            className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#181a20] border border-slate-200/80 dark:border-[#262932]"
+          >
+            <button
+              type="button"
+              onClick={() => handleSwitchHomeTripView('thumbnail')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                homeTripViewMode === 'thumbnail'
+                  ? 'bg-white dark:bg-[#121316] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
+              }`}
+              title="มุมมองการ์ดปกภาพสถานที่"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>การ์ดปก</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchHomeTripView('list')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                homeTripViewMode === 'list'
+                  ? 'bg-white dark:bg-[#121316] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
+              }`}
+              title="มุมมองรายการตั๋วย่อ"
+            >
+              <AlignJustify className="h-3.5 w-3.5" />
+              <span>รายการตั๋ว</span>
+            </button>
+          </div>
+
           <button
             onClick={openCreateModal}
             className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
@@ -1059,7 +1102,8 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* ==================== 4. TRIP CARDS GRID (Travo Editorial Card Boxes) ==================== */}
+        {/* ==================== 4. TRIP CARDS GRID / BOARDING LIST ==================== */}
+        <div id="home-trips-container" tabIndex={-1} className="outline-none">
         {loading && trips.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
@@ -1079,23 +1123,13 @@ export default function HomePage() {
               <Plus className="h-4 w-4" /> สร้างทริปใหม่
             </button>
           </div>
-        ) : (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.06 }
-              }
-            }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
-            {filteredTrips.map((t) => {
+        ) : homeTripViewMode === 'list' ? (
+          <div className="space-y-3">
+            {filteredTrips.map((t, idx) => {
               const tripName = t.name || t.title || 'ทริปท่องเที่ยว';
               const tripBudget = Number(t.total_budget ?? t.budget ?? 0);
               const statusBadge = getTripStatusBadge(t.start_date, t.end_date);
+              const coverMeta = getPlaceVisualMeta(tripName, t.currency, idx);
 
               const badgeColorClass =
                 statusBadge.status === 'live'
@@ -1107,44 +1141,64 @@ export default function HomePage() {
                   : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25';
 
               return (
-                <motion.div
+                <div
                   key={t.id}
-                  variants={{
-                    hidden: { opacity: 0, y: 12 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.25 } }
-                  }}
-                  whileHover={{ y: -4, transition: { duration: 0.15 } }}
                   onClick={() => {
                     window.location.href = `/trips/${t.id}`;
                   }}
-                  className="group relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-lg"
+                  className="group relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-2xs hover:shadow-md"
                 >
-                  {/* Top Boarding Header Row */}
-                  <div className="p-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] gap-2 bg-slate-50/40 dark:bg-[#14161c]">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${badgeColorClass}`}>
-                        {statusBadge.isPulse && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    <div
+                      className={`w-16 h-16 sm:w-20 sm:h-16 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br ${coverMeta.gradient}`}
+                      style={{ aspectRatio: '4 / 3' }}
+                    >
+                      <img
+                        src={coverMeta.imageUrl}
+                        alt={tripName}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-1 text-left">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black border ${badgeColorClass}`}>
+                          {statusBadge.badgeText}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]">
+                          {t.currency || 'JPY'}
+                        </span>
+                        {t.isOwner ? (
+                          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400">👑 เจ้าของ</span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">👥 สมาชิก</span>
                         )}
-                        <span>{statusBadge.badgeText}</span>
-                      </span>
-
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]">
-                        {t.currency || 'JPY'}
-                      </span>
-
-                      {t.isOwner ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 flex items-center gap-0.5">
-                          👑 เจ้าของ
+                      </div>
+                      <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                        {tripName}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                        <Calendar className="h-3 w-3 text-blue-500 shrink-0" />
+                        <span>
+                          {t.start_date
+                            ? `${new Date(t.start_date).toLocaleDateString('th-TH')} - ${t.end_date ? new Date(t.end_date).toLocaleDateString('th-TH') : 'ไม่ระบุวันกลับ'}`
+                            : 'ยังไม่ได้ระบุวันเดินทาง'}
                         </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25 flex items-center gap-0.5">
-                          👥 สมาชิก{t.userRole === 'viewer' ? ' (ดู)' : ''}
-                        </span>
-                      )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-dashed border-slate-200 dark:border-[#262932] shrink-0">
+                    <div className="text-left sm:text-right">
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 block">
+                        TRIP BUDGET
+                      </span>
+                      <span className="font-mono font-black text-xs sm:text-sm text-slate-900 dark:text-white">
+                        {tripBudget > 0 ? `${tripBudget.toLocaleString()} ${t.currency || 'JPY'}` : 'ไม่ระบุงบ'}
+                      </span>
                     </div>
 
-                    <div className="flex items-center gap-0.5 shrink-0">
+                    <div className="flex items-center gap-1">
                       {(t.isOwner || t.userRole === 'editor') && (
                         <button
                           type="button"
@@ -1160,16 +1214,133 @@ export default function HomePage() {
                           type="button"
                           onClick={(e) => openDeleteModal(t, e)}
                           className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                          title="ลบทริป (เฉพาะเจ้าของ)"
+                          title="ลบทริป"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
+                      )}
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-xs font-black text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/50 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                        <span>เปิดดูทริป</span>
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.06 }
+              }
+            }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
+            {filteredTrips.map((t, idx) => {
+              const tripName = t.name || t.title || 'ทริปท่องเที่ยว';
+              const tripBudget = Number(t.total_budget ?? t.budget ?? 0);
+              const statusBadge = getTripStatusBadge(t.start_date, t.end_date);
+              const coverMeta = getPlaceVisualMeta(tripName, t.currency, idx);
+
+              const badgeColorClass =
+                statusBadge.status === 'live'
+                  ? 'bg-emerald-500/90 text-white border-emerald-400/50'
+                  : statusBadge.status === 'upcoming'
+                  ? 'bg-blue-600/90 text-white border-blue-400/50'
+                  : statusBadge.status === 'completed'
+                  ? 'bg-slate-900/80 text-slate-200 border-white/15'
+                  : 'bg-indigo-600/90 text-white border-indigo-400/50';
+
+              return (
+                <motion.div
+                  key={t.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 12 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.25 } }
+                  }}
+                  whileHover={{ y: -4, transition: { duration: 0.15 } }}
+                  onClick={() => {
+                    window.location.href = `/trips/${t.id}`;
+                  }}
+                  className="group relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-lg"
+                >
+                  {/* Top Destination Cover Photo Banner (Polarsteps / Trip.com style) */}
+                  <div
+                    className={`relative w-full aspect-[16/9] overflow-hidden bg-gradient-to-br ${coverMeta.gradient}`}
+                    style={{ aspectRatio: '16 / 9' }}
+                  >
+                    <img
+                      src={coverMeta.imageUrl}
+                      alt={tripName}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent" />
+
+                    {/* Top Overlaid Badges & Quick Edit/Delete */}
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border backdrop-blur-md shadow-xs ${badgeColorClass}`}>
+                          {statusBadge.isPulse && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                          )}
+                          <span>{statusBadge.badgeText}</span>
+                        </span>
+
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-900/75 backdrop-blur-md text-white border border-white/15">
+                          {t.currency || 'JPY'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        {(t.isOwner || t.userRole === 'editor') && (
+                          <button
+                            type="button"
+                            onClick={(e) => openEditModal(t, e)}
+                            className="p-1.5 rounded-xl bg-slate-900/65 hover:bg-slate-900 text-white/90 hover:text-white backdrop-blur-md transition-colors"
+                            title="แก้ไขทริป"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        {t.isOwner && (
+                          <button
+                            type="button"
+                            onClick={(e) => openDeleteModal(t, e)}
+                            className="p-1.5 rounded-xl bg-slate-900/65 hover:bg-rose-600 text-white/90 hover:text-white backdrop-blur-md transition-colors"
+                            title="ลบทริป (เฉพาะเจ้าของ)"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bottom Role Tag on Cover */}
+                    <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-white/90 bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded-lg">
+                        {coverMeta.emoji} {coverMeta.categoryLabel}
+                      </span>
+                      {t.isOwner ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/90 text-white shadow-xs">
+                          👑 เจ้าของ
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600/90 text-white shadow-xs">
+                          👥 สมาชิก{t.userRole === 'viewer' ? ' (ดู)' : ''}
+                        </span>
                       )}
                     </div>
                   </div>
 
                   {/* Body Content */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3.5 text-left">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 text-left">
                     <div className="text-left space-y-1.5">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white group-hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-snug text-left break-words">
@@ -1217,6 +1388,7 @@ export default function HomePage() {
             })}
           </motion.div>
         )}
+        </div>
 
 
       </main>

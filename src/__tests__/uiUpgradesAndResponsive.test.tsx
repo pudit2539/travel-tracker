@@ -16,6 +16,19 @@ import {
 import ShowToStaffModal from '@/components/trip-detail/ShowToStaffModal';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import LiveTripCard from '@/components/LiveTripCard';
+import { getPlaceVisualMeta, triggerViewTransition } from '@/lib/placeThumbnails';
+import {
+  ItineraryStopCard,
+  ItineraryThumbnailCard,
+  ItineraryCompactRow,
+} from '@/components/trip-detail/ItineraryStopCard';
+import {
+  ExpenseCard,
+  ExpenseThumbnailCard,
+  ExpenseCompactRow,
+} from '@/components/trip-detail/ExpenseCard';
+import PocketMoneyWidget from '@/components/PocketMoneyWidget';
+import { DEFAULT_CATEGORIES } from '@/lib/categories';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -277,4 +290,200 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
       expect(container.textContent).toContain('เช็คอินแล้ว 1/2 จุด');
     });
   });
+
+  describe('8. Curated Place Thumbnails & Same-Document View Transition Helper', () => {
+    it('resolves destination cover photos for Osaka, USJ, Kyoto, and fallback landmarks', () => {
+      const usj = getPlaceVisualMeta('Universal Studios Japan (USJ)', 'Osaka', 0);
+      expect(usj.categoryLabel).toBe('Theme Park');
+      expect(usj.imageUrl).toContain('images.unsplash.com');
+
+      const kyoto = getPlaceVisualMeta('Fushimi Inari Shrine', 'Kyoto', 1);
+      expect(kyoto.categoryLabel).toBe('Shrine & Temple');
+
+      const food = getPlaceVisualMeta('Ichiran Ramen Kuromon Market', 'Japan', 2);
+      expect(food.categoryLabel).toBe('Gourmet & Dining');
+    });
+
+    it('executes DOM update and shifts focus when triggerViewTransition is called', () => {
+      const targetEl = document.createElement('div');
+      targetEl.id = 'test-view-container';
+      targetEl.tabIndex = -1;
+      document.body.appendChild(targetEl);
+
+      let updated = false;
+      triggerViewTransition(() => {
+        updated = true;
+      }, 'test-view-container');
+
+      expect(updated).toBe(true);
+      document.body.removeChild(targetEl);
+    });
+  });
+
+  describe('9. Itinerary View Modes (Thumbnail / Detailed Card / Compact Row) & Decluttered Actions', () => {
+    const sampleStop = {
+      id: 'itin-101',
+      trip_id: 'trip-osaka',
+      date_label: '05-Dec',
+      time_slot: '10:00 - 12:00',
+      main_place: 'Osaka Castle Park',
+      city: 'Osaka',
+      transport_info: 'JR Loop Line Osakajokoen Station',
+    };
+
+    it('renders ItineraryThumbnailCard with aspect-ratio 16/10 to prevent CLS and opens ShowToStaffModal', async () => {
+      const onOpenEditActivity = vi.fn();
+
+      await act(async () => {
+        root.render(
+          <ItineraryThumbnailCard
+            item={sampleStop}
+            idx={0}
+            canEditPlan={true}
+            onOpenEditActivity={onOpenEditActivity}
+          />
+        );
+      });
+
+      expect(container.textContent).toContain('Osaka Castle Park');
+      expect(container.textContent).toContain('10:00 - 12:00');
+      const aspectBox = container.querySelector('[style*="aspect-ratio"]') as HTMLElement;
+      expect(aspectBox).not.toBeNull();
+
+      const staffBtn = Array.from(container.querySelectorAll('button')).find((b) =>
+        b.textContent?.includes('โชว์ถามทาง')
+      );
+      expect(staffBtn).toBeDefined();
+      await act(async () => {
+        staffBtn?.click();
+      });
+
+      const dialog = document.body.querySelector('[role="dialog"]');
+      expect(dialog).not.toBeNull();
+    });
+
+    it('renders ItineraryCompactRow as a 1-line scannable row and ItineraryStopCard with grouped More (⋯) menu', async () => {
+      const onOpenEditActivity = vi.fn();
+
+      await act(async () => {
+        root.render(
+          <div>
+            <ItineraryCompactRow
+              item={sampleStop}
+              idx={0}
+              canEditPlan={true}
+              onOpenEditActivity={onOpenEditActivity}
+            />
+            <ItineraryStopCard
+              item={sampleStop}
+              idx={0}
+              totalItems={2}
+              canEditPlan={true}
+              reordering={false}
+              isPlanBOpen={false}
+              onTogglePlanB={vi.fn()}
+              onMoveActivity={vi.fn()}
+              onOpenEditActivity={onOpenEditActivity}
+              onDeleteActivity={vi.fn()}
+            />
+          </div>
+        );
+      });
+
+      expect(container.textContent).toContain('Osaka Castle Park');
+      // Open the decluttered ⋯ menu on ItineraryStopCard
+      const moreBtn = Array.from(container.querySelectorAll('button')).find((b) =>
+        b.getAttribute('title')?.includes('จัดการกิจกรรม')
+      );
+      expect(moreBtn).toBeDefined();
+
+      await act(async () => {
+        moreBtn?.click();
+      });
+
+      expect(container.textContent).toContain('แก้ไขรายละเอียด');
+    });
+  });
+
+  describe('10. Expense View Modes (Thumbnail / Compact) & Collapsible PocketMoneyWidget', () => {
+    const sampleExpense = {
+      id: 'exp-1',
+      title: 'Kani Doraku Crab Dinner',
+      amount: 12000,
+      currency: 'JPY',
+      category: 'food',
+      payer_name: 'NongPudit',
+      spent_at: '2026-12-05T19:00:00Z',
+      payment_method: 'travel_card',
+    };
+
+    it('renders ExpenseThumbnailCard and ExpenseCompactRow with split share and currency conversion', async () => {
+      await act(async () => {
+        root.render(
+          <div>
+            <ExpenseThumbnailCard
+              expense={sampleExpense}
+              categories={DEFAULT_CATEGORIES}
+              userDisplayName="NongPudit"
+              fxRate={0.235}
+              canModify={true}
+              onOpenReceiptPreview={vi.fn()}
+              onDeleteExpense={vi.fn()}
+              splitMembers={[
+                { id: 'u1', name: 'NongPudit' },
+                { id: 'u2', name: 'Friend' },
+              ]}
+            />
+            <ExpenseCompactRow
+              expense={sampleExpense}
+              categories={DEFAULT_CATEGORIES}
+              userDisplayName="NongPudit"
+              fxRate={0.235}
+              canModify={true}
+              onOpenReceiptPreview={vi.fn()}
+              onDeleteExpense={vi.fn()}
+              splitMembers={[
+                { id: 'u1', name: 'NongPudit' },
+                { id: 'u2', name: 'Friend' },
+              ]}
+            />
+          </div>
+        );
+      });
+
+      expect(container.textContent).toContain('Kani Doraku Crab Dinner');
+      expect(container.textContent).toContain('12,000');
+      expect(container.textContent).toContain('6,000');
+    });
+
+    it('renders PocketMoneyWidget in compact summary mode by default and expands on click', async () => {
+      await act(async () => {
+        root.render(
+          <PocketMoneyWidget
+            tripId="trip-osaka"
+            currency="JPY"
+            fxRate={0.235}
+            expenses={[sampleExpense]}
+          />
+        );
+      });
+
+      // Initially collapsed: shows compact summary badges and "จัดการกระเป๋า"
+      expect(container.textContent).toContain('จัดการกระเป๋า');
+      expect(container.textContent).toContain('เงินสดเหลือ');
+
+      const toggleBtn = Array.from(container.querySelectorAll('button')).find((b) =>
+        b.textContent?.includes('จัดการกระเป๋า')
+      );
+      expect(toggleBtn).toBeDefined();
+
+      await act(async () => {
+        toggleBtn?.click();
+      });
+
+      expect(container.textContent).toContain('ย่อเก็บ');
+      expect(container.textContent).toContain('YouTrip / Planet');
+    });
+  });
 });
+

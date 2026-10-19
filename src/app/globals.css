@@ -420,3 +420,12 @@ input::-ms-clear {
   max-height: calc(100dvh - max(env(safe-area-inset-top, 0px) + 12px, 52px) - max(env(safe-area-inset-bottom, 0px) + 14px, 24px)) !important;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+

@@ -4,7 +4,8 @@ import React, { useMemo, useState } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
-  BookmarkCheck, List, Building2, Utensils, Dices, QrCode
+  BookmarkCheck, List, Building2, Utensils, Dices, QrCode,
+  LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles
 } from 'lucide-react';
 import LiveTripCard from '@/components/LiveTripCard';
 import WishlistDrawer from '@/components/WishlistDrawer';
@@ -12,14 +13,21 @@ import { getAccommodations, getGoogleMapsUrl } from '@/lib/accommodations';
 import WeatherWidget from '@/components/WeatherWidget';
 import RouteVisualizer from '@/components/RouteVisualizer';
 import InteractiveTripMap from '@/components/InteractiveTripMap';
-import { ItineraryStopCard } from '@/components/trip-detail/ItineraryStopCard';
+import { 
+  ItineraryStopCard, 
+  ItineraryThumbnailCard, 
+  ItineraryCompactRow 
+} from '@/components/trip-detail/ItineraryStopCard';
 import { TransitConnector } from '@/components/trip-detail/TransitConnector';
 import { FlightBoardingPassCard } from '@/components/trip-detail/FlightBoardingPassCard';
 import { AccommodationsCard, formatStayDateDisplay } from '@/components/trip-detail/AccommodationsCard';
 import { TripHeroCover } from '@/components/trip-detail/TripHeroCover';
 import AnimatedNumber from '@/components/AnimatedNumber';
-import { convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
+import { formatExchangeRateDisplay } from '@/lib/currency';
 import { resolveDisplayCurrency } from '@/lib/tripStatus';
+import { triggerViewTransition } from '@/lib/placeThumbnails';
+
+export type ItineraryDisplayLayout = 'card' | 'thumbnail' | 'compact' | 'map';
 
 interface TripPlanTabProps {
   trip: any;
@@ -108,6 +116,41 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   onOpenTicketLocker,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
+  const [showFileMenu, setShowFileMenu] = useState(false);
+
+  // Sub-layout state for itinerary ('card' | 'thumbnail' | 'compact' | 'map')
+  const [displayLayout, setDisplayLayout] = useState<ItineraryDisplayLayout>(() =>
+    itineraryViewMode === 'map' ? 'map' : 'card'
+  );
+
+  // Sync when parent itineraryViewMode changes
+  React.useEffect(() => {
+    if (itineraryViewMode === 'map' && displayLayout !== 'map') {
+      setDisplayLayout('map');
+    } else if (itineraryViewMode === 'list' && displayLayout === 'map') {
+      setDisplayLayout('card');
+    }
+  }, [itineraryViewMode]);
+
+  const handleSelectDisplayLayout = (nextLayout: ItineraryDisplayLayout) => {
+    triggerViewTransition(() => {
+      setDisplayLayout(nextLayout);
+      setItineraryViewMode(nextLayout === 'map' ? 'map' : 'list');
+    }, 'itinerary-view-container');
+  };
+
+  const handleSelectDay = (day: string) => {
+    triggerViewTransition(() => {
+      setSelectedDayFilter(day);
+    }, 'itinerary-view-container');
+  };
+
+  // Collapsible Logistics Panels so the page isn't overloaded with giant cards at once
+  const [openLogisticsPanel, setOpenLogisticsPanel] = useState<'none' | 'flights' | 'hotels' | 'budget' | 'all'>('none');
+
+  const toggleLogisticsPanel = (panel: 'flights' | 'hotels' | 'budget') => {
+    setOpenLogisticsPanel((prev) => (prev === panel ? 'none' : panel));
+  };
 
   // Check if any accommodation is for this day
   const tripId = trip?.id;
@@ -134,9 +177,22 @@ export const TripPlanTab = React.memo(function TripPlanTab({
     );
   }, [selectedDayFilter, stays]);
 
+  const spentDisp = resolveDisplayCurrency(heroDisplayData.spent, tripBaseCurrency, fxRate, currencyView);
+  const targetDisp = resolveDisplayCurrency(heroDisplayData.targetBudget, tripBaseCurrency, fxRate, currencyView);
+  const remDisp = resolveDisplayCurrency(
+    heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining,
+    tripBaseCurrency,
+    fxRate,
+    currencyView
+  );
+
+  const showFlights = openLogisticsPanel === 'flights' || openLogisticsPanel === 'all';
+  const showHotels = openLogisticsPanel === 'hotels' || openLogisticsPanel === 'all';
+  const showBudget = openLogisticsPanel === 'budget' || openLogisticsPanel === 'all';
+
   return (
     <div className="space-y-3.5 sm:space-y-4">
-      {/* 1. Trip Hero Cover Banner with Countdown & Cat AI Companion Greeting */}
+      {/* 1. Trip Hero Cover Banner */}
       <TripHeroCover 
         trip={trip} 
         itineraryCount={itinerary.length} 
@@ -145,108 +201,125 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         showBudget={canSeeMoney}
       />
 
-      {/* 2. Apple Wallet Style Flight Boarding Pass */}
-      <FlightBoardingPassCard 
-        tripId={trip?.id || ''} 
-        defaultDestination={trip?.destination || 'Tokyo'} 
-        tripCurrency={tripBaseCurrency}
-        fxRate={fxRate}
-        currentUser={currentUser}
-        tripStartDate={trip?.start_date}
-        tripEndDate={trip?.end_date}
-        onExpenseCreated={onRefreshTrip}
-        onShowToast={onShowToast}
-      />
+      {/* 2. Clean Quick-Glance Logistics & Concierge Hub (Wanderlog / Flighty Style) */}
+      <div className="p-3 sm:p-3.5 rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] card-elevation space-y-2.5">
+        {/* Top Row: Logistics Drawer Toggles (Flight / Hotel / Budget / Weather) */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-1">
+            <button
+              type="button"
+              onClick={() => toggleLogisticsPanel('flights')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
+                showFlights
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                  : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-[#2a3652] hover:border-blue-400'
+              }`}
+            >
+              <Plane className="h-3.5 w-3.5 shrink-0" />
+              <span>ตั๋วเครื่องบิน</span>
+              {showFlights ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3 opacity-60" />}
+            </button>
 
-      {/* 3. Accommodations / Hotels Card */}
-      <AccommodationsCard
-        tripId={trip?.id || ''}
-        tripCurrency={tripBaseCurrency}
-        fxRate={fxRate}
-        members={members}
-        currentUser={currentUser}
-        tripStartDate={trip?.start_date}
-        tripEndDate={trip?.end_date}
-        onExpenseCreated={onRefreshTrip}
-        onShowToast={onShowToast}
-      />
+            <button
+              type="button"
+              onClick={() => toggleLogisticsPanel('hotels')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
+                showHotels
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                  : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-[#2a3652] hover:border-emerald-400'
+              }`}
+            >
+              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <span>ที่พัก ({stays.length})</span>
+              {showHotels ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3 opacity-60" />}
+            </button>
 
-      {/* Quick Status Bar: FX Rate + Weather Toggle + Travel Hub (Travo + TravelGo Hybrid) */}
-      <div className="flex flex-col gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25 shrink-0">
-              {tripBaseCurrency} Workspace
-            </span>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#121316] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932] font-mono shrink-0">
-              {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
-            </span>
+            {canSeeMoney && (
+              <button
+                type="button"
+                onClick={() => toggleLogisticsPanel('budget')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
+                  showBudget
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                    : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-[#2a3652] hover:border-indigo-400'
+                }`}
+              >
+                <Coins className="h-3.5 w-3.5 shrink-0" />
+                <span className="font-mono">{spentDisp.primaryText}</span>
+                {showBudget ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3 opacity-60" />}
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowWeatherSection(!showWeatherSection)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
+                showWeatherSection
+                  ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                  : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-[#2a3652] hover:border-sky-400'
+              }`}
+            >
+              <CloudSun className="h-3.5 w-3.5 shrink-0" />
+              <span>อากาศ & เส้นทาง</span>
+            </button>
           </div>
 
-          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium sm:hidden shrink-0">
-            แตะเลื่อนซ้าย-ขวาได้ ➔
-          </div>
+          <button
+            type="button"
+            onClick={() => setOpenLogisticsPanel((prev) => (prev === 'all' ? 'none' : 'all'))}
+            className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline px-2 py-1 shrink-0 cursor-pointer"
+          >
+            {openLogisticsPanel === 'all' ? 'ย่อเก็บทั้งหมด ▲' : 'กางดูทั้งหมด ▼'}
+          </button>
         </div>
 
-        {/* Action Buttons Row: Smooth Horizontal Scroll on Mobile, Flex on Desktop */}
-        <div className="w-full flex items-center gap-2 overflow-x-auto custom-scrollbar no-scrollbar pb-1 pt-0.5 overscroll-x-contain">
-          <button
-            type="button"
-            onClick={() => setShowWeatherSection(!showWeatherSection)}
-            className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 sm:py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              showWeatherSection 
-                ? 'bg-blue-500/10 text-blue-600 border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-400' 
-                : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
-            }`}
-          >
-            <span>เส้นทาง & อากาศ</span>
-            {showWeatherSection ? <ChevronUp className="h-3 w-3 shrink-0" /> : <ChevronDown className="h-3 w-3 shrink-0" />}
-          </button>
+        {/* Divider */}
+        <div className="border-t border-slate-100 dark:border-[#222c42]" />
 
-          <button
-            type="button"
-            onClick={onOpenGourmetRadar}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-orange-400 px-3 py-2 sm:py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
-            title="คู่มือร้านอาหาร คาเฟ่ & แผนสำรองทั้งหมดของทริป"
-          >
-            <Utensils className="h-3.5 w-3.5 text-orange-500 shrink-0" />
-            <span>เรดาร์อาหาร & คาเฟ่</span>
-          </button>
+        {/* Bottom Row: 4 Clean Travel Concierge Quick Tools */}
+        <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pt-0.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={onOpenTicketLocker}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#2a3652] hover:border-indigo-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95"
+            >
+              <QrCode className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+              <span>ตั๋ว & QR Pass</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => onOpenDiningDecision?.()}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-blue-400 px-3 py-2 sm:py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
-            title="ตัวช่วยสุ่มร้านอาหาร คาเฟ่ และสถานที่เที่ยว/ช้อปปิ้ง นอกแพลนหรือในแพลน"
-          >
-            <Dices className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-            <span>สุ่มมื้อ & ที่เที่ยว</span>
-          </button>
+            <button
+              type="button"
+              onClick={onOpenGourmetRadar}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#2a3652] hover:border-orange-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95"
+            >
+              <Utensils className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+              <span>เรดาร์ร้านอร่อย</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={onOpenTicketLocker}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-indigo-400 px-3 py-2 sm:py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
-            title="ตู้เซฟเก็บตั๋ว QR ตม., ตั๋วรถไฟ และบัตร USJ ออฟไลน์ 100%"
-          >
-            <QrCode className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-            <span>ตั๋ว & QR Pass</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => onOpenDiningDecision?.()}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#2a3652] hover:border-blue-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95"
+            >
+              <Dices className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+              <span>สุ่มมื้อ/ที่เที่ยว</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setShowWishlistDrawer(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] hover:border-amber-400 px-3 py-2 sm:py-1.5 rounded-xl shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
-          >
-            <BookmarkCheck className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-            <span>Wishlist ร้านเด็ด</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setShowWishlistDrawer(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#2a3652] hover:border-amber-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95"
+            >
+              <BookmarkCheck className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <span>Wishlist</span>
+            </button>
+          </div>
 
           <button
             type="button"
             onClick={() => setShowTravelHubModal(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-3.5 py-2 sm:py-1.5 rounded-xl shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0 mr-3"
-            title="เปิด Travel Hub แดชบอร์ดสรุปทริป"
+            className="inline-flex items-center gap-1.5 text-xs font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-3.5 py-1.5 rounded-xl shadow-sm shadow-blue-500/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
           >
             <Compass className="h-3.5 w-3.5 shrink-0" />
             <span>Travel Hub</span>
@@ -254,7 +327,126 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         </div>
       </div>
 
-      {/* 1. Live On-Trip Destination & Next-Up Spotlight Card */}
+      {/* Expandable Logistics Panels (Only shown when toggled so the journey stays super clean) */}
+      {showFlights && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+          <FlightBoardingPassCard 
+            tripId={trip?.id || ''} 
+            defaultDestination={trip?.destination || 'Tokyo'} 
+            tripCurrency={tripBaseCurrency}
+            fxRate={fxRate}
+            currentUser={currentUser}
+            tripStartDate={trip?.start_date}
+            tripEndDate={trip?.end_date}
+            onExpenseCreated={onRefreshTrip}
+            onShowToast={onShowToast}
+          />
+        </div>
+      )}
+
+      {showHotels && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+          <AccommodationsCard
+            tripId={trip?.id || ''}
+            tripCurrency={tripBaseCurrency}
+            fxRate={fxRate}
+            members={members}
+            currentUser={currentUser}
+            tripStartDate={trip?.start_date}
+            tripEndDate={trip?.end_date}
+            onExpenseCreated={onRefreshTrip}
+            onShowToast={onShowToast}
+          />
+        </div>
+      )}
+
+      {showBudget && canSeeMoney && (
+        <div 
+          onClick={() => onSwitchTab('expenses')}
+          className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] space-y-3 cursor-pointer hover:border-blue-500/50 transition-all group shadow-2xs animate-in fade-in slide-in-from-top-2 duration-200"
+        >
+          <div className="flex items-center justify-between px-0.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+              <div className="p-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <Coins className="h-4 w-4" />
+              </div>
+              <span>สรุปงบประมาณทริป ({heroDisplayData.title})</span>
+              <span className="text-[10px] font-mono text-slate-400">{formatExchangeRateDisplay(tripBaseCurrency, fxRate)}</span>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
+              <span>ไปหน้ารายจ่าย</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="rounded-2xl p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
+              <div className="text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                ใช้ไปแล้ว ({spentDisp.primaryCurrency})
+              </div>
+              <div className="mt-1">
+                <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono">
+                  <AnimatedNumber value={spentDisp.primaryAmount} />
+                </div>
+                <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                  {spentDisp.secondaryText || spentDisp.primaryCurrency}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl p-2.5 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
+              <div className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                ตั้งเป้าไว้ ({targetDisp.primaryCurrency})
+              </div>
+              <div className="mt-1">
+                <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono">
+                  {heroDisplayData.targetBudget > 0 ? (
+                    <AnimatedNumber value={targetDisp.primaryAmount} />
+                  ) : (
+                    '-'
+                  )}
+                </div>
+                <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                  {heroDisplayData.targetBudget > 0 ? (targetDisp.secondaryText || targetDisp.primaryCurrency) : 'ยังไม่ระบุงบ'}
+                </div>
+              </div>
+            </div>
+
+            <div className={`rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
+              heroDisplayData.isOver 
+                ? 'bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40' 
+                : 'bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40'
+            }`}>
+              <div className={`text-[10px] sm:text-[11px] font-bold ${
+                heroDisplayData.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-300'
+              }`}>
+                {heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'} ({remDisp.primaryCurrency})
+              </div>
+              <div className="mt-1">
+                <div className={`text-sm sm:text-base md:text-lg font-black leading-tight font-mono ${
+                  heroDisplayData.isOver ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'
+                }`}>
+                  <AnimatedNumber value={remDisp.primaryAmount} />
+                </div>
+                <div className={`text-[9px] sm:text-[10px] font-semibold truncate ${
+                  heroDisplayData.isOver ? 'text-rose-600/80 dark:text-rose-300/70' : 'text-amber-600/80 dark:text-amber-300/70'
+                }`}>
+                  {remDisp.secondaryText || remDisp.primaryCurrency}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showWeatherSection && (
+        <div className="rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation p-3.5 sm:p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <WeatherWidget defaultCity={itinerary[0]?.city || 'Osaka'} />
+          <RouteVisualizer dayLabel="ทริปทั้งหมด" items={itinerary} />
+        </div>
+      )}
+
+      {/* 3. Live On-Trip Destination & Next-Up Spotlight Card */}
       <LiveTripCard
         trip={trip}
         itinerary={itinerary}
@@ -265,211 +457,175 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         onShowToast={onShowToast}
       />
 
-      {/* Aesthetic 3-Block Travel Budget Overview Card (Travo Editorial Card Box) */}
-      <div 
-        onClick={() => onSwitchTab('expenses')}
-        className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] space-y-3 cursor-pointer hover:border-blue-500/50 transition-all group shadow-2xs"
-      >
-        {/* Card Header */}
-        <div className="flex items-center justify-between px-0.5">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
-            <div className="p-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              <Coins className="h-4 w-4" />
-            </div>
-            <span>สรุปงบประมาณทริป</span>
-            <span className="text-[10px] font-medium text-slate-400">({heroDisplayData.title})</span>
-          </div>
-          <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
-            <span>ไปหน้ารายจ่าย</span>
-            <ChevronRight className="h-3.5 w-3.5" />
-          </div>
-        </div>
-
-        {/* 3 Summary Blocks */}
-        {(() => {
-          const spentDisp = resolveDisplayCurrency(heroDisplayData.spent, tripBaseCurrency, fxRate, currencyView);
-          const targetDisp = resolveDisplayCurrency(heroDisplayData.targetBudget, tripBaseCurrency, fxRate, currencyView);
-          const remDisp = resolveDisplayCurrency(
-            heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining,
-            tripBaseCurrency,
-            fxRate,
-            currencyView
-          );
-          return (
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {/* Block 1: Used / จ่ายแล้ว (Royal Blue) */}
-              <div className="rounded-2xl p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
-                <div className="text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400">
-                  ใช้ไปแล้ว ({spentDisp.primaryCurrency})
-                </div>
-                <div className="mt-1">
-                  <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono">
-                    <AnimatedNumber value={spentDisp.primaryAmount} />
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                    {spentDisp.secondaryText || spentDisp.primaryCurrency}
-                  </div>
-                </div>
-              </div>
-
-              {/* Block 2: Target / ตั้งเป้า (Neutral Slate) */}
-              <div className="rounded-2xl p-2.5 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
-                <div className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                  ตั้งเป้าไว้ ({targetDisp.primaryCurrency})
-                </div>
-                <div className="mt-1">
-                  <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono">
-                    {heroDisplayData.targetBudget > 0 ? (
-                      <AnimatedNumber value={targetDisp.primaryAmount} />
-                    ) : (
-                      '-'
-                    )}
-                  </div>
-                  {heroDisplayData.targetBudget > 0 ? (
-                    <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                      {targetDisp.secondaryText || targetDisp.primaryCurrency}
-                    </div>
-                  ) : (
-                    <div className="text-[9px] sm:text-[10px] font-semibold text-slate-400 truncate">
-                      ยังไม่ระบุงบ
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Block 3: Remaining / คงเหลือ (Emerald or Rose) */}
-              <div className={`rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
-                heroDisplayData.isOver 
-                  ? 'bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40' 
-                  : 'bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40'
-              }`}>
-                <div className={`text-[10px] sm:text-[11px] font-bold ${
-                  heroDisplayData.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-300'
-                }`}>
-                  {heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'} ({remDisp.primaryCurrency})
-                </div>
-                <div className="mt-1">
-                  <div className={`text-sm sm:text-base md:text-lg font-black leading-tight font-mono ${
-                    heroDisplayData.isOver ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'
-                  }`}>
-                    <AnimatedNumber value={remDisp.primaryAmount} />
-                  </div>
-                  <div className={`text-[9px] sm:text-[10px] font-semibold truncate ${
-                    heroDisplayData.isOver ? 'text-rose-600/80 dark:text-rose-300/70' : 'text-amber-600/80 dark:text-amber-300/70'
-                  }`}>
-                    {remDisp.secondaryText || remDisp.primaryCurrency}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* Accordion Weather & Route Visualizer Section */}
-      {showWeatherSection && (
-        <div className="rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation p-3.5 sm:p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-          <WeatherWidget defaultCity={itinerary[0]?.city || 'Osaka'} />
-          <RouteVisualizer dayLabel="ทริปทั้งหมด" items={itinerary} />
-        </div>
-      )}
-
-      {/* Itinerary Filter, View Mode Toggle & Action Buttons (Trip.com Horizontal Chips) */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] card-elevation">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {/* View Mode Toggle: List vs Map */}
-          <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/70 dark:border-[#222c42]">
+      {/* 4. Unified Itinerary View Switcher + Day Filter Bar (Wanderlog / Trip.com Style) */}
+      <div className="p-3 sm:p-3.5 rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] card-elevation space-y-2.5">
+        {/* Top Row: 4-Mode View Switcher (Thumbnail / Card / Compact / Map) + File Menu & Add Button */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* 4-Mode Segmented View Switcher */}
+          <div
+            className="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/70 dark:border-[#222c42]"
+            role="group"
+            aria-label="เลือกมุมมองแผนเที่ยว"
+          >
             <button
-              onClick={() => setItineraryViewMode('list')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                itineraryViewMode === 'list' 
-                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs' 
+              type="button"
+              onClick={() => handleSelectDisplayLayout('thumbnail')}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                displayLayout === 'thumbnail'
+                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
+              title="มุมมองการ์ดรูปภาพ Thumbnail (Magazine Grid)"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Thumbnail</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectDisplayLayout('card')}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                displayLayout === 'card'
+                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="มุมมองการ์ดรายละเอียดครบถ้วน"
             >
               <List className="h-3.5 w-3.5" />
-              <span>รายการ</span>
+              <span>การ์ด</span>
             </button>
+
             <button
-              onClick={() => setItineraryViewMode('map')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                itineraryViewMode === 'map' 
-                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs' 
+              type="button"
+              onClick={() => handleSelectDisplayLayout('compact')}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                displayLayout === 'compact'
+                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
+              title="มุมมองรายการย่อ 1 บรรทัด (Compact Timeline)"
+            >
+              <Rows3 className="h-3.5 w-3.5" />
+              <span>รายการย่อ</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectDisplayLayout('map')}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                displayLayout === 'map'
+                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="มุมมองแผนที่ (และ Split-View บน iPad แนวนอน)"
             >
               <MapPin className="h-3.5 w-3.5" />
               <span>แผนที่</span>
             </button>
           </div>
 
-          {/* Day Filter Pills */}
-          {availableDays.length > 1 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 custom-scrollbar">
+          {/* Right Actions: Clean File Dropdown (PDF/Excel) + Primary Add Activity */}
+          <div className="flex items-center gap-2 ml-auto relative">
+            <div className="relative">
               <button
-                onClick={() => setSelectedDayFilter('all')}
-                className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                  selectedDayFilter === 'all'
+                type="button"
+                onClick={() => setShowFileMenu((v) => !v)}
+                className="btn-luxury-glass inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-2xs active:scale-95"
+                title="พิมพ์ PDF หรือนำเข้า/ส่งออก Excel"
+              >
+                <FolderDown className="h-3.5 w-3.5 text-blue-500" />
+                <span>ไฟล์ / PDF</span>
+                <ChevronDown className="h-3 w-3 opacity-60" />
+              </button>
+
+              {showFileMenu && (
+                <div className="absolute right-0 top-11 z-30 w-48 rounded-2xl bg-white dark:bg-[#1c2438] border border-slate-200 dark:border-[#2a3652] shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFileMenu(false);
+                      setShowPrintableModal(true);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/50 flex items-center gap-2 cursor-pointer"
+                  >
+                    <FileText className="h-3.5 w-3.5 text-blue-500" />
+                    <span>พิมพ์ / เซฟเป็น PDF</span>
+                  </button>
+
+                  {canImportExcel && (
+                    <label className="w-full px-3 py-2 rounded-xl text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50 flex items-center gap-2 cursor-pointer">
+                      <Upload className="h-3.5 w-3.5 text-blue-500" />
+                      <span>นำเข้าไฟล์ Excel</span>
+                      <input
+                        type="file"
+                        accept=".xlsx, .xls"
+                        className="hidden"
+                        onChange={(e) => {
+                          setShowFileMenu(false);
+                          handleFileUpload(e);
+                        }}
+                      />
+                    </label>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFileMenu(false);
+                      exportToExcel();
+                    }}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 flex items-center gap-2 cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5 text-emerald-500" />
+                    <span>ส่งออกไฟล์ Excel</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {canEditPlan && (
+              <button
+                type="button"
+                onClick={() => handleOpenAddActivity(null, selectedDayFilter !== 'all' ? selectedDayFilter : undefined)}
+                className="btn-luxury-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span>เพิ่มกิจกรรม</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Row: Swipeable Day Filter Pills */}
+        {availableDays.length > 1 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 custom-scrollbar">
+            <button
+              type="button"
+              onClick={() => handleSelectDay('all')}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                selectedDayFilter === 'all'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#222c42]'
+              }`}
+            >
+              📅 ทุกวัน ({itinerary.length})
+            </button>
+            {availableDays.map((day, dIdx) => (
+              <button
+                key={day}
+                type="button"
+                onClick={() => handleSelectDay(day)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                  selectedDayFilter === day
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#222c42]'
                 }`}
               >
-                ทุกวัน ({itinerary.length})
+                Day {dIdx + 1} • {day}
               </button>
-              {availableDays.map((day) => (
-                <button
-                  key={day}
-                  onClick={() => setSelectedDayFilter(day)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                    selectedDayFilter === day
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#222c42]'
-                  }`}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 ml-auto">
-          <button
-            onClick={() => setShowPrintableModal(true)}
-            className="btn-luxury-glass inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-2xs active:scale-95"
-            title="พิมพ์ / เซฟเป็น PDF"
-          >
-            <FileText className="h-3.5 w-3.5 text-blue-500" />
-            <span className="hidden sm:inline">พิมพ์ PDF</span>
-          </button>
-
-          {canImportExcel && (
-            <label className="btn-luxury-glass inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-blue-700 dark:text-blue-300 text-xs font-bold cursor-pointer transition-all shadow-2xs active:scale-95">
-              <Upload className="h-3.5 w-3.5 text-blue-500" />
-              <span className="hidden sm:inline">Import Excel</span>
-              <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
-            </label>
-          )}
-
-          <button
-            onClick={exportToExcel}
-            className="btn-luxury-glass inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs active:scale-95"
-            title="ดาวน์โหลดไฟล์ Excel"
-          >
-            <Download className="h-3.5 w-3.5 text-emerald-500" />
-            <span className="hidden sm:inline">Export Excel</span>
-          </button>
-
-          {canEditPlan && (
-            <button
-              onClick={() => handleOpenAddActivity(null, selectedDayFilter !== 'all' ? selectedDayFilter : undefined)}
-              className="btn-luxury-primary inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer"
-            >
-              <Plus className="h-4 w-4" />
-              <span>เพิ่มกิจกรรม</span>
-            </button>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Active Stay Banner for selected day if applicable */}
@@ -481,7 +637,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block uppercase">
-                ที่พักของวันนี้ ({selectedDayFilter})
+                🏨 ที่พักของวันนี้ ({selectedDayFilter})
               </span>
               <span className="font-black text-slate-900 dark:text-white truncate block">
                 {activeStayForSelectedDay.name}
@@ -493,18 +649,17 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             href={getGoogleMapsUrl(activeStayForSelectedDay)}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#151b2b] text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:bg-emerald-50 flex items-center gap-1 shrink-0 cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#151b2b] text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:bg-emerald-50 flex items-center gap-1 shrink-0 cursor-pointer"
           >
             <MapPin className="h-3 w-3 text-rose-500" />
-            <span>เปิดแผนที่</span>
+            <span>นำทางกลับที่พัก</span>
           </a>
         </div>
       )}
 
-      {itineraryViewMode === 'map' ? (
-        <InteractiveTripMap itinerary={itinerary} selectedDay={selectedDayFilter} />
-      ) : (
-        filteredItinerary.length === 0 ? (
+      {/* 5. Main Itinerary Content Area (4 View Modes with Accessibility Focus Target) */}
+      <div id="itinerary-view-container" tabIndex={-1} className="outline-none">
+        {filteredItinerary.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-[#222c42] rounded-3xl p-6 bg-white dark:bg-[#151b2b]">
             <Navigation className="h-10 w-10 text-blue-500 mx-auto mb-2 animate-float-slow" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีกิจกรรมในแผนเที่ยวนี้</h3>
@@ -520,7 +675,60 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               </button>
             )}
           </div>
+        ) : displayLayout === 'map' ? (
+          /* Map & iPad Landscape Split-View Mode (Wanderlog Style) */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className="hidden lg:block lg:col-span-5 space-y-2 max-h-[75dvh] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="px-2 py-1 text-xs font-black text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                <span>📋 รายการจุดแวะ ({filteredItinerary.length} จุด)</span>
+                <span>iPad / Split View</span>
+              </div>
+              {filteredItinerary.map((item, idx) => (
+                <ItineraryCompactRow
+                  key={item.id || idx}
+                  item={item}
+                  idx={idx}
+                  canEditPlan={canEditPlan}
+                  onOpenEditActivity={handleOpenEditActivity}
+                />
+              ))}
+            </div>
+            <div className="lg:col-span-7 lg:sticky lg:top-24">
+              <InteractiveTripMap itinerary={itinerary} selectedDay={selectedDayFilter} />
+            </div>
+          </div>
+        ) : displayLayout === 'thumbnail' ? (
+          /* Thumbnail / Magazine Grid Mode (Trip.com / Airbnb Style) */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+            {filteredItinerary.map((item, idx) => (
+              <ItineraryThumbnailCard
+                key={item.id || idx}
+                item={item}
+                idx={idx}
+                canEditPlan={canEditPlan}
+                onOpenEditActivity={handleOpenEditActivity}
+              />
+            ))}
+          </div>
+        ) : displayLayout === 'compact' ? (
+          /* Compact Timeline / Checklist Mode (Wanderlog / Google Calendar Style) */
+          <div className="p-3 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-2">
+            <div className="flex items-center justify-between px-1 pb-1 border-b border-slate-100 dark:border-[#222c42] text-[11px] font-bold text-slate-500 dark:text-slate-400">
+              <span>⚡ มุมมองตารางเวลาย่อ ({filteredItinerary.length} รายการ)</span>
+              <span>แตะไอคอนด้านซ้ายเพื่อเช็กอิน</span>
+            </div>
+            {filteredItinerary.map((item, idx) => (
+              <ItineraryCompactRow
+                key={item.id || idx}
+                item={item}
+                idx={idx}
+                canEditPlan={canEditPlan}
+                onOpenEditActivity={handleOpenEditActivity}
+              />
+            ))}
+          </div>
         ) : (
+          /* Detailed Card Mode */
           <div className="space-y-3">
             {filteredItinerary.map((item, idx) => {
               const nextItem = filteredItinerary[idx + 1];
@@ -551,8 +759,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               );
             })}
           </div>
-        )
-      )}
+        )}
+      </div>
 
       {/* Wishlist Drawer Modal */}
       <WishlistDrawer

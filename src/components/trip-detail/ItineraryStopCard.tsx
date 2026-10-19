@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
-  Navigation, Eye
+  Navigation, Eye, MoreHorizontal, Check
 } from 'lucide-react';
 import { parseTransitInfo } from '@/lib/transitGuide';
 import {
@@ -11,8 +11,9 @@ import {
   subscribeVisitedStamps,
 } from '@/lib/visitedStamps';
 import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
+import { getPlaceVisualMeta } from '@/lib/placeThumbnails';
 
-interface ItineraryStopCardProps {
+export interface ItineraryStopCardProps {
   item: any;
   idx: number;
   totalItems: number;
@@ -25,21 +26,8 @@ interface ItineraryStopCardProps {
   onDeleteActivity: (id: string) => void;
 }
 
-function ItineraryStopCardComponent({
-  item,
-  idx,
-  totalItems,
-  canEditPlan,
-  reordering,
-  isPlanBOpen,
-  onTogglePlanB,
-  onMoveActivity,
-  onOpenEditActivity,
-  onDeleteActivity,
-}: ItineraryStopCardProps) {
+function useStopVisitedState(item: any) {
   const [visited, setVisited] = React.useState(false);
-  const [showStaffModal, setShowStaffModal] = React.useState(false);
-
   const activityKey = item?.id || item?.main_place || '';
   const tripId = item?.trip_id;
 
@@ -54,14 +42,17 @@ function ItineraryStopCardComponent({
     return subscribeVisitedStamps(syncVisited);
   }, [syncVisited]);
 
-  const toggleVisited = () => {
+  const toggleVisited = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (!activityKey) return;
     const next = toggleActivityVisited(tripId, activityKey);
     setVisited(next);
   };
 
-  const transitGuide = parseTransitInfo(item.transport_info);
+  return { visited, toggleVisited };
+}
 
+function buildStopUrls(item: any) {
   const mainPlaceMapsUrl =
     item.main_place_links && item.main_place_links[0]
       ? item.main_place_links[0]
@@ -73,7 +64,31 @@ function ItineraryStopCardComponent({
     item.main_place + (item.city ? ' ' + item.city : '')
   )}`;
 
-  // Clean restaurant title for fallback search
+  return { mainPlaceMapsUrl, mainPlaceDirectionsUrl };
+}
+
+/**
+ * 1. Detailed Card View (Decluttered & Friendly)
+ */
+function ItineraryStopCardComponent({
+  item,
+  idx,
+  totalItems,
+  canEditPlan,
+  reordering,
+  isPlanBOpen,
+  onTogglePlanB,
+  onMoveActivity,
+  onOpenEditActivity,
+  onDeleteActivity,
+}: ItineraryStopCardProps) {
+  const { visited, toggleVisited } = useStopVisitedState(item);
+  const [showStaffModal, setShowStaffModal] = React.useState(false);
+  const [showAdminMenu, setShowAdminMenu] = React.useState(false);
+
+  const transitGuide = parseTransitInfo(item.transport_info);
+  const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+
   const cleanFoodQuery = React.useMemo(() => {
     if (!item.food_recommendation || item.food_recommendation === '-') return '';
     let text = item.food_recommendation;
@@ -101,7 +116,7 @@ function ItineraryStopCardComponent({
           : 'border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-400/60 dark:hover:border-blue-500/40'
       }`}>
         
-        {/* 1. Trip.com Style Top Notice / Platform Banner */}
+        {/* Top Notice / Platform Banner */}
         {transitGuide.hasGuide && (
           <div className="px-4 py-2 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-b border-amber-200/70 dark:border-amber-900/40 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2 flex-wrap">
@@ -127,7 +142,7 @@ function ItineraryStopCardComponent({
           </div>
         )}
 
-        {/* 2. Main Card Body */}
+        {/* Main Card Body */}
         <div className="p-4 sm:p-5 space-y-3">
           {/* Top Header Line: Day badge, Time slot, City & Eki Stamp Checkin */}
           <div className="flex justify-between items-center gap-2">
@@ -150,7 +165,7 @@ function ItineraryStopCardComponent({
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0 relative">
               {/* Eki-Stamp / Paw Checkin Button */}
               <button
                 type="button"
@@ -163,45 +178,71 @@ function ItineraryStopCardComponent({
                 title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน' : 'ประทับตราเช็กอิน ⛩️'}
               >
                 <span className={visited ? 'animate-bounce' : ''}>{visited ? '💮' : '🐾'}</span>
-                <span className="hidden sm:inline">{visited ? 'แวะแล้ว (済)' : 'เช็กอิน'}</span>
+                <span>{visited ? 'แวะแล้ว' : 'เช็กอิน'}</span>
               </button>
 
+              {/* Decluttered Admin Menu Button */}
               {canEditPlan && (
-                <div className="flex items-center gap-0.5">
+                <div className="relative">
                   <button
                     type="button"
-                    onClick={() => onMoveActivity(idx, 'up')}
-                    disabled={idx === 0 || reordering}
-                    className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1c2438] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer"
-                    title="เลื่อนขึ้น"
+                    onClick={() => setShowAdminMenu((v) => !v)}
+                    className="p-1.5 rounded-xl border border-slate-200/80 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-colors"
+                    title="จัดการกิจกรรม (แก้ไข / เลื่อนลำดับ / ลบ)"
                   >
-                    <ArrowUp className="h-3.5 w-3.5" />
+                    <MoreHorizontal className="h-4 w-4" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onMoveActivity(idx, 'down')}
-                    disabled={idx === totalItems - 1 || reordering}
-                    className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1c2438] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer"
-                    title="เลื่อนลง"
-                  >
-                    <ArrowDown className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onOpenEditActivity(item)}
-                    className="p-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/50 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-                    title="แก้ไข"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDeleteActivity(item.id)}
-                    className="p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
-                    title="ลบ"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+
+                  {showAdminMenu && (
+                    <div className="absolute right-0 top-9 z-30 w-40 rounded-2xl bg-white dark:bg-[#1c2438] border border-slate-200 dark:border-[#2a3652] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          onOpenEditActivity(item);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 flex items-center gap-2 cursor-pointer"
+                      >
+                        <Edit3 className="h-3.5 w-3.5 text-blue-500" />
+                        <span>แก้ไขรายละเอียด</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          onMoveActivity(idx, 'up');
+                        }}
+                        disabled={idx === 0 || reordering}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
+                        <span>เลื่อนขึ้น</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          onMoveActivity(idx, 'down');
+                        }}
+                        disabled={idx === totalItems - 1 || reordering}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                        <span>เลื่อนลง</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          onDeleteActivity(item.id);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2 cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>ลบกิจกรรมนี้</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -339,37 +380,316 @@ function ItineraryStopCardComponent({
           )}
         </div>
 
-        {/* 3. Trip.com Divided Action Footer (3 Actions: Navigate | Show to Staff | Maps Review) */}
-        <div className="grid grid-cols-3 divide-x divide-slate-100 dark:divide-[#222c42] border-t border-slate-100 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#111624]/60 text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
+        {/* Clean 2-Button Action Footer (Navigate Maps | Show to Staff Card) */}
+        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-[#222c42] border-t border-slate-100 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#111624]/60 text-xs font-bold text-slate-700 dark:text-slate-300">
           <a
             href={mainPlaceDirectionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="py-3 px-1.5 flex items-center justify-center gap-1 sm:gap-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer text-center"
+            className="py-2.5 px-3 flex items-center justify-center gap-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer text-center"
           >
             <Navigation className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-            <span className="truncate">นำทาง Maps</span>
+            <span className="truncate">นำทาง Google Maps</span>
           </a>
 
           <button
             type="button"
             onClick={() => setShowStaffModal(true)}
-            className="py-3 px-1.5 flex items-center justify-center gap-1 sm:gap-1.5 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer text-center"
+            className="py-2.5 px-3 flex items-center justify-center gap-1.5 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer text-center"
             title="แสดงชื่อสถานที่ตัวใหญ่ให้คนขับแท็กซี่หรือพนักงานสถานีรถไฟดู"
           >
             <Eye className="h-3.5 w-3.5 text-[#e79b71] shrink-0" />
-            <span className="truncate">โชว์ถามทาง 🚕</span>
+            <span className="truncate">การ์ดโชว์ถามทาง 🚕</span>
           </button>
+        </div>
+      </div>
 
+      <ShowToStaffModal
+        isOpen={showStaffModal}
+        onClose={() => setShowStaffModal(false)}
+        placeName={item.main_place || 'จุดหมาย'}
+        city={item.city}
+        timeSlot={item.time_slot}
+        transportInfo={item.transport_info}
+        mapsUrl={mainPlaceMapsUrl}
+        directionsUrl={mainPlaceDirectionsUrl}
+      />
+    </>
+  );
+}
+
+/**
+ * 2. Thumbnail / Magazine Grid View (Ref: Trip.com / Airbnb / Lemon8)
+ * Uses aspect-[16/10] (aspect-ratio) on image container to reserve layout space and prevent CLS.
+ */
+function ItineraryThumbnailCardComponent({
+  item,
+  idx,
+  canEditPlan,
+  onOpenEditActivity,
+}: {
+  item: any;
+  idx: number;
+  canEditPlan: boolean;
+  onOpenEditActivity: (item: any) => void;
+}) {
+  const { visited, toggleVisited } = useStopVisitedState(item);
+  const [showStaffModal, setShowStaffModal] = React.useState(false);
+  const [imgError, setImgError] = React.useState(false);
+
+  const visual = getPlaceVisualMeta(item.main_place, item.city, idx);
+  const transitGuide = parseTransitInfo(item.transport_info);
+  const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+
+  return (
+    <>
+      <div
+        className={`group rounded-3xl border overflow-hidden flex flex-col justify-between transition-all duration-300 card-elevation ${
+          visited
+            ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/15 dark:bg-emerald-950/15'
+            : 'border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-500/60 hover:-translate-y-0.5'
+        }`}
+      >
+        {/* Top Visual Thumbnail with aspect-ratio to prevent CLS */}
+        <div>
+          <div
+            style={{ aspectRatio: '16 / 10' }}
+            className={`relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br ${visual.gradient}`}
+          >
+            {!imgError && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={visual.imageUrl}
+                alt={item.main_place || 'Destination'}
+                loading="lazy"
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/15" />
+
+            {/* Top Overlay Badges */}
+            <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-black/60 text-white backdrop-blur-md border border-white/15">
+                  {item.date_label || `Day ${idx + 1}`}
+                </span>
+                {item.time_slot && (
+                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-600/85 text-white backdrop-blur-md">
+                    {item.time_slot}
+                  </span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={toggleVisited}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-black backdrop-blur-md border transition-all cursor-pointer active:scale-95 ${
+                  visited
+                    ? 'bg-emerald-500 text-white border-emerald-300 shadow-md'
+                    : 'bg-black/55 text-white border-white/25 hover:bg-black/75'
+                }`}
+              >
+                {visited ? '💮 แวะแล้ว (済)' : '🐾 เช็กอิน'}
+              </button>
+            </div>
+
+            {/* Bottom Overlay City & Category Tag */}
+            <div className="absolute bottom-2.5 inset-x-3 flex items-end justify-between gap-2">
+              <div className="min-w-0">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 drop-shadow-xs">
+                  <span>{visual.emoji}</span>
+                  <span>{item.city || visual.tagLabel}</span>
+                </span>
+                <h3 className="text-sm sm:text-base font-black text-white leading-snug line-clamp-2 drop-shadow-sm">
+                  {item.main_place}
+                </h3>
+              </div>
+
+              {canEditPlan && (
+                <button
+                  type="button"
+                  onClick={() => onOpenEditActivity(item)}
+                  className="p-1.5 rounded-xl bg-black/50 hover:bg-black/75 text-white/90 border border-white/20 backdrop-blur-md shrink-0 cursor-pointer"
+                  title="แก้ไข"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Compact Snippet Body */}
+          <div className="p-3 sm:p-3.5 space-y-1.5 text-left">
+            {transitGuide.details ? (
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-1 flex items-center gap-1.5 font-medium">
+                <Bus className="h-3 w-3 text-indigo-500 shrink-0" />
+                <span className="truncate">{transitGuide.details}</span>
+              </p>
+            ) : null}
+
+            {item.food_recommendation ? (
+              <p className="text-[11px] text-amber-700 dark:text-amber-300 line-clamp-1 flex items-center gap-1.5 font-semibold">
+                <Utensils className="h-3 w-3 text-amber-500 shrink-0" />
+                <span className="truncate">{item.food_recommendation}</span>
+              </p>
+            ) : null}
+
+            {!transitGuide.details && !item.food_recommendation && (
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                แตะปุ่มด้านล่างเพื่อเปิดแผนที่หรือโชว์ถามทาง
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom 2-Action Bar */}
+        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-[#222c42] border-t border-slate-100 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#111624]/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
           <a
-            href={mainPlaceMapsUrl}
+            href={mainPlaceDirectionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="py-3 px-1.5 flex items-center justify-center gap-1 sm:gap-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer text-center"
+            className="py-2.5 px-2 flex items-center justify-center gap-1 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
           >
-            <span className="truncate">พิกัด & รีวิว 📍</span>
-            <ExternalLink className="h-3 w-3 opacity-60 shrink-0 hidden sm:inline" />
+            <Navigation className="h-3 w-3 text-blue-500 shrink-0" />
+            <span className="truncate">นำทาง Maps</span>
           </a>
+          <button
+            type="button"
+            onClick={() => setShowStaffModal(true)}
+            className="py-2.5 px-2 flex items-center justify-center gap-1 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+          >
+            <Eye className="h-3 w-3 text-[#e79b71] shrink-0" />
+            <span className="truncate">โชว์ถามทาง 🚕</span>
+          </button>
+        </div>
+      </div>
+
+      <ShowToStaffModal
+        isOpen={showStaffModal}
+        onClose={() => setShowStaffModal(false)}
+        placeName={item.main_place || 'จุดหมาย'}
+        city={item.city}
+        timeSlot={item.time_slot}
+        transportInfo={item.transport_info}
+        mapsUrl={mainPlaceMapsUrl}
+        directionsUrl={mainPlaceDirectionsUrl}
+      />
+    </>
+  );
+}
+
+/**
+ * 3. Compact Timeline / Checklist Row View (Ref: Wanderlog / Google Calendar)
+ */
+function ItineraryCompactRowComponent({
+  item,
+  idx,
+  canEditPlan,
+  onOpenEditActivity,
+}: {
+  item: any;
+  idx: number;
+  canEditPlan: boolean;
+  onOpenEditActivity: (item: any) => void;
+}) {
+  const { visited, toggleVisited } = useStopVisitedState(item);
+  const [showStaffModal, setShowStaffModal] = React.useState(false);
+  const visual = getPlaceVisualMeta(item.main_place, item.city, idx);
+  const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+
+  return (
+    <>
+      <div
+        className={`group flex items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl border transition-all ${
+          visited
+            ? 'border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/25 dark:bg-emerald-950/20'
+            : 'border-slate-200/80 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-400/60'
+        }`}
+      >
+        {/* Left: Check-in Circle + Thumbnail Mini Avatar + Time */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={toggleVisited}
+            className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all cursor-pointer active:scale-90 ${
+              visited
+                ? 'bg-emerald-500 text-white border-emerald-500 shadow-2xs'
+                : 'bg-slate-50 dark:bg-[#1c2438] text-slate-400 border-slate-200 dark:border-[#2a3652] hover:border-rose-400 hover:text-rose-500'
+            }`}
+            title={visited ? 'แวะแล้ว (済)' : 'กดเพื่อเช็กอิน'}
+          >
+            {visited ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <span className="text-xs">{visual.emoji}</span>}
+          </button>
+
+          <div className="min-w-0 flex-1 text-left">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-mono">
+                {item.date_label || `D${idx + 1}`}
+              </span>
+              {item.time_slot && (
+                <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400">
+                  {item.time_slot}
+                </span>
+              )}
+              {item.city && (
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 truncate">
+                  • {item.city}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <a
+                href={mainPlaceMapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className={`text-xs sm:text-sm font-black truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                  visited ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white'
+                }`}
+              >
+                {item.main_place}
+              </a>
+              {visited && (
+                <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 shrink-0">
+                  済
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Quick Action Icons */}
+        <div className="flex items-center gap-1 shrink-0">
+          <a
+            href={mainPlaceDirectionsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
+            title="นำทาง Google Maps"
+          >
+            <Navigation className="h-3.5 w-3.5" />
+          </a>
+
+          <button
+            type="button"
+            onClick={() => setShowStaffModal(true)}
+            className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white transition-colors cursor-pointer"
+            title="โชว์ถามทาง / แท็กซี่"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </button>
+
+          {canEditPlan && (
+            <button
+              type="button"
+              onClick={() => onOpenEditActivity(item)}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+              title="แก้ไข"
+            >
+              <Edit3 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -388,3 +708,5 @@ function ItineraryStopCardComponent({
 }
 
 export const ItineraryStopCard = React.memo(ItineraryStopCardComponent);
+export const ItineraryThumbnailCard = React.memo(ItineraryThumbnailCardComponent);
+export const ItineraryCompactRow = React.memo(ItineraryCompactRowComponent);
