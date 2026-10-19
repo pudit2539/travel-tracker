@@ -457,19 +457,59 @@ const syncedTripIds = new Set<string>();
 const inflightTripSync = new Map<string, Promise<void>>();
 
 /**
+ * Hydrates in-memory + localStorage custom place photo cache from a remote `customPlacePhotos` map
+ * (used both by `page.tsx` during initial/Realtime `fetchTripData` and by `loadCustomPlacePhotosFromSupabase`).
+ */
+export function hydrateCustomPlacePhotosFromMap(
+  remoteMap?: Record<string, string> | null,
+  tripId?: string
+): void {
+  if (typeof window === 'undefined' || !remoteMap || typeof remoteMap !== 'object') return;
+  if (tripId) {
+    syncedTripIds.add(tripId);
+  }
+
+  const localMap = readCustomPhotoMap();
+  let changed = false;
+
+  for (const [k, v] of Object.entries(remoteMap)) {
+    if (typeof v === 'string' && v && localMap[k] !== v) {
+      localMap[k] = v;
+      memoryCustomPhotoCache.set(k, v);
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    try {
+      localStorage.setItem(CUSTOM_PLACE_PHOTO_STORAGE_KEY, JSON.stringify(localMap));
+    } catch {}
+    window.dispatchEvent(new CustomEvent(CUSTOM_PHOTO_CHANGED_EVENT, { detail: { tripId } }));
+  }
+}
+
+/**
  * Syncs custom place photos into the trip's `__meta_trip_data__` row in Supabase
  * so custom PNG screenshots and selected Google Maps photos appear across PC, Mobile, and iPad.
+ * Only deletes keys explicitly passed in `deletedKeys` so a new device with empty localStorage
+ * never wipes out custom photos uploaded from another device.
  */
-export async function syncCustomPlacePhotosToSupabase(tripId: string): Promise<void> {
+export async function syncCustomPlacePhotosToSupabase(
+  tripId: string,
+  deletedKeys: string[] = []
+): Promise<void> {
   if (!tripId) return;
   try {
     const map = readCustomPhotoMap();
-    const { data: existing } = await supabase
+    const { data: rows } = await supabase
       .from('itinerary_items')
       .select('id, backup_plan')
       .eq('trip_id', tripId)
       .eq('date_label', '__meta_trip_data__')
-      .maybeSingle();
+      .order('id', { ascending: true })
+      .limit(1);
+
+    const existing = Array.isArray(rows) ? rows[0] : (rows as any);
 
     let payload: any = {};
     if (existing?.backup_plan) {
@@ -478,17 +518,19 @@ export async function syncCustomPlacePhotosToSupabase(tripId: string): Promise<v
       } catch {}
     }
 
-    payload.customPlacePhotos = {
+    const mergedPhotos: Record<string, string> = {
       ...(payload.customPlacePhotos || {}),
       ...map,
     };
 
-    // Remove keys that were explicitly deleted locally
-    for (const k of Object.keys(payload.customPlacePhotos)) {
-      if (!(k in map)) {
-        delete payload.customPlacePhotos[k];
+    // Only remove keys that were explicitly reset by the user
+    for (const delKey of deletedKeys) {
+      if (delKey) {
+        delete mergedPhotos[delKey];
       }
     }
+
+    payload.customPlacePhotos = mergedPhotos;
 
     if (existing?.id) {
       await supabase
@@ -524,34 +566,18 @@ export async function loadCustomPlacePhotosFromSupabase(
   const p = (async () => {
     try {
       syncedTripIds.add(tripId);
-      const { data } = await supabase
+      const { data: rows } = await supabase
         .from('itinerary_items')
         .select('backup_plan')
         .eq('trip_id', tripId)
         .eq('date_label', '__meta_trip_data__')
-        .maybeSingle();
+        .order('id', { ascending: true })
+        .limit(1);
 
-      if (!data?.backup_plan) return;
-      const parsed = JSON.parse(data.backup_plan);
-      const remoteMap = parsed?.customPlacePhotos;
-      if (!remoteMap || typeof remoteMap !== 'object') return;
-
-      const localMap = readCustomPhotoMap();
-      let changed = false;
-      for (const [k, v] of Object.entries(remoteMap)) {
-        if (typeof v === 'string' && v && localMap[k] !== v) {
-          localMap[k] = v;
-          memoryCustomPhotoCache.set(k, v);
-          changed = true;
-        }
-      }
-
-      if (changed) {
-        try {
-          localStorage.setItem(CUSTOM_PLACE_PHOTO_STORAGE_KEY, JSON.stringify(localMap));
-        } catch {}
-        window.dispatchEvent(new CustomEvent(CUSTOM_PHOTO_CHANGED_EVENT, { detail: { tripId } }));
-      }
+      const metaRow = Array.isArray(rows) ? rows[0] : (rows as any);
+      if (!metaRow?.backup_plan) return;
+      const parsed = JSON.parse(metaRow.backup_plan);
+      hydrateCustomPlacePhotosFromMap(parsed?.customPlacePhotos, tripId);
     } catch {
       // ignore network/parse errors in offline mode
     } finally {
@@ -573,15 +599,18 @@ export function setCustomPlacePhoto(
   const placeKey = placeName ? `place:${placeName.trim().toLowerCase()}` : '';
 
   const map = readCustomPhotoMap();
+  const deletedKeys: string[] = [];
 
   if (!imageUrlOrDataUrl) {
     if (itemKey) {
       memoryCustomPhotoCache.delete(itemKey);
       delete map[itemKey];
+      deletedKeys.push(itemKey);
     }
     if (placeKey) {
       memoryCustomPhotoCache.delete(placeKey);
       delete map[placeKey];
+      deletedKeys.push(placeKey);
     }
   } else {
     if (itemKey) {
@@ -606,7 +635,7 @@ export function setCustomPlacePhoto(
   }
 
   if (tripId) {
-    syncCustomPlacePhotosToSupabase(tripId).catch(() => {});
+    syncCustomPlacePhotosToSupabase(tripId, deletedKeys).catch(() => {});
   }
 }
 
@@ -616,11 +645,12 @@ export function setCustomPlacePhoto(
  */
 export async function fetchGooglePlacesPhotoCandidates(
   query: string,
-  city?: string
+  city?: string,
+  rawQuery = false
 ): Promise<PlacePhotoCandidate[]> {
   if (!query || typeof window === 'undefined' || typeof fetch !== 'function') return [];
   try {
-    const cleanQ = extractAttractionSearchQuery(query, city) || query;
+    const cleanQ = rawQuery ? query.trim() : extractAttractionSearchQuery(query, city) || query;
     const res = await fetch(
       `/api/place-photo?q=${encodeURIComponent(cleanQ)}&city=${encodeURIComponent(
         city || ''

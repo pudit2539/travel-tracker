@@ -800,7 +800,7 @@ function ItineraryCompactRowComponent({
             type="button"
             onClick={() => setShowLightbox(true)}
             style={{ aspectRatio: '1 / 1' }}
-            className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br ${visual.gradient} hidden xs:block sm:block cursor-zoom-in`}
+            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br ${visual.gradient} block cursor-zoom-in`}
             title="แตะเพื่อขยายดูรูปสถานที่จริง"
           >
             {!imgError && (

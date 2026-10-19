@@ -134,7 +134,7 @@ export function CustomPlacePhotoModal({
     setLoadingCandidates(true);
     setStatusMsg(`กำลังค้นหารูปของ "${q}" จาก Google Maps...`);
     try {
-      const list = await fetchGooglePlacesPhotoCandidates(q, city);
+      const list = await fetchGooglePlacesPhotoCandidates(q, city, true);
       setCandidates(list);
       if (list.length > 0) {
         setPreviewUrl(list[0].url);

@@ -52,6 +52,7 @@ import { calculateSettlement } from '@/lib/settlement';
 import { exportExpensesToExcel as runExportExpensesToExcel } from '@/lib/exportExpensesExcel';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
+import { hydrateCustomPlacePhotosFromMap } from '@/lib/placeThumbnails';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
@@ -449,6 +450,9 @@ export default function TripDetailPage() {
             }
             if (parsed.ticketsVault && Array.isArray(parsed.ticketsVault) && typeof window !== 'undefined') {
               localStorage.setItem(`ticket_vault_${tripId}`, JSON.stringify(parsed.ticketsVault));
+            }
+            if (parsed.customPlacePhotos && typeof parsed.customPlacePhotos === 'object' && typeof window !== 'undefined') {
+              hydrateCustomPlacePhotosFromMap(parsed.customPlacePhotos, tripId);
             }
           } catch (e) {
             console.warn('Trip meta parse error:', e);
