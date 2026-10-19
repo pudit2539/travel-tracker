@@ -11,6 +11,7 @@ import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatEx
 import { supabase } from '@/lib/supabase';
 import { setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
 import { setExpenseSplitMembers } from '@/lib/expenseSplits';
+import type { ExpenseInsert } from '@/types/database.types';
 
 interface MemberInfo {
   id: string;
@@ -187,7 +188,7 @@ export default function QuickCurrencyCalculator({
       const payerName = userDisplayName || userProfile?.name || currentUser?.email?.split('@')[0] || 'สมาชิก';
       const payerAvatar = userProfile?.avatar || currentUser?.user_metadata?.avatar_url || '';
 
-      const rowToInsert: Record<string, any> = {
+      const rowToInsert: ExpenseInsert = {
         trip_id: tripId,
         title: itemTitle.trim() || `ช้อปปิ้ง ${finalCurrency} (Tax-Free)`,
         amount: finalAmount,
@@ -212,7 +213,7 @@ export default function QuickCurrencyCalculator({
         const { payment_method: _, ...fallbackRow } = rowToInsert;
         const { data: fbRows, error: fbError } = await supabase
           .from('expenses')
-          .insert([fallbackRow])
+          .insert([fallbackRow as ExpenseInsert])
           .select();
         if (fbError) throw fbError;
         if (fbRows && fbRows[0]) {

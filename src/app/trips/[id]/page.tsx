@@ -53,6 +53,13 @@ import { exportExpensesToExcel as runExportExpensesToExcel } from '@/lib/exportE
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
 import { hydrateCustomPlacePhotosFromMap } from '@/lib/placeThumbnails';
+import type { 
+  TripRow, 
+  ItineraryItemRow, 
+  ExpenseRow, 
+  TripMemberWithProfile, 
+  ProfileRow 
+} from '@/types/database.types';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
@@ -99,11 +106,11 @@ export default function TripDetailPage() {
 
   // State ข้อมูลหลัก
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [trip, setTrip] = useState<any>(null);
-  const [itinerary, setItinerary] = useState<any[]>([]);
-  const [expenses, setExpenses] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<ProfileRow | null>(null);
+  const [trip, setTrip] = useState<TripRow | null>(null);
+  const [itinerary, setItinerary] = useState<ItineraryItemRow[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
+  const [members, setMembers] = useState<TripMemberWithProfile[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetMap>({});
   const [memberBudgets, setMemberBudgets] = useState<MemberBudgetMap>({});
@@ -1479,7 +1486,7 @@ export default function TripDetailPage() {
           allMembersList.push({
             name: pName,
             avatar: e.payer_avatar || 'cat_blue',
-            id: e.payer_id,
+            id: e.payer_id || undefined,
           });
           seenNames.add(pName.toLowerCase());
           if (e.payer_id) seenIds.add(e.payer_id.toLowerCase());
@@ -1850,7 +1857,7 @@ export default function TripDetailPage() {
       const norm = mName.toLowerCase();
       const key = m.user_id || mName;
       if (!map.has(norm) && !map.has(key)) {
-        const obj = { key, name: mName, avatar: m.profiles?.avatar_id };
+        const obj = { key, name: mName, avatar: m.profiles?.avatar_id || undefined };
         map.set(norm, obj);
         map.set(key, obj);
       }
@@ -1868,7 +1875,7 @@ export default function TripDetailPage() {
       const norm = pName.toLowerCase();
       const pKey = e.payer_id || pName;
       if (!map.has(norm) && !map.has(pKey)) {
-        const obj = { key: pKey, name: pName, avatar: e.payer_avatar };
+        const obj = { key: pKey, name: pName, avatar: e.payer_avatar || undefined };
         map.set(norm, obj);
         map.set(pKey, obj);
       }
@@ -2168,7 +2175,7 @@ export default function TripDetailPage() {
                 expenses={expenses} 
                 itinerary={itinerary} 
                 members={members} 
-                tripTitle={trip?.name || trip?.title}
+                tripTitle={trip?.name || trip?.title || undefined}
                 currentUser={currentUser}
                 userDisplayName={userDisplayName}
               />
@@ -2687,9 +2694,9 @@ export default function TripDetailPage() {
         isOpen={showPackingModal}
         onClose={() => setShowPackingModal(false)}
         tripId={tripId}
-        tripName={trip?.name}
-        tripCountry={trip?.country}
-        tripStartDate={trip?.start_date}
+        tripName={trip?.name || trip?.title || undefined}
+        tripCountry={trip?.country || undefined}
+        tripStartDate={trip?.start_date || undefined}
       />
 
       {/* 3. Profile Modal */}
@@ -2708,7 +2715,16 @@ export default function TripDetailPage() {
               m.user_id === currentUser?.id
                 ? {
                     ...m,
-                    profiles: { ...(m.profiles || {}), ...updated },
+                    profiles: {
+                      id: currentUser?.id || '',
+                      display_name: updated?.display_name || m.profiles?.display_name || null,
+                      avatar_id: updated?.avatar_id || m.profiles?.avatar_id || null,
+                      email: (updated as any)?.email || m.profiles?.email || null,
+                      role: m.profiles?.role || null,
+                      is_super_admin: m.profiles?.is_super_admin || null,
+                      created_at: m.profiles?.created_at || null,
+                      updated_at: m.profiles?.updated_at || null,
+                    },
                   }
                 : m
             )
@@ -2784,7 +2800,7 @@ export default function TripDetailPage() {
           setPhotosCount(getTripPhotos(tripId).length);
         }}
         tripId={tripId}
-        tripName={trip?.name || trip?.title}
+        tripName={trip?.name || trip?.title || ''}
       />
 
       {/* 9. Version Rollback Modal */}
@@ -3836,7 +3852,7 @@ export default function TripDetailPage() {
             setTransferTargetMember(null);
           }}
           targetMember={transferTargetMember}
-          tripName={trip?.name || trip?.title}
+          tripName={trip?.name || trip?.title || ''}
           currentUserEmail={currentUser?.email || ''}
           onConfirmTransfer={handleConfirmTransferOwnership}
         />
@@ -3848,7 +3864,7 @@ export default function TripDetailPage() {
           isOpen={showAddMemberModal}
           onClose={() => setShowAddMemberModal(false)}
           tripId={tripId}
-          tripName={trip?.name || trip?.title}
+          tripName={trip?.name || trip?.title || ''}
           existingMemberUserIds={members.map((m) => m.user_id || m.id)}
           onMemberAdded={fetchTripData}
         />

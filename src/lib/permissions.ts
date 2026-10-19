@@ -5,17 +5,17 @@ export const SUPER_ADMIN_EMAILS = ['pudit2539@gmail.com'];
 export type TripRole = 'owner' | 'editor' | 'contributor' | 'viewer' | 'plan_only';
 
 export interface UserLike {
-  id?: string;
-  email?: string;
+  id?: string | null;
+  email?: string | null;
   user_metadata?: any;
 }
 
 export interface ProfileLike {
-  id?: string;
-  email?: string;
-  display_name?: string;
-  is_super_admin?: boolean;
-  role?: string;
+  id?: string | null;
+  email?: string | null;
+  display_name?: string | null;
+  is_super_admin?: boolean | null;
+  role?: string | null;
 }
 
 /**

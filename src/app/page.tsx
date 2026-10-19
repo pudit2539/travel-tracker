@@ -281,7 +281,7 @@ export default function HomePage() {
         console.error('Error fetching user trips:', tripsErr);
       } else {
         const tripIds = (tripsData || []).map((t: any) => t.id).filter(Boolean);
-        const highlightMap = new Map<string, { place: string; city?: string }>();
+        const highlightMap = new Map<string, { place: string; city?: string | null }>();
 
         if (tripIds.length > 0) {
           try {
