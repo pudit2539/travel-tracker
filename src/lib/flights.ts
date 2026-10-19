@@ -29,47 +29,15 @@ export interface FlightTicket {
 
 const STORAGE_PREFIX = 'flight_pass_';
 
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+
 export async function syncFlightsToSupabase(tripId: string, flights: FlightTicket[]): Promise<void> {
   if (!tripId) return;
   try {
-    const { data: existing } = await supabase
-      .from('itinerary_items')
-      .select('id, backup_plan')
-      .eq('trip_id', tripId)
-      .eq('date_label', '__meta_trip_data__')
-      .maybeSingle();
-
-    let payload: any = {};
-    if (existing?.backup_plan) {
-      try {
-        payload = JSON.parse(existing.backup_plan);
-      } catch {}
-    }
-
-    payload.flights = flights;
-    // Backward compatibility for single flight
-    if (flights.length > 0) {
-      payload.flight = flights[0];
-    } else {
-      delete payload.flight;
-    }
-
-    if (existing?.id) {
-      await supabase
-        .from('itinerary_items')
-        .update({ backup_plan: JSON.stringify(payload) })
-        .eq('id', existing.id);
-    } else {
-      await supabase
-        .from('itinerary_items')
-        .insert([{
-          trip_id: tripId,
-          date_label: '__meta_trip_data__',
-          main_place: 'SYSTEM_TRIP_METADATA',
-          backup_plan: JSON.stringify(payload),
-          sort_order: -9999
-        }]);
-    }
+    await syncTripMetadataToSupabase(tripId, {
+      flights,
+      flight: flights.length > 0 ? flights[0] : null,
+    });
   } catch (err) {
     console.warn('Failed to sync flights to Supabase:', err);
   }

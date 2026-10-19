@@ -53,43 +53,12 @@ function sanitizeStaysForStorage(stays: AccommodationStay[]): AccommodationStay[
   });
 }
 
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+
 export async function syncAccommodationsToSupabase(tripId: string, stays: AccommodationStay[]): Promise<void> {
   if (!tripId) return;
   try {
-    const { data: existing } = await supabase
-      .from('itinerary_items')
-      .select('id, backup_plan')
-      .eq('trip_id', tripId)
-      .eq('date_label', '__meta_trip_data__')
-      .maybeSingle();
-
-    let payload: any = {};
-    if (existing?.backup_plan) {
-      try {
-        payload = JSON.parse(existing.backup_plan);
-      } catch {
-        // ignore malformed JSON
-      }
-    }
-    // Retain full accommodation data (including voucherFile.dataUrl) so mobile and all devices can view & download
-    payload.accommodations = stays;
-
-    if (existing?.id) {
-      await supabase
-        .from('itinerary_items')
-        .update({ backup_plan: JSON.stringify(payload) })
-        .eq('id', existing.id);
-    } else {
-      await supabase
-        .from('itinerary_items')
-        .insert([{
-          trip_id: tripId,
-          date_label: '__meta_trip_data__',
-          main_place: 'SYSTEM_TRIP_METADATA',
-          backup_plan: JSON.stringify(payload),
-          sort_order: -9999
-        }]);
-    }
+    await syncTripMetadataToSupabase(tripId, { accommodations: stays });
   } catch (err) {
     console.warn('Failed to sync accommodations to Supabase:', err);
   }

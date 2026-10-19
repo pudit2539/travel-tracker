@@ -53,6 +53,7 @@ import { exportExpensesToExcel as runExportExpensesToExcel } from '@/lib/exportE
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
 import { hydrateCustomPlacePhotosFromMap } from '@/lib/placeThumbnails';
+import { useTripModals } from '@/hooks/useTripModals';
 import type { 
   TripRow, 
   ItineraryItemRow, 
@@ -156,46 +157,47 @@ export default function TripDetailPage() {
     }, 3200);
   }, []);
 
-  // Modals state
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showSettlementModal, setShowSettlementModal] = useState(false);
-  const [showAIAssistantModal, setShowAIAssistantModal] = useState(false);
-  const [showBudgetCategoryModal, setShowBudgetCategoryModal] = useState(false);
-  const [budgetModalInitialTab, setBudgetModalInitialTab] = useState<'budget' | 'members' | 'categories' | 'custom'>('budget');
-  const [showPrintableModal, setShowPrintableModal] = useState(false);
-  const [showScrapbookModal, setShowScrapbookModal] = useState(false);
-  const [showRollbackModal, setShowRollbackModal] = useState(false);
-  const [showPackingModal, setShowPackingModal] = useState(false);
-  const [showCurrencyCalculator, setShowCurrencyCalculator] = useState(false);
-  const [showTravelHubModal, setShowTravelHubModal] = useState(false);
-  const [showGourmetRadarModal, setShowGourmetRadarModal] = useState(false);
-  const [showDiningDecisionModal, setShowDiningDecisionModal] = useState(false);
-  const [showTicketPassLockerModal, setShowTicketPassLockerModal] = useState(false);
-  const [diningPickerDefaultCity, setDiningPickerDefaultCity] = useState<string | undefined>(undefined);
+  // Encapsulated Modal states via useTripModals custom hook
+  const {
+    showProfileModal, setShowProfileModal,
+    showSettlementModal, setShowSettlementModal,
+    showAIAssistantModal, setShowAIAssistantModal,
+    showBudgetCategoryModal, setShowBudgetCategoryModal,
+    budgetModalInitialTab, setBudgetModalInitialTab,
+    showPrintableModal, setShowPrintableModal,
+    showScrapbookModal, setShowScrapbookModal,
+    showRollbackModal, setShowRollbackModal,
+    showPackingModal, setShowPackingModal,
+    showCurrencyCalculator, setShowCurrencyCalculator,
+    showTravelHubModal, setShowTravelHubModal,
+    showGourmetRadarModal, setShowGourmetRadarModal,
+    showDiningDecisionModal, setShowDiningDecisionModal,
+    showTicketPassLockerModal, setShowTicketPassLockerModal,
+    diningPickerDefaultCity, setDiningPickerDefaultCity,
+    showScanModal, setShowScanModal,
+    scanning, setScanning,
+    savingExpense, setSavingExpense,
+    ocrSuccessToast, setOcrSuccessToast,
+    ocrErrorToast, setOcrErrorToast,
+    showAiKeyModal, setShowAiKeyModal,
+    splitAsSeparateExpenses, setSplitAsSeparateExpenses,
+    selectedExpenseForDetail, setSelectedExpenseForDetail,
+    startInExpenseEditMode, setStartInExpenseEditMode,
+    showActivityModal, setShowActivityModal,
+    editingActivity, setEditingActivity,
+    showShareModal, setShowShareModal,
+    showTransferModal, setShowTransferModal,
+    transferTargetMember, setTransferTargetMember,
+    showAddMemberModal, setShowAddMemberModal,
+    previewImage, setPreviewImage,
+    previewLoading, setPreviewLoading,
+    copiedLink, setCopiedLink,
+    copiedAuthLink, setCopiedAuthLink,
+    copiedCode, setCopiedCode,
+  } = useTripModals();
 
-  const [showScanModal, setShowScanModal] = useState(false);
-  const [scanning, setScanning] = useState(false);
-  const [savingExpense, setSavingExpense] = useState(false);
-  const [ocrSuccessToast, setOcrSuccessToast] = useState<string | null>(null);
-  const [ocrErrorToast, setOcrErrorToast] = useState<string | null>(null);
-  const [showAiKeyModal, setShowAiKeyModal] = useState(false);
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('');
   const [hasSavedGeminiKey, setHasSavedGeminiKey] = useState(false);
-  const [splitAsSeparateExpenses, setSplitAsSeparateExpenses] = useState(false);
-  const [selectedExpenseForDetail, setSelectedExpenseForDetail] = useState<any | null>(null);
-  const [startInExpenseEditMode, setStartInExpenseEditMode] = useState<boolean>(false);
-
-  const [showActivityModal, setShowActivityModal] = useState(false);
-  const [editingActivity, setEditingActivity] = useState<any>(null);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [transferTargetMember, setTransferTargetMember] = useState<any | null>(null);
-  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedAuthLink, setCopiedAuthLink] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
 
   // Lock body scroll on mobile/iPad when any page modal is active
   useEffect(() => {
