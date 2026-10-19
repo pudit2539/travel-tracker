@@ -12,11 +12,14 @@ import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getTripExpenseSplits } from '@/lib/expenseSplits';
+import { resolveDisplayCurrency } from '@/lib/tripStatus';
+import PocketMoneyWidget from '@/components/PocketMoneyWidget';
 
 interface TripExpensesTabProps {
   trip: any;
   tripBaseCurrency: string;
   fxRate: number;
+  currencyView?: 'foreign' | 'thb';
   heroDisplayData: {
     title: string;
     spent: number;
@@ -62,6 +65,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
   trip,
   tripBaseCurrency,
   fxRate,
+  currencyView = 'foreign',
   heroDisplayData,
   heroBudgetView,
   setHeroBudgetView,
@@ -325,141 +329,157 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
         </div>
 
         {/* Row 3: Spent Metric with Animated Counter */}
-        <div className="relative z-10 pt-1">
-          <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>{heroDisplayData.title}</span>
-            {heroDisplayData.isOver && (
-              <span className="text-[10px] sm:text-[11px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900/50">
-                ⚠️ เกินงบ +<AnimatedNumber value={heroDisplayData.diff} /> {tripBaseCurrency}
-              </span>
-            )}
-          </div>
+        {(() => {
+          const spentDisplay = resolveDisplayCurrency(heroDisplayData.spent, tripBaseCurrency, fxRate, currencyView);
+          const diffDisplay = resolveDisplayCurrency(heroDisplayData.diff, tripBaseCurrency, fxRate, currencyView);
+          const targetDisplay = resolveDisplayCurrency(heroDisplayData.targetBudget, tripBaseCurrency, fxRate, currencyView);
+          const remainOrDiffDisplay = resolveDisplayCurrency(
+            heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining,
+            tripBaseCurrency,
+            fxRate,
+            currencyView
+          );
+          return (
+            <>
+              <div className="relative z-10 pt-1">
+                <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                  <span>{heroDisplayData.title}</span>
+                  {heroDisplayData.isOver && (
+                    <span className="text-[10px] sm:text-[11px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900/50">
+                      ⚠️ เกินงบ +<AnimatedNumber value={diffDisplay.primaryAmount} /> {diffDisplay.primaryCurrency}
+                    </span>
+                  )}
+                </div>
 
-          <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
-            <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white font-mono">
-              <AnimatedNumber value={heroDisplayData.spent} />
-            </span>
-            <span className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-400">
-              {tripBaseCurrency}
-            </span>
-            {tripBaseCurrency === 'THB' ? (
-              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
-                (≈ ¥<AnimatedNumber value={Math.round(fxRate > 0 ? heroDisplayData.spent / fxRate : 0)} /> JPY)
-              </span>
-            ) : (
-              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
-                (≈ ฿<AnimatedNumber value={Math.round(convertToThb(heroDisplayData.spent, tripBaseCurrency, fxRate))} />)
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Row 4: Progress Bar */}
-        <div className="relative z-10 space-y-1.5">
-          <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
-            <span>
-              {heroDisplayData.targetBudget > 0 
-                ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
-                : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
-            </span>
-            <span className="flex items-center gap-1">
-              {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? (
-                <>
-                  <AnimatedNumber value={heroDisplayData.targetBudget} /> {tripBaseCurrency}
-                </>
-              ) : 'ไม่ระบุ'}
-              <button
-                onClick={() => setShowBudgetCategoryModal(true)}
-                className="p-0.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
-                title="ตั้งค่าเป้าหมายงบประมาณ"
-              >
-                <Edit3 className="h-3 w-3" />
-              </button>
-            </span>
-          </div>
-
-          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 sm:h-3.5 p-0.5 overflow-hidden shadow-inner relative">
-            <div
-              className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
-                heroDisplayData.isOver
-                  ? 'bg-rose-500'
-                  : 'bg-blue-600'
-              }`}
-              style={{ width: `${Math.max(heroDisplayData.progress, 3)}%` }}
-            >
-              <div className="absolute inset-0 bg-white/20 animate-shimmer" />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 5: Remaining Ribbon & Primary Action Buttons */}
-        <div className="relative z-10 pt-1 space-y-3">
-          {heroDisplayData.targetBudget > 0 && (
-            <div className={`p-2.5 sm:p-3 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-2xs ${
-              heroDisplayData.isOver
-                ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300'
-                : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300'
-            }`}>
-              <div className="flex items-center gap-1.5">
-                {heroDisplayData.isOver ? (
-                  <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                )}
-                <span>
-                  {heroDisplayData.isOver ? 'ยอดเงินที่ใช้เกินงบประมาณ:' : 'ยอดเงินคงเหลือ:'}
-                </span>
-              </div>
-              <div className="font-black text-right font-mono">
-                <span>
-                  <AnimatedNumber value={heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining} /> {tripBaseCurrency}
-                </span>
-                {tripBaseCurrency === 'THB' ? (
-                  <span className="text-[10px] opacity-80 block sm:inline sm:ml-1 font-sans">
-                    (≈ ¥<AnimatedNumber value={Math.round(fxRate > 0 ? (heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining) / fxRate : 0)} /> JPY)
+                <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
+                  <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white font-mono">
+                    <AnimatedNumber value={spentDisplay.primaryAmount} />
                   </span>
-                ) : (
-                  <span className="text-[10px] opacity-80 block sm:inline sm:ml-1 font-sans">
-                    (≈ ฿<AnimatedNumber value={Math.round(convertToThb((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining), tripBaseCurrency, fxRate))} />)
+                  <span className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-400">
+                    {spentDisplay.primaryCurrency}
                   </span>
-                )}
+                  {spentDisplay.secondaryText && (
+                    <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1">
+                      {spentDisplay.secondaryText}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
 
-          {/* Action Buttons: AI OCR + Settlement + 1-Click Excel Export */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
-            <button
-              onClick={() => {
-                setOcrSuccessToast(null);
-                setShowScanModal(true);
-              }}
-              disabled={!canAddExpense}
-              className="btn-luxury-primary py-3 px-3 rounded-2xl text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-50"
-            >
-              <Camera className="h-4 w-4 shrink-0" />
-              <span className="truncate">บันทึกรายจ่าย AI OCR</span>
-            </button>
+              {/* Row 4: Progress Bar */}
+              <div className="relative z-10 space-y-1.5">
+                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span>
+                    {heroDisplayData.targetBudget > 0 
+                      ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
+                      : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? (
+                      <>
+                        <AnimatedNumber value={targetDisplay.primaryAmount} /> {targetDisplay.primaryCurrency}
+                      </>
+                    ) : 'ไม่ระบุ'}
+                    <button
+                      onClick={() => setShowBudgetCategoryModal(true)}
+                      className="p-0.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                      title="ตั้งค่าเป้าหมายงบประมาณ"
+                    >
+                      <Edit3 className="h-3 w-3" />
+                    </button>
+                  </span>
+                </div>
 
-            <button
-              onClick={() => setShowSettlementModal(true)}
-              className="btn-luxury-glass py-3 px-3 rounded-2xl font-black text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all"
-            >
-              <Calculator className="h-4 w-4 text-blue-500 shrink-0" />
-              <span className="truncate">เคลียร์บิลหารเงิน</span>
-            </button>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 sm:h-3.5 p-0.5 overflow-hidden shadow-inner relative">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
+                      heroDisplayData.isOver
+                        ? 'bg-rose-500'
+                        : 'bg-blue-600'
+                    }`}
+                    style={{ width: `${Math.max(heroDisplayData.progress, 3)}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+                  </div>
+                </div>
+              </div>
 
-            <button
-              onClick={exportExpensesToExcel}
-              className="btn-luxury-emerald col-span-2 sm:col-span-1 py-3 px-3 rounded-2xl font-black text-xs sm:text-sm text-white flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-500/25 active:scale-95 transition-all"
-              title="ส่งออกรายการค่าใช้จ่ายทั้งหมดเป็นไฟล์ Excel (.xlsx)"
-            >
-              <Download className="h-4 w-4 shrink-0" />
-              <span className="truncate">Export Excel</span>
-            </button>
-          </div>
-        </div>
+              {/* Row 5: Remaining Ribbon & Primary Action Buttons */}
+              <div className="relative z-10 pt-1 space-y-3">
+                {heroDisplayData.targetBudget > 0 && (
+                  <div className={`p-2.5 sm:p-3 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-2xs ${
+                    heroDisplayData.isOver
+                      ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300'
+                      : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300'
+                  }`}>
+                    <div className="flex items-center gap-1.5">
+                      {heroDisplayData.isOver ? (
+                        <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      )}
+                      <span>
+                        {heroDisplayData.isOver ? 'ยอดเงินที่ใช้เกินงบประมาณ:' : 'ยอดเงินคงเหลือ:'}
+                      </span>
+                    </div>
+                    <div className="font-black text-right font-mono">
+                      <span>
+                        <AnimatedNumber value={remainOrDiffDisplay.primaryAmount} /> {remainOrDiffDisplay.primaryCurrency}
+                      </span>
+                      {remainOrDiffDisplay.secondaryText && (
+                        <span className="text-[10px] opacity-80 block sm:inline sm:ml-1 font-sans">
+                          {remainOrDiffDisplay.secondaryText}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons: AI OCR + Settlement + 1-Click Excel Export */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                  <button
+                    onClick={() => {
+                      setOcrSuccessToast(null);
+                      setShowScanModal(true);
+                    }}
+                    disabled={!canAddExpense}
+                    className="btn-luxury-primary py-3 px-3 rounded-2xl text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    <Camera className="h-4 w-4 shrink-0" />
+                    <span className="truncate">บันทึกรายจ่าย AI OCR</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowSettlementModal(true)}
+                    className="btn-luxury-glass py-3 px-3 rounded-2xl font-black text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all"
+                  >
+                    <Calculator className="h-4 w-4 text-blue-500 shrink-0" />
+                    <span className="truncate">เคลียร์บิลหารเงิน</span>
+                  </button>
+
+                  <button
+                    onClick={exportExpensesToExcel}
+                    className="btn-luxury-emerald col-span-2 sm:col-span-1 py-3 px-3 rounded-2xl font-black text-xs sm:text-sm text-white flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-500/25 active:scale-95 transition-all"
+                    title="ส่งออกรายการค่าใช้จ่ายทั้งหมดเป็นไฟล์ Excel (.xlsx)"
+                  >
+                    <Download className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Export Excel</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          );
+        })()}
       </div>
+
+      {/* Multi-Wallet Pocket Money & Payment Method Tracker */}
+      <PocketMoneyWidget
+        tripId={trip?.id || ''}
+        currency={tripBaseCurrency}
+        fxRate={fxRate}
+        expenses={expenses}
+        currencyView={currencyView}
+      />
 
       {/* Horizontal Filter Row (Trip.com style) */}
       <div className="p-3.5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-3">
@@ -474,37 +494,40 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             </span>
           </div>
 
-          <div className="text-right font-mono">
-            <div className="text-xs font-black text-blue-600 dark:text-blue-400">
-              {expensePayerFilter === 'all' ? (
-                <>
-                  <span>ยอดรวมทั้งทริป: {Math.round(totalFilteredAmount).toLocaleString()} {tripBaseCurrency}</span>
-                  <span className="font-normal text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ml-1">
-                    (≈ {tripBaseCurrency === 'THB' 
-                      ? `¥${Math.round(fxRate > 0 ? totalFilteredAmount / fxRate : 0).toLocaleString()}` 
-                      : `฿${Math.round(convertToThb(totalFilteredAmount, tripBaseCurrency, fxRate)).toLocaleString()}`})
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span>ยอดแชร์ของ {selectedFilterName}: {Math.round(totalFilteredAmount).toLocaleString()} {tripBaseCurrency}</span>
-                  <span className="font-normal text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ml-1">
-                    (≈ {tripBaseCurrency === 'THB' 
-                      ? `¥${Math.round(fxRate > 0 ? totalFilteredAmount / fxRate : 0).toLocaleString()}` 
-                      : `฿${Math.round(convertToThb(totalFilteredAmount, tripBaseCurrency, fxRate)).toLocaleString()}`})
-                  </span>
-                </>
-              )}
-            </div>
-            {expensePayerFilter !== 'all' && (
-              <div className="text-[10px] text-slate-400 font-sans">
-                (ยอดบิลเต็มรวม {Math.round(fullTripAmount).toLocaleString()} {tripBaseCurrency}{' '}
-                {tripBaseCurrency === 'THB' 
-                  ? `≈ ¥${Math.round(fxRate > 0 ? fullTripAmount / fxRate : 0).toLocaleString()}` 
-                  : `≈ ฿${Math.round(convertToThb(fullTripAmount, tripBaseCurrency, fxRate)).toLocaleString()}`})
+          {(() => {
+            const filteredTotalDisplay = resolveDisplayCurrency(totalFilteredAmount, tripBaseCurrency, fxRate, currencyView);
+            const fullBillDisplay = resolveDisplayCurrency(fullTripAmount, tripBaseCurrency, fxRate, currencyView);
+            return (
+              <div className="text-right font-mono">
+                <div className="text-xs font-black text-blue-600 dark:text-blue-400">
+                  {expensePayerFilter === 'all' ? (
+                    <>
+                      <span>ยอดรวมทั้งทริป: {filteredTotalDisplay.primaryText}</span>
+                      {filteredTotalDisplay.secondaryText && (
+                        <span className="font-normal text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ml-1">
+                          {filteredTotalDisplay.secondaryText}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <span>ยอดแชร์ของ {selectedFilterName}: {filteredTotalDisplay.primaryText}</span>
+                      {filteredTotalDisplay.secondaryText && (
+                        <span className="font-normal text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ml-1">
+                          {filteredTotalDisplay.secondaryText}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+                {expensePayerFilter !== 'all' && (
+                  <div className="text-[10px] text-slate-400 font-sans">
+                    (ยอดบิลเต็มรวม {fullBillDisplay.primaryText} {fullBillDisplay.secondaryText})
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
         </div>
 
         {/* Swipeable Filter Chips */}
@@ -636,6 +659,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               currentUserId={currentUser?.id}
               userDisplayName={userDisplayName}
               fxRate={fxRate}
+              currencyView={currencyView}
               canModify={canModifyExpense(exp)}
               onOpenReceiptPreview={handleOpenReceiptPreview}
               onDeleteExpense={handleDeleteExpense}

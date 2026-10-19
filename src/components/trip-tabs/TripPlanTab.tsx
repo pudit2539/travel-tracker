@@ -19,11 +19,13 @@ import { AccommodationsCard, formatStayDateDisplay } from '@/components/trip-det
 import { TripHeroCover } from '@/components/trip-detail/TripHeroCover';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
+import { resolveDisplayCurrency } from '@/lib/tripStatus';
 
 interface TripPlanTabProps {
   trip: any;
   tripBaseCurrency: string;
   fxRate: number;
+  currencyView?: 'foreign' | 'thb';
   heroDisplayData: {
     title: string;
     spent: number;
@@ -71,6 +73,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   trip,
   tripBaseCurrency,
   fxRate,
+  currencyView = 'foreign',
   heroDisplayData,
   itinerary,
   filteredItinerary,
@@ -283,92 +286,84 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         </div>
 
         {/* 3 Summary Blocks */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {/* Block 1: Used / จ่ายแล้ว (Royal Blue) */}
-          <div className="rounded-2xl p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
-            <div className="text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400">
-              ใช้ไปแล้ว
-            </div>
-            <div className="mt-1">
-              <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight">
-                <AnimatedNumber value={heroDisplayData.spent} />
-              </div>
-              {tripBaseCurrency !== 'THB' ? (
-                <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                  ≈ ฿<AnimatedNumber value={Math.round(convertToThb(heroDisplayData.spent, tripBaseCurrency, fxRate))} />
+        {(() => {
+          const spentDisp = resolveDisplayCurrency(heroDisplayData.spent, tripBaseCurrency, fxRate, currencyView);
+          const targetDisp = resolveDisplayCurrency(heroDisplayData.targetBudget, tripBaseCurrency, fxRate, currencyView);
+          const remDisp = resolveDisplayCurrency(
+            heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining,
+            tripBaseCurrency,
+            fxRate,
+            currencyView
+          );
+          return (
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {/* Block 1: Used / จ่ายแล้ว (Royal Blue) */}
+              <div className="rounded-2xl p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
+                <div className="text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                  ใช้ไปแล้ว ({spentDisp.primaryCurrency})
                 </div>
-              ) : (
-                <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                  {tripBaseCurrency}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Block 2: Target / ตั้งเป้า (Neutral Slate) */}
-          <div className="rounded-2xl p-2.5 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
-            <div className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300">
-              ตั้งเป้าไว้
-            </div>
-            <div className="mt-1">
-              <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight">
-                {heroDisplayData.targetBudget > 0 ? (
-                  <AnimatedNumber value={heroDisplayData.targetBudget} />
-                ) : (
-                  '-'
-                )}
-              </div>
-              {heroDisplayData.targetBudget > 0 ? (
-                tripBaseCurrency !== 'THB' ? (
-                  <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                    ≈ ฿<AnimatedNumber value={Math.round(convertToThb(heroDisplayData.targetBudget, tripBaseCurrency, fxRate))} />
+                <div className="mt-1">
+                  <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono">
+                    <AnimatedNumber value={spentDisp.primaryAmount} />
                   </div>
-                ) : (
                   <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                    {tripBaseCurrency}
+                    {spentDisp.secondaryText || spentDisp.primaryCurrency}
                   </div>
-                )
-              ) : (
-                <div className="text-[9px] sm:text-[10px] font-semibold text-slate-400 truncate">
-                  ยังไม่ระบุงบ
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* Block 3: Remaining / คงเหลือ (Emerald or Rose) */}
-          <div className={`rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
-            heroDisplayData.isOver 
-              ? 'bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40' 
-              : 'bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40'
-          }`}>
-            <div className={`text-[10px] sm:text-[11px] font-bold ${
-              heroDisplayData.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-300'
-            }`}>
-              {heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'}
-            </div>
-            <div className="mt-1">
-              <div className={`text-sm sm:text-base md:text-lg font-black leading-tight ${
-                heroDisplayData.isOver ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'
+              {/* Block 2: Target / ตั้งเป้า (Neutral Slate) */}
+              <div className="rounded-2xl p-2.5 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
+                <div className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                  ตั้งเป้าไว้ ({targetDisp.primaryCurrency})
+                </div>
+                <div className="mt-1">
+                  <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono">
+                    {heroDisplayData.targetBudget > 0 ? (
+                      <AnimatedNumber value={targetDisp.primaryAmount} />
+                    ) : (
+                      '-'
+                    )}
+                  </div>
+                  {heroDisplayData.targetBudget > 0 ? (
+                    <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                      {targetDisp.secondaryText || targetDisp.primaryCurrency}
+                    </div>
+                  ) : (
+                    <div className="text-[9px] sm:text-[10px] font-semibold text-slate-400 truncate">
+                      ยังไม่ระบุงบ
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Block 3: Remaining / คงเหลือ (Emerald or Rose) */}
+              <div className={`rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
+                heroDisplayData.isOver 
+                  ? 'bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40' 
+                  : 'bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40'
               }`}>
-                <AnimatedNumber value={heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining} />
+                <div className={`text-[10px] sm:text-[11px] font-bold ${
+                  heroDisplayData.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-300'
+                }`}>
+                  {heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'} ({remDisp.primaryCurrency})
+                </div>
+                <div className="mt-1">
+                  <div className={`text-sm sm:text-base md:text-lg font-black leading-tight font-mono ${
+                    heroDisplayData.isOver ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'
+                  }`}>
+                    <AnimatedNumber value={remDisp.primaryAmount} />
+                  </div>
+                  <div className={`text-[9px] sm:text-[10px] font-semibold truncate ${
+                    heroDisplayData.isOver ? 'text-rose-600/80 dark:text-rose-300/70' : 'text-amber-600/80 dark:text-amber-300/70'
+                  }`}>
+                    {remDisp.secondaryText || remDisp.primaryCurrency}
+                  </div>
+                </div>
               </div>
-              {tripBaseCurrency !== 'THB' ? (
-                <div className={`text-[9px] sm:text-[10px] font-semibold truncate ${
-                  heroDisplayData.isOver ? 'text-rose-600/80 dark:text-rose-300/70' : 'text-amber-600/80 dark:text-amber-300/70'
-                }`}>
-                  ≈ ฿<AnimatedNumber value={Math.round(convertToThb((heroDisplayData.isOver ? heroDisplayData.diff : heroDisplayData.remaining), tripBaseCurrency, fxRate))} />
-                </div>
-              ) : (
-                <div className={`text-[9px] sm:text-[10px] font-semibold truncate ${
-                  heroDisplayData.isOver ? 'text-rose-600/80 dark:text-rose-300/70' : 'text-amber-600/80 dark:text-amber-300/70'
-                }`}>
-                  {tripBaseCurrency}
-                </div>
-              )}
             </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
       {/* Accordion Weather & Route Visualizer Section */}

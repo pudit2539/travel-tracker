@@ -7,6 +7,7 @@ import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCategoryMeta, CategoryItem } from '@/lib/categories';
 import { convertToThb } from '@/lib/currency';
+import { resolveDisplayCurrency } from '@/lib/tripStatus';
 
 interface ExpenseCardProps {
   expense: any;
@@ -14,6 +15,7 @@ interface ExpenseCardProps {
   currentUserId?: string;
   userDisplayName: string;
   fxRate: number;
+  currencyView?: 'foreign' | 'thb';
   /** Whether the current user may edit/delete this specific expense */
   canModify: boolean;
   onOpenReceiptPreview: (exp: any) => void;
@@ -29,6 +31,7 @@ function ExpenseCardComponent({
   currentUserId,
   userDisplayName,
   fxRate,
+  currencyView = 'foreign',
   canModify,
   onOpenReceiptPreview,
   onDeleteExpense,
@@ -45,6 +48,10 @@ function ExpenseCardComponent({
   const isSplit = splitMembers && splitMembers.length > 1;
   const isSingle = splitMembers && splitMembers.length === 1;
   const perPersonAmount = isSplit ? Math.round(Number(expense.amount || 0) / splitMembers.length) : null;
+  const mainDisplay = resolveDisplayCurrency(Number(expense.amount || 0), expense.currency || 'JPY', fxRate, currencyView);
+  const splitDisplay = perPersonAmount !== null
+    ? resolveDisplayCurrency(perPersonAmount, expense.currency || 'JPY', fxRate, currencyView)
+    : null;
 
   return (
     <div 
@@ -84,20 +91,14 @@ function ExpenseCardComponent({
         <div className="flex items-start gap-1.5 sm:gap-2.5 shrink-0 text-right">
           <div className="font-black text-slate-900 dark:text-white font-mono leading-tight">
             <div className="text-base sm:text-lg tracking-tight">
-              {Number(expense.amount).toLocaleString()}{' '}
+              {mainDisplay.primaryAmount.toLocaleString()}{' '}
               <span className="text-xs text-slate-400 dark:text-slate-400 font-sans font-bold">
-                {expense.currency}
+                {mainDisplay.primaryCurrency}
               </span>
             </div>
-            {expense.currency === 'THB' ? (
-              <span className="text-[11px] text-slate-400 dark:text-slate-400 block font-sans font-normal mt-0.5">
-                {isSplit ? 'ยอดรวมบิล ' : ''}≈ ¥{Math.round(fxRate > 0 ? Number(expense.amount) / fxRate : 0).toLocaleString()}
-              </span>
-            ) : (
-              <span className="text-[11px] text-slate-400 dark:text-slate-400 block font-sans font-normal mt-0.5">
-                {isSplit ? 'ยอดรวมบิล ' : ''}≈ ฿{Math.round(convertToThb(Number(expense.amount), expense.currency || 'JPY', fxRate)).toLocaleString()}
-              </span>
-            )}
+            <span className="text-[11px] text-slate-400 dark:text-slate-400 block font-sans font-normal mt-0.5">
+              {isSplit ? 'ยอดรวมบิล ' : ''}≈ {mainDisplay.secondarySymbol}{mainDisplay.secondaryAmount.toLocaleString()} {mainDisplay.secondaryCurrency}
+            </span>
           </div>
 
           {canModify && (
@@ -199,17 +200,13 @@ function ExpenseCardComponent({
         </div>
 
         {/* Right: Per-person share in prominent emerald badge */}
-        {isSplit && perPersonAmount !== null && (
+        {isSplit && splitDisplay !== null && (
           <div className="shrink-0 text-right ml-auto">
             <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 font-mono shadow-2xs">
-              คนละ ≈ {perPersonAmount.toLocaleString()} {expense.currency}
-              {expense.currency === 'THB' ? (
+              คนละ ≈ {splitDisplay.primaryText}
+              {splitDisplay.secondaryText && (
                 <span className="font-normal text-[10px] opacity-90 font-sans">
-                  (¥{Math.round(fxRate > 0 ? perPersonAmount / fxRate : 0).toLocaleString()})
-                </span>
-              ) : (
-                <span className="font-normal text-[10px] opacity-90 font-sans">
-                  (฿{Math.round(convertToThb(perPersonAmount, expense.currency || 'JPY', fxRate)).toLocaleString()})
+                  {splitDisplay.secondaryText}
                 </span>
               )}
             </span>

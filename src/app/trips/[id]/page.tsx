@@ -51,6 +51,7 @@ import { syncExpenseToFlight } from '@/lib/flights';
 import { calculateSettlement } from '@/lib/settlement';
 import { exportExpensesToExcel as runExportExpensesToExcel } from '@/lib/exportExpensesExcel';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
+import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
 
 // Code Splitting / Lazy Loaded Modals for 50%+ lighter initial bundle
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false });
@@ -2229,8 +2230,8 @@ export default function TripDetailPage() {
             </div>
           </div>
 
-          {/* Row 2: The Tabs (Travo & TravelGo Hybrid Pill Selector) */}
-          <div className={`grid ${canSeeMoney ? 'grid-cols-4' : 'grid-cols-2'} gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100/90 dark:bg-[#181a20] backdrop-blur-xl border border-slate-200/90 dark:border-[#262932] rounded-2xl sm:rounded-3xl shadow-inner`}>
+          {/* Row 2: The Tabs (Travo & TravelGo Hybrid Pill Selector - visible on sm+/iPad/Landscape, while <640px uses Sticky Bottom Bar) */}
+          <div className={`hidden sm:grid ${canSeeMoney ? 'grid-cols-4' : 'grid-cols-2'} gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100/90 dark:bg-[#181a20] backdrop-blur-xl border border-slate-200/90 dark:border-[#262932] rounded-2xl sm:rounded-3xl shadow-inner`}>
             <button
               type="button"
               onClick={() => handleSwitchTab('plan')}
@@ -2372,11 +2373,12 @@ export default function TripDetailPage() {
         {/* Tab Content Panels - Keep-Alive for Zero-Latency Instant Switching */}
         <div className="tab-panels-wrapper">
           {visitedTabs.has('plan') && (
-            <div className={activeTab === 'plan' ? 'block' : 'hidden'} role="tabpanel">
+            <div className={activeTab === 'plan' ? 'block animate-in fade-in duration-200' : 'hidden'} role="tabpanel">
               <TripPlanTab
                 trip={trip}
                 tripBaseCurrency={tripBaseCurrency}
                 fxRate={fxRate}
+                currencyView={currencyView}
                 heroDisplayData={heroDisplayData}
                 canSeeMoney={canSeeMoney}
                 itinerary={itinerary}
@@ -2417,11 +2419,12 @@ export default function TripDetailPage() {
           )}
 
           {visitedTabs.has('expenses') && (
-            <div className={activeTab === 'expenses' ? 'block' : 'hidden'} role="tabpanel">
+            <div className={activeTab === 'expenses' ? 'block animate-in fade-in duration-200' : 'hidden'} role="tabpanel">
               <TripExpensesTab
                 trip={trip}
                 tripBaseCurrency={tripBaseCurrency}
                 fxRate={fxRate}
+                currencyView={currencyView}
                 heroDisplayData={heroDisplayData}
                 heroBudgetView={heroBudgetView}
                 setHeroBudgetView={setHeroBudgetView}
@@ -2456,7 +2459,7 @@ export default function TripDetailPage() {
           )}
 
           {visitedTabs.has('analytics') && (
-            <div className={activeTab === 'analytics' ? 'block' : 'hidden'} role="tabpanel">
+            <div className={activeTab === 'analytics' ? 'block animate-in fade-in duration-200' : 'hidden'} role="tabpanel">
               <TripAnalyticsTab
                 distinctPayers={distinctPayers}
                 totalSpent={totalSpent}
@@ -2480,7 +2483,7 @@ export default function TripDetailPage() {
           )}
 
           {visitedTabs.has('members') && (
-            <div className={activeTab === 'members' ? 'block' : 'hidden'} role="tabpanel">
+            <div className={activeTab === 'members' ? 'block animate-in fade-in duration-200' : 'hidden'} role="tabpanel">
               <TripMembersTab
                 members={members}
                 isOwner={isOwner}
@@ -2502,43 +2505,22 @@ export default function TripDetailPage() {
       </main>
 
       {/* ==================== FLOATING CAT AI ASSISTANT PILL (TRIP.COM STYLE) ==================== */}
-      <div className="fixed bottom-20 left-4 sm:bottom-6 sm:left-6 z-40">
+      <div className="fixed bottom-20 left-3.5 sm:bottom-6 sm:left-6 z-40">
         <button
           type="button"
           onClick={() => setShowAIAssistantModal(true)}
-          className="group flex items-center gap-2 px-3.5 py-2.5 sm:px-4.5 sm:py-3 rounded-full bg-white/95 dark:bg-[#151b2b]/95 border border-slate-200/90 dark:border-[#222c42] shadow-xl shadow-blue-900/10 hover:shadow-blue-500/20 text-slate-800 dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
+          className="group flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full bg-white/95 dark:bg-[#151b2b]/95 border border-slate-200/90 dark:border-[#222c42] shadow-xl shadow-blue-900/10 hover:shadow-blue-500/20 text-slate-800 dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
           title="ถาม AI ผู้ช่วยวางแผนทริป"
         >
           <span className="w-6 h-6 rounded-full bg-blue-600/15 dark:bg-blue-500/25 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
             <Bot className="h-3.5 w-3.5" />
           </span>
-          <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-            ถาม <span className="text-blue-600 dark:text-blue-400">AI ผู้ช่วย</span>
-            <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
+          <span className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1">
+            <span className="hidden xs:inline">ถาม</span> <span className="text-blue-600 dark:text-blue-400">AI ผู้ช่วย</span>
+            <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" />
           </span>
         </button>
       </div>
-
-      {/* ==================== FLOATING QUICK CURRENCY CALCULATOR FAB ==================== */}
-      <button
-        type="button"
-        onClick={() => setShowCurrencyCalculator(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-xl shadow-blue-500/25 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer glow-blue"
-        title={`เครื่องคิดเลขแปลงเงินด่วน (${tripBaseCurrency} ⇄ THB)`}
-      >
-        <Coins className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse text-amber-300" />
-        <span className="text-xs sm:text-sm font-black">
-          {tripBaseCurrency === 'CNY'
-            ? '元 ⇄ ฿'
-            : tripBaseCurrency === 'USD'
-            ? '$ ⇄ ฿'
-            : tripBaseCurrency === 'EUR'
-            ? '€ ⇄ ฿'
-            : tripBaseCurrency === 'THB'
-            ? '฿ ⇄ ¥'
-            : '¥ ⇄ ฿'}
-        </span>
-      </button>
 
       {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
       <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-white/98 dark:bg-[#151b2b]/98 border-t border-slate-200/90 dark:border-[#222c42] shadow-2xl">
@@ -2931,6 +2913,51 @@ export default function TripDetailPage() {
 
               {/* 2. Main Expense Fields Card */}
               <div className="space-y-3 p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42]">
+                {/* 1-Tap Quick Expense Presets (Real-World Travel Micro-Tool) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-black text-slate-700 dark:text-slate-200 flex items-center gap-1">
+                      ⚡ กดเลือกด่วน 1-Tap (ไม่ต้องพิมพ์เอง):
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      เลื่อนซ้าย-ขวา ➔
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar overscroll-x-contain">
+                    {QUICK_EXPENSE_PRESETS.map((preset) => {
+                      const isActive = scannedData.title === preset.title;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            setScannedData((prev: any) => ({
+                              ...prev,
+                              title: preset.title,
+                              category: preset.category,
+                              payment_method: preset.paymentMethod,
+                              amount: preset.defaultAmount ? String(preset.defaultAmount) : prev.amount,
+                            }));
+                          }}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold shrink-0 border transition-all cursor-pointer active:scale-95 ${
+                            isActive
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                              : 'bg-white dark:bg-[#151b2b] text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-[#222c42] hover:border-blue-400'
+                          }`}
+                        >
+                          <span>{preset.emoji}</span>
+                          <span>{preset.label}</span>
+                          {preset.defaultAmount && (
+                            <span className={`text-[10px] font-mono ${isActive ? 'text-blue-100' : 'text-blue-600 dark:text-blue-400'}`}>
+                              ¥{preset.defaultAmount}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Store / Merchant Name */}
                 <div>
                   <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
@@ -3784,7 +3811,7 @@ export default function TripDetailPage() {
         )}
       </AnimatePresence>
 
-      {/* Floating Global Currency Switcher Pill (Micro-Interactions) */}
+      {/* Floating Global Currency Switcher Pill & Quick Calculator Dock (Micro-Interactions) */}
       <CurrencyPillSwitcher
         primaryCurrency={trip?.currency || 'JPY'}
         activeView={currencyView}
@@ -3793,6 +3820,7 @@ export default function TripDetailPage() {
           showToast(view === 'thb' ? 'สลับดูยอดเป็นเงินบาทไทย (THB) 🇹🇭' : `สลับดูยอดเป็นสกุลเงิน ${trip?.currency || 'JPY'} 🇯🇵`, 'info');
         }}
         fxRate={fxRate}
+        onOpenCalculator={() => setShowCurrencyCalculator(true)}
       />
 
       {/* 14. Transfer Ownership Modal with Password Confirmation */}

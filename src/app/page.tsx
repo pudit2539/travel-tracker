@@ -30,6 +30,7 @@ import { toast } from 'sonner';
 import { isSuperAdmin } from '@/lib/permissions';
 import { copyToClipboard } from '@/lib/clipboard';
 import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
+import { getTripStatusBadge } from '@/lib/tripStatus';
 
 export default function HomePage() {
   const router = useRouter();
@@ -1094,14 +1095,16 @@ export default function HomePage() {
             {filteredTrips.map((t) => {
               const tripName = t.name || t.title || 'ทริปท่องเที่ยว';
               const tripBudget = Number(t.total_budget ?? t.budget ?? 0);
-              
-              // Determine status
-              const now = new Date();
-              now.setHours(0, 0, 0, 0);
-              const startD = t.start_date ? new Date(t.start_date) : null;
-              const endD = t.end_date ? new Date(t.end_date) : null;
-              const isPast = endD ? endD < now : startD ? startD < now : false;
-              const isActive = startD && endD && startD <= now && endD >= now;
+              const statusBadge = getTripStatusBadge(t.start_date, t.end_date);
+
+              const badgeColorClass =
+                statusBadge.status === 'live'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                  : statusBadge.status === 'upcoming'
+                  ? 'bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                  : statusBadge.status === 'completed'
+                  ? 'bg-slate-100 dark:bg-[#121316] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-[#262932]'
+                  : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25';
 
               return (
                 <motion.div
@@ -1116,24 +1119,17 @@ export default function HomePage() {
                   }}
                   className="group relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-lg"
                 >
-                  {/* Top Metadata Row */}
-                  <div className="p-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] gap-2">
+                  {/* Top Boarding Header Row */}
+                  <div className="p-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] gap-2 bg-slate-50/40 dark:bg-[#14161c]">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {isActive ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          กำลังเที่ยว
-                        </span>
-                      ) : isPast ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-[#121316] text-slate-500 dark:text-slate-400">
-                          ที่ผ่านมา
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25">
-                          เร็วๆ นี้
-                        </span>
-                      )}
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${badgeColorClass}`}>
+                        {statusBadge.isPulse && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                        )}
+                        <span>{statusBadge.badgeText}</span>
+                      </span>
 
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#121316] text-slate-700 dark:text-slate-300">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]">
                         {t.currency || 'JPY'}
                       </span>
 
@@ -1153,7 +1149,7 @@ export default function HomePage() {
                         <button
                           type="button"
                           onClick={(e) => openEditModal(t, e)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#222530] transition-colors"
                           title="แก้ไขทริป"
                         >
                           <Edit3 className="h-3.5 w-3.5" />
@@ -1163,7 +1159,7 @@ export default function HomePage() {
                         <button
                           type="button"
                           onClick={(e) => openDeleteModal(t, e)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                           title="ลบทริป (เฉพาะเจ้าของ)"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -1173,30 +1169,45 @@ export default function HomePage() {
                   </div>
 
                   {/* Body Content */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3 text-left">
-                    <div className="text-left">
-                      <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white group-hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-relaxed text-left break-words">
-                        {tripName}
-                      </h3>
-                      {t.start_date && (
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 flex items-center gap-1.5 text-left">
-                          <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3.5 text-left">
+                    <div className="text-left space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white group-hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-snug text-left break-words">
+                          {tripName}
+                        </h3>
+                        <PlaneTakeoff className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
+                      </div>
+                      {t.start_date ? (
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 text-left">
+                          <Calendar className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                           <span>{new Date(t.start_date).toLocaleDateString('th-TH')} - {t.end_date ? new Date(t.end_date).toLocaleDateString('th-TH') : 'ไม่ระบุวันกลับ'}</span>
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 text-left">
+                          <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <span>ยังไม่ได้ระบุวันเดินทาง</span>
+                        </p>
+                      )}
+                      {statusBadge.subLabel && (
+                        <p className="text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80">
+                          {statusBadge.subLabel}
                         </p>
                       )}
                     </div>
 
-                    {/* Budget & Action Row */}
-                    <div className="pt-3 border-t border-slate-100 dark:border-[#262932] flex items-center justify-between gap-2">
+                    {/* Perforated Boarding Pass Stub Row */}
+                    <div className="relative pt-3 border-t-2 border-dashed border-slate-200/80 dark:border-[#262932] flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">งบประมาณ</span>
-                        <span className="font-bold text-xs text-slate-900 dark:text-white">
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 block">
+                          TRIP BUDGET
+                        </span>
+                        <span className="font-mono font-black text-xs sm:text-sm text-slate-900 dark:text-white">
                           {tripBudget > 0 ? `${tripBudget.toLocaleString()} ${t.currency || 'JPY'}` : 'ไม่ระบุงบ'}
                         </span>
                       </div>
 
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
-                        <span>เปิดดู</span>
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-xs font-black text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/50 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+                        <span>เปิดดูทริป</span>
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </span>
                     </div>

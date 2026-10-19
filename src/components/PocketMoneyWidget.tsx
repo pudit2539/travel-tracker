@@ -8,12 +8,14 @@ import {
 } from 'lucide-react';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { convertToThb } from '@/lib/currency';
+import { resolveDisplayCurrency } from '@/lib/tripStatus';
 
 interface PocketMoneyWidgetProps {
   tripId: string;
   currency: string;
   fxRate: number;
   expenses: any[];
+  currencyView?: 'foreign' | 'thb';
   onOpenAtmRadar?: () => void;
   onShowToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
@@ -23,6 +25,7 @@ export default function PocketMoneyWidget({
   currency = 'JPY',
   fxRate = 0.235,
   expenses = [],
+  currencyView = 'foreign',
   onOpenAtmRadar,
   onShowToast,
 }: PocketMoneyWidgetProps) {
@@ -227,17 +230,22 @@ export default function PocketMoneyWidget({
             </div>
           </div>
 
-          <div>
-            <div className="text-[10px] font-bold text-emerald-700/80 dark:text-emerald-300/70 mb-0.5">
-              ยอดเงินสดคงเหลือ
-            </div>
-            <div className="text-xl sm:text-2xl font-black font-mono text-emerald-950 dark:text-emerald-100 leading-tight">
-              ¥<AnimatedNumber value={remainingCash} />
-            </div>
-            <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300/80 mt-0.5">
-              ≈ ฿<AnimatedNumber value={Math.round(convertToThb(remainingCash, currency, fxRate))} /> คงเหลือ
-            </div>
-          </div>
+          {(() => {
+            const disp = resolveDisplayCurrency(remainingCash, currency, fxRate, currencyView);
+            return (
+              <div>
+                <div className="text-[10px] font-bold text-emerald-700/80 dark:text-emerald-300/70 mb-0.5">
+                  ยอดเงินสดคงเหลือ ({disp.primaryCurrency})
+                </div>
+                <div className="text-xl sm:text-2xl font-black font-mono text-emerald-950 dark:text-emerald-100 leading-tight">
+                  {disp.primarySymbol}<AnimatedNumber value={disp.primaryAmount} />
+                </div>
+                <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300/80 mt-0.5">
+                  ≈ {disp.secondarySymbol}<AnimatedNumber value={disp.secondaryAmount} /> {disp.secondaryCurrency} คงเหลือ
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="text-[10px] text-emerald-800/80 dark:text-emerald-300/60 pt-1 border-t border-emerald-200/60 dark:border-emerald-900/30 flex justify-between">
             <span>พกมา: ¥{startingCash.toLocaleString()}</span>
@@ -274,18 +282,24 @@ export default function PocketMoneyWidget({
             </div>
           </div>
 
-          <div>
-            <div className="text-[10px] font-bold text-blue-700/80 dark:text-blue-300/70 mb-0.5">
-              {hasTravelCardBudget ? 'ยอดเงินคงเหลือในบัตร' : 'ยอดรูดจ่ายสะสม'}
-            </div>
-            <div className="text-xl sm:text-2xl font-black font-mono text-blue-950 dark:text-blue-100 leading-tight">
-              ¥<AnimatedNumber value={hasTravelCardBudget ? remainingTravelCard : travelCardSpent} />
-            </div>
-            <div className="text-[11px] font-semibold text-blue-700 dark:text-blue-300/80 mt-0.5">
-              ≈ ฿<AnimatedNumber value={Math.round(convertToThb(hasTravelCardBudget ? remainingTravelCard : travelCardSpent, currency, fxRate))} />
-              {hasTravelCardBudget ? ' คงเหลือ' : ' รูดไปแล้ว'}
-            </div>
-          </div>
+          {(() => {
+            const targetVal = hasTravelCardBudget ? remainingTravelCard : travelCardSpent;
+            const disp = resolveDisplayCurrency(targetVal, currency, fxRate, currencyView);
+            return (
+              <div>
+                <div className="text-[10px] font-bold text-blue-700/80 dark:text-blue-300/70 mb-0.5">
+                  {hasTravelCardBudget ? `ยอดเงินคงเหลือในบัตร (${disp.primaryCurrency})` : `ยอดรูดจ่ายสะสม (${disp.primaryCurrency})`}
+                </div>
+                <div className="text-xl sm:text-2xl font-black font-mono text-blue-950 dark:text-blue-100 leading-tight">
+                  {disp.primarySymbol}<AnimatedNumber value={disp.primaryAmount} />
+                </div>
+                <div className="text-[11px] font-semibold text-blue-700 dark:text-blue-300/80 mt-0.5">
+                  ≈ {disp.secondarySymbol}<AnimatedNumber value={disp.secondaryAmount} /> {disp.secondaryCurrency}
+                  {hasTravelCardBudget ? ' คงเหลือ' : ' รูดไปแล้ว'}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="text-[10px] text-blue-800/80 dark:text-blue-300/60 pt-1 border-t border-blue-200/60 dark:border-blue-900/30 flex justify-between items-center">
             {hasTravelCardBudget ? (
@@ -319,17 +333,22 @@ export default function PocketMoneyWidget({
             </span>
           </div>
 
-          <div>
-            <div className="text-[10px] font-bold text-purple-700/80 dark:text-purple-300/70 mb-0.5">
-              ยอดรูดจ่ายสะสม
-            </div>
-            <div className="text-xl sm:text-2xl font-black font-mono text-purple-950 dark:text-purple-100 leading-tight">
-              ¥<AnimatedNumber value={creditCardSpent} />
-            </div>
-            <div className="text-[11px] font-semibold text-purple-700 dark:text-purple-300/80 mt-0.5">
-              ≈ ฿<AnimatedNumber value={Math.round(convertToThb(creditCardSpent, currency, fxRate))} />
-            </div>
-          </div>
+          {(() => {
+            const disp = resolveDisplayCurrency(creditCardSpent, currency, fxRate, currencyView);
+            return (
+              <div>
+                <div className="text-[10px] font-bold text-purple-700/80 dark:text-purple-300/70 mb-0.5">
+                  ยอดรูดจ่ายสะสม ({disp.primaryCurrency})
+                </div>
+                <div className="text-xl sm:text-2xl font-black font-mono text-purple-950 dark:text-purple-100 leading-tight">
+                  {disp.primarySymbol}<AnimatedNumber value={disp.primaryAmount} />
+                </div>
+                <div className="text-[11px] font-semibold text-purple-700 dark:text-purple-300/80 mt-0.5">
+                  ≈ {disp.secondarySymbol}<AnimatedNumber value={disp.secondaryAmount} /> {disp.secondaryCurrency}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="text-[10px] text-purple-800/80 dark:text-purple-300/60 pt-1 border-t border-purple-200/60 dark:border-purple-900/30 flex justify-between">
             <span>ยอดรูดรอบบิลนี้</span>
