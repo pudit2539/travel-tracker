@@ -1,5 +1,12 @@
 // src/lib/placeThumbnails.ts
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+export interface PlacePhotoCandidate {
+  url: string;
+  author?: string;
+  placeName?: string;
+}
 
 export interface PlaceVisualMeta {
   imageUrl: string;
@@ -446,10 +453,121 @@ export function getCustomPlacePhoto(placeName?: string, itemId?: string): string
   return null;
 }
 
+const syncedTripIds = new Set<string>();
+const inflightTripSync = new Map<string, Promise<void>>();
+
+/**
+ * Syncs custom place photos into the trip's `__meta_trip_data__` row in Supabase
+ * so custom PNG screenshots and selected Google Maps photos appear across PC, Mobile, and iPad.
+ */
+export async function syncCustomPlacePhotosToSupabase(tripId: string): Promise<void> {
+  if (!tripId) return;
+  try {
+    const map = readCustomPhotoMap();
+    const { data: existing } = await supabase
+      .from('itinerary_items')
+      .select('id, backup_plan')
+      .eq('trip_id', tripId)
+      .eq('date_label', '__meta_trip_data__')
+      .maybeSingle();
+
+    let payload: any = {};
+    if (existing?.backup_plan) {
+      try {
+        payload = JSON.parse(existing.backup_plan);
+      } catch {}
+    }
+
+    payload.customPlacePhotos = {
+      ...(payload.customPlacePhotos || {}),
+      ...map,
+    };
+
+    // Remove keys that were explicitly deleted locally
+    for (const k of Object.keys(payload.customPlacePhotos)) {
+      if (!(k in map)) {
+        delete payload.customPlacePhotos[k];
+      }
+    }
+
+    if (existing?.id) {
+      await supabase
+        .from('itinerary_items')
+        .update({ backup_plan: JSON.stringify(payload) })
+        .eq('id', existing.id);
+    } else {
+      await supabase.from('itinerary_items').insert([
+        {
+          trip_id: tripId,
+          date_label: '__meta_trip_data__',
+          main_place: 'SYSTEM_TRIP_METADATA',
+          backup_plan: JSON.stringify(payload),
+          sort_order: -9999,
+        },
+      ]);
+    }
+  } catch {}
+}
+
+/**
+ * Loads custom place photos from the trip's `__meta_trip_data__` row in Supabase (once per tripId)
+ * and merges them into local cache so all devices see the same custom photos.
+ */
+export async function loadCustomPlacePhotosFromSupabase(
+  tripId?: string,
+  force = false
+): Promise<void> {
+  if (!tripId || typeof window === 'undefined') return;
+  if (!force && syncedTripIds.has(tripId)) return;
+  if (inflightTripSync.has(tripId)) return inflightTripSync.get(tripId)!;
+
+  const p = (async () => {
+    try {
+      syncedTripIds.add(tripId);
+      const { data } = await supabase
+        .from('itinerary_items')
+        .select('backup_plan')
+        .eq('trip_id', tripId)
+        .eq('date_label', '__meta_trip_data__')
+        .maybeSingle();
+
+      if (!data?.backup_plan) return;
+      const parsed = JSON.parse(data.backup_plan);
+      const remoteMap = parsed?.customPlacePhotos;
+      if (!remoteMap || typeof remoteMap !== 'object') return;
+
+      const localMap = readCustomPhotoMap();
+      let changed = false;
+      for (const [k, v] of Object.entries(remoteMap)) {
+        if (typeof v === 'string' && v && localMap[k] !== v) {
+          localMap[k] = v;
+          memoryCustomPhotoCache.set(k, v);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        try {
+          localStorage.setItem(CUSTOM_PLACE_PHOTO_STORAGE_KEY, JSON.stringify(localMap));
+        } catch {}
+        window.dispatchEvent(new CustomEvent(CUSTOM_PHOTO_CHANGED_EVENT, { detail: { tripId } }));
+      }
+    } catch {
+      // ignore network/parse errors in offline mode
+    } finally {
+      inflightTripSync.delete(tripId);
+    }
+  })();
+
+  inflightTripSync.set(tripId, p);
+  return p;
+}
+
 export function setCustomPlacePhoto(
   placeName: string | undefined,
   imageUrlOrDataUrl: string | null,
-  itemId?: string
+  itemId?: string,
+  tripId?: string
 ): void {
   const itemKey = itemId ? `item:${itemId}` : '';
   const placeKey = placeName ? `place:${placeName.trim().toLowerCase()}` : '';
@@ -482,10 +600,53 @@ export function setCustomPlacePhoto(
     } catch {}
     window.dispatchEvent(
       new CustomEvent(CUSTOM_PHOTO_CHANGED_EVENT, {
-        detail: { placeName, itemId, imageUrl: imageUrlOrDataUrl },
+        detail: { placeName, itemId, tripId, imageUrl: imageUrlOrDataUrl },
       })
     );
   }
+
+  if (tripId) {
+    syncCustomPlacePhotosToSupabase(tripId).catch(() => {});
+  }
+}
+
+/**
+ * Fetches up to 5 photo candidates from Google Places API (New) via `/api/place-photo?candidates=1`
+ * so the user can visually pick their favorite angle in CustomPlacePhotoModal.
+ */
+export async function fetchGooglePlacesPhotoCandidates(
+  query: string,
+  city?: string
+): Promise<PlacePhotoCandidate[]> {
+  if (!query || typeof window === 'undefined' || typeof fetch !== 'function') return [];
+  try {
+    const cleanQ = extractAttractionSearchQuery(query, city) || query;
+    const res = await fetch(
+      `/api/place-photo?q=${encodeURIComponent(cleanQ)}&city=${encodeURIComponent(
+        city || ''
+      )}&candidates=1`
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (Array.isArray(data?.photos) && data.photos.length > 0) {
+      return data.photos;
+    }
+    if (data?.photoUrl) {
+      return [{ url: data.photoUrl, placeName: data.placeName, author: data.author }];
+    }
+  } catch {}
+  return [];
+}
+
+/**
+ * Builds a Google Maps Street View / Place Panorama lookup URL for finding storefronts & hotel entrances.
+ */
+export function buildStreetViewUrl(placeName?: string, city?: string): string {
+  const cleanQuery = extractAttractionSearchQuery(placeName, city) || placeName || 'Japan';
+  const cleanCity = (city || 'Japan').split(/->|→/)[0].trim();
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${cleanQuery} ${cleanCity}`
+  )}`;
 }
 
 /**
@@ -758,7 +919,8 @@ export function usePlaceVisualMeta(
   placeName?: string,
   city?: string,
   index = 0,
-  itemId?: string
+  itemId?: string,
+  tripId?: string
 ): PlaceVisualMeta {
   const baseMeta = getPlaceVisualMeta(placeName, city, index);
 
@@ -774,17 +936,20 @@ export function usePlaceVisualMeta(
     return loadCachedPhotoRecord(cacheKey);
   });
 
-  // Listen to custom photo changes (upload PNG / paste screenshot / reset)
+  // Listen to custom photo changes (upload PNG / paste screenshot / reset / Supabase cloud sync)
   useEffect(() => {
     const syncCustom = () => {
       setCustomPhotoState(getCustomPlacePhoto(placeName, itemId));
     };
     syncCustom();
+    if (tripId) {
+      loadCustomPlacePhotosFromSupabase(tripId).catch(() => {});
+    }
     if (typeof window !== 'undefined') {
       window.addEventListener(CUSTOM_PHOTO_CHANGED_EVENT, syncCustom);
       return () => window.removeEventListener(CUSTOM_PHOTO_CHANGED_EVENT, syncCustom);
     }
-  }, [placeName, itemId]);
+  }, [placeName, itemId, tripId]);
 
   // Fetch real place photo from Google Maps Places API (New) -> Wikimedia HD
   useEffect(() => {

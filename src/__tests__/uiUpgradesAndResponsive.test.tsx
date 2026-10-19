@@ -20,12 +20,17 @@ import {
   getPlaceVisualMeta,
   fetchRealPlacePhotoUrl,
   fetchRealPlacePhotoRecord,
+  fetchGooglePlacesPhotoCandidates,
+  buildStreetViewUrl,
   extractAttractionSearchQuery,
   upscaleWikimediaThumbUrl,
   setCustomPlacePhoto,
   getCustomPlacePhoto,
   triggerViewTransition,
 } from '@/lib/placeThumbnails';
+import {
+  PlacePhotoLightboxModal,
+} from '@/components/trip-detail/CustomPlacePhotoModal';
 import {
   ItineraryStopCard,
   ItineraryThumbnailCard,
@@ -585,5 +590,63 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
       expect(container.textContent).toContain('YouTrip / Planet');
     });
   });
+
+  describe('11. Place Photo Studio (5-Angle Candidates, Street View URL, Lightbox Modal)', () => {
+    it('builds valid Google Maps search / Street View URL with place and city', () => {
+      const url = buildStreetViewUrl('Ine Funaya', 'Kyoto');
+      expect(url).toContain('https://www.google.com/maps/search/?api=1&query=');
+      expect(url).toContain('Ine%20Funaya%20Kyoto');
+    });
+
+    it('fetches up to 5 photo candidates from /api/place-photo?candidates=1', async () => {
+      const mockFetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          url: 'https://lh3.googleusercontent.com/places/photo-1=w1200',
+          source: 'google_places',
+          placeTitle: 'Ine Funaya',
+          photos: [
+            { url: 'https://lh3.googleusercontent.com/places/photo-1=w1200', author: 'A' },
+            { url: 'https://lh3.googleusercontent.com/places/photo-2=w1200', author: 'B' },
+          ],
+        }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      const candidates = await fetchGooglePlacesPhotoCandidates('Ine Funaya', 'Kyoto');
+      expect(candidates).toHaveLength(2);
+      expect(candidates[0].url).toContain('photo-1');
+      expect(candidates[1].author).toBe('B');
+
+      vi.unstubAllGlobals();
+    });
+
+    it('renders PlacePhotoLightboxModal with Street View link, Directions link, and Change Photo trigger', async () => {
+      const onClose = vi.fn();
+      const onOpenCustomPhoto = vi.fn();
+
+      await act(async () => {
+        root.render(
+          <PlacePhotoLightboxModal
+            isOpen={true}
+            onClose={onClose}
+            imageUrl="https://lh3.googleusercontent.com/places/ine-funaya=w1200"
+            placeName="Ine Funaya Boathouses"
+            city="Ine, Kyoto"
+            tagLabel="Attraction"
+            emoji="🏯"
+            mapsUrl="https://maps.google.com/?q=Ine+Funaya"
+            directionsUrl="https://www.google.com/maps/dir/?api=1&destination=Ine+Funaya"
+            onOpenCustomPhoto={onOpenCustomPhoto}
+          />
+        );
+      });
+
+      expect(document.body.textContent).toContain('Ine Funaya Boathouses');
+      expect(document.body.textContent).toContain('ดูหน้าร้าน / รีวิวใน Google Maps');
+      expect(document.body.textContent).toContain('นำทางไปที่นี่');
+    });
+  });
 });
+
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
-  Navigation, Eye, MoreHorizontal, Check, Camera
+  Navigation, Eye, MoreHorizontal, Check, Camera, ZoomIn
 } from 'lucide-react';
 import { parseTransitInfo } from '@/lib/transitGuide';
 import {
@@ -11,7 +11,10 @@ import {
   subscribeVisitedStamps,
 } from '@/lib/visitedStamps';
 import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
-import { CustomPlacePhotoModal } from '@/components/trip-detail/CustomPlacePhotoModal';
+import {
+  CustomPlacePhotoModal,
+  PlacePhotoLightboxModal,
+} from '@/components/trip-detail/CustomPlacePhotoModal';
 import { usePlaceVisualMeta } from '@/lib/placeThumbnails';
 
 export interface ItineraryStopCardProps {
@@ -69,7 +72,7 @@ function buildStopUrls(item: any) {
 }
 
 /**
- * 1. Detailed Card View (Decluttered & Friendly)
+ * 1. Detailed Card View (Decluttered & Friendly + Real Place Visual Thumbnail)
  */
 function ItineraryStopCardComponent({
   item,
@@ -86,10 +89,17 @@ function ItineraryStopCardComponent({
   const { visited, toggleVisited } = useStopVisitedState(item);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
+  const [showLightbox, setShowLightbox] = React.useState(false);
   const [showAdminMenu, setShowAdminMenu] = React.useState(false);
+  const [imgError, setImgError] = React.useState(false);
 
+  const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
   const transitGuide = parseTransitInfo(item.transport_info);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+
+  React.useEffect(() => {
+    setImgError(false);
+  }, [visual.imageUrl]);
 
   const cleanFoodQuery = React.useMemo(() => {
     if (!item.food_recommendation || item.food_recommendation === '-') return '';
@@ -261,17 +271,69 @@ function ItineraryStopCardComponent({
             </div>
           </div>
 
-          {/* Main Place Title + Optional Stamp Watermark */}
-          <div className="pt-0.5 text-left w-full flex items-start justify-between gap-2">
-            <a
-              href={mainPlaceMapsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-base sm:text-lg font-black text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center gap-1.5 transition-colors cursor-pointer group/title leading-relaxed text-left break-words flex-1"
-            >
-              <span>{item.main_place}</span>
-              <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover/title:text-blue-500 transition-colors shrink-0" />
-            </a>
+          {/* Main Place Title + Real Place Thumbnail + Optional Stamp Watermark */}
+          <div className="pt-0.5 text-left w-full flex items-start justify-between gap-3">
+            {/* Real Place Thumbnail (Tap to expand Lightbox, Corner button to change photo) */}
+            <div className="relative shrink-0 group/thumb">
+              <button
+                type="button"
+                onClick={() => setShowLightbox(true)}
+                style={{ aspectRatio: '1 / 1' }}
+                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gradient-to-br ${visual.gradient} border border-slate-200/80 dark:border-[#2a3652] shadow-xs relative block cursor-pointer`}
+                title="แตะเพื่อขยายดูรูปสถานที่จริง / ดูหน้าร้าน Street View"
+              >
+                {!imgError && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={visual.imageUrl}
+                    alt={item.main_place || 'Destination'}
+                    loading="lazy"
+                    onError={() => setImgError(true)}
+                    className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
+                  />
+                )}
+                <span className="absolute bottom-1 left-1 px-1.5 py-0.2 rounded-md bg-black/65 text-white text-[9px] font-bold backdrop-blur-xs">
+                  {visual.emoji}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCustomPhotoModal(true);
+                }}
+                className="absolute -top-1.5 -right-1.5 p-1 rounded-full bg-slate-900/85 hover:bg-blue-600 text-white border border-white/25 shadow-sm cursor-pointer transition-colors"
+                title="เปลี่ยนรูปสถานที่ (เลือกรูป Google Maps / อัปโหลด PNG)"
+              >
+                <Camera className="h-3 w-3" />
+              </button>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                  {visual.emoji} {visual.tagLabel}
+                </span>
+                {visual.isCustomPhoto ? (
+                  <span className="px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[9px] font-black">
+                    ✨ รูปของฉัน
+                  </span>
+                ) : visual.photoSource === 'google_places' ? (
+                  <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-[#1c2438] text-slate-500 dark:text-slate-400 text-[9px] font-semibold">
+                    Google Maps
+                  </span>
+                ) : null}
+              </div>
+              <a
+                href={mainPlaceMapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-base sm:text-lg font-black text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center gap-1.5 transition-colors cursor-pointer group/title leading-relaxed text-left break-words"
+              >
+                <span>{item.main_place}</span>
+                <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover/title:text-blue-500 transition-colors shrink-0" />
+              </a>
+            </div>
 
             {visited && (
               <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-dashed border-rose-500/70 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-black rotate-[-6deg]">
@@ -434,6 +496,21 @@ function ItineraryStopCardComponent({
         placeName={item.main_place || 'จุดหมาย'}
         city={item.city}
         itemId={item.id}
+        tripId={item.trip_id}
+        currentAutoImageUrl={visual.imageUrl}
+      />
+
+      <PlacePhotoLightboxModal
+        isOpen={showLightbox}
+        onClose={() => setShowLightbox(false)}
+        imageUrl={visual.imageUrl}
+        placeName={item.main_place || 'จุดหมาย'}
+        city={item.city}
+        tagLabel={visual.tagLabel}
+        emoji={visual.emoji}
+        mapsUrl={mainPlaceMapsUrl}
+        directionsUrl={mainPlaceDirectionsUrl}
+        onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
       />
     </>
   );
@@ -457,9 +534,10 @@ function ItineraryThumbnailCardComponent({
   const { visited, toggleVisited } = useStopVisitedState(item);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
+  const [showLightbox, setShowLightbox] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
 
-  const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id);
+  const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
   const transitGuide = parseTransitInfo(item.transport_info);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
 
@@ -480,7 +558,9 @@ function ItineraryThumbnailCardComponent({
         <div>
           <div
             style={{ aspectRatio: '16 / 10' }}
-            className={`relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br ${visual.gradient}`}
+            onClick={() => setShowLightbox(true)}
+            className={`relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br ${visual.gradient} cursor-zoom-in`}
+            title="แตะที่รูปเพื่อขยายเต็มจอ / ดูหน้าร้าน Street View"
           >
             {!imgError && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -495,7 +575,10 @@ function ItineraryThumbnailCardComponent({
             <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/15" />
 
             {/* Top Overlay Badges */}
-            <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-1.5">
+            <div
+              className="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-1.5"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center gap-1 flex-wrap">
                 <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-black/60 text-white backdrop-blur-md border border-white/15">
                   {item.date_label || `Day ${idx + 1}`}
@@ -546,12 +629,23 @@ function ItineraryThumbnailCardComponent({
                 </h3>
               </div>
 
-              <div className="flex items-center gap-1 shrink-0">
+              <div
+                className="flex items-center gap-1 shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowLightbox(true)}
+                  className="p-1.5 rounded-xl bg-black/50 hover:bg-black/75 text-white/90 border border-white/20 backdrop-blur-md shrink-0 cursor-pointer"
+                  title="ขยายดูรูปเต็มจอ / ดูหน้าร้าน Street View"
+                >
+                  <ZoomIn className="h-3.5 w-3.5" />
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowCustomPhotoModal(true)}
                   className="p-1.5 rounded-xl bg-black/50 hover:bg-black/75 text-white/90 border border-white/20 backdrop-blur-md shrink-0 cursor-pointer"
-                  title="เปลี่ยนรูปสถานที่ (อัปโหลด PNG / วางรูปที่แคปมา)"
+                  title="เปลี่ยนรูปสถานที่ (เลือกรูป Google Maps / อัปโหลด PNG)"
                 >
                   <Camera className="h-3.5 w-3.5" />
                 </button>
@@ -587,7 +681,7 @@ function ItineraryThumbnailCardComponent({
 
             {!transitGuide.details && !item.food_recommendation && (
               <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                แตะปุ่มด้านล่างเพื่อเปิดแผนที่หรือโชว์ถามทาง
+                แตะที่รูปเพื่อขยายเต็มจอ หรือแตะปุ่มด้านล่างเพื่อนำทาง
               </p>
             )}
           </div>
@@ -632,7 +726,21 @@ function ItineraryThumbnailCardComponent({
         placeName={item.main_place || 'จุดหมาย'}
         city={item.city}
         itemId={item.id}
+        tripId={item.trip_id}
         currentAutoImageUrl={visual.imageUrl}
+      />
+
+      <PlacePhotoLightboxModal
+        isOpen={showLightbox}
+        onClose={() => setShowLightbox(false)}
+        imageUrl={visual.imageUrl}
+        placeName={item.main_place || 'จุดหมาย'}
+        city={item.city}
+        tagLabel={visual.tagLabel}
+        emoji={visual.emoji}
+        mapsUrl={mainPlaceMapsUrl}
+        directionsUrl={mainPlaceDirectionsUrl}
+        onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
       />
     </>
   );
@@ -654,8 +762,10 @@ function ItineraryCompactRowComponent({
 }) {
   const { visited, toggleVisited } = useStopVisitedState(item);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
+  const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
+  const [showLightbox, setShowLightbox] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
-  const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id);
+  const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
 
   React.useEffect(() => {
@@ -686,9 +796,12 @@ function ItineraryCompactRowComponent({
             {visited ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <span className="text-xs">{visual.emoji}</span>}
           </button>
 
-          <div
+          <button
+            type="button"
+            onClick={() => setShowLightbox(true)}
             style={{ aspectRatio: '1 / 1' }}
-            className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br ${visual.gradient} hidden xs:block sm:block`}
+            className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br ${visual.gradient} hidden xs:block sm:block cursor-zoom-in`}
+            title="แตะเพื่อขยายดูรูปสถานที่จริง"
           >
             {!imgError && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -700,7 +813,7 @@ function ItineraryCompactRowComponent({
                 className="w-full h-full object-cover"
               />
             )}
-          </div>
+          </button>
 
           <div className="min-w-0 flex-1 text-left">
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -782,6 +895,29 @@ function ItineraryCompactRowComponent({
         transportInfo={item.transport_info}
         mapsUrl={mainPlaceMapsUrl}
         directionsUrl={mainPlaceDirectionsUrl}
+      />
+
+      <CustomPlacePhotoModal
+        isOpen={showCustomPhotoModal}
+        onClose={() => setShowCustomPhotoModal(false)}
+        placeName={item.main_place || 'จุดหมาย'}
+        city={item.city}
+        itemId={item.id}
+        tripId={item.trip_id}
+        currentAutoImageUrl={visual.imageUrl}
+      />
+
+      <PlacePhotoLightboxModal
+        isOpen={showLightbox}
+        onClose={() => setShowLightbox(false)}
+        imageUrl={visual.imageUrl}
+        placeName={item.main_place || 'จุดหมาย'}
+        city={item.city}
+        tagLabel={visual.tagLabel}
+        emoji={visual.emoji}
+        mapsUrl={mainPlaceMapsUrl}
+        directionsUrl={mainPlaceDirectionsUrl}
+        onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
       />
     </>
   );

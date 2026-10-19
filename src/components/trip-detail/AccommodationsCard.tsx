@@ -8,7 +8,7 @@ import {
   MapPin, Calendar, Moon, ExternalLink, Copy, Check, 
   Receipt, DollarSign, Sparkles, Phone, FileText, CheckCircle2,
   X, AlertCircle, BookmarkCheck, Upload, Eye, Download, Image as ImageIcon,
-  Loader2, Clock
+  Loader2, Clock, Camera
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -30,6 +30,94 @@ import HotelVoucherPreviewModal from './HotelVoucherPreviewModal';
 import { convertToThb, convertCurrency } from '@/lib/currency';
 import { supabase } from '@/lib/supabase';
 import { triggerConfetti } from '@/lib/confetti';
+import { usePlaceVisualMeta } from '@/lib/placeThumbnails';
+import {
+  CustomPlacePhotoModal,
+  PlacePhotoLightboxModal,
+} from '@/components/trip-detail/CustomPlacePhotoModal';
+
+function StayPhotoBanner({
+  stay,
+  idx,
+  mapsUrl,
+  tripId,
+}: {
+  stay: AccommodationStay;
+  idx: number;
+  mapsUrl: string;
+  tripId: string;
+}) {
+  const resolvedTripId = tripId || stay.tripId;
+  const visual = usePlaceVisualMeta(stay.name, stay.city, idx, stay.id, resolvedTripId);
+  const [imgErr, setImgErr] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [showCustomModal, setShowCustomModal] = useState(false);
+
+  useEffect(() => {
+    setImgErr(false);
+  }, [visual.imageUrl]);
+
+  return (
+    <>
+      <div
+        style={{ aspectRatio: '16 / 9' }}
+        onClick={() => setShowLightbox(true)}
+        className={`relative w-full aspect-[16/9] rounded-xl overflow-hidden bg-gradient-to-br ${visual.gradient} cursor-zoom-in group/hotelimg`}
+        title="แตะเพื่อดูรูปตึกโรงแรมเต็มจอ / เปิดดูหน้าร้าน Google Street View"
+      >
+        {!imgErr && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={visual.imageUrl}
+            alt={stay.name}
+            loading="lazy"
+            onError={() => setImgErr(true)}
+            className="w-full h-full object-cover group-hover/hotelimg:scale-105 transition-transform duration-500"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+        <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+          <span className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs truncate">
+            🏨 {visual.isCustomPhoto ? '✨ รูปที่พักของฉัน' : visual.photoSource === 'google_places' ? 'รูปจริงจาก Google Maps' : 'รูปที่พัก'}
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCustomModal(true);
+            }}
+            className="p-1.5 rounded-lg bg-black/60 hover:bg-emerald-600 text-white border border-white/20 backdrop-blur-xs cursor-pointer transition-colors shrink-0"
+            title="เปลี่ยนรูปโรงแรม (เลือกรูป Google Maps / อัปโหลด PNG)"
+          >
+            <Camera className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+
+      <CustomPlacePhotoModal
+        isOpen={showCustomModal}
+        onClose={() => setShowCustomModal(false)}
+        placeName={stay.name}
+        city={stay.city}
+        itemId={stay.id}
+        tripId={resolvedTripId}
+        currentAutoImageUrl={visual.imageUrl}
+      />
+
+      <PlacePhotoLightboxModal
+        isOpen={showLightbox}
+        onClose={() => setShowLightbox(false)}
+        imageUrl={visual.imageUrl}
+        placeName={stay.name}
+        city={stay.city}
+        tagLabel="Hotel & Stay"
+        emoji="🏨"
+        mapsUrl={mapsUrl}
+        onOpenCustomPhoto={() => setShowCustomModal(true)}
+      />
+    </>
+  );
+}
 
 interface AccommodationsCardProps {
   tripId: string;
@@ -870,8 +958,9 @@ export function AccommodationsCard({
                     key={stay.id}
                     className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#111624] shadow-xs hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3 relative group"
                   >
-                    {/* Top Header: Stay Index & Hotel Name */}
-                    <div className="space-y-1.5">
+                    {/* Top Header: Real Hotel Photo Banner, Stay Index & Hotel Name */}
+                    <div className="space-y-2.5">
+                      <StayPhotoBanner stay={stay} idx={idx} mapsUrl={mapsUrl} tripId={tripId} />
                       <div className="flex items-center justify-between gap-1.5">
                         <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 font-mono">
                           ที่พัก {idx + 1}
