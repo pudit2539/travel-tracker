@@ -32,7 +32,65 @@ import { isSuperAdmin } from '@/lib/permissions';
 import { copyToClipboard } from '@/lib/clipboard';
 import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { getTripStatusBadge } from '@/lib/tripStatus';
-import { getPlaceVisualMeta, triggerViewTransition } from '@/lib/placeThumbnails';
+import { getPlaceVisualMeta, usePlaceVisualMeta, triggerViewTransition } from '@/lib/placeThumbnails';
+
+function TripCoverMedia({
+  tripName,
+  highlightPlace,
+  highlightCity,
+  idx,
+  className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-105',
+  showBottomTag = false,
+  isOwner = false,
+  userRole = 'viewer',
+}: {
+  tripName: string;
+  highlightPlace?: string;
+  highlightCity?: string;
+  idx: number;
+  className?: string;
+  showBottomTag?: boolean;
+  isOwner?: boolean;
+  userRole?: string;
+}) {
+  const visual = usePlaceVisualMeta(highlightPlace || tripName, highlightCity, idx);
+  const [imgErr, setImgErr] = useState(false);
+
+  useEffect(() => {
+    setImgErr(false);
+  }, [visual.imageUrl]);
+
+  return (
+    <>
+      {!imgErr && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={visual.imageUrl}
+          alt={highlightPlace || tripName}
+          loading="lazy"
+          onError={() => setImgErr(true)}
+          className={className}
+        />
+      )}
+      {showBottomTag && (
+        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between gap-2 z-10">
+          <span className="text-[10px] font-bold text-white/95 bg-black/50 backdrop-blur-xs px-2.5 py-0.5 rounded-lg truncate max-w-[68%]">
+            {visual.emoji} {highlightPlace || visual.categoryLabel}
+          </span>
+          {isOwner ? (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/90 text-white shadow-xs shrink-0">
+              👑 เจ้าของ
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600/90 text-white shadow-xs shrink-0">
+              👥 สมาชิก{userRole === 'viewer' ? ' (ดู)' : ''}
+            </span>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -197,13 +255,50 @@ export default function HomePage() {
       if (tripsErr) {
         console.error('Error fetching user trips:', tripsErr);
       } else {
+        const tripIds = (tripsData || []).map((t: any) => t.id).filter(Boolean);
+        const highlightMap = new Map<string, { place: string; city?: string }>();
+
+        if (tripIds.length > 0) {
+          try {
+            const { data: itinRows } = await supabase
+              .from('itinerary_items')
+              .select('trip_id, main_place, city, sort_order')
+              .in('trip_id', tripIds)
+              .order('sort_order', { ascending: true });
+
+            if (Array.isArray(itinRows)) {
+              for (const row of itinRows) {
+                if (!row?.trip_id || !row?.main_place) continue;
+                if (row.main_place === '__TRIP_METADATA__' || row.city === '__METADATA__') continue;
+                const lower = String(row.main_place).toLowerCase();
+                const isTransitOrHotel =
+                  lower.includes('สุวรรณภูมิ') ||
+                  lower.includes('สนามบิน') ||
+                  lower.includes('airport') ||
+                  lower.includes('เช็คอิน') ||
+                  lower.includes('เช็กอิน') ||
+                  lower.includes('ฝากกระเป๋า');
+
+                if (!highlightMap.has(row.trip_id) || (!isTransitOrHotel && highlightMap.get(row.trip_id)?.place.includes('สนามบิน'))) {
+                  if (!isTransitOrHotel || !highlightMap.has(row.trip_id)) {
+                    highlightMap.set(row.trip_id, { place: row.main_place, city: row.city });
+                  }
+                }
+              }
+            }
+          } catch {}
+        }
+
         const enrichedTrips = (tripsData || []).map((t: any) => {
           const isOwner = isAdmin || t.created_by === currentUserId || memberRoleMap.get(t.id) === 'owner';
           const role = isOwner ? 'owner' : (memberRoleMap.get(t.id) || 'viewer');
+          const hl = highlightMap.get(t.id);
           return {
             ...t,
             isOwner,
             userRole: role,
+            highlightPlace: hl?.place || t.highlightPlace,
+            highlightCity: hl?.city || t.highlightCity,
           };
         });
 
@@ -1129,7 +1224,7 @@ export default function HomePage() {
               const tripName = t.name || t.title || 'ทริปท่องเที่ยว';
               const tripBudget = Number(t.total_budget ?? t.budget ?? 0);
               const statusBadge = getTripStatusBadge(t.start_date, t.end_date);
-              const coverMeta = getPlaceVisualMeta(tripName, t.currency, idx);
+              const coverMeta = getPlaceVisualMeta(t.highlightPlace || tripName, t.highlightCity, idx);
 
               const badgeColorClass =
                 statusBadge.status === 'live'
@@ -1153,10 +1248,11 @@ export default function HomePage() {
                       className={`w-16 h-16 sm:w-20 sm:h-16 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br ${coverMeta.gradient}`}
                       style={{ aspectRatio: '4 / 3' }}
                     >
-                      <img
-                        src={coverMeta.imageUrl}
-                        alt={tripName}
-                        loading="lazy"
+                      <TripCoverMedia
+                        tripName={tripName}
+                        highlightPlace={t.highlightPlace}
+                        highlightCity={t.highlightCity}
+                        idx={idx}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
@@ -1246,7 +1342,7 @@ export default function HomePage() {
               const tripName = t.name || t.title || 'ทริปท่องเที่ยว';
               const tripBudget = Number(t.total_budget ?? t.budget ?? 0);
               const statusBadge = getTripStatusBadge(t.start_date, t.end_date);
-              const coverMeta = getPlaceVisualMeta(tripName, t.currency, idx);
+              const coverMeta = getPlaceVisualMeta(t.highlightPlace || tripName, t.highlightCity, idx);
 
               const badgeColorClass =
                 statusBadge.status === 'live'
@@ -1275,16 +1371,19 @@ export default function HomePage() {
                     className={`relative w-full aspect-[16/9] overflow-hidden bg-gradient-to-br ${coverMeta.gradient}`}
                     style={{ aspectRatio: '16 / 9' }}
                   >
-                    <img
-                      src={coverMeta.imageUrl}
-                      alt={tripName}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    <TripCoverMedia
+                      tripName={tripName}
+                      highlightPlace={t.highlightPlace}
+                      highlightCity={t.highlightCity}
+                      idx={idx}
+                      showBottomTag={true}
+                      isOwner={t.isOwner}
+                      userRole={t.userRole}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent pointer-events-none" />
 
                     {/* Top Overlaid Badges & Quick Edit/Delete */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border backdrop-blur-md shadow-xs ${badgeColorClass}`}>
                           {statusBadge.isPulse && (
@@ -1320,22 +1419,6 @@ export default function HomePage() {
                           </button>
                         )}
                       </div>
-                    </div>
-
-                    {/* Bottom Role Tag on Cover */}
-                    <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-white/90 bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded-lg">
-                        {coverMeta.emoji} {coverMeta.categoryLabel}
-                      </span>
-                      {t.isOwner ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/90 text-white shadow-xs">
-                          👑 เจ้าของ
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600/90 text-white shadow-xs">
-                          👥 สมาชิก{t.userRole === 'viewer' ? ' (ดู)' : ''}
-                        </span>
-                      )}
                     </div>
                   </div>
 

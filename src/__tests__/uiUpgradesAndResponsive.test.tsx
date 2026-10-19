@@ -16,7 +16,12 @@ import {
 import ShowToStaffModal from '@/components/trip-detail/ShowToStaffModal';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import LiveTripCard from '@/components/LiveTripCard';
-import { getPlaceVisualMeta, triggerViewTransition } from '@/lib/placeThumbnails';
+import {
+  getPlaceVisualMeta,
+  fetchRealPlacePhotoUrl,
+  extractAttractionSearchQuery,
+  triggerViewTransition,
+} from '@/lib/placeThumbnails';
 import {
   ItineraryStopCard,
   ItineraryThumbnailCard,
@@ -292,7 +297,19 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
   });
 
   describe('8. Curated Place Thumbnails & Same-Document View Transition Helper', () => {
-    it('resolves destination cover photos for Osaka, USJ, Kyoto, and fallback landmarks', () => {
+    it('prioritizes specific attractions (Ine, Amanohashidate, Katsuo-ji, USJ) over generic city names and never defaults to Fuji', () => {
+      const ine = getPlaceVisualMeta('ล่องเรือหมู่บ้านชาวประมงอิเนะ (Ine Funaya)', 'Kyoto', 0);
+      expect(ine.categoryLabel).toBe('Ine Funaya Bay');
+      expect(ine.wikiQuery).toBe('Ine, Kyoto');
+
+      const amano = getPlaceVisualMeta('จุดชมวิว Amanohashidate Viewland', 'Kyoto', 1);
+      expect(amano.categoryLabel).toBe('Amanohashidate');
+      expect(amano.wikiQuery).toBe('Amanohashidate');
+
+      const katsuoji = getPlaceVisualMeta('วัดดารุมะ คัตสึโอจิ (Katsuo-ji Temple)', 'Osaka', 2);
+      expect(katsuoji.categoryLabel).toBe('Katsuo-ji Temple');
+      expect(katsuoji.wikiQuery).toBe('Katsuo-ji');
+
       const usj = getPlaceVisualMeta('Universal Studios Japan (USJ)', 'Osaka', 0);
       expect(usj.categoryLabel).toBe('Theme Park');
       expect(usj.imageUrl).toContain('images.unsplash.com');
@@ -302,6 +319,32 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
 
       const food = getPlaceVisualMeta('Ichiran Ramen Kuromon Market', 'Japan', 2);
       expect(food.categoryLabel).toBe('Gourmet & Dining');
+
+      // Ensure default fallback never returns Mt. Fuji unless explicitly requested
+      const generic = getPlaceVisualMeta('เดินเล่นพักผ่อนตามอัธยาศัย', '', 1);
+      expect(generic.categoryLabel).not.toBe('Mt. Fuji');
+    });
+
+    it('extracts clean attraction search query and fetches real photo from Wikipedia REST API with cache', async () => {
+      expect(extractAttractionSearchQuery('เดินทางไป หมู่บ้านชาวประมงอิเนะ (Ine Funaya)', 'Kyoto')).toBe('Ine Funaya');
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          thumbnail: {
+            source: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Ine_funaya_01.jpg/800px-Ine_funaya_01.jpg',
+          },
+        }),
+      }) as any;
+
+      try {
+        const photoUrl = await fetchRealPlacePhotoUrl('หมู่บ้านชาวประมงอิเนะ (Ine)', 'Kyoto', 'Ine, Kyoto');
+        expect(photoUrl).toContain('upload.wikimedia.org');
+        expect(photoUrl).toContain('Ine_funaya');
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
 
     it('executes DOM update and shifts focus when triggerViewTransition is called', () => {

@@ -11,7 +11,7 @@ import {
   subscribeVisitedStamps,
 } from '@/lib/visitedStamps';
 import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
-import { getPlaceVisualMeta } from '@/lib/placeThumbnails';
+import { getPlaceVisualMeta, usePlaceVisualMeta } from '@/lib/placeThumbnails';
 
 export interface ItineraryStopCardProps {
   item: any;
@@ -437,9 +437,13 @@ function ItineraryThumbnailCardComponent({
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
 
-  const visual = getPlaceVisualMeta(item.main_place, item.city, idx);
+  const visual = usePlaceVisualMeta(item.main_place, item.city, idx);
   const transitGuide = parseTransitInfo(item.transport_info);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+
+  React.useEffect(() => {
+    setImgError(false);
+  }, [visual.imageUrl]);
 
   return (
     <>
@@ -494,12 +498,17 @@ function ItineraryThumbnailCardComponent({
               </button>
             </div>
 
-            {/* Bottom Overlay City & Category Tag */}
+            {/* Bottom Overlay Landmark Tag & City */}
             <div className="absolute bottom-2.5 inset-x-3 flex items-end justify-between gap-2">
               <div className="min-w-0">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 drop-shadow-xs">
                   <span>{visual.emoji}</span>
-                  <span>{item.city || visual.tagLabel}</span>
+                  <span>
+                    {visual.tagLabel}
+                    {item.city && !visual.tagLabel.toLowerCase().includes(item.city.toLowerCase())
+                      ? ` • ${item.city}`
+                      : ''}
+                  </span>
                 </span>
                 <h3 className="text-sm sm:text-base font-black text-white leading-snug line-clamp-2 drop-shadow-sm">
                   {item.main_place}
@@ -595,8 +604,13 @@ function ItineraryCompactRowComponent({
 }) {
   const { visited, toggleVisited } = useStopVisitedState(item);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
-  const visual = getPlaceVisualMeta(item.main_place, item.city, idx);
+  const [imgError, setImgError] = React.useState(false);
+  const visual = usePlaceVisualMeta(item.main_place, item.city, idx);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+
+  React.useEffect(() => {
+    setImgError(false);
+  }, [visual.imageUrl]);
 
   return (
     <>
@@ -607,7 +621,7 @@ function ItineraryCompactRowComponent({
             : 'border-slate-200/80 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-400/60'
         }`}
       >
-        {/* Left: Check-in Circle + Thumbnail Mini Avatar + Time */}
+        {/* Left: Check-in Circle + Real Place Mini Thumbnail + Time */}
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <button
             type="button"
@@ -621,6 +635,22 @@ function ItineraryCompactRowComponent({
           >
             {visited ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <span className="text-xs">{visual.emoji}</span>}
           </button>
+
+          <div
+            style={{ aspectRatio: '1 / 1' }}
+            className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br ${visual.gradient} hidden xs:block sm:block`}
+          >
+            {!imgError && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={visual.imageUrl}
+                alt={item.main_place || 'Stop'}
+                loading="lazy"
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
 
           <div className="min-w-0 flex-1 text-left">
             <div className="flex items-center gap-1.5 flex-wrap">
