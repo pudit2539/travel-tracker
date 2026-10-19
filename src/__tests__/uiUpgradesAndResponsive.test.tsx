@@ -19,7 +19,11 @@ import LiveTripCard from '@/components/LiveTripCard';
 import {
   getPlaceVisualMeta,
   fetchRealPlacePhotoUrl,
+  fetchRealPlacePhotoRecord,
   extractAttractionSearchQuery,
+  upscaleWikimediaThumbUrl,
+  setCustomPlacePhoto,
+  getCustomPlacePhoto,
   triggerViewTransition,
 } from '@/lib/placeThumbnails';
 import {
@@ -297,7 +301,7 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
   });
 
   describe('8. Curated Place Thumbnails & Same-Document View Transition Helper', () => {
-    it('prioritizes specific attractions (Ine, Amanohashidate, Katsuo-ji, USJ) over generic city names and never defaults to Fuji', () => {
+    it('prioritizes specific attractions (Ine, Amanohashidate, Katsuo-ji, USJ) and hotels over generic districts and never defaults to Fuji', () => {
       const ine = getPlaceVisualMeta('ล่องเรือหมู่บ้านชาวประมงอิเนะ (Ine Funaya)', 'Kyoto', 0);
       expect(ine.categoryLabel).toBe('Ine Funaya Bay');
       expect(ine.wikiQuery).toBe('Ine, Kyoto');
@@ -309,6 +313,22 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
       const katsuoji = getPlaceVisualMeta('วัดดารุมะ คัตสึโอจิ (Katsuo-ji Temple)', 'Osaka', 2);
       expect(katsuoji.categoryLabel).toBe('Katsuo-ji Temple');
       expect(katsuoji.wikiQuery).toBe('Katsuo-ji');
+
+      // Hotel stops mentioning Shinsaibashi or Kyoto must match Hotel & Stay first (not Dotonbori)
+      const quintessaHotel = getPlaceVisualMeta(
+        'เข้าเช็คอินและฝากกระเป๋าเดินทางที่โรงแรม Quintessa Hotel Osaka Shinsaibashi Comic & Books',
+        'Osaka (Shinsaibashi)',
+        0
+      );
+      expect(quintessaHotel.categoryLabel).toBe('Hotel & Stay');
+      expect(quintessaHotel.wikiQuery).toBeUndefined();
+
+      const musseHotel = getPlaceVisualMeta(
+        'เช็กเอาต์จาก Hotel Musse Kyoto Shijo Kawaramachi นั่งรถไฟด่วนมุ่งหน้าสู่โอซาก้า',
+        'Kyoto -> Osaka',
+        1
+      );
+      expect(musseHotel.categoryLabel).toBe('Hotel & Stay');
 
       const usj = getPlaceVisualMeta('Universal Studios Japan (USJ)', 'Osaka', 0);
       expect(usj.categoryLabel).toBe('Theme Park');
@@ -325,26 +345,63 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
       expect(generic.categoryLabel).not.toBe('Mt. Fuji');
     });
 
-    it('extracts clean attraction search query and fetches real photo from Wikipedia REST API with cache', async () => {
+    it('extracts clean attraction/hotel search queries, upscales Wikimedia URLs to 1280px HD, and supports Google Places + custom photo override', async () => {
       expect(extractAttractionSearchQuery('เดินทางไป หมู่บ้านชาวประมงอิเนะ (Ine Funaya)', 'Kyoto')).toBe('Ine Funaya');
+      expect(
+        extractAttractionSearchQuery(
+          'เข้าเช็คอินและฝากกระเป๋าเดินทางที่โรงแรม Quintessa Hotel Osaka Shinsaibashi Comic & Books (ทำเลดี)',
+          'Osaka'
+        )
+      ).toBe('Quintessa Hotel Osaka Shinsaibashi Comic & Books');
+
+      // Verify 320px blurry Wikimedia thumbnail URLs are upscaled to 1280px HD
+      expect(
+        upscaleWikimediaThumbUrl(
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Dotonbori.jpg/320px-Dotonbori.jpg'
+        )
+      ).toBe('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Dotonbori.jpg/1280px-Dotonbori.jpg');
 
       const originalFetch = globalThis.fetch;
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          thumbnail: {
-            source: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Ine_funaya_01.jpg/800px-Ine_funaya_01.jpg',
-          },
-        }),
+      // 1) Test Google Places API (New) proxy resolution first
+      globalThis.fetch = vi.fn().mockImplementation(async (url: string) => {
+        if (String(url).startsWith('/api/place-photo')) {
+          return {
+            ok: true,
+            json: async () => ({
+              photoUrl: 'https://lh3.googleusercontent.com/places/ANXAkqQuintessaHotel1200',
+              attribution: 'Google Maps',
+              source: 'google_places',
+            }),
+          };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            thumbnail: {
+              source: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Ine_funaya_01.jpg/320px-Ine_funaya_01.jpg',
+            },
+          }),
+        };
       }) as any;
 
       try {
-        const photoUrl = await fetchRealPlacePhotoUrl('หมู่บ้านชาวประมงอิเนะ (Ine)', 'Kyoto', 'Ine, Kyoto');
-        expect(photoUrl).toContain('upload.wikimedia.org');
-        expect(photoUrl).toContain('Ine_funaya');
+        const googleRec = await fetchRealPlacePhotoRecord(
+          'Quintessa Hotel Osaka Shinsaibashi Comic & Books',
+          'Osaka'
+        );
+        expect(googleRec?.source).toBe('google_places');
+        expect(googleRec?.url).toContain('lh3.googleusercontent.com/places');
       } finally {
         globalThis.fetch = originalFetch;
       }
+
+      // 2) Test Custom Place Photo Override (Option 3: upload PNG / paste screenshot / URL)
+      setCustomPlacePhoto('Ine Funaya', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA', 'stop-ine-1');
+      expect(getCustomPlacePhoto('Ine Funaya', 'stop-ine-1')).toBe(
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA'
+      );
+      setCustomPlacePhoto('Ine Funaya', null, 'stop-ine-1');
+      expect(getCustomPlacePhoto('Ine Funaya', 'stop-ine-1')).toBeNull();
     });
 
     it('executes DOM update and shifts focus when triggerViewTransition is called', () => {

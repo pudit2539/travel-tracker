@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
-  Navigation, Eye, MoreHorizontal, Check
+  Navigation, Eye, MoreHorizontal, Check, Camera
 } from 'lucide-react';
 import { parseTransitInfo } from '@/lib/transitGuide';
 import {
@@ -11,7 +11,8 @@ import {
   subscribeVisitedStamps,
 } from '@/lib/visitedStamps';
 import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
-import { getPlaceVisualMeta, usePlaceVisualMeta } from '@/lib/placeThumbnails';
+import { CustomPlacePhotoModal } from '@/components/trip-detail/CustomPlacePhotoModal';
+import { usePlaceVisualMeta } from '@/lib/placeThumbnails';
 
 export interface ItineraryStopCardProps {
   item: any;
@@ -84,6 +85,7 @@ function ItineraryStopCardComponent({
 }: ItineraryStopCardProps) {
   const { visited, toggleVisited } = useStopVisitedState(item);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
+  const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showAdminMenu, setShowAdminMenu] = React.useState(false);
 
   const transitGuide = parseTransitInfo(item.transport_info);
@@ -194,7 +196,18 @@ function ItineraryStopCardComponent({
                   </button>
 
                   {showAdminMenu && (
-                    <div className="absolute right-0 top-9 z-30 w-40 rounded-2xl bg-white dark:bg-[#1c2438] border border-slate-200 dark:border-[#2a3652] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-9 z-30 w-44 rounded-2xl bg-white dark:bg-[#1c2438] border border-slate-200 dark:border-[#2a3652] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          setShowCustomPhotoModal(true);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 flex items-center gap-2 cursor-pointer"
+                      >
+                        <Camera className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>เปลี่ยนรูปสถานที่</span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => {
@@ -414,6 +427,14 @@ function ItineraryStopCardComponent({
         mapsUrl={mainPlaceMapsUrl}
         directionsUrl={mainPlaceDirectionsUrl}
       />
+
+      <CustomPlacePhotoModal
+        isOpen={showCustomPhotoModal}
+        onClose={() => setShowCustomPhotoModal(false)}
+        placeName={item.main_place || 'จุดหมาย'}
+        city={item.city}
+        itemId={item.id}
+      />
     </>
   );
 }
@@ -435,9 +456,10 @@ function ItineraryThumbnailCardComponent({
 }) {
   const { visited, toggleVisited } = useStopVisitedState(item);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
+  const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
 
-  const visual = usePlaceVisualMeta(item.main_place, item.city, idx);
+  const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id);
   const transitGuide = parseTransitInfo(item.transport_info);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
 
@@ -501,7 +523,7 @@ function ItineraryThumbnailCardComponent({
             {/* Bottom Overlay Landmark Tag & City */}
             <div className="absolute bottom-2.5 inset-x-3 flex items-end justify-between gap-2">
               <div className="min-w-0">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 drop-shadow-xs">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 drop-shadow-xs flex-wrap">
                   <span>{visual.emoji}</span>
                   <span>
                     {visual.tagLabel}
@@ -509,22 +531,41 @@ function ItineraryThumbnailCardComponent({
                       ? ` • ${item.city}`
                       : ''}
                   </span>
+                  {visual.isCustomPhoto ? (
+                    <span className="px-1.5 py-0.2 rounded bg-emerald-500/80 text-white text-[9px] font-black">
+                      ✨ รูปของฉัน
+                    </span>
+                  ) : visual.photoSource === 'google_places' ? (
+                    <span className="px-1.5 py-0.2 rounded bg-white/20 text-white/95 text-[9px] font-semibold">
+                      Google Maps
+                    </span>
+                  ) : null}
                 </span>
                 <h3 className="text-sm sm:text-base font-black text-white leading-snug line-clamp-2 drop-shadow-sm">
                   {item.main_place}
                 </h3>
               </div>
 
-              {canEditPlan && (
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
-                  onClick={() => onOpenEditActivity(item)}
+                  onClick={() => setShowCustomPhotoModal(true)}
                   className="p-1.5 rounded-xl bg-black/50 hover:bg-black/75 text-white/90 border border-white/20 backdrop-blur-md shrink-0 cursor-pointer"
-                  title="แก้ไข"
+                  title="เปลี่ยนรูปสถานที่ (อัปโหลด PNG / วางรูปที่แคปมา)"
                 >
-                  <Edit3 className="h-3.5 w-3.5" />
+                  <Camera className="h-3.5 w-3.5" />
                 </button>
-              )}
+                {canEditPlan && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenEditActivity(item)}
+                    className="p-1.5 rounded-xl bg-black/50 hover:bg-black/75 text-white/90 border border-white/20 backdrop-blur-md shrink-0 cursor-pointer"
+                    title="แก้ไข"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -584,6 +625,15 @@ function ItineraryThumbnailCardComponent({
         mapsUrl={mainPlaceMapsUrl}
         directionsUrl={mainPlaceDirectionsUrl}
       />
+
+      <CustomPlacePhotoModal
+        isOpen={showCustomPhotoModal}
+        onClose={() => setShowCustomPhotoModal(false)}
+        placeName={item.main_place || 'จุดหมาย'}
+        city={item.city}
+        itemId={item.id}
+        currentAutoImageUrl={visual.imageUrl}
+      />
     </>
   );
 }
@@ -605,7 +655,7 @@ function ItineraryCompactRowComponent({
   const { visited, toggleVisited } = useStopVisitedState(item);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
-  const visual = usePlaceVisualMeta(item.main_place, item.city, idx);
+  const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
 
   React.useEffect(() => {

@@ -15,7 +15,7 @@ import {
   Share2, CheckCircle2, Loader2, X, User, Bell, Coins, 
   Check, ArrowUpRight, Shield, Globe2, KeyRound, Sparkle,
   MapPin, Clock, CloudSun, Heart, Shuffle, ChevronRight, BookmarkCheck,
-  LayoutGrid, AlignJustify
+  LayoutGrid, AlignJustify, Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/ThemeProvider';
@@ -33,6 +33,7 @@ import { copyToClipboard } from '@/lib/clipboard';
 import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { getTripStatusBadge } from '@/lib/tripStatus';
 import { getPlaceVisualMeta, usePlaceVisualMeta, triggerViewTransition } from '@/lib/placeThumbnails';
+import { CustomPlacePhotoModal } from '@/components/trip-detail/CustomPlacePhotoModal';
 
 function TripCoverMedia({
   tripName,
@@ -53,8 +54,10 @@ function TripCoverMedia({
   isOwner?: boolean;
   userRole?: string;
 }) {
-  const visual = usePlaceVisualMeta(highlightPlace || tripName, highlightCity, idx);
+  const targetPlace = highlightPlace || tripName;
+  const visual = usePlaceVisualMeta(targetPlace, highlightCity, idx);
   const [imgErr, setImgErr] = useState(false);
+  const [showCustomModal, setShowCustomModal] = useState(false);
 
   useEffect(() => {
     setImgErr(false);
@@ -66,7 +69,7 @@ function TripCoverMedia({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={visual.imageUrl}
-          alt={highlightPlace || tripName}
+          alt={targetPlace}
           loading="lazy"
           onError={() => setImgErr(true)}
           className={className}
@@ -74,20 +77,42 @@ function TripCoverMedia({
       )}
       {showBottomTag && (
         <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between gap-2 z-10">
-          <span className="text-[10px] font-bold text-white/95 bg-black/50 backdrop-blur-xs px-2.5 py-0.5 rounded-lg truncate max-w-[68%]">
+          <span className="text-[10px] font-bold text-white/95 bg-black/50 backdrop-blur-xs px-2.5 py-0.5 rounded-lg truncate max-w-[60%]">
             {visual.emoji} {highlightPlace || visual.categoryLabel}
+            {visual.photoSource === 'google_places' ? ' • Google Maps' : ''}
           </span>
-          {isOwner ? (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/90 text-white shadow-xs shrink-0">
-              👑 เจ้าของ
-            </span>
-          ) : (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600/90 text-white shadow-xs shrink-0">
-              👥 สมาชิก{userRole === 'viewer' ? ' (ดู)' : ''}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowCustomModal(true);
+              }}
+              className="p-1.5 rounded-full bg-black/55 hover:bg-black/80 text-white border border-white/20 backdrop-blur-xs cursor-pointer"
+              title="เปลี่ยนรูปปกทริป (อัปโหลด PNG / วางรูปที่แคปมา)"
+            >
+              <Camera className="h-3 w-3" />
+            </button>
+            {isOwner ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/90 text-white shadow-xs shrink-0">
+                👑 เจ้าของ
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600/90 text-white shadow-xs shrink-0">
+                👥 สมาชิก{userRole === 'viewer' ? ' (ดู)' : ''}
+              </span>
+            )}
+          </div>
         </div>
       )}
+      <CustomPlacePhotoModal
+        isOpen={showCustomModal}
+        onClose={() => setShowCustomModal(false)}
+        placeName={targetPlace}
+        city={highlightCity}
+        currentAutoImageUrl={visual.imageUrl}
+      />
     </>
   );
 }
