@@ -298,3 +298,20 @@ FOR ALL
 TO authenticated
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+
+-- ====================================================================
+-- SUPABASE DATA API EXPLICIT GRANTS (Post-October 30th Compliance)
+-- ป้องกันข้อผิดพลาด "permission denied" สำหรับตารางใน public schema
+-- ====================================================================
+DO $$
+BEGIN
+  -- ให้สิทธิ์ authenticated และ service_role กับตารางหลักทั้งหมด
+  EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated';
+  EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO service_role';
+  EXECUTE 'GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role';
+  
+  -- สิทธิ์สำหรับ anon (อ่านข้อมูลสาธารณะหรือเช็คอินหากมี)
+  EXECUTE 'GRANT SELECT ON public.trips TO anon';
+  EXECUTE 'GRANT SELECT ON public.itinerary_items TO anon';
+END $$;
+
