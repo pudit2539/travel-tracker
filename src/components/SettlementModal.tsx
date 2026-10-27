@@ -253,9 +253,9 @@ export default function SettlementModal({
     <>
       {createPortal(
         <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center backdrop-blur-md bg-black/75 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
+      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
-        <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
+        <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Calculator className="h-5 w-5" strokeWidth={2} />
@@ -278,7 +278,7 @@ export default function SettlementModal({
         </div>
 
         {/* Tab Switcher: Transfers vs Dishes */}
-        <div className="flex border-b border-slate-100 dark:border-[#222c42] px-4 pt-2 gap-4 shrink-0 bg-slate-50/50 dark:bg-[#111624]/50">
+        <div className="flex border-b border-slate-100 dark:border-[#262932] px-4 pt-2 gap-4 shrink-0 bg-slate-50/50 dark:bg-[#111624]/50">
           <button
             type="button"
             onClick={() => setActiveTab('transfers')}
@@ -309,7 +309,7 @@ export default function SettlementModal({
         <div className="p-4 sm:p-5 pt-3 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain min-h-0 custom-scrollbar flex-1 space-y-4">
           
           {/* Top Summary Banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42]">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#262932]">
             <div>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">ยอดรวมทั้งทริป</span>
               <span className="text-base font-black text-slate-900 dark:text-white">
@@ -331,7 +331,7 @@ export default function SettlementModal({
                 {settlement.memberCount} คน
               </span>
             </div>
-            <div className="col-span-2 sm:col-span-1 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200/80 dark:border-[#222c42]">
+            <div className="col-span-2 sm:col-span-1 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200/80 dark:border-[#262932]">
               <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 block">หารเฉลี่ยคนละ</span>
               <span className="text-base font-black text-blue-600 dark:text-blue-400">
                 {Math.round(settlement.averagePerPerson).toLocaleString()} {currency}
@@ -364,7 +364,7 @@ export default function SettlementModal({
           </div>
 
           {showRateSettings && (
-            <div className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438] border border-slate-200 dark:border-[#222c42] space-y-2 animate-in fade-in">
+            <div className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438] border border-slate-200 dark:border-[#262932] space-y-2 animate-in fade-in">
               <label className="block text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                 กำหนดเรตแลกเงินที่คุณแลกมา (1 เยน = กี่บาท เช่น 0.210)
               </label>
@@ -372,7 +372,7 @@ export default function SettlementModal({
                 <input
                   type="number"
                   step="0.001"
-                  className="flex-1 p-2 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-mono font-bold"
+                  className="flex-1 p-2 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-mono font-bold"
                   value={fxRate.toFixed(3)}
                   onChange={(e) => {
                     const val = parseFloat(e.target.value);
@@ -385,7 +385,7 @@ export default function SettlementModal({
                 <button
                   type="button"
                   onClick={() => handleRateChange(0.210)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#2a3650] text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#151b2b]"
+                  className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#2a3650] text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#181a20]"
                 >
                   เรตมาตรฐาน (0.210)
                 </button>
@@ -426,7 +426,7 @@ export default function SettlementModal({
                           className={`p-3.5 rounded-2xl border transition-all flex flex-col gap-2.5 ${
                             isSettled
                               ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/40 opacity-75'
-                              : 'bg-slate-50/70 dark:bg-[#1c2438]/70 border-slate-200 dark:border-[#222c42]'
+                              : 'bg-slate-50/70 dark:bg-[#1c2438]/70 border-slate-200 dark:border-[#262932]'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-2">
@@ -515,11 +515,11 @@ export default function SettlementModal({
               </div>
 
               {/* Member Balance Breakdown */}
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#222c42]">
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#262932]">
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
                   สถานะยอดสุทธิของสมาชิกแต่ละคน
                 </h3>
-                <div className="divide-y divide-slate-100 dark:divide-[#222c42]">
+                <div className="divide-y divide-slate-100 dark:divide-[#262932]">
                   {settlement.balances.map((b, idx) => {
                     const bCat = getCatAvatar(b.avatar);
                     const isOverpaid = b.netBalance > 0.5;
@@ -561,7 +561,7 @@ export default function SettlementModal({
           {/* TAB 2: DISH & EXPENSE ITEMIZED BREAKDOWN (Feature 5) */}
           {activeTab === 'dishes' && (
             <div className="space-y-3">
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#222c42] text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#262932] text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block mb-0.5">
                   🍽️ ระบบเลือกคนหารจานอาหาร (Dynamic Dish-Split):
                 </span>
@@ -592,7 +592,7 @@ export default function SettlementModal({
                     return (
                       <div
                         key={exp.id}
-                        className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#1c2438]/70 space-y-2.5"
+                        className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/70 dark:bg-[#1c2438]/70 space-y-2.5"
                       >
                         {/* Expense Header */}
                         <div className="flex items-center justify-between gap-2">
@@ -649,7 +649,7 @@ export default function SettlementModal({
                                   className={`px-2 py-1 rounded-xl text-[10px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                                     isSharing
                                       ? 'bg-blue-600 text-white shadow-2xs'
-                                      : 'bg-white dark:bg-[#151b2b] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-[#222c42] line-through opacity-60'
+                                      : 'bg-white dark:bg-[#181a20] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-[#262932] line-through opacity-60'
                                   }`}
                                 >
                                   <CatAvatarBadge cat={mCat} size="sm" />
@@ -670,7 +670,7 @@ export default function SettlementModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 dark:border-[#222c42] flex flex-wrap justify-between items-center gap-2 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+        <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 dark:border-[#262932] flex flex-wrap justify-between items-center gap-2 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
@@ -705,7 +705,7 @@ export default function SettlementModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 min-h-[44px] rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer touch-manipulation flex items-center justify-center"
+            className="px-5 py-2.5 min-h-[44px] rounded-xl border border-slate-300 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer touch-manipulation flex items-center justify-center"
           >
             ปิดหน้าต่าง
           </button>
@@ -719,9 +719,9 @@ export default function SettlementModal({
       {/* PROMPTPAY QR MODAL (Feature 5) */}
       {selectedTransferForQr && mounted && createPortal(
         <div className="fixed inset-0 z-[110] flex items-center justify-center backdrop-blur-md bg-black/80 p-4 overscroll-contain animate-in fade-in duration-150" role="dialog" aria-modal="true">
-          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#151b2b] p-6 shadow-2xl border border-slate-200 dark:border-[#222c42] space-y-4 animate-in zoom-in-95 duration-150 max-h-[92dvh] overflow-y-auto overscroll-contain min-h-0">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#181a20] p-6 shadow-2xl border border-slate-200 dark:border-[#262932] space-y-4 animate-in zoom-in-95 duration-150 max-h-[92dvh] overflow-y-auto overscroll-contain min-h-0">
             {/* Header */}
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#222c42]">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
                   <QrCode className="h-4 w-4" />
@@ -741,7 +741,7 @@ export default function SettlementModal({
             </div>
 
             {/* Recipient & Amount Badge */}
-            <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] text-center space-y-1">
+            <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#262932] text-center space-y-1">
               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block">
                 โอนให้คุณ <b className="text-slate-900 dark:text-white">{selectedTransferForQr.to}</b>
               </span>
@@ -812,7 +812,7 @@ export default function SettlementModal({
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#222c42]">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#262932]">
                   <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
                     {promptPayNumber || 'ยังไม่กำหนด'}
                   </span>

@@ -396,7 +396,7 @@ export function FlightBoardingPassCard({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] shadow-sm overflow-hidden transition-all">
+    <div className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] shadow-sm overflow-hidden transition-all">
       {/* Accordion Trigger Header */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
@@ -436,7 +436,7 @@ export function FlightBoardingPassCard({
             <span className="hidden sm:inline">เพิ่มตั๋วบิน</span>
           </button>
 
-          <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#1c2438] text-slate-500 dark:text-slate-300 border border-slate-200/80 dark:border-[#222c42]">
+          <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#1c2438] text-slate-500 dark:text-slate-300 border border-slate-200/80 dark:border-[#262932]">
             {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
         </div>
@@ -444,7 +444,7 @@ export function FlightBoardingPassCard({
 
       {/* Expanded Content */}
       {isOpen && (
-        <div className="p-4 sm:p-6 pt-0 border-t border-slate-100 dark:border-[#222c42] space-y-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="p-4 sm:p-6 pt-0 border-t border-slate-100 dark:border-[#262932] space-y-4 animate-in slide-in-from-top-2 duration-200">
           {/* Financial Summary & Quick Add Bar */}
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 text-xs">
             <div className="flex items-center gap-2">
@@ -474,7 +474,7 @@ export function FlightBoardingPassCard({
 
           {/* Flights List */}
           {flights.length === 0 ? (
-            <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#151b2b]/50 space-y-2">
+            <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#262932] bg-slate-50/50 dark:bg-[#181a20]/50 space-y-2">
               <Plane className="h-9 w-9 text-blue-500 mx-auto opacity-80" />
               <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                 ยังไม่มีตั๋วเครื่องบินในทริปนี้
@@ -498,7 +498,7 @@ export function FlightBoardingPassCard({
                 return (
                   <div
                     key={flight.id}
-                    className="relative rounded-3xl bg-white dark:bg-[#111624] border border-slate-200/90 dark:border-[#222c42] shadow-xl overflow-hidden flex flex-col justify-between group"
+                    className="relative rounded-3xl bg-white dark:bg-[#111624] border border-slate-200/90 dark:border-[#262932] shadow-xl overflow-hidden flex flex-col justify-between group"
                   >
                     {/* Notice Ribbon */}
                     <div className="px-4 py-2 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200/70 dark:border-amber-900/40 flex items-center justify-between text-[11px] font-bold text-amber-800 dark:text-amber-300">
@@ -576,26 +576,26 @@ export function FlightBoardingPassCard({
 
                       {/* Perforated Divider Line */}
                       <div className="relative py-1 flex items-center">
-                        <div className="absolute -left-6 sm:-left-7 w-5 h-5 rounded-full bg-slate-50 dark:bg-[#151b2b] border-r border-slate-200 dark:border-[#222c42]" />
-                        <div className="w-full border-t-2 border-dashed border-slate-200 dark:border-[#222c42]" />
-                        <div className="absolute -right-6 sm:-right-7 w-5 h-5 rounded-full bg-slate-50 dark:bg-[#151b2b] border-l border-slate-200 dark:border-[#222c42]" />
+                        <div className="absolute -left-6 sm:-left-7 w-5 h-5 rounded-full bg-slate-50 dark:bg-[#181a20] border-r border-slate-200 dark:border-[#262932]" />
+                        <div className="w-full border-t-2 border-dashed border-slate-200 dark:border-[#262932]" />
+                        <div className="absolute -right-6 sm:-right-7 w-5 h-5 rounded-full bg-slate-50 dark:bg-[#181a20] border-l border-slate-200 dark:border-[#262932]" />
                       </div>
 
                       {/* Metadata Grid */}
                       <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#182033] border border-slate-200/70 dark:border-[#222c42]">
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#182033] border border-slate-200/70 dark:border-[#262932]">
                           <span className="text-[9px] uppercase font-bold text-slate-400 block">Terminal</span>
                           <span className="font-mono font-black text-slate-800 dark:text-white text-xs">{flight.terminal || '-'}</span>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#182033] border border-slate-200/70 dark:border-[#222c42]">
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#182033] border border-slate-200/70 dark:border-[#262932]">
                           <span className="text-[9px] uppercase font-bold text-slate-400 block">Gate</span>
                           <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs">{flight.gate || '-'}</span>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#182033] border border-slate-200/70 dark:border-[#222c42]">
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#182033] border border-slate-200/70 dark:border-[#262932]">
                           <span className="text-[9px] uppercase font-bold text-slate-400 block">Seat</span>
                           <span className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs">{flight.seat || '-'}</span>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#182033] border border-slate-200/70 dark:border-[#222c42]">
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#182033] border border-slate-200/70 dark:border-[#262932]">
                           <span className="text-[9px] uppercase font-bold text-slate-400 block">Dep Time</span>
                           <span className="font-mono font-black text-slate-800 dark:text-white text-xs">{flight.departureTime || '-'}</span>
                         </div>
@@ -611,7 +611,7 @@ export function FlightBoardingPassCard({
                           <button
                             type="button"
                             onClick={() => handleCopyRef(flight.id, flight.bookingRef!)}
-                            className="px-2 py-0.5 rounded-lg bg-white dark:bg-[#151b2b] text-[10px] font-bold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-2xs hover:bg-blue-50 transition-colors shrink-0 cursor-pointer flex items-center gap-1"
+                            className="px-2 py-0.5 rounded-lg bg-white dark:bg-[#181a20] text-[10px] font-bold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-2xs hover:bg-blue-50 transition-colors shrink-0 cursor-pointer flex items-center gap-1"
                           >
                             {copiedId === flight.id ? (
                               <>
@@ -644,7 +644,7 @@ export function FlightBoardingPassCard({
                       </div>
 
                       {/* Price & Payment Checklist Section */}
-                      <div className="pt-2 border-t border-slate-100 dark:border-[#222c42] flex flex-col gap-2">
+                      <div className="pt-2 border-t border-slate-100 dark:border-[#262932] flex flex-col gap-2">
                         <div className="flex items-center justify-between text-xs gap-2">
                           <button
                             type="button"
@@ -687,7 +687,7 @@ export function FlightBoardingPassCard({
                             href={`https://www.google.com/search?q=${encodeURIComponent((flight.airline || '') + ' ' + (flight.flightNo || '') + ' check in online')}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex-1 py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] hover:border-blue-400 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-bold transition-all text-center flex items-center justify-center gap-1 shadow-2xs"
+                            className="flex-1 py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] hover:border-blue-400 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-bold transition-all text-center flex items-center justify-center gap-1 shadow-2xs"
                           >
                             <Plane className="h-3 w-3 text-blue-500" />
                             <span>เช็คอินออนไลน์</span>
@@ -723,9 +723,9 @@ export function FlightBoardingPassCard({
       {/* ==================== ADD / EDIT FLIGHT MODAL ==================== */}
       {showModal && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
+            <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
                   <Plane className="h-4 w-4" />
@@ -764,7 +764,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น Thai Airways, AirAsia"
                       value={formAirline}
                       onChange={(e) => setFormAirline(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -777,7 +777,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น TG682, MM028"
                       value={formFlightNo}
                       onChange={(e) => setFormFlightNo(e.target.value.toUpperCase())}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -794,7 +794,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น BKK, DMK"
                       value={formOriginCode}
                       onChange={(e) => setFormOriginCode(e.target.value.toUpperCase())}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -806,7 +806,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น Bangkok"
                       value={formOriginCity}
                       onChange={(e) => setFormOriginCity(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -823,7 +823,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น KIX, HND, NRT"
                       value={formDestCode}
                       onChange={(e) => setFormDestCode(e.target.value.toUpperCase())}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -835,7 +835,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น Osaka, Tokyo"
                       value={formDestCity}
                       onChange={(e) => setFormDestCity(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -850,7 +850,7 @@ export function FlightBoardingPassCard({
                       type="date"
                       value={formDepartureDate}
                       onChange={(e) => setFormDepartureDate(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -862,7 +862,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น 22:45"
                       value={formDepartureTime}
                       onChange={(e) => setFormDepartureTime(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -874,7 +874,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น 22:05"
                       value={formBoardingTime}
                       onChange={(e) => setFormBoardingTime(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -890,7 +890,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น 1, 2, Inter"
                       value={formTerminal}
                       onChange={(e) => setFormTerminal(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -902,7 +902,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น D4, A12"
                       value={formGate}
                       onChange={(e) => setFormGate(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -914,7 +914,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น 24K, 15A"
                       value={formSeat}
                       onChange={(e) => setFormSeat(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -930,7 +930,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น 6-digit PNR / Trip.com ref"
                       value={formBookingRef}
                       onChange={(e) => setFormBookingRef(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -942,7 +942,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น TRAVELER"
                       value={formPassengerName}
                       onChange={(e) => setFormPassengerName(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -962,7 +962,7 @@ export function FlightBoardingPassCard({
                       className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         formPaymentStatus === 'paid'
                           ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-xs ring-1 ring-emerald-500'
-                          : 'bg-slate-50 dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                          : 'bg-slate-50 dark:bg-[#1c2438] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
                       }`}
                     >
                       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -977,7 +977,7 @@ export function FlightBoardingPassCard({
                       className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         formPaymentStatus === 'unpaid'
                           ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 text-amber-700 dark:text-amber-300 shadow-xs ring-1 ring-amber-500'
-                          : 'bg-slate-50 dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                          : 'bg-slate-50 dark:bg-[#1c2438] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
                       }`}
                     >
                       <Clock className="h-4 w-4 text-amber-500" />
@@ -1001,7 +1001,7 @@ export function FlightBoardingPassCard({
                       placeholder="เช่น 18500"
                       value={formPrice}
                       onChange={(e) => setFormPrice(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     />
                     {formPrice && parseFloat(formPrice) > 0 && formCurrency !== 'THB' && (
                       <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono mt-0.5 block font-bold">
@@ -1016,7 +1016,7 @@ export function FlightBoardingPassCard({
                     <select
                       value={formCurrency}
                       onChange={(e) => setFormCurrency(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500"
                     >
                       <option value="THB">THB (฿)</option>
                       <option value="JPY">JPY (¥)</option>
@@ -1038,7 +1038,7 @@ export function FlightBoardingPassCard({
                     placeholder="เช่น น้ำหนักกระเป๋าโหลด 20kg, รวมอาหารบนเครื่อง"
                     value={formNotes}
                     onChange={(e) => setFormNotes(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
                   />
                 </div>
 
@@ -1050,7 +1050,7 @@ export function FlightBoardingPassCard({
                       id="autoFlightExpense"
                       checked={formAutoCreateExpense}
                       onChange={(e) => setFormAutoCreateExpense(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 text-blue-600 rounded border-slate-300 dark:border-[#222c42] cursor-pointer"
+                      className="mt-0.5 h-4 w-4 text-blue-600 rounded border-slate-300 dark:border-[#262932] cursor-pointer"
                     />
                     <label htmlFor="autoFlightExpense" className="text-xs text-slate-800 dark:text-slate-200 cursor-pointer">
                       <span className="font-bold block">⚡ บันทึกเป็นรายจ่ายลงในแท็บ &ldquo;รายการ&rdquo; ทันที</span>
@@ -1063,11 +1063,11 @@ export function FlightBoardingPassCard({
               </div>
 
               {/* Submit Footer */}
-              <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-100 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 backdrop-blur-md shrink-0 flex items-center justify-end gap-2.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
+              <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-100 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 backdrop-blur-md shrink-0 flex items-center justify-end gap-2.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors touch-manipulation"
+                  className="px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors touch-manipulation"
                 >
                   ยกเลิก
                 </button>

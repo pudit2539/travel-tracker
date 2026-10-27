@@ -427,7 +427,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
       )}
 
       {showWeatherSection && (
-        <div className="rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation p-3.5 sm:p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation p-3.5 sm:p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
           <WeatherWidget defaultCity={itinerary[0]?.city || 'Osaka'} />
           <RouteVisualizer dayLabel="ทริปทั้งหมด" items={itinerary} />
         </div>
@@ -594,7 +594,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
                 selectedDayFilter === 'all'
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#222c42]'
+                  : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
               }`}
             >
               📅 ทุกวัน ({itinerary.length})
@@ -607,7 +607,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
                   selectedDayFilter === day
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#222c42]'
+                    : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
                 }`}
               >
                 Day {dIdx + 1} • {day}
@@ -638,7 +638,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             href={getGoogleMapsUrl(activeStayForSelectedDay)}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#151b2b] text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:bg-emerald-50 flex items-center gap-1 shrink-0 cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#181a20] text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:bg-emerald-50 flex items-center gap-1 shrink-0 cursor-pointer"
           >
             <MapPin className="h-3 w-3 text-rose-500" />
             <span>นำทางกลับที่พัก</span>
@@ -649,7 +649,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
       {/* 5. Main Itinerary Content Area (4 View Modes with Accessibility Focus Target) */}
       <div id="itinerary-view-container" tabIndex={-1} className="outline-none">
         {filteredItinerary.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-[#222c42] rounded-3xl p-6 bg-white dark:bg-[#151b2b]">
+          <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl p-6 bg-white dark:bg-[#181a20]">
             <Navigation className="h-10 w-10 text-blue-500 mx-auto mb-2 animate-float-slow" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีกิจกรรมในแผนเที่ยวนี้</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
@@ -701,8 +701,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
         ) : displayLayout === 'compact' ? (
           /* Compact Timeline / Checklist Mode (Wanderlog / Google Calendar Style) */
-          <div className="p-3 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-2">
-            <div className="flex items-center justify-between px-1 pb-1 border-b border-slate-100 dark:border-[#222c42] text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          <div className="p-3 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation space-y-2">
+            <div className="flex items-center justify-between px-1 pb-1 border-b border-slate-100 dark:border-[#262932] text-[11px] font-bold text-slate-500 dark:text-slate-400">
               <span>⚡ มุมมองตารางเวลาย่อ ({filteredItinerary.length} รายการ)</span>
               <span>แตะไอคอนด้านซ้ายเพื่อเช็กอิน</span>
             </div>

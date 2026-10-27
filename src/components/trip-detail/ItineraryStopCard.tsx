@@ -125,7 +125,7 @@ function ItineraryStopCardComponent({
       <div className={`group rounded-3xl border transition-all duration-300 relative overflow-hidden card-elevation ${
         visited 
           ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/20' 
-          : 'border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-400/60 dark:hover:border-blue-500/40'
+          : 'border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-400/60 dark:hover:border-blue-500/40'
       }`}>
         
         {/* Top Notice / Platform Banner */}
@@ -185,7 +185,7 @@ function ItineraryStopCardComponent({
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-95 ${
                   visited
                     ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs'
-                    : 'bg-rose-50/70 dark:bg-[#fb7185]/15 text-[#f43f5e] dark:text-[#fb7185] border border-rose-200/60 dark:border-[#fb7185]/30 hover:bg-rose-100 dark:hover:bg-[#fb7185]/25'
+                    : 'bg-slate-100 dark:bg-[#181a20] text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-[#262932] hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400'
                 }`}
                 title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน' : 'ประทับตราเช็กอิน ⛩️'}
               >
@@ -456,25 +456,25 @@ function ItineraryStopCardComponent({
         </div>
 
         {/* Clean 2-Button Action Footer (Navigate Maps | Show to Staff Card) */}
-        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-[#222c42] border-t border-slate-100 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#111624]/60 text-xs font-bold text-slate-700 dark:text-slate-300">
+        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-[#262932] border-t border-slate-100 dark:border-[#262932] bg-slate-50/50 dark:bg-[#121316]/60 text-xs font-bold text-slate-700 dark:text-slate-300">
           <a
             href={mainPlaceDirectionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="py-2.5 px-3 flex items-center justify-center gap-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer text-center"
+            className="min-h-11 py-2.5 px-3 flex items-center justify-center gap-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 active:bg-blue-100/50 transition-colors cursor-pointer text-center touch-manipulation"
           >
             <Navigation className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-            <span className="truncate">นำทาง Google Maps</span>
+            <span className="truncate">นำทาง Maps</span>
           </a>
 
           <button
             type="button"
             onClick={() => setShowStaffModal(true)}
-            className="py-2.5 px-3 flex items-center justify-center gap-1.5 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer text-center"
+            className="min-h-11 py-2.5 px-3 flex items-center justify-center gap-1.5 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 active:bg-amber-100/50 transition-colors cursor-pointer text-center touch-manipulation"
             title="แสดงชื่อสถานที่ตัวใหญ่ให้คนขับแท็กซี่หรือพนักงานสถานีรถไฟดู"
           >
-            <Eye className="h-3.5 w-3.5 text-[#e79b71] shrink-0" />
-            <span className="truncate">การ์ดโชว์ถามทาง 🚕</span>
+            <Eye className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            <span className="truncate">โชว์ถามทาง 🚕</span>
           </button>
         </div>
       </div>
@@ -551,7 +551,7 @@ function ItineraryThumbnailCardComponent({
         className={`group rounded-3xl border overflow-hidden flex flex-col justify-between transition-all duration-300 card-elevation ${
           visited
             ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/15 dark:bg-emerald-950/15'
-            : 'border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-500/60 hover:-translate-y-0.5'
+            : 'border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500/60 hover:-translate-y-0.5'
         }`}
       >
         {/* Top Visual Thumbnail with aspect-ratio to prevent CLS */}
@@ -688,12 +688,12 @@ function ItineraryThumbnailCardComponent({
         </div>
 
         {/* Bottom 2-Action Bar */}
-        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-[#222c42] border-t border-slate-100 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#111624]/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-[#262932] border-t border-slate-100 dark:border-[#262932] bg-slate-50/60 dark:bg-[#121316]/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
           <a
             href={mainPlaceDirectionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="py-2.5 px-2 flex items-center justify-center gap-1 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            className="min-h-10 py-2 px-2 flex items-center justify-center gap-1 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 active:bg-blue-100/50 transition-colors cursor-pointer touch-manipulation"
           >
             <Navigation className="h-3 w-3 text-blue-500 shrink-0" />
             <span className="truncate">นำทาง Maps</span>
@@ -701,9 +701,9 @@ function ItineraryThumbnailCardComponent({
           <button
             type="button"
             onClick={() => setShowStaffModal(true)}
-            className="py-2.5 px-2 flex items-center justify-center gap-1 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+            className="min-h-10 py-2 px-2 flex items-center justify-center gap-1 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 active:bg-amber-100/50 transition-colors cursor-pointer touch-manipulation"
           >
-            <Eye className="h-3 w-3 text-[#e79b71] shrink-0" />
+            <Eye className="h-3 w-3 text-amber-500 shrink-0" />
             <span className="truncate">โชว์ถามทาง 🚕</span>
           </button>
         </div>
@@ -778,7 +778,7 @@ function ItineraryCompactRowComponent({
         className={`group flex items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl border transition-all ${
           visited
             ? 'border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/25 dark:bg-emerald-950/20'
-            : 'border-slate-200/80 dark:border-[#222c42] bg-white dark:bg-[#151b2b] hover:border-blue-400/60'
+            : 'border-slate-200/80 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-400/60'
         }`}
       >
         {/* Left: Check-in Circle + Real Place Mini Thumbnail + Time */}
@@ -789,7 +789,7 @@ function ItineraryCompactRowComponent({
             className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all cursor-pointer active:scale-90 ${
               visited
                 ? 'bg-emerald-500 text-white border-emerald-500 shadow-2xs'
-                : 'bg-slate-50 dark:bg-[#1c2438] text-slate-400 border-slate-200 dark:border-[#2a3652] hover:border-rose-400 hover:text-rose-500'
+                : 'bg-slate-50 dark:bg-[#1c2438] text-slate-400 border-slate-200 dark:border-[#2a3652] hover:border-blue-400 hover:text-blue-500'
             }`}
             title={visited ? 'แวะแล้ว (済)' : 'กดเพื่อเช็กอิน'}
           >

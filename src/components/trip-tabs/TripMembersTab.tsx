@@ -30,7 +30,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
 }: TripMembersTabProps) {
   return (
     <div className="space-y-4">
-      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-4 text-left">
         <div className="flex flex-wrap justify-between items-center gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -73,7 +73,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
         </div>
 
         {/* Roles explainer banner (Clean Corporate Style) */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121622] border border-slate-200/70 dark:border-[#222c42] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121622] border border-slate-200/70 dark:border-[#262932] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
           <div className="flex items-center gap-2">
             <Edit3 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             <span className="font-bold text-slate-800 dark:text-slate-200">Editor:</span>
@@ -110,7 +110,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
             return (
               <div 
                 key={m.id} 
-                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md flex items-center justify-between gap-3"
+                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`relative shrink-0 ${isTripOwner ? 'ring-2 ring-amber-400 dark:ring-amber-500 rounded-full' : ''}`}>
@@ -151,7 +151,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
                       <select
                         value={m.role || 'viewer'}
                         onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as TripRole)}
-                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-500 shadow-2xs transition-colors"
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-500 shadow-2xs transition-colors"
                       >
                         <option value="editor">Editor — แก้ไขแผนและรายจ่าย</option>
                         <option value="contributor">Contributor — ดูแผน และ บันทึกรายจ่ายได้</option>
@@ -180,7 +180,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
                       </button>
                     </div>
                   ) : (
-                    <span className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 shadow-2xs font-mono">
+                    <span className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 shadow-2xs font-mono">
                       {isTripOwner ? (
                         <>
                           <Crown className="h-3 w-3 text-amber-500" />

@@ -147,7 +147,7 @@ export default function LiveTripCard({
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-3xl p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#151b2b] to-[#0f1422] text-white border border-blue-500/30 shadow-xl space-y-3.5 group">
+      <div className="relative overflow-hidden rounded-3xl p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#181a20] to-[#121316] text-white border border-blue-500/30 shadow-xl space-y-3.5 group">
         {/* Decorative Background Glows */}
         <div className="absolute -top-16 -right-16 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />

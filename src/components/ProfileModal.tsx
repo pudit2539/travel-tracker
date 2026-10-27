@@ -266,9 +266,9 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
 
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
+      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
-        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
+        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
               🐱
@@ -322,7 +322,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                         className={`relative p-2 rounded-2xl border transition-all flex flex-col items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 ${
                           isSelected
                             ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/60 ring-2 ring-blue-500/50 scale-105 shadow-sm'
-                            : 'border-slate-200 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#1c2438] hover:border-slate-300 dark:hover:border-slate-600'
+                            : 'border-slate-200 dark:border-[#262932] bg-slate-50/70 dark:bg-[#1c2438] hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
                         {isSelected && (
@@ -358,7 +358,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                       type="text"
                       required
                       placeholder="เช่น Alex, น้องน้ำ, พุด"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                     />
@@ -398,7 +398,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
               </form>
 
               {/* SECTION 3: CHANGE PASSWORD (ACCORDION) */}
-              <div className="border-t border-slate-100 dark:border-[#222c42] pt-4">
+              <div className="border-t border-slate-100 dark:border-[#262932] pt-4">
                 <button
                   type="button"
                   onClick={() => setShowPasswordSection(!showPasswordSection)}
@@ -411,7 +411,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                 </button>
 
                 {showPasswordSection && (
-                  <form onSubmit={handleChangePassword} className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#222c42] space-y-3 animate-in fade-in">
+                  <form onSubmit={handleChangePassword} className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#262932] space-y-3 animate-in fade-in">
                     <div>
                       <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
                         รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)
@@ -421,7 +421,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                           type={showNewPassword ? 'text' : 'password'}
                           required
                           placeholder="••••••••"
-                          className="w-full p-2.5 pr-9 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
+                          className="w-full p-2.5 pr-9 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                         />
@@ -443,7 +443,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                         type="password"
                         required
                         placeholder="••••••••"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                       />
@@ -468,7 +468,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
               </div>
 
               {/* SECTION 4: ACTIVE DEVICES & MULTI-DEVICE MANAGEMENT */}
-              <div className="border-t border-slate-100 dark:border-[#222c42] pt-4 space-y-3">
+              <div className="border-t border-slate-100 dark:border-[#262932] pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Laptop className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -513,7 +513,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                             isCurrent 
                               ? 'bg-blue-600 text-white shadow-sm' 
-                              : 'bg-slate-200 dark:bg-[#222c42] text-slate-600 dark:text-slate-300'
+                              : 'bg-slate-200 dark:bg-[#262932] text-slate-600 dark:text-slate-300'
                           }`}>
                             <Icon className="h-4 w-4" />
                           </div>
@@ -575,7 +575,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
               </div>
 
               {/* SECTION 5: ACCOUNT INFO & LOGOUT */}
-              <div className="border-t border-slate-100 dark:border-[#222c42] pt-4 space-y-3">
+              <div className="border-t border-slate-100 dark:border-[#262932] pt-4 space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-medium">อีเมลที่ล็อกอิน:</span>
                   <span className="font-bold text-slate-900 dark:text-white font-mono">{user?.email}</span>

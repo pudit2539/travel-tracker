@@ -39,7 +39,7 @@ export const TransitConnector = React.memo(function TransitConnector({
           href={directionsUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] text-slate-700 dark:text-slate-200 shadow-2xs hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer group-hover:scale-102"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] text-slate-700 dark:text-slate-200 shadow-2xs hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer group-hover:scale-102"
           title="เปิดเส้นทางนำทางและเช็กชานชาลาแบบ Real-time ใน Google Maps"
         >
           <Bus className="h-3 w-3 text-blue-500" />

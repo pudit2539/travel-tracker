@@ -196,7 +196,7 @@ export function CustomPlacePhotoModal({
         aria-modal="true"
         aria-label="เปลี่ยนรูปภาพสถานที่"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200 dark:border-[#25314d] shadow-2xl p-4 sm:p-6 space-y-4 text-left"
+        className="w-full max-w-xl max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] shadow-2xl p-4 sm:p-6 space-y-4 text-left"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3">

@@ -277,10 +277,10 @@ export default function QuickCurrencyCalculator({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-      <div className="w-full sm:max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-4 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] animate-in zoom-in-95 duration-200 space-y-4 max-h-[92dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain modal-safe-card">
+      <div className="w-full sm:max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] p-4 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#262932] animate-in zoom-in-95 duration-200 space-y-4 max-h-[92dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain modal-safe-card">
         
         {/* Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#222c42]">
+        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#262932]">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
               <Coins className="h-5 w-5" />
@@ -322,7 +322,7 @@ export default function QuickCurrencyCalculator({
               className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                 foreignCurrency === c.code
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300 hover:bg-slate-200 border border-slate-200/60 dark:border-[#222c42]'
+                  : 'bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300 hover:bg-slate-200 border border-slate-200/60 dark:border-[#262932]'
               }`}
             >
               <span>{c.symbol} {c.code}</span>
@@ -331,7 +331,7 @@ export default function QuickCurrencyCalculator({
         </div>
 
         {/* Exchange Rate Badge & Direction Switcher */}
-        <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42]">
+        <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932]">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
             <span>เรทแลกเปลี่ยน:</span>
             {foreignCurrency === 'JPY' && editingRate ? (
@@ -339,7 +339,7 @@ export default function QuickCurrencyCalculator({
                 <input
                   type="number"
                   step="0.001"
-                  className="w-20 p-1 text-xs rounded border border-blue-500 bg-white dark:bg-[#151b2b] font-black text-center font-mono"
+                  className="w-20 p-1 text-xs rounded border border-blue-500 bg-white dark:bg-[#181a20] font-black text-center font-mono"
                   value={tempRate}
                   onChange={(e) => setTempRate(e.target.value)}
                 />
@@ -367,7 +367,7 @@ export default function QuickCurrencyCalculator({
 
           <button
             onClick={() => setDirection(direction === 'foreign_to_thb' ? 'thb_to_foreign' : 'foreign_to_thb')}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 text-xs font-black shadow-2xs hover:scale-105 transition-transform cursor-pointer border border-blue-200 dark:border-[#222c42]"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 text-xs font-black shadow-2xs hover:scale-105 transition-transform cursor-pointer border border-blue-200 dark:border-[#262932]"
           >
             <ArrowRightLeft className="h-3 w-3" />
             <span>{direction === 'foreign_to_thb' ? `${activeMeta.code} ➔ THB` : `THB ➔ ${activeMeta.code}`}</span>
@@ -388,7 +388,7 @@ export default function QuickCurrencyCalculator({
                 className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                   taxMode === '10'
                     ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400'
+                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
@@ -404,7 +404,7 @@ export default function QuickCurrencyCalculator({
                 className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                   taxMode === '8'
                     ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 text-amber-900 dark:text-amber-200 font-bold shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400'
+                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
@@ -420,7 +420,7 @@ export default function QuickCurrencyCalculator({
                 className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                   taxMode === 'none'
                     ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-900 dark:text-blue-200 font-bold shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400'
+                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">

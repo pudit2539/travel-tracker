@@ -107,7 +107,7 @@ export function ShowToStaffModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl max-h-[90dvh] rounded-3xl bg-white dark:bg-[#151b2b] border-2 border-slate-200 dark:border-[#262932] shadow-2xl glow-blue flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className="w-full max-w-xl max-h-[90dvh] rounded-3xl bg-white dark:bg-[#181a20] border-2 border-slate-200 dark:border-[#262932] shadow-2xl glow-blue flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
       >
         {/* Top Header */}
         <div className="shrink-0 px-4 sm:px-6 py-3.5 border-b border-slate-200/80 dark:border-[#262932] flex items-center justify-between bg-slate-50/80 dark:bg-[#181a20]">
@@ -216,7 +216,7 @@ export function ShowToStaffModal({
           <button
             type="button"
             onClick={handleCopy}
-            className="py-2.5 px-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#151b2b] text-slate-800 dark:text-slate-100 text-xs font-black flex items-center justify-center gap-1.5 hover:border-blue-400 active:scale-95 transition-all cursor-pointer"
+            className="py-2.5 px-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-800 dark:text-slate-100 text-xs font-black flex items-center justify-center gap-1.5 hover:border-blue-400 active:scale-95 transition-all cursor-pointer"
           >
             {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-blue-500" />}
             <span>{copied ? 'คัดลอกชื่อแล้ว!' : 'คัดลอกชื่อสถานที่'}</span>

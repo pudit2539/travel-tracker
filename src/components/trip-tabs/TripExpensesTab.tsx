@@ -278,14 +278,14 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
   return (
     <div className="space-y-4">
       {/* HERO BUDGET & QUICK ACTION CARD (Decluttered: 1 clean metric & 3 primary actions) */}
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation p-4 sm:p-6 md:p-7 space-y-4">
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation p-4 sm:p-6 md:p-7 space-y-4">
         {/* Row 1: Badges & Quick Tool Pills */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs">
               {tripBaseCurrency} Workspace
             </span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1c2438] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#222c42] font-mono">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1c2438] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932] font-mono">
               {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
             </span>
           </div>
@@ -456,7 +456,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
       />
 
       {/* Unified Filter & 3-Mode View Switcher Toolbar */}
-      <div className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] card-elevation space-y-3">
+      <div className="p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="text-xs font-black text-slate-900 dark:text-slate-200 flex items-center gap-1.5">
@@ -512,7 +512,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
               expensePayerFilter === 'all'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#222c42]'
+                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
             }`}
           >
             📋 รวมทุกคน ({expenses.length})
@@ -527,7 +527,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
               expensePayerFilter === 'me'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#222c42]'
+                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
             }`}
           >
             <CatAvatarBadge cat={userCat} size="xs" />
@@ -549,7 +549,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#222c42]'
+                    : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
                 }`}
               >
                 <CatAvatarBadge cat={pCat} size="xs" />
@@ -566,7 +566,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             <input
               type="text"
               placeholder="ค้นหารายการ, ร้านค้า..."
-              className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#111624] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
+              className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
               value={expenseSearchQuery}
               onChange={(e) => setExpenseSearchQuery(e.target.value)}
             />
@@ -575,7 +575,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           <select
             value={expenseCategoryFilter}
             onChange={(e) => setExpenseCategoryFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#111624] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold cursor-pointer md:w-44"
+            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold cursor-pointer md:w-44"
           >
             <option value="all">📁 ทุกหมวดหมู่</option>
             {categories.map((c) => (
@@ -589,7 +589,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           <div
             role="group"
             aria-label="สลับมุมมองรายการค่าใช้จ่าย"
-            className="inline-flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#111624] border border-slate-200/80 dark:border-[#222c42] shrink-0 self-start md:self-auto"
+            className="inline-flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] shrink-0 self-start md:self-auto"
           >
             <button
               type="button"
@@ -637,7 +637,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
       {/* Expenses List Container */}
       <div id="expenses-view-container" tabIndex={-1} className="outline-none">
         {filteredExpenses.length === 0 ? (
-          <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-[#222c42] rounded-3xl p-6 bg-white dark:bg-[#151b2b]">
+          <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl p-6 bg-white dark:bg-[#181a20]">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่ายที่ตรงกับเงื่อนไข</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
               กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกน และบันทึกรายจ่าย หรือล้างตัวกรอง
@@ -650,7 +650,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                     setExpensePayerFilter('all');
                     setExpenseCategoryFilter('all');
                   }}
-                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
                 >
                   ล้างตัวกรองทั้งหมด
                 </button>
@@ -689,7 +689,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             ))}
           </div>
         ) : expenseViewMode === 'compact' ? (
-          <div className="divide-y divide-slate-100 dark:divide-[#222c42] rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] overflow-hidden card-elevation">
+          <div className="divide-y divide-slate-100 dark:divide-[#262932] rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] overflow-hidden card-elevation">
             {filteredExpenses.map((exp, idx) => (
               <ExpenseCompactRow
                 key={exp.id || idx}
@@ -715,9 +715,9 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               return (
                 <div
                   key={group.dateKey}
-                  className="rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white dark:bg-[#151b2b] overflow-hidden card-elevation"
+                  className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] overflow-hidden card-elevation"
                 >
-                  <div className="px-4 py-2.5 bg-slate-50/90 dark:bg-[#111624] border-b border-slate-200/70 dark:border-[#222c42] flex items-center justify-between gap-2 text-xs">
+                  <div className="px-4 py-2.5 bg-slate-50/90 dark:bg-[#121316] border-b border-slate-200/70 dark:border-[#262932] flex items-center justify-between gap-2 text-xs">
                     <div className="font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <span>📅 {group.label}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
@@ -733,7 +733,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                       )}
                     </div>
                   </div>
-                  <div className="divide-y divide-slate-100 dark:divide-[#222c42]">
+                  <div className="divide-y divide-slate-100 dark:divide-[#262932]">
                     {group.items.map((exp, idx) => (
                       <ExpenseCard
                         key={exp.id || idx}

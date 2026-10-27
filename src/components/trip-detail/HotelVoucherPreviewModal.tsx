@@ -134,12 +134,12 @@ export function HotelVoucherPreviewModal({
   return createPortal(
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 sm:p-4 backdrop-blur-md bg-black/85 animate-in fade-in duration-200 overscroll-contain">
       <div 
-        className="w-full max-w-4xl max-h-[94dvh] bg-white dark:bg-[#111624] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-[#222c42] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className="w-full max-w-4xl max-h-[94dvh] bg-white dark:bg-[#111624] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Modal Top Bar */}
-        <div className="p-3.5 sm:p-4 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#151b2b]/90 gap-3">
+        <div className="p-3.5 sm:p-4 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-[#262932] bg-slate-50/70 dark:bg-[#181a20]/90 gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 ${
               isPdf 
@@ -186,7 +186,7 @@ export function HotelVoucherPreviewModal({
                 <button
                   type="button"
                   onClick={handleOpenNewTab}
-                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1a2234] hover:bg-slate-100 dark:hover:bg-[#202b42] text-slate-700 dark:text-slate-200 text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1a2234] hover:bg-slate-100 dark:hover:bg-[#202b42] text-slate-700 dark:text-slate-200 text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer"
                   title="เปิดดูในแท็บใหม่"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -278,7 +278,7 @@ export function HotelVoucherPreviewModal({
               </div>
 
               {/* PDF Viewer Iframe */}
-              <div className="w-full h-[58vh] sm:h-[68vh] rounded-xl overflow-hidden border border-slate-200 dark:border-[#222c42] bg-white shadow-inner">
+              <div className="w-full h-[58vh] sm:h-[68vh] rounded-xl overflow-hidden border border-slate-200 dark:border-[#262932] bg-white shadow-inner">
                 <iframe
                   src={blobPdfUrl || activeDataUrl || ''}
                   title={`ใบจอง ${hotelName}`}
@@ -347,7 +347,7 @@ export function HotelVoucherPreviewModal({
         </div>
 
         {/* Modal Bottom Footer */}
-        <div className="p-3 sm:p-4 px-4 sm:px-6 flex items-center justify-between border-t border-slate-200/80 dark:border-[#222c42] bg-white dark:bg-[#151b2b] text-xs shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+        <div className="p-3 sm:p-4 px-4 sm:px-6 flex items-center justify-between border-t border-slate-200/80 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           <div className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5 text-[11px]">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
             <span>พร้อมใช้งานแบบออฟไลน์บนเครื่องนี้</span>
@@ -365,7 +365,7 @@ export function HotelVoucherPreviewModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] hover:bg-slate-100 dark:hover:bg-[#1c2438] text-slate-700 dark:text-slate-300 font-bold transition-colors cursor-pointer min-h-[38px] touch-manipulation active:scale-95"
+              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#262932] hover:bg-slate-100 dark:hover:bg-[#1c2438] text-slate-700 dark:text-slate-300 font-bold transition-colors cursor-pointer min-h-[38px] touch-manipulation active:scale-95"
             >
               ปิด
             </button>

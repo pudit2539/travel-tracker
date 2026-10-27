@@ -435,7 +435,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
     <div className="space-y-4 sm:space-y-6 text-left">
 
       {/* ==================== 1. TOP HUD: CURRENCY SWITCHER & RATE ==================== */}
-      <div className="p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-3 text-left">
+      <div className="p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-3 text-left">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -467,7 +467,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
                 className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95 ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-500/30'
-                    : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#222c42] hover:border-blue-400 hover:bg-white dark:hover:bg-[#222c42]'
+                    : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 hover:bg-white dark:hover:bg-[#262932]'
                 }`}
               >
                 <span className="text-sm">{cur.flag}</span>
@@ -482,14 +482,14 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
       </div>
 
       {/* ==================== 2. HERO DASHBOARD: TARGET VS ACTUAL SPENT ==================== */}
-      <div className="p-5 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-gradient-to-br from-blue-50/70 via-indigo-50/25 to-white dark:from-[#151b2b] dark:via-[#1c2438] dark:to-[#151b2b] card-elevation space-y-5 relative overflow-hidden text-left">
+      <div className="p-5 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-gradient-to-br from-blue-50/70 via-indigo-50/25 to-white dark:from-[#181a20] dark:via-[#1c2438] dark:to-[#181a20] card-elevation space-y-5 relative overflow-hidden text-left">
         {/* Deep Navy/Blue Glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-10 -left-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 text-left">
-            <span className="text-2xl p-2 rounded-2xl bg-white/80 dark:bg-[#1c2438] shadow-sm border border-slate-200/60 dark:border-[#222c42] shrink-0">🎯</span>
+            <span className="text-2xl p-2 rounded-2xl bg-white/80 dark:bg-[#1c2438] shadow-sm border border-slate-200/60 dark:border-[#262932] shrink-0">🎯</span>
             <div className="text-left">
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>ภาพรวมงบประมาณ & การใช้จ่ายรวม</span>
@@ -515,7 +515,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
         {/* 3 Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Target Budget */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-xs space-y-1 text-left">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#181a20]/90 border border-slate-200/80 dark:border-[#262932] shadow-xs space-y-1 text-left">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 {convertedTotalBudget > 0 ? 'งบประมาณรวมตั้งไว้' : 'งบรวมทริป'}
@@ -550,7 +550,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
           </div>
 
           {/* Total Spent */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-xs space-y-1 text-left">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#181a20]/90 border border-slate-200/80 dark:border-[#262932] shadow-xs space-y-1 text-left">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 ใช้จ่ายไปแล้ว
@@ -571,7 +571,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
           </div>
 
           {/* Remaining / Over */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#151b2b]/90 border border-slate-200/80 dark:border-[#222c42] shadow-xs space-y-1 text-left">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-[#181a20]/90 border border-slate-200/80 dark:border-[#262932] shadow-xs space-y-1 text-left">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 {convertedTotalBudget > 0 ? (overBudget > 0 ? 'เกินงบประมาณ' : 'งบคงเหลือ') : 'สถานะงบทริป'}
@@ -628,7 +628,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
       </div>
 
       {/* ==================== DASHLET 1: DAILY BUDGET VELOCITY & SAFE RADAR ==================== */}
-      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-4 text-left">
         <div className="flex flex-wrap items-center justify-between gap-2 text-left">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -674,7 +674,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] text-left">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932] text-left">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               ใช้จริงเฉลี่ย / วัน
             </span>
@@ -686,7 +686,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] text-left">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932] text-left">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               จำนวนวันในทริป
             </span>
@@ -698,7 +698,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] text-left">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932] text-left">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               วันที่เหลือให้เที่ยว
             </span>
@@ -713,7 +713,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
       </div>
 
       {/* ==================== DASHLET 2: INTERACTIVE DAILY SPENDING WAVE ==================== */}
-      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-4 text-left">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -739,12 +739,12 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
 
         {/* Daily Wave Bar Chart Visualizer */}
         {dailyWaveData.list.length === 0 ? (
-          <div className="py-8 text-center text-xs text-slate-400 font-bold border border-dashed rounded-2xl border-slate-200 dark:border-[#222c42]">
+          <div className="py-8 text-center text-xs text-slate-400 font-bold border border-dashed rounded-2xl border-slate-200 dark:border-[#262932]">
             ยังไม่มีรายการค่าใช้จ่ายในแต่ละวัน
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="flex items-end gap-2 overflow-x-auto pb-2 pt-6 custom-scrollbar h-48 border-b border-slate-100 dark:border-[#222c42]">
+            <div className="flex items-end gap-2 overflow-x-auto pb-2 pt-6 custom-scrollbar h-48 border-b border-slate-100 dark:border-[#262932]">
               {dailyWaveData.list.map((d) => {
                 const heightPct = Math.max(12, Math.round((d.total / dailyWaveData.maxTotal) * 100));
                 const isPeak = peakDay?.dayLabel === d.dayLabel;
@@ -827,7 +827,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
         {/* ==================== DASHLET 3: CATEGORY MATRIX & TOP DRIVER ==================== */}
-        <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+        <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-4 text-left">
           <div className="flex justify-between items-center gap-2">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -873,11 +873,11 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
             {categoryMatrixData.list.map((cat) => (
               <div
                 key={cat.id}
-                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438]/60 border border-slate-200/80 dark:border-[#222c42] space-y-1.5 text-left hover:border-blue-400 transition-all"
+                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438]/60 border border-slate-200/80 dark:border-[#262932] space-y-1.5 text-left hover:border-blue-400 transition-all"
               >
                 <div className="flex justify-between items-center text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-base p-1 rounded-lg bg-white dark:bg-[#111624] shadow-2xs border border-slate-200/60 dark:border-[#222c42]">{cat.icon}</span>
+                    <span className="text-base p-1 rounded-lg bg-white dark:bg-[#111624] shadow-2xs border border-slate-200/60 dark:border-[#262932]">{cat.icon}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{cat.label}</span>
                   </div>
                   <div className="text-right">
@@ -913,7 +913,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
         </div>
 
         {/* ==================== DASHLET 4: LIVE NET BALANCE & SMART DEBT MINIMIZER ==================== */}
-        <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+        <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-4 text-left">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -946,7 +946,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
             {liveSettlementData.balances.map((b) => (
               <div
                 key={b.name}
-                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438]/60 border border-slate-200/80 dark:border-[#222c42] flex items-center justify-between gap-3 text-left"
+                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-[#1c2438]/60 border border-slate-200/80 dark:border-[#262932] flex items-center justify-between gap-3 text-left"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <CatAvatarBadge cat={b.avatar} size="sm" />
@@ -981,7 +981,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
 
           {/* Smart Optimal Transfer Flow */}
           {liveSettlementData.transfers.length > 0 && (
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#111624] border border-slate-200/80 dark:border-[#222c42] space-y-2 text-left">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#111624] border border-slate-200/80 dark:border-[#262932] space-y-2 text-left">
               <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 block tracking-wider">
                 ⚡ สเต็ปโอนเงินที่น้อยที่สุด (Optimal Transfers)
               </span>
@@ -1008,7 +1008,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
       </div>
 
       {/* ==================== DASHLET 6: PAYMENT METHOD BREAKDOWN ==================== */}
-      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-4 text-left">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -1091,7 +1091,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
       </div>
 
       {/* ==================== DASHLET 7: WHAT-IF BUDGET SIMULATOR ==================== */}
-      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#222c42] bg-white/95 dark:bg-[#151b2b]/95 card-elevation space-y-4 text-left">
+      <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-4 text-left">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -1120,7 +1120,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
         </div>
 
         {/* Live Simulator Slider */}
-        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] space-y-3">
+        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932] space-y-3">
           <div className="flex justify-between items-center text-xs font-bold">
             <span className="text-slate-600 dark:text-slate-300">
               จำลองงบประมาณรวมใหม่:

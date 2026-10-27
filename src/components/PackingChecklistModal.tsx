@@ -303,10 +303,10 @@ export default function PackingChecklistModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-4 modal-safe-card">
+      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-4 modal-safe-card">
         
         {/* Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#222c42] shrink-0">
+        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 dark:bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Luggage className="h-5 w-5" strokeWidth={2} />
@@ -334,7 +334,7 @@ export default function PackingChecklistModal({
         </div>
 
         {/* Feature 4: Weather Intelligence Section Banner */}
-        <div className="rounded-2xl border border-blue-100 dark:border-[#222c42] bg-blue-50/50 dark:bg-[#1c2438]/80 p-3.5 space-y-3 shrink-0">
+        <div className="rounded-2xl border border-blue-100 dark:border-[#262932] bg-blue-50/50 dark:bg-[#1c2438]/80 p-3.5 space-y-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
@@ -353,7 +353,7 @@ export default function PackingChecklistModal({
             <button
               type="button"
               onClick={() => setShowAiAdvisor(!showAiAdvisor)}
-              className="px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900 bg-white dark:bg-[#151b2b] text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900 bg-white dark:bg-[#181a20] text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 transition-colors flex items-center gap-1 cursor-pointer"
             >
               <Sparkles className="h-3 w-3" />
               <span>{showAiAdvisor ? 'ซ่อนคำแนะนำ' : 'วิเคราะห์สภาพอากาศ AI'}</span>
@@ -377,7 +377,7 @@ export default function PackingChecklistModal({
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-blue-600 text-white shadow-2xs'
-                          : 'bg-white dark:bg-[#151b2b] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#222c42]'
+                          : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#262932]'
                       }`}
                     >
                       <Icon className="h-3 w-3" />
@@ -388,7 +388,7 @@ export default function PackingChecklistModal({
               </div>
 
               {/* Advice Box */}
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#151b2b]/90 border border-blue-200/60 dark:border-[#222c42] text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#181a20]/90 border border-blue-200/60 dark:border-[#262932] text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block mb-0.5">💡 คำแนะนำการแต่งกาย:</span>
                 {currentPreset.advice}
               </div>
