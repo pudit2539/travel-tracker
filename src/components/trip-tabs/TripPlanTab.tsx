@@ -201,22 +201,22 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         showBudget={canSeeMoney}
       />
 
-      {/* 2. Clean Quick-Glance Logistics & Concierge Hub (Wanderlog / Flighty Style) */}
-      <div className="p-3 sm:p-3.5 rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] card-elevation space-y-2.5">
-        {/* Top Row: Logistics Drawer Toggles (Flight / Hotel / Budget / Weather) */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-1">
+      {/* 2. Sleek Quick-Glance Logistics & Concierge Tray (Single Compact Row) */}
+      <div className="p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs">
+        <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-0.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Logistics Drawers Toggles */}
             <button
               type="button"
               onClick={() => toggleLogisticsPanel('flights')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                 showFlights
                   ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                  : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-[#2a3652] hover:border-blue-400'
+                  : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-blue-400'
               }`}
             >
               <Plane className="h-3.5 w-3.5 shrink-0" />
-              <span>ตั๋วเครื่องบิน</span>
+              <span>ตั๋วบิน</span>
               {showFlights ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3 opacity-60" />}
             </button>
 
@@ -226,7 +226,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                 showHotels
                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                  : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-[#2a3652] hover:border-emerald-400'
+                  : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-emerald-400'
               }`}
             >
               <Building2 className="h-3.5 w-3.5 shrink-0" />
@@ -241,7 +241,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                   showBudget
                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-[#2a3652] hover:border-indigo-400'
+                    : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-indigo-400'
                 }`}
               >
                 <Coins className="h-3.5 w-3.5 shrink-0" />
@@ -256,60 +256,47 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                 showWeatherSection
                   ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                  : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-[#2a3652] hover:border-sky-400'
+                  : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-sky-400'
               }`}
             >
               <CloudSun className="h-3.5 w-3.5 shrink-0" />
-              <span>อากาศ & เส้นทาง</span>
+              <span>อากาศ</span>
             </button>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => setOpenLogisticsPanel((prev) => (prev === 'all' ? 'none' : 'all'))}
-            className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline px-2 py-1 shrink-0 cursor-pointer"
-          >
-            {openLogisticsPanel === 'all' ? 'ย่อเก็บทั้งหมด ▲' : 'กางดูทั้งหมด ▼'}
-          </button>
-        </div>
+            <div className="h-5 w-px bg-slate-200 dark:bg-[#262932] mx-0.5 shrink-0" />
 
-        {/* Divider */}
-        <div className="border-t border-slate-100 dark:border-[#222c42]" />
-
-        {/* Bottom Row: 4 Clean Travel Concierge Quick Tools */}
-        <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pt-0.5">
-          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Concierge Tools */}
             <button
               type="button"
               onClick={onOpenTicketLocker}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#2a3652] hover:border-indigo-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-indigo-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
               <QrCode className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-              <span>ตั๋ว & QR Pass</span>
+              <span>QR Pass</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenGourmetRadar}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#2a3652] hover:border-orange-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-orange-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
               <Utensils className="h-3.5 w-3.5 text-orange-500 shrink-0" />
-              <span>เรดาร์ร้านอร่อย</span>
+              <span>ร้านอร่อย</span>
             </button>
 
             <button
               type="button"
               onClick={() => onOpenDiningDecision?.()}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#2a3652] hover:border-blue-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
               <Dices className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-              <span>สุ่มมื้อ/ที่เที่ยว</span>
+              <span>สุ่มมื้อ</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowWishlistDrawer(true)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#2a3652] hover:border-amber-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-amber-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
               <BookmarkCheck className="h-3.5 w-3.5 text-amber-500 shrink-0" />
               <span>Wishlist</span>
@@ -319,7 +306,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           <button
             type="button"
             onClick={() => setShowTravelHubModal(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-3.5 py-1.5 rounded-xl shadow-sm shadow-blue-500/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
           >
             <Compass className="h-3.5 w-3.5 shrink-0" />
             <span>Travel Hub</span>
@@ -457,36 +444,37 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         onShowToast={onShowToast}
       />
 
-      {/* 4. Unified Itinerary View Switcher + Day Filter Bar (Wanderlog / Trip.com Style) */}
-      <div className="p-3 sm:p-3.5 rounded-3xl bg-white dark:bg-[#151b2b] border border-slate-200/90 dark:border-[#222c42] card-elevation space-y-2.5">
-        {/* Top Row: 4-Mode View Switcher (Thumbnail / Card / Compact / Map) + File Menu & Add Button */}
+      {/* 4. Unified Itinerary View Switcher + Day Filter Bar */}
+      <div className="p-3 sm:p-3.5 rounded-3xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs space-y-2.5">
+        {/* Top Row: 4-Mode View Switcher + File Menu & Add Button */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* 4-Mode Segmented View Switcher */}
           <div
-            className="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/70 dark:border-[#222c42]"
+            className="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932]"
             role="group"
             aria-label="เลือกมุมมองแผนเที่ยว"
           >
             <button
               type="button"
               onClick={() => handleSelectDisplayLayout('thumbnail')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 displayLayout === 'thumbnail'
-                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
-              title="มุมมองการ์ดรูปภาพ Thumbnail (Magazine Grid)"
+              title="มุมมองการ์ดรูปภาพ Thumbnail"
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              <span>Thumbnail</span>
+              <span className="hidden sm:inline">Thumbnail</span>
+              <span className="sm:hidden">รูป</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSelectDisplayLayout('card')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 displayLayout === 'card'
-                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="มุมมองการ์ดรายละเอียดครบถ้วน"
@@ -498,26 +486,27 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             <button
               type="button"
               onClick={() => handleSelectDisplayLayout('compact')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 displayLayout === 'compact'
-                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
-              title="มุมมองรายการย่อ 1 บรรทัด (Compact Timeline)"
+              title="มุมมองรายการย่อ 1 บรรทัด"
             >
               <Rows3 className="h-3.5 w-3.5" />
-              <span>รายการย่อ</span>
+              <span className="hidden sm:inline">รายการย่อ</span>
+              <span className="sm:hidden">ย่อ</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSelectDisplayLayout('map')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 displayLayout === 'map'
-                  ? 'bg-white dark:bg-[#151b2b] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
-              title="มุมมองแผนที่ (และ Split-View บน iPad แนวนอน)"
+              title="มุมมองแผนที่"
             >
               <MapPin className="h-3.5 w-3.5" />
               <span>แผนที่</span>

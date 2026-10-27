@@ -1,8 +1,8 @@
 // src/components/trip-detail/TripHeroCover.tsx
 'use client';
 
-import React, { useMemo } from 'react';
-import { Calendar, MapPin, Sparkles, Clock, Compass, Sun, Utensils, Moon, Check } from 'lucide-react';
+import { useMemo } from 'react';
+import { Calendar, MapPin, Clock, Compass, Check, Plane } from 'lucide-react';
 import AnimatedNumber from '@/components/AnimatedNumber';
 
 interface TripHeroCoverProps {
@@ -118,108 +118,70 @@ export function TripHeroCover({
     };
   }, [trip]);
 
-  // Dynamic Travel Assistant Advice based on current hour (Clean Corporate Style)
-  const assistantGreeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-      return {
-        title: 'ช่วงเช้า: เตรียมพร้อมออกเดินทาง',
-        message: 'ตรวจสอบเวลาเปิด-ปิดของสถานที่และสภาพอากาศก่อนเริ่มเดินทางตามแผน',
-        icon: <Sun className="h-4 w-4 text-amber-500 shrink-0" />,
-      };
-    }
-    if (hour >= 12 && hour < 17) {
-      return {
-        title: 'ช่วงบ่าย: จุดแวะพักและร้านอาหาร',
-        message: 'มีร้านอาหารและจุดพักผ่อนแนะนำตามเส้นทางในแผนเดินทางของคุณ',
-        icon: <Utensils className="h-4 w-4 text-blue-500 shrink-0" />,
-      };
-    }
-    return {
-      title: 'ช่วงค่ำ: ตรวจสอบและสรุปรายจ่ายประจำวัน',
-      message: 'ตรวจสอบรายการค่าใช้จ่ายและบันทึกข้อมูลเพื่อความถูกต้องของงบประมาณ',
-      icon: <Moon className="h-4 w-4 text-indigo-400 shrink-0" />,
-    };
-  }, []);
+  const destinationLabel = trip?.destination || trip?.country || 'จุดหมายปลายทาง';
 
   return (
-    <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/90 dark:border-[#222c42] group">
-      {/* Background Cover Image with Gradient Scrim */}
-      <div className="h-44 sm:h-52 w-full relative overflow-hidden bg-slate-900">
+    <div className="relative rounded-3xl overflow-hidden shadow-md border border-slate-200/90 dark:border-[#262932] group bg-slate-900 text-white">
+      {/* Boarding Pass Hero Media Banner */}
+      <div className="h-40 sm:h-48 md:h-52 w-full relative overflow-hidden bg-slate-950">
         <img
           src={coverImage}
           alt={trip?.name || 'Trip Destination Cover'}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-80"
         />
         {/* Soft Multi-Stop Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-black/30 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/75 via-transparent to-slate-950/45 pointer-events-none" />
 
-        {/* Top Floating Countdown Pill */}
-        {tripCountdown && (
-          <div className="absolute top-3.5 left-3.5 sm:left-5 z-10">
-            <div className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1.5 backdrop-blur-md ${tripCountdown.badgeColor}`}>
-              {tripCountdown.icon}
-              <span>{tripCountdown.text}</span>
-            </div>
-          </div>
-        )}
+        {/* Top Boarding Pass Header Tags */}
+        <div className="absolute top-3 left-3 sm:left-4.5 right-3 sm:right-4.5 z-10 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-xs">
+              <Plane className="h-3 w-3" />
+              <span>{destinationLabel}</span>
+            </span>
 
-        {/* Bottom Banner Content inside Image */}
-        <div className="absolute bottom-3.5 left-3.5 sm:left-5 right-3.5 sm:right-5 z-10 flex flex-wrap justify-between items-end gap-2 text-white">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold drop-shadow-md tracking-tight">
-              {trip?.name || 'ทริปท่องเที่ยว'}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-200 font-medium drop-shadow-xs flex items-center gap-2 mt-0.5">
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5 text-slate-300" />
-                <span>{trip?.destination || trip?.country || 'ญี่ปุ่น'}</span>
-              </span>
-              <span>•</span>
-              <span>{itineraryCount} กิจกรรม</span>
-            </p>
-          </div>
-
-          <div className="hidden sm:block text-right">
-            {showBudget ? (
-              <>
-                <span className="text-[10px] uppercase font-bold text-slate-300 block">ยอดใช้จ่ายรวม</span>
-                <span className="text-base font-bold text-amber-300 font-mono">
-                  <AnimatedNumber value={totalSpent} suffix={` ${currency}`} />
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="text-[10px] uppercase font-bold text-emerald-300 block">โหมดการเข้าชม</span>
-                <span className="text-xs font-bold text-emerald-200 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm backdrop-blur-xs mt-0.5">
-                  <Compass className="h-3 w-3" />
-                  <span>ดูเฉพาะแผนเที่ยว</span>
-                </span>
-              </>
+            {tripCountdown && (
+              <div className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-xs flex items-center gap-1.5 backdrop-blur-md ${tripCountdown.badgeColor}`}>
+                {tripCountdown.icon}
+                <span>{tripCountdown.text}</span>
+              </div>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Travel Assistant Banner directly below cover (Clean Executive Style) */}
-      <div className="p-3 sm:p-3.5 bg-white dark:bg-[#151b2b] border-t border-slate-200/90 dark:border-[#222c42] flex items-center justify-between gap-3 text-xs text-left">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-[#1c2438] shadow-xs flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#222c42]">
-            {assistantGreeting.icon}
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-black/50 backdrop-blur-md text-white/90 border border-white/15">
+            {currency}
+          </span>
+        </div>
+
+        {/* Bottom Title & Stats inside Boarding Pass Banner */}
+        <div className="absolute bottom-3 left-3 sm:left-4.5 right-3 sm:right-4.5 z-10 flex flex-wrap justify-between items-end gap-2.5 text-white">
+          <div className="space-y-1 min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black drop-shadow-md tracking-tight leading-tight truncate">
+              {trip?.name || 'ทริปท่องเที่ยว'}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 font-medium drop-shadow-xs">
+              {trip?.start_date && (
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                  <span>
+                    {new Date(trip.start_date).toLocaleDateString('th-TH')} - {trip.end_date ? new Date(trip.end_date).toLocaleDateString('th-TH') : 'ไม่ระบุวันกลับ'}
+                  </span>
+                </span>
+              )}
+              <span className="opacity-40">•</span>
+              <span>{itineraryCount} กิจกรรม</span>
+            </div>
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white flex-wrap">
-              <span>{assistantGreeting.title}</span>
-              <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full font-bold border border-blue-200 dark:border-blue-900/40 inline-flex items-center gap-1">
-                <Sparkles className="h-2.5 w-2.5" />
-                <span>Travel Assistant</span>
+
+          {showBudget && (
+            <div className="text-right shrink-0 bg-black/45 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/15 shadow-xs">
+              <span className="text-[9px] uppercase font-bold tracking-wider text-slate-300 block">ยอดใช้จ่ายรวม</span>
+              <span className="text-sm sm:text-base font-black text-amber-300 font-mono">
+                <AnimatedNumber value={totalSpent} suffix={` ${currency}`} />
               </span>
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium truncate">
-              {assistantGreeting.message}
-            </p>
-          </div>
+          )}
         </div>
       </div>
     </div>
