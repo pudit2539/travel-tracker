@@ -4,10 +4,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
   X, ArrowRightLeft, Sparkles, Plus, 
-  Coins, Check, Percent, Store, CreditCard, Wallet, Users, User, Loader2
+  Coins, Check, Percent, Store, CreditCard, Wallet, Users, User, Loader2, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay, syncLiveJpyToThb } from '@/lib/currency';
+import { triggerHaptic } from '@/lib/haptics';
 import { supabase } from '@/lib/supabase';
 import { setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
 import { setExpenseSplitMembers } from '@/lib/expenseSplits';
@@ -163,6 +164,28 @@ export default function QuickCurrencyCalculator({
     setItemTitle(preset.label);
     setTaxMode(preset.defaultTax);
     setSelectedCategory(preset.category);
+  };
+
+  const [isSyncingRate, setIsSyncingRate] = useState(false);
+
+  const handleSyncLiveRate = async () => {
+    setIsSyncingRate(true);
+    triggerHaptic('light');
+    try {
+      const res = await syncLiveJpyToThb();
+      if (res && res.success) {
+        setFxRate(res.rate);
+        setTempRate(String(res.rate.toFixed(3)));
+        triggerHaptic('success');
+        toast.success(`อัปเดตเรท JPY/THB ล่าสุดแล้ว: ฿${res.rate.toFixed(3)} 🔄`);
+      } else {
+        toast.error('ไม่สามารถดึงเรทสดได้ในขณะนี้');
+      }
+    } catch {
+      toast.error('เกิดข้อผิดพลาดในการดึงเรท');
+    } finally {
+      setIsSyncingRate(false);
+    }
   };
 
   const handleSaveRate = () => {
@@ -332,8 +355,8 @@ export default function QuickCurrencyCalculator({
 
         {/* Exchange Rate Badge & Direction Switcher */}
         <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932]">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-            <span>เรทแลกเปลี่ยน:</span>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 flex-wrap">
+            <span>เรท:</span>
             {foreignCurrency === 'JPY' && editingRate ? (
               <div className="flex items-center gap-1">
                 <input
@@ -351,13 +374,25 @@ export default function QuickCurrencyCalculator({
                 </button>
               </div>
             ) : foreignCurrency === 'JPY' ? (
-              <button
-                onClick={() => setEditingRate(true)}
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer font-black font-mono"
-                title="คลิกเพื่อแก้ไขเรทแลกเปลี่ยน"
-              >
-                {formatExchangeRateDisplay('JPY', fxRate)} ✏️
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setEditingRate(true)}
+                  className="underline hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer font-black font-mono"
+                  title="คลิกเพื่อแก้ไขเรทแลกเปลี่ยน"
+                >
+                  {formatExchangeRateDisplay('JPY', fxRate)} ✏️
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSyncLiveRate}
+                  disabled={isSyncingRate}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+                  title="ดึงเรท JPY/THB ล่าสุดจากตลาดสด"
+                >
+                  <RefreshCw className={`h-3 w-3 ${isSyncingRate ? 'animate-spin' : ''}`} />
+                  <span>{isSyncingRate ? 'ดึง...' : 'ดึงเรทสด'}</span>
+                </button>
+              </div>
             ) : (
               <span className="font-black font-mono">
                 {formatExchangeRateDisplay(foreignCurrency, fxRate)}

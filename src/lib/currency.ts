@@ -60,6 +60,33 @@ export function setCustomJpyToThbRate(rate: number): void {
 }
 
 /**
+ * Fetch latest live JPY/THB rate from real-time API, update localStorage,
+ * and dispatch an update event across the application.
+ */
+export async function syncLiveJpyToThb(): Promise<{ rate: number; success: boolean; date?: string }> {
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+    if (!res.ok) throw new Error('Live FX API error');
+    const data = await res.json();
+    if (data && data.rates && data.rates.THB) {
+      const liveRate = parseFloat(Number(data.rates.THB).toFixed(4));
+      setCustomJpyToThbRate(liveRate);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('travel_tracker_fx_rate_updated'));
+      }
+      return { 
+        rate: liveRate, 
+        success: true, 
+        date: data.time_last_update_utc ? new Date(data.time_last_update_utc).toLocaleDateString('th-TH') : undefined 
+      };
+    }
+  } catch (err) {
+    console.warn('Sync live JPY rate failed:', err);
+  }
+  return { rate: getCustomJpyToThbRate(), success: false };
+}
+
+/**
  * Convert any amount from one currency to another.
  * Uses JPY as the internal pivot currency.
  */

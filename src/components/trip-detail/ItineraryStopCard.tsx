@@ -122,15 +122,68 @@ function ItineraryStopCardComponent({
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanFoodQuery)}`
       : '';
 
+  const [touchStartX, setTouchStartX] = React.useState<number | null>(null);
+  const [swipeOffset, setSwipeOffset] = React.useState<number>(0);
+  const [isSwiping, setIsSwiping] = React.useState<boolean>(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (reordering) return;
+    setTouchStartX(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX === null || !isSwiping) return;
+    const currentX = e.touches[0].clientX;
+    const deltaX = currentX - touchStartX;
+    if (deltaX > 0) {
+      setSwipeOffset(Math.min(deltaX, 85));
+    } else {
+      setSwipeOffset(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (swipeOffset >= 60) {
+      toggleVisited();
+    }
+    setSwipeOffset(0);
+    setIsSwiping(false);
+    setTouchStartX(null);
+  };
+
   return (
     <>
-      <div className={`group rounded-3xl border transition-all duration-300 relative overflow-hidden card-elevation ${
-        visited 
-          ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/20' 
-          : 'border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-400/60 dark:hover:border-blue-500/40'
-      }`}>
-        
-        {/* Top Notice / Platform Banner */}
+      <div 
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className={`group rounded-3xl border transition-all duration-300 relative overflow-hidden card-elevation ${
+          visited 
+            ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/20' 
+            : 'border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-400/60 dark:hover:border-blue-500/40'
+        }`}
+      >
+        {/* Swipe Reveal Action Background */}
+        {swipeOffset > 8 && (
+          <div className="absolute inset-y-0 left-0 w-28 bg-emerald-500 text-white flex items-center pl-4 font-black text-xs gap-1.5 z-0 transition-opacity">
+            <Check className="h-4 w-4 stroke-[3]" />
+            <span className="text-[11px] font-bold">{visited ? 'ยกเลิก' : 'เช็กอิน'}</span>
+          </div>
+        )}
+
+        <div
+          style={{
+            transform: swipeOffset > 0 ? `translateX(${swipeOffset}px)` : undefined,
+            transition: isSwiping ? 'none' : 'transform 0.25s ease-out',
+          }}
+          className={`relative z-10 transition-colors ${
+            visited 
+              ? 'bg-emerald-50/30 dark:bg-[#181a20]' 
+              : 'bg-white dark:bg-[#181a20]'
+          }`}
+        >
+          {/* Top Notice / Platform Banner */}
         {transitGuide.hasGuide && (
           <div className="px-4 py-2 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-b border-amber-200/70 dark:border-amber-900/40 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2 flex-wrap">
@@ -480,6 +533,7 @@ function ItineraryStopCardComponent({
           </button>
         </div>
       </div>
+    </div>
 
       <ShowToStaffModal
         isOpen={showStaffModal}

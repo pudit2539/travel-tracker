@@ -5,7 +5,7 @@ import {
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
   BookmarkCheck, List, Building2, Utensils, Dices, QrCode,
-  LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles
+  LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles, ExternalLink
 } from 'lucide-react';
 import LiveTripCard from '@/components/LiveTripCard';
 import WishlistDrawer from '@/components/WishlistDrawer';
@@ -185,6 +185,22 @@ export const TripPlanTab = React.memo(function TripPlanTab({
     fxRate,
     currencyView
   );
+
+  // Google Maps Multi-Stop Directions URL for the current filtered day
+  const multiStopRouteUrl = useMemo(() => {
+    if (!filteredItinerary || filteredItinerary.length < 2) return null;
+    const places = filteredItinerary
+      .map((item) => {
+        const name = (item.main_place || item.title || '').trim();
+        if (!name) return null;
+        const city = item.city ? ` ${item.city}` : '';
+        return encodeURIComponent(`${name}${city}`);
+      })
+      .filter(Boolean);
+
+    if (places.length < 2) return null;
+    return `https://www.google.com/maps/dir/${places.join('/')}`;
+  }, [filteredItinerary]);
 
   const showFlights = openLogisticsPanel === 'flights' || openLogisticsPanel === 'all';
   const showHotels = openLogisticsPanel === 'hotels' || openLogisticsPanel === 'all';
@@ -648,6 +664,62 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
       {/* 5. Main Itinerary Content Area (4 View Modes with Accessibility Focus Target) */}
       <div id="itinerary-view-container" tabIndex={-1} className="outline-none">
+        {/* 4.5 Sequential Route Flow & 1-Tap Google Maps Multi-Stop Navigation */}
+        {filteredItinerary.length > 1 && (
+          <div className="mb-3.5 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <div className="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Navigation className="h-3.5 w-3.5" />
+                </div>
+                <span>เส้นทางจุดแวะวันนี้ ({filteredItinerary.length} จุด)</span>
+              </div>
+              {multiStopRouteUrl && (
+                <a
+                  href={multiStopRouteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-xs hover:scale-102 active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                  title="เปิดเส้นทางรวมทุกจุดแบบ Multi-Stop ใน Google Maps ทันที"
+                >
+                  <span>เปิดเส้นทางใน Google Maps 🚗 / 🚶</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
+
+            {/* Sequential Route Trail Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar text-xs">
+              {filteredItinerary.map((stop, sIdx) => {
+                const isLast = sIdx === filteredItinerary.length - 1;
+                const stopName = stop.main_place || stop.title || `จุดที่ ${sIdx + 1}`;
+                return (
+                  <React.Fragment key={stop.id || sIdx}>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] shrink-0 text-slate-700 dark:text-slate-300">
+                      <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-mono font-black flex items-center justify-center shrink-0">
+                        {sIdx + 1}
+                      </span>
+                      <span className="font-bold text-[11px] max-w-[120px] sm:max-w-[160px] truncate" title={stopName}>
+                        {stopName}
+                      </span>
+                      {stop.time_slot && (
+                        <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+                          {stop.time_slot.split('–')[0]?.trim()}
+                        </span>
+                      )}
+                    </div>
+                    {!isLast && (
+                      <span className="text-slate-300 dark:text-slate-600 font-black text-xs shrink-0 select-none">
+                        ➔
+                      </span>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {filteredItinerary.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl p-6 bg-white dark:bg-[#181a20]">
             <Navigation className="h-10 w-10 text-blue-500 mx-auto mb-2 animate-float-slow" />
