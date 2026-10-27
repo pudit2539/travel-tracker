@@ -53,6 +53,7 @@ import { exportExpensesToExcel as runExportExpensesToExcel } from '@/lib/exportE
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
 import { hydrateCustomPlacePhotosFromMap } from '@/lib/placeThumbnails';
+import { hydrateVisitedStampsFromSupabase } from '@/lib/visitedStamps';
 import { useTripModals } from '@/hooks/useTripModals';
 import type { 
   TripRow, 
@@ -484,6 +485,9 @@ export default function TripDetailPage() {
             }
             if (parsed.customPlacePhotos && typeof parsed.customPlacePhotos === 'object' && typeof window !== 'undefined') {
               hydrateCustomPlacePhotosFromMap(parsed.customPlacePhotos, tripId);
+            }
+            if (parsed.checkedInSpots && typeof parsed.checkedInSpots === 'object' && typeof window !== 'undefined') {
+              hydrateVisitedStampsFromSupabase(tripId, parsed.checkedInSpots);
             }
           } catch (e) {
             console.warn('Trip meta parse error:', e);

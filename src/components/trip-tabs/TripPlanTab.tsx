@@ -750,6 +750,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                   item={item}
                   idx={idx}
                   canEditPlan={canEditPlan}
+                  currentUser={currentUser}
                   onOpenEditActivity={handleOpenEditActivity}
                 />
               ))}
@@ -767,6 +768,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 item={item}
                 idx={idx}
                 canEditPlan={canEditPlan}
+                currentUser={currentUser}
                 onOpenEditActivity={handleOpenEditActivity}
               />
             ))}
@@ -784,6 +786,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 item={item}
                 idx={idx}
                 canEditPlan={canEditPlan}
+                currentUser={currentUser}
                 onOpenEditActivity={handleOpenEditActivity}
               />
             ))}
@@ -800,6 +803,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                     idx={idx}
                     totalItems={itinerary.length}
                     canEditPlan={canEditPlan}
+                    currentUser={currentUser}
                     reordering={reordering}
                     isPlanBOpen={expandedPlanB[item.id] || false}
                     onTogglePlanB={(id) => setExpandedPlanB((prev) => ({ ...prev, [id]: !prev[id] }))}

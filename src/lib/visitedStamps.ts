@@ -1,14 +1,20 @@
 // src/lib/visitedStamps.ts
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 
-export interface VisitedStampMap {
-  [activityId: string]: boolean;
+export interface CheckInMeta {
+  visited: boolean;
+  by?: string;      // ชื่อผู้เช็กอิน เช่น 'คุณปูดิษฐ์'
+  userId?: string;  // user ID
+  at?: string;      // เช่น '14:30 น.'
 }
+
+export type VisitedStampMap = Record<string, boolean>;
 
 const EVENT_NAME = 'visited-stamps-changed';
 
-export function getTripVisitedStamps(tripId?: string, activityIds?: string[]): VisitedStampMap {
+export function getTripVisitedStamps(tripId?: string, activityIds?: string[]): Record<string, boolean> {
   if (typeof window === 'undefined') return {};
-  const result: VisitedStampMap = {};
+  const result: Record<string, boolean> = {};
 
   try {
     if (tripId) {
@@ -16,7 +22,10 @@ export function getTripVisitedStamps(tripId?: string, activityIds?: string[]): V
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object') {
-          Object.assign(result, parsed);
+          Object.keys(parsed).forEach((k) => {
+            const v = parsed[k];
+            result[k] = typeof v === 'boolean' ? v : Boolean(v?.visited);
+          });
         }
       }
     }
@@ -38,6 +47,31 @@ export function getTripVisitedStamps(tripId?: string, activityIds?: string[]): V
   return result;
 }
 
+export function getTripVisitedMeta(tripId?: string): Record<string, CheckInMeta> {
+  if (typeof window === 'undefined' || !tripId) return {};
+  try {
+    const raw = localStorage.getItem(`trip_visited_stamps_${tripId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        const res: Record<string, CheckInMeta> = {};
+        Object.keys(parsed).forEach((k) => {
+          const v = parsed[k];
+          if (typeof v === 'object' && v !== null) {
+            res[k] = v;
+          } else if (v === true) {
+            res[k] = { visited: true };
+          }
+        });
+        return res;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to read visited meta:', err);
+  }
+  return {};
+}
+
 export function isActivityVisited(tripId: string | undefined, activityId: string): boolean {
   if (typeof window === 'undefined' || !activityId) return false;
   try {
@@ -45,8 +79,9 @@ export function isActivityVisited(tripId: string | undefined, activityId: string
       const raw = localStorage.getItem(`trip_visited_stamps_${tripId}`);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed[activityId] === 'boolean') {
-          return parsed[activityId];
+        if (parsed && parsed[activityId] !== undefined) {
+          const val = parsed[activityId];
+          return typeof val === 'boolean' ? val : Boolean(val?.visited);
         }
       }
     }
@@ -56,34 +91,93 @@ export function isActivityVisited(tripId: string | undefined, activityId: string
   }
 }
 
+export function getActivityCheckInMeta(tripId: string | undefined, activityId: string): CheckInMeta | null {
+  if (typeof window === 'undefined' || !activityId || !tripId) return null;
+  try {
+    const raw = localStorage.getItem(`trip_visited_stamps_${tripId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const val = parsed?.[activityId];
+      if (typeof val === 'object' && val !== null) {
+        return val as CheckInMeta;
+      } else if (val === true) {
+        return { visited: true };
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export function isStopVisited(activityId: string, tripId?: string): boolean {
   return isActivityVisited(tripId, activityId);
+}
+
+export function hydrateVisitedStampsFromSupabase(tripId: string, serverMap: Record<string, any>): void {
+  if (typeof window === 'undefined' || !tripId || !serverMap || typeof serverMap !== 'object') return;
+  try {
+    const raw = localStorage.getItem(`trip_visited_stamps_${tripId}`);
+    let local: Record<string, any> = {};
+    if (raw) {
+      try { local = JSON.parse(raw) || {}; } catch {}
+    }
+    const merged = { ...local, ...serverMap };
+    localStorage.setItem(`trip_visited_stamps_${tripId}`, JSON.stringify(merged));
+    window.dispatchEvent(
+      new CustomEvent(EVENT_NAME, {
+        detail: { tripId, hydrated: true },
+      })
+    );
+  } catch (e) {
+    console.warn('Failed to hydrate visited stamps from Supabase:', e);
+  }
 }
 
 export function toggleActivityVisited(
   tripId: string | undefined,
   activityId: string,
-  forceValue?: boolean
+  forceValue?: boolean,
+  userInfo?: { userId?: string; userName?: string }
 ): boolean {
   if (typeof window === 'undefined' || !activityId) return false;
   try {
     const current = isActivityVisited(tripId, activityId);
     const next = typeof forceValue === 'boolean' ? forceValue : !current;
 
+    const atStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    const meta: CheckInMeta = {
+      visited: next,
+      by: next ? (userInfo?.userName || 'สมาชิก') : undefined,
+      userId: next ? userInfo?.userId : undefined,
+      at: next ? atStr : undefined,
+    };
+
     // Save in individual key
     localStorage.setItem(`visited_activity_${activityId}`, next ? 'true' : 'false');
 
     // Save in trip map key
     if (tripId) {
-      const map = getTripVisitedStamps(tripId);
-      map[activityId] = next;
-      localStorage.setItem(`trip_visited_stamps_${tripId}`, JSON.stringify(map));
+      const raw = localStorage.getItem(`trip_visited_stamps_${tripId}`);
+      let rawMap: Record<string, any> = {};
+      if (raw) {
+        try { rawMap = JSON.parse(raw) || {}; } catch {}
+      }
+      rawMap[activityId] = meta;
+      localStorage.setItem(`trip_visited_stamps_${tripId}`, JSON.stringify(rawMap));
+
+      // Sync to Supabase Trip Metadata in background so all members see it in real-time
+      syncTripMetadataToSupabase(tripId, {
+        checkedInSpots: rawMap,
+      }).catch((err) => {
+        console.warn('Failed to sync check-in to Supabase:', err);
+      });
     }
 
     // Broadcast change so LiveTripCard and ItineraryStopCard stay in instant sync
     window.dispatchEvent(
       new CustomEvent(EVENT_NAME, {
-        detail: { tripId, activityId, visited: next },
+        detail: { tripId, activityId, visited: next, meta },
       })
     );
 
@@ -94,8 +188,13 @@ export function toggleActivityVisited(
   }
 }
 
-export function toggleStopVisited(activityId: string, tripId?: string, forceValue?: boolean): boolean {
-  return toggleActivityVisited(tripId, activityId, forceValue);
+export function toggleStopVisited(
+  activityId: string,
+  tripId?: string,
+  forceValue?: boolean,
+  userInfo?: { userId?: string; userName?: string }
+): boolean {
+  return toggleActivityVisited(tripId, activityId, forceValue, userInfo);
 }
 
 export function getVisitedCountForItems(items: Array<{ id?: string }>, tripId?: string): number {

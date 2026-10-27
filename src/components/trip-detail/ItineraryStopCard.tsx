@@ -2,13 +2,16 @@ import React from 'react';
 import { 
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
-  Navigation, Eye, MoreHorizontal, Check, Camera, ZoomIn
+  Navigation, Eye, MoreHorizontal, Check, Camera, ZoomIn, RotateCcw
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { parseTransitInfo } from '@/lib/transitGuide';
 import {
   isActivityVisited,
   toggleActivityVisited,
   subscribeVisitedStamps,
+  getActivityCheckInMeta,
+  CheckInMeta,
 } from '@/lib/visitedStamps';
 import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
 import {
@@ -23,6 +26,7 @@ export interface ItineraryStopCardProps {
   idx: number;
   totalItems: number;
   canEditPlan: boolean;
+  currentUser?: any;
   reordering: boolean;
   isPlanBOpen: boolean;
   onTogglePlanB: (id: string) => void;
@@ -31,14 +35,16 @@ export interface ItineraryStopCardProps {
   onDeleteActivity: (id: string) => void;
 }
 
-function useStopVisitedState(item: any) {
+function useStopVisitedState(item: any, canEditPlan: boolean = true, currentUser?: any) {
   const [visited, setVisited] = React.useState(false);
+  const [meta, setMeta] = React.useState<CheckInMeta | null>(null);
   const activityKey = item?.id || item?.main_place || '';
   const tripId = item?.trip_id;
 
   const syncVisited = React.useCallback(() => {
     if (typeof window !== 'undefined' && activityKey) {
       setVisited(isActivityVisited(tripId, activityKey));
+      setMeta(getActivityCheckInMeta(tripId, activityKey));
     }
   }, [tripId, activityKey]);
 
@@ -47,15 +53,56 @@ function useStopVisitedState(item: any) {
     return subscribeVisitedStamps(syncVisited);
   }, [syncVisited]);
 
-  const toggleVisited = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+  const toggleVisited = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e && 'stopPropagation' in e) e.stopPropagation();
     if (!activityKey) return;
-    const next = toggleActivityVisited(tripId, activityKey);
+
+    if (canEditPlan === false) {
+      toast.error('เฉพาะผู้ดูแลหรือสมาชิกทริปเท่านั้นที่สามารถเช็กอินหรือยกเลิกได้');
+      return;
+    }
+
+    const userName =
+      currentUser?.user_metadata?.display_name ||
+      currentUser?.user_metadata?.full_name ||
+      currentUser?.email?.split('@')[0] ||
+      'สมาชิก';
+
+    const willBeVisited = !visited;
+    const next = toggleActivityVisited(tripId, activityKey, willBeVisited, {
+      userId: currentUser?.id,
+      userName: userName,
+    });
     setVisited(next);
+    setMeta(getActivityCheckInMeta(tripId, activityKey));
     triggerHaptic(next ? 'success' : 'light');
+
+    const placeName = item.main_place || 'กิจกรรมนี้';
+    if (next) {
+      toast.success(`เช็กอินแล้ว: ${placeName} ✨`, {
+        description: `โดย ${userName} (บันทึกและซิงก์ทุกคนในกลุ่ม)`,
+        action: {
+          label: 'ยกเลิก',
+          onClick: () => {
+            toggleActivityVisited(tripId, activityKey, false, {
+              userId: currentUser?.id,
+              userName,
+            });
+            setVisited(false);
+            setMeta(null);
+            triggerHaptic('light');
+            toast.info(`ยกเลิกเช็กอิน ${placeName} แล้ว ↩️`);
+          },
+        },
+      });
+    } else {
+      toast.info(`ยกเลิกเช็กอิน ${placeName} แล้ว ↩️`, {
+        description: 'คืนค่าสถานะเป็นยังไม่ได้แวะ',
+      });
+    }
   };
 
-  return { visited, toggleVisited };
+  return { visited, toggleVisited, meta };
 }
 
 function buildStopUrls(item: any) {
@@ -81,6 +128,7 @@ function ItineraryStopCardComponent({
   idx,
   totalItems,
   canEditPlan,
+  currentUser,
   reordering,
   isPlanBOpen,
   onTogglePlanB,
@@ -88,7 +136,7 @@ function ItineraryStopCardComponent({
   onOpenEditActivity,
   onDeleteActivity,
 }: ItineraryStopCardProps) {
-  const { visited, toggleVisited } = useStopVisitedState(item);
+  const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
@@ -166,9 +214,22 @@ function ItineraryStopCardComponent({
       >
         {/* Swipe Reveal Action Background */}
         {swipeOffset > 8 && (
-          <div className="absolute inset-y-0 left-0 w-28 bg-emerald-500 text-white flex items-center pl-4 font-black text-xs gap-1.5 z-0 transition-opacity">
-            <Check className="h-4 w-4 stroke-[3]" />
-            <span className="text-[11px] font-bold">{visited ? 'ยกเลิก' : 'เช็กอิน'}</span>
+          <div
+            className={`absolute inset-y-0 left-0 w-36 flex items-center pl-4 font-black text-xs gap-1.5 z-0 transition-opacity ${
+              visited ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
+            }`}
+          >
+            {visited ? (
+              <>
+                <RotateCcw className="h-4 w-4 stroke-[3]" />
+                <span className="text-[11px] font-bold">ยกเลิกเช็กอิน</span>
+              </>
+            ) : (
+              <>
+                <Check className="h-4 w-4 stroke-[3]" />
+                <span className="text-[11px] font-bold">เช็กอิน</span>
+              </>
+            )}
           </div>
         )}
 
@@ -230,6 +291,12 @@ function ItineraryStopCardComponent({
                   📍 {item.city}
                 </span>
               )}
+
+              {visited && meta?.by && (
+                <span className="inline-flex text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/50 border border-emerald-200/50 dark:border-emerald-900/40" title={`เช็กอินโดย ${meta.by} ${meta.at || ''}`}>
+                  ✓ {meta.by} {meta.at ? `(${meta.at})` : ''}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0 relative">
@@ -242,7 +309,7 @@ function ItineraryStopCardComponent({
                     ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs'
                     : 'bg-slate-100 dark:bg-[#181a20] text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-[#262932] hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400'
                 }`}
-                title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน' : 'ประทับตราเช็กอิน ⛩️'}
+                title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน (คืนค่าเดิม)' : 'ประทับตราเช็กอิน ⛩️'}
               >
                 <span className={visited ? 'animate-bounce' : ''}>{visited ? '💮' : '🐾'}</span>
                 <span>{visited ? 'แวะแล้ว' : 'เช็กอิน'}</span>
@@ -580,14 +647,16 @@ function ItineraryThumbnailCardComponent({
   item,
   idx,
   canEditPlan,
+  currentUser,
   onOpenEditActivity,
 }: {
   item: any;
   idx: number;
   canEditPlan: boolean;
+  currentUser?: any;
   onOpenEditActivity: (item: any) => void;
 }) {
-  const { visited, toggleVisited } = useStopVisitedState(item);
+  const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
@@ -809,14 +878,16 @@ function ItineraryCompactRowComponent({
   item,
   idx,
   canEditPlan,
+  currentUser,
   onOpenEditActivity,
 }: {
   item: any;
   idx: number;
   canEditPlan: boolean;
+  currentUser?: any;
   onOpenEditActivity: (item: any) => void;
 }) {
-  const { visited, toggleVisited } = useStopVisitedState(item);
+  const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
