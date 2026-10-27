@@ -15,7 +15,7 @@ import {
   Share2, CheckCircle2, Loader2, X, User, Bell, Coins, 
   Check, ArrowUpRight, Shield, Globe2, KeyRound, Sparkle,
   MapPin, Clock, CloudSun, Heart, Shuffle, ChevronRight, BookmarkCheck,
-  LayoutGrid, AlignJustify, Camera
+  LayoutGrid, AlignJustify, Camera, ChevronDown, ChevronUp, Calculator
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/ThemeProvider';
@@ -95,12 +95,12 @@ function TripCoverMedia({
               <Camera className="h-3 w-3" />
             </button>
             {isOwner ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/90 text-white shadow-xs shrink-0">
-                👑 เจ้าของ
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/80 text-white backdrop-blur-md shadow-xs shrink-0">
+                เจ้าของ
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600/90 text-white shadow-xs shrink-0">
-                👥 สมาชิก{userRole === 'viewer' ? ' (ดู)' : ''}
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-600/80 text-white backdrop-blur-md shadow-xs shrink-0">
+                สมาชิก{userRole === 'viewer' ? ' (ดู)' : ''}
               </span>
             )}
           </div>
@@ -688,6 +688,7 @@ export default function HomePage() {
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
   // Quick Currency Mini-Calculator State
+  const [showFxCalculator, setShowFxCalculator] = useState(false);
   const [quickCalcAmount, setQuickCalcAmount] = useState('10000');
   const [quickCalcCurr, setQuickCalcCurr] = useState<'JPY' | 'CNY' | 'USD' | 'EUR' | 'KRW'>('JPY');
   const quickRates: Record<string, { rate: number; label: string; symbol: string; flag: string }> = {
@@ -757,10 +758,6 @@ export default function HomePage() {
         isRefreshing={isRefreshing}
         isReadyToRefresh={isReadyToRefresh}
       />
-      
-      {/* Background Floating Glow Orbs */}
-      <div className="absolute top-10 left-1/4 w-96 h-96 bg-rose-400/8 dark:bg-rose-400/10 rounded-full blur-3xl pointer-events-none animate-float-slow" />
-      <div className="absolute top-60 right-10 w-80 h-80 bg-purple-500/8 dark:bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-float-reverse" />
 
       {/* ==================== TOP NAVIGATION ==================== */}
       <nav className="sticky top-0 z-40 border-b border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
@@ -843,196 +840,78 @@ export default function HomePage() {
       {/* ==================== MAIN CONTENT CONTAINER ==================== */}
       <main className="relative z-10 max-w-5xl mx-auto px-4 safe-area-x pt-6 space-y-6">
 
-        {/* ==================== 1. TRAVO EDITORIAL HERO & SUPER-APP UTILITY DECK ==================== */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          {/* Left: Travo Editorial Header & Tabular Stats Card (Ref Image 4) */}
-          <div className="md:col-span-2 p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] backdrop-blur-xl relative overflow-hidden space-y-4 shadow-sm">
-            
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-2 h-2 rounded-full bg-blue-600" />
-                  <span className="text-[10px] font-bold tracking-widest uppercase text-blue-600 dark:text-blue-400">
-                    TRAVEL JOURNAL & ARCHIVE
-                  </span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                  สวัสดี, {userDisplayName}
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  บันทึกเรื่องราวการเดินทาง แพลนเที่ยวรายวัน และติดตามงบประมาณทริปของคุณ
-                </p>
-              </div>
-
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] font-bold border border-blue-500/25">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>ซิงค์ข้อมูลเรียบร้อย</span>
-              </div>
+        {/* ==================== 1. EDITORIAL WELCOME BAR & TABULAR STATS ==================== */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] shadow-2xs">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-600" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-blue-600 dark:text-blue-400">
+                TRAVEL JOURNAL & CO-PILOT
+              </span>
             </div>
-
-            {/* Travo Tabular Stats Deck (Reference Image 4 Style) */}
-            <div className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-[#262932] p-4 rounded-2xl bg-slate-50/80 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932]">
-              <div className="px-2 sm:px-3 text-center sm:text-left">
-                <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 block mb-1">
-                  TRIPS
-                </span>
-                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  {loading && trips.length === 0 ? <span className="inline-block w-6 h-6 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : trips.length}
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400 block mt-0.5 hidden sm:block">
-                  ทริปทั้งหมด
-                </span>
-              </div>
-
-              <div className="px-2 sm:px-3 text-center sm:text-left">
-                <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 block mb-1">
-                  TOTAL BUDGET
-                </span>
-                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate block">
-                  {loading && trips.length === 0 ? <span className="inline-block w-12 h-6 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : `฿${Math.round(totalCombinedBudgetInThb).toLocaleString()}`}
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400 block mt-0.5 hidden sm:block">
-                  งบรวมทุกทริป
-                </span>
-              </div>
-
-              <div className="px-2 sm:px-3 text-center sm:text-left">
-                <span className="text-[10px] font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 block mb-1">
-                  UPCOMING
-                </span>
-                <span className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">
-                  {loading && trips.length === 0 ? <span className="inline-block w-6 h-6 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : tripStats.upcomingCount}
-                </span>
-                <span className="text-[10px] font-semibold text-blue-600/80 dark:text-blue-400/80 block mt-0.5 hidden sm:block">
-                  เร็วๆ นี้
-                </span>
-              </div>
-            </div>
-
-            {/* Minimalist Editorial Travel Note */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121316]/70 border border-slate-200/60 dark:border-[#262932] space-y-1">
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400">
-                  TRAVEL NOTE • {CAT_TRAVEL_TIPS[currentTipIndex].tag}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCurrentTipIndex((prev) => (prev + 1) % CAT_TRAVEL_TIPS.length)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-1 font-semibold transition-colors cursor-pointer"
-                >
-                  <Shuffle className="h-3 w-3" />
-                  <span>ถัดไป</span>
-                </button>
-              </div>
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={currentTipIndex}
-                  initial={{ opacity: 0, y: 3 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -3 }}
-                  transition={{ duration: 0.15 }}
-                  className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed"
-                >
-                  {CAT_TRAVEL_TIPS[currentTipIndex].text}
-                </motion.p>
-              </AnimatePresence>
-            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              สวัสดี, {userDisplayName}
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              บันทึกเรื่องราวการเดินทาง จัดการงบประมาณ และเตรียมความพร้อมสำหรับทุกจุดหมาย
+            </p>
           </div>
 
-          {/* Right: Live Currency Radar & Instant Mini-Calculator (Style 3 Super-App Widget) */}
-          <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] flex flex-col justify-between space-y-4 shadow-sm">
+          {/* Travo Tabular Stats Deck */}
+          <div className="flex items-center gap-4 sm:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-[#262932] sm:pl-6 shrink-0">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>LIVE FX RADAR</span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-mono font-medium">1 JPY = {Number(fxRate).toFixed(3)} THB</span>
-              </div>
-
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                <Coins className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <span>คำนวณแปลงเงินด่วน</span>
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                แตะเลือกสกุลเงินและพิมพ์ยอดเพื่อแปลงเป็นบาท (ทศนิยม 3 หลัก)
-              </p>
-
-              {/* Currency Selector Pills */}
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {(['JPY', 'CNY', 'USD', 'EUR', 'KRW'] as const).map((curr) => {
-                  const info = quickRates[curr];
-                  const isSelected = quickCalcCurr === curr;
-                  return (
-                    <button
-                      key={curr}
-                      type="button"
-                      onClick={() => setQuickCalcCurr(curr)}
-                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${
-                        isSelected
-                          ? 'bg-blue-600 text-white border-blue-500 shadow-2xs'
-                          : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-blue-500/50'
-                      }`}
-                    >
-                      {info.flag} {info.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Mini Calculator Input & Live Result */}
-              <div className="mt-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-[11px] font-semibold text-slate-400">ระบุยอด ({quickCalcCurr}):</span>
-                  <input
-                    type="number"
-                    value={quickCalcAmount}
-                    onChange={(e) => setQuickCalcAmount(e.target.value)}
-                    className="w-28 text-right font-mono font-bold text-sm p-1 rounded-lg border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none focus:border-blue-500"
-                    placeholder="10000"
-                  />
-                </div>
-                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-[#262932]">
-                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">เทียบเท่าเงินบาท:</span>
-                  <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-base">
-                    ฿{((Number(quickCalcAmount) || 0) * (quickRates[quickCalcCurr]?.rate || 1)).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} THB
-                  </span>
-                </div>
-              </div>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 block mb-0.5">
+                TRIPS
+              </span>
+              <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                {loading && trips.length === 0 ? <span className="inline-block w-5 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : trips.length}
+              </span>
             </div>
-
-            <button
-              onClick={() => setShowJoinModal(true)}
-              className="w-full py-2.5 px-4 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 font-bold text-xs hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <KeyRound className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              <span>เข้าร่วมด้วยรหัสเชิญทริป</span>
-            </button>
+            <div className="h-8 w-px bg-slate-200 dark:bg-[#262932]" />
+            <div>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 block mb-0.5">
+                UPCOMING
+              </span>
+              <span className="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400">
+                {loading && trips.length === 0 ? <span className="inline-block w-5 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : tripStats.upcomingCount}
+              </span>
+            </div>
+            <div className="h-8 w-px bg-slate-200 dark:bg-[#262932]" />
+            <div>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 block mb-0.5">
+                TOTAL BUDGET
+              </span>
+              <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                {loading && trips.length === 0 ? <span className="inline-block w-12 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : `฿${Math.round(totalCombinedBudgetInThb).toLocaleString()}`}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* ==================== 2. FEATURED UPCOMING TRIP SPOTLIGHT (Travo + TravelGo Hybrid) ==================== */}
+        {/* ==================== 2. SINGLE PROTAGONIST HERO (FEATURED UPCOMING TRIP SPOTLIGHT) ==================== */}
         {upcomingTrip && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-gradient-to-r from-slate-900 via-[#181a20] to-slate-900 text-white relative overflow-hidden shadow-md"
+            className="relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-slate-900 text-white overflow-hidden shadow-lg group"
           >
-            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-left">
-              <div className="space-y-2 text-left flex-1 min-w-0">
+            {/* Ambient Subtle Hero Background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/95 to-slate-900 pointer-events-none" />
+
+            <div className="relative z-10 p-6 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 text-left">
+              <div className="space-y-2.5 text-left flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white border border-white/20 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/10 text-white border border-white/20 backdrop-blur-md flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                     <span>ทริปไฮไลต์ที่จะถึงนี้</span>
                   </span>
 
                   {daysUntilTrip !== null && (
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 ${
                       daysUntilTrip <= 0
                         ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                        : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                     }`}>
                       <Clock className="h-3 w-3" />
                       {daysUntilTrip > 0
@@ -1042,31 +921,39 @@ export default function HomePage() {
                         : 'กำลังเดินทาง'}
                     </span>
                   )}
+
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-white/10 text-white/90 border border-white/15">
+                    {upcomingTrip.currency || 'JPY'}
+                  </span>
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-relaxed text-left break-words">
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug break-words">
                   {upcomingTrip.name || upcomingTrip.title}
                 </h2>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 font-medium">
+                <div className="flex flex-wrap items-center gap-3.5 text-xs text-slate-300 font-medium">
                   {upcomingTrip.start_date && (
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                      <span>{new Date(upcomingTrip.start_date).toLocaleDateString('th-TH')} - {upcomingTrip.end_date ? new Date(upcomingTrip.end_date).toLocaleDateString('th-TH') : 'ไม่ระบุวันกลับ'}</span>
+                      <Calendar className="h-3.5 w-3.5 text-blue-400" />
+                      <span>
+                        {new Date(upcomingTrip.start_date).toLocaleDateString('th-TH')} - {upcomingTrip.end_date ? new Date(upcomingTrip.end_date).toLocaleDateString('th-TH') : 'ไม่ระบุวันกลับ'}
+                      </span>
                     </span>
                   )}
-                  <span className="opacity-40">•</span>
+                  <span className="text-slate-600">•</span>
                   <span className="flex items-center gap-1.5">
-                    <Compass className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                    <span>งบ {Number(upcomingTrip.total_budget ?? upcomingTrip.budget ?? 0).toLocaleString()} {upcomingTrip.currency || 'JPY'}</span>
+                    <Compass className="h-3.5 w-3.5 text-blue-400" />
+                    <span>
+                      งบ {Number(upcomingTrip.total_budget ?? upcomingTrip.budget ?? 0).toLocaleString()} {upcomingTrip.currency || 'JPY'}
+                    </span>
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5 w-full md:w-auto">
+              <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
                 <Link
                   href={`/trips/${upcomingTrip.id}`}
-                  className="flex-1 md:flex-none px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>เข้าสู่ทริป</span>
                   <ArrowUpRight className="h-4 w-4" />
@@ -1075,6 +962,127 @@ export default function HomePage() {
             </div>
           </motion.div>
         )}
+
+        {/* ==================== 3. UTILITIES DOCK: LIVE FX QUICK BAR & TRAVEL NOTE ==================== */}
+        <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] shadow-2xs space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            
+            {/* Left: Quick FX Pill & Join Trip Button */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setShowFxCalculator(!showFxCalculator)}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                  showFxCalculator
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                    : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-blue-400'
+                }`}
+              >
+                <Coins className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                <span className="font-mono">1 JPY = {Number(fxRate).toFixed(3)} THB</span>
+                <span className="text-[11px] opacity-75 hidden xs:inline">คำนวณแปลงเงิน</span>
+                {showFxCalculator ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowJoinModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#262932] hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer"
+              >
+                <KeyRound className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                <span>เข้าร่วมด้วยรหัสทริป</span>
+              </button>
+            </div>
+
+            {/* Right: Cat Travel Tip Single-line Carousel */}
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <span className="font-bold text-[10px] uppercase tracking-wider text-blue-600 dark:text-blue-400 shrink-0">
+                💡 NOTE:
+              </span>
+              <span className="truncate max-w-[240px] sm:max-w-xs md:max-w-md">
+                {CAT_TRAVEL_TIPS[currentTipIndex].text}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentTipIndex((prev) => (prev + 1) % CAT_TRAVEL_TIPS.length)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer shrink-0"
+                title="ข้อคิดถัดไป"
+              >
+                <Shuffle className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+
+          {/* Collapsible Quick Currency Converter Drawer */}
+          <AnimatePresence>
+            {showFxCalculator && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden pt-3 border-t border-slate-200/80 dark:border-[#262932]"
+              >
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Calculator className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>คำนวณอัตราแลกเปลี่ยนแบบ Real-Time</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      ทศนิยม 3 ตำแหน่ง • อิงอัตราแลกเปลี่ยนเฉลี่ย
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    {/* Currency Selector Pills */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {(['JPY', 'CNY', 'USD', 'EUR', 'KRW'] as const).map((curr) => {
+                        const info = quickRates[curr];
+                        const isSelected = quickCalcCurr === curr;
+                        return (
+                          <button
+                            key={curr}
+                            type="button"
+                            onClick={() => setQuickCalcCurr(curr)}
+                            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                              isSelected
+                                ? 'bg-blue-600 text-white border-blue-500 shadow-2xs'
+                                : 'bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-blue-400'
+                            }`}
+                          >
+                            {info.flag} {info.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Amount input & result */}
+                    <div className="flex items-center gap-3 bg-white dark:bg-[#181a20] p-2 rounded-xl border border-slate-200 dark:border-[#262932]">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-slate-400 font-mono">{quickCalcCurr}:</span>
+                        <input
+                          type="number"
+                          value={quickCalcAmount}
+                          onChange={(e) => setQuickCalcAmount(e.target.value)}
+                          className="w-24 text-right font-mono font-bold text-xs p-1 rounded border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                          placeholder="10000"
+                        />
+                      </div>
+                      <span className="text-slate-400">=</span>
+                      <div className="flex items-center gap-1">
+                        <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm">
+                          ฿{((Number(quickCalcAmount) || 0) * (quickRates[quickCalcCurr]?.rate || 1)).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 font-mono">THB</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* ==================== SUPER ADMIN GLOBAL MODE BAR ==================== */}
         {isSuper && (
@@ -1300,9 +1308,9 @@ export default function HomePage() {
                           {t.currency || 'JPY'}
                         </span>
                         {t.isOwner ? (
-                          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400">👑 เจ้าของ</span>
+                          <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">เจ้าของ</span>
                         ) : (
-                          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">👥 สมาชิก</span>
+                          <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">สมาชิก</span>
                         )}
                       </div>
                       <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
