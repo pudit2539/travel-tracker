@@ -464,13 +464,15 @@
   {
     "row_num": 51,
     "date_label": "11 ธ.ค.",
-    "time_slot": "08:30 น.",
-    "city": "Nara (ครึ่งวันเช้ากระชับ)",
-    "main_place": "นั่งรถไฟ Kintetsu สู่สถานีนารา เดินเล่นสวนกวาง Nara Park ถ่ายรูปกับฝูงกวาง และไหว้พระใหญ่ที่วัด Todai-ji Temple (ทริปนารากระชับครึ่งวันตามคำขอ)",
+    "time_slot": "08:00 – 12:00 น.",
+    "city": "Nara (ไฮไลต์เมืองนารายามเช้า)",
+    "main_place": "ไฮไลต์เมืองนารายามเช้า: แวะชิมโมจิตำสดร้อนๆ หน้าร้าน Nakatanidou, เดินเล่นและถ่ายรูปกับฝูงกวางที่ Nara Park, เข้าสักการะพระใหญ่ไดบุตสึที่วัด Todai-ji Temple (12:00 น. เดินกลับมาสถานี Kintetsu-Nara เตรียมขึ้นรถไฟกลับเข้าเมือง)",
     "main_place_links": [
-      "https://maps.google.com/?q=Nara+Park"
+      "https://maps.google.com/?q=Nara+Park",
+      "https://maps.google.com/?q=Todai-ji+Temple+Nara",
+      "https://maps.google.com/?q=Kintetsu-Nara+Station"
     ],
-    "food_recommendation": "แวะชิมโมจิตำสดเหนียวนุ่มหน้าร้าน Nakatanidou ระหว่างทางเดินเที่ยว",
+    "food_recommendation": "แวะชิมโมจิตำสดร้อนๆ เหนียวนุ่มหน้าร้าน Nakatanidou ระหว่างทางเดินเที่ยว",
     "food_links": [
       "https://maps.google.com/?q=Nakatanidou"
     ],
@@ -480,69 +482,80 @@
       "https://maps.google.com/?q=Rokumei+Coffee+Nara",
       "https://maps.google.com/?q=Shizuka+Koen-ten+Nara"
     ],
-    "transport_info": "รถไฟ Kintetsu Line (Osaka-Namba -> Kintetsu-Nara) | แตะ ICOCA (680 เยน)"
+    "transport_info": "ขึ้นรถไฟ Kintetsu จากสถานี Osaka-Namba ตรงไปยังสถานี Kintetsu-Nara (แตะ ICOCA 680 เยน, ประมาณ 40 นาที)"
   },
   {
     "row_num": 54,
     "date_label": "11 ธ.ค.",
-    "time_slot": "12:30 น.",
-    "city": "Nara -> Osaka (Honmachi)",
-    "main_place": "นั่งรถไฟด่วน Kintetsu Line กลับเข้าโอซาก้า มุ่งตรงไปยังย่าน Honmachi ทันเวลามื้อเที่ยง",
-    "main_place_links": [],
-    "food_recommendation": "ข้าวแกงกะหรี่เนื้อทงคัตสึรสจัดจ้าน Hakugintei Curry ร้านท็อปในดวงใจคนญี่ปุ่น (ช่วงบ่ายโมงคิวซาลง)",
+    "time_slot": "12:15 – 15:00 น.",
+    "city": "Osaka (Tsuruhashi & Ikuno Korea Town)",
+    "main_place": "ชุมชนเกาหลี Ikuno Korea Town & มื้อเที่ยงปิ้งย่าง Tsuruhashi: เดินเล่นถนนคนเดิน Miyuki-dori (Ikuno Korea Town) ชิมสตรีทฟู้ดเกาหลี (ต๊อกบกกี คอร์นด็อก ขนมโฮต็อก) แวะดูเครื่องสำอางและของฝากเกาหลี",
+    "main_place_links": [
+      "https://maps.google.com/?q=Miyuki-dori+Korea+Town+Osaka",
+      "https://maps.google.com/?q=Tsuruhashi+Station"
+    ],
+    "food_recommendation": "มื้อกลางวัน (13:00 น.): ทานปิ้งย่างเกาหลียากินิคุชื่อดังหน้าสถานี Tsuruhashi หรือแวะทานอาหารเกาหลีแบบโลคอล + ชิมสตรีทฟู้ดเกาหลี (ต๊อกบกกี คอร์นด็อก ขนมโฮต็อก)",
     "food_links": [
-      "https://maps.google.com/?q=Hakugintei+Osaka"
+      "https://maps.google.com/?q=Tsuruhashi+Korean+Yakiniku+Osaka",
+      "https://maps.google.com/?q=Tsuruhashi+Korea+Town+Street+Food+Osaka"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 8: Curry House Nishimoto (แกงกะหรี่เนื้อทอดสไตล์โฮมเมด)\nคาเฟ่สำรอง: Wad Omotenashi Cafe (คาเฟ่ชาเขียวชงสดและขนมดังโงะย่างเตาถ่านส่วนตัว)\nที่เที่ยวสำรอง: Utsubo Park Osaka (สวนอุสึโบะ สวนกว้างร่มรื่นและย่านคาเฟ่ชิคๆ ของโอซาก้า)",
+    "backup_plan": "ร้านของฝากสำรอง: Tsuruhashi Wholesale Market (ตลาดค้าส่งกิมจิและอาหารเกาหลีแท้ๆ)\nคาเฟ่เกาหลีสำรอง: Cafe N2 Tsuruhashi (คาเฟ่สไตล์มินิมอลเกาหลี ครอฟเฟิลและครีมลาเต้)\nร้านอาหารเกาหลีสำรอง: Soran Tsuruhashi (ร้านอาหารพื้นเมืองเกาหลีและซุปกิมจิร้อนๆ)",
     "backup_links": [
-      "https://maps.google.com/?q=Curry+House+Nishimoto+Osaka",
-      "https://maps.google.com/?q=Wad+Omotenashi+Cafe+Osaka",
-      "https://maps.google.com/?q=Utsubo+Park+Osaka"
+      "https://maps.google.com/?q=Tsuruhashi+Market",
+      "https://maps.google.com/?q=Cafe+N2+Tsuruhashi",
+      "https://maps.google.com/?q=Soran+Tsuruhashi"
     ],
-    "transport_info": "รถไฟ Kintetsu Line (Kintetsu-Nara -> Osaka) | แตะ ICOCA (680 เยน)"
+    "transport_info": "นั่งรถไฟ Kintetsu จาก Kintetsu-Nara ยิงตรงมาลงที่สถานี Tsuruhashi (สึรุฮาชิ) ได้เลยรวดเดียว (ประมาณ 32 นาที ไม่ต้องเปลี่ยนขบวน) | แตะ ICOCA (540 เยน)"
   },
   {
     "row_num": 56,
     "date_label": "11 ธ.ค.",
-    "time_slot": "14:00 น.",
-    "city": "Osaka (Korea Town)",
-    "main_place": "นั่งรถไฟใต้ดินไปเยือนย่านชุมชนชาวเกาหลีที่ใหญ่ที่สุดในญี่ปุ่น Osaka Ikuno Korea Town (ถนน Miyuki-dori ย่าน Tsuruhashi) เดินชมบรรยากาศ ร้านค้าเกาหลี ของฝาก เครื่องสำอาง และขนมเกาหลี",
+    "time_slot": "15:15 – 17:45 น.",
+    "city": "Osaka (Den Den Town Nipponbashi)",
+    "main_place": "ลุยโซนของเล่น Den Den Town (คัดเฉพาะจุดเด่น 2.5 ชม. ไม่เดินสะเปะสะปะ): Joshin Super Kids Land Main Store & Character Hall (กันพลา โมเดลประกอบ รถแข่ง ฟิกเกอร์ และกล่องของเล่นหลัก) ➔ Surugaya Nipponbashi (กล่องสุ่ม ฟิกเกอร์มือสอง และของสะสมอนิเมะ) ➔ Mandarake Grandchaos (ของสะสมหายาก ฟิกเกอร์วินเทจ และตู้โชว์แรร์ไอเทม) ➔ Gashapon Bandai Official Shop (หมุนตู้กาชาปอง)",
     "main_place_links": [
-      "https://maps.google.com/?q=Miyuki-dori+Korea+Town+Osaka"
+      "https://maps.google.com/?q=Joshin+Super+Kids+Land+Main+Store",
+      "https://maps.google.com/?q=Surugaya+Osaka+Nipponbashi",
+      "https://maps.google.com/?q=Mandarake+Grandchaos",
+      "https://maps.google.com/?q=Gashapon+Bandai+Official+Shop+Nipponbashi"
     ],
-    "food_recommendation": "ชิมของว่างและเครื่องดื่มสไตล์เกาหลีในย่าน Tsuruhashi",
+    "food_recommendation": "ของว่าง/เครื่องดื่มระหว่างช้อปปิ้งย่านเด็นเด็นทาวน์ หรือแวะพักเหนื่อยจิบกาแฟ",
     "food_links": [
-      "https://maps.google.com/?q=Tsuruhashi+Korea+Town+Street+Food+Osaka"
+      "https://maps.google.com/?q=Brooklyn+Roasting+Company+Namba"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 9: ปิ้งย่างเกาหลี / หมูย่างเกาหลีรสเด็ดย่าน Tsuruhashi\nคาเฟ่เกาหลีสำรอง: Cafe N2 Tsuruhashi (คาเฟ่สไตล์มินิมอลเกาหลี ครอฟเฟิลและครีมลาเต้)\nร้านของฝากสำรอง: Tsuruhashi Wholesale Market (ตลาดค้าส่งกิมจิและอาหารเกาหลีแท้ๆ)",
+    "backup_plan": "ร้านของเล่นสำรอง 1: Animate Osaka Nipponbashi (อนิเมะ มังงะ และกู๊ดส์ลิขสิทธิ์แท้)\nร้านของเล่นสำรอง 2: Sofmap Namba (ฟิกเกอร์ เกม และอุปกรณ์ไอที)\nร้านของสะสมสำรอง: K-BOOKS Namba (กู๊ดส์และของสะสมอนิเมะมือสองสภาพนางฟ้า)\nคาเฟ่สำรอง: Brooklyn Roasting Company Namba (คาเฟ่ริมทางรถไฟ บรรยากาศดิบเท่สไตล์นิวยอร์ก)",
     "backup_links": [
-      "https://maps.google.com/?q=Tsuruhashi+Korean+Yakiniku+Osaka",
-      "https://maps.google.com/?q=Cafe+N2+Tsuruhashi",
-      "https://maps.google.com/?q=Tsuruhashi+Market"
+      "https://maps.google.com/?q=Animate+Osaka+Nipponbashi",
+      "https://maps.google.com/?q=Sofmap+Namba",
+      "https://maps.google.com/?q=K-BOOKS+Namba",
+      "https://maps.google.com/?q=Brooklyn+Roasting+Company+Namba"
     ],
-    "transport_info": "Osaka Metro (Namba -> Tsuruhashi) | แตะ ICOCA (190 เยน)"
+    "transport_info": "จากสถานี Tsuruhashi นั่งรถไฟ Kintetsu เพียง 2 สถานี (4 นาที) มาลงที่ สถานี Kintetsu-Nipponbashi ทางออก 5 แล้วเดินเข้าโซนของเล่นได้ทันที | แตะ ICOCA (180 เยน)"
   },
   {
     "row_num": 58,
     "date_label": "11 ธ.ค.",
-    "time_slot": "16:30 น.",
-    "city": "Osaka (Recycle Shopping)",
-    "main_place": "กลับเข้าย่านชินไซบาชิ ลุยล่าสมบัติร้านขายของมือสองญี่ปุ่นแนว General Recycle / Treasure Hunting (เสื้อผ้า แบรนด์เนม ของใช้ โมเดล แผ่นเสียง) ที่ 2nd STREET Shinsaibashi และร้านใหญ่ Mandarake Grandchaos",
+    "time_slot": "18:00 น. เป็นต้นไป",
+    "city": "Osaka (Shinsaibashi & Dotonbori)",
+    "main_place": "Shinsaibashi & มื้อค่ำ Dotonbori: เดินเท้าจาก Den Den Town ทะลุเข้าโซน Namba / Shinsaibashi เพื่อนำของที่ช้อปมากลับไปเก็บที่โรงแรม Quintessa แล้วออกมาเดินเล่นรับลมริมคลองโดทงโบริ ถ่ายรูปคู่ป้าย Dotonbori Glico Sign",
     "main_place_links": [
-      "https://maps.google.com/?q=2nd+Street+Shinsaibashi"
+      "https://maps.google.com/?q=Dotonbori+Glico+Sign",
+      "https://maps.google.com/?q=Quintessa+Hotel+Osaka+Shinsaibashi"
     ],
-    "food_recommendation": "มื้อค่ำเทมปุระเจ้าดัง Tenmasa Osaka หรืออาหารญี่ปุ่นโลคอลในย่านช้อปปิ้ง",
+    "food_recommendation": "ทานมื้อค่ำตามแผน: เทมปุระเจ้าดัง Tenmasa Osaka หรือราเมงข้อสอบ Ichiran Dotonbori หรือโอโคโนมิยากิกระทะร้อน Chibo",
     "food_links": [
-      "https://maps.google.com/?q=Tenmasa+Osaka"
+      "https://maps.google.com/?q=Tenmasa+Osaka",
+      "https://maps.google.com/?q=Ichiran+Ramen+Dotonbori",
+      "https://maps.google.com/?q=Chibo+Okonomiyaki+Dotonbori"
     ],
-    "backup_plan": "ร้านของมือสองเสริม 3: Book-Off Plus / Book-Off Super Bazaar Namba\nร้านของมือสองเสริม 4: Kindal Shinsaibashi Amerikamura\nคาเฟ่สำรอง: Brooklyn Roasting Company Namba (คาเฟ่ริมทางรถไฟ บรรยากาศดิบเท่สไตล์นิวยอร์ก)\nร้านของสะสมสำรอง: Joshin Super Kids Land Main Store Nipponbashi (สวรรค์กันดั้มและโมเดลรถไฟ)",
+    "backup_plan": "ที่เที่ยวสำรอง 1: เดินช้อปปิ้งถนนคนเดิน Shinsaibashi-Suji Shopping Street\nที่เที่ยวสำรอง 2: ตรอกหินโบราณและรูปปั้นพระฟุโดเมียวโอะมอสเขียว Hozenji Yokocho\nร้านอาหารสำรอง: Mizuno Okonomiyaki (โอโคโนมิยากิมิชลิน บิบ กูร์มองด์)\nร้านดองกี้สำรอง: Don Quijote Dotonbori (ช้อปปิ้งดองกี้ชิงช้าสวรรค์ริมคลอง เปิด 24 ชม.)",
     "backup_links": [
-      "https://maps.google.com/?q=BookOff+Plus+Namba+Osaka",
-      "https://maps.google.com/?q=Kindal+Shinsaibashi+Amerikamura",
-      "https://maps.google.com/?q=Brooklyn+Roasting+Company+Namba",
-      "https://maps.google.com/?q=Joshin+Super+Kids+Land+Main+Store"
+      "https://maps.google.com/?q=Shinsaibashi-Suji+Shopping+Street",
+      "https://maps.google.com/?q=Hozenji+Yokocho",
+      "https://maps.google.com/?q=Mizuno+Okonomiyaki",
+      "https://maps.google.com/?q=Don+Quijote+Dotonbori"
     ],
-    "transport_info": "Osaka Metro / เดินเท้า | แตะ ICOCA (190 เยน)"
+    "transport_info": "เดินเท้าจาก Den Den Town ทะลุเข้าย่าน Namba / Shinsaibashi กลับโรงแรม Quintessa Hotel Osaka Shinsaibashi Comic & Books | ฟรี"
   },
   {
     "row_num": 61,

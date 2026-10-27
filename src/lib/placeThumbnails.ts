@@ -215,6 +215,24 @@ const SPECIFIC_ATTRACTION_THUMBNAILS: LandmarkRule[] = [
     tagLabel: 'Gourmet & Dining',
     wikiQuery: 'Kuromon Ichiba Market',
   },
+  // 20.1 Den Den Town & Nipponbashi (Anime & Model District)
+  {
+    keywords: ['den den', 'denden', 'nipponbashi', 'นิปปอนบาชิ', 'เด็นเด็น', 'เดนเดน', 'joshin', 'surugaya', 'super kids land', 'mandarake', 'gashapon', 'ของเล่น', 'กันพลา'],
+    imageUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-indigo-600 via-purple-600 to-pink-600',
+    emoji: '🤖',
+    tagLabel: 'Den Den Town',
+    wikiQuery: 'Nipponbashi',
+  },
+  // 20.2 Ikuno Korea Town & Tsuruhashi
+  {
+    keywords: ['korea town', 'koreatown', 'ikuno', 'tsuruhashi', 'สึรุฮาชิ', 'โคเรียทาวน์', 'เกาหลี', 'miyuki-dori'],
+    imageUrl: 'https://images.unsplash.com/photo-1583224964978-2257b96073d3?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-red-600 via-rose-600 to-amber-600',
+    emoji: '🥘',
+    tagLabel: 'Korea Town',
+    wikiQuery: 'Tsuruhashi Station',
+  },
   // 21. Rinku Premium Outlets & Shopping
   {
     keywords: ['rinku', 'outlet', 'donki', 'shopping', 'りんくう', 'gu', 'uniqlo', 'ช้อปปิ้ง', 'ดองกี้', 'เอาท์เล็ท', 'ริงกุ'],

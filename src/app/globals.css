@@ -108,14 +108,29 @@ input, textarea, [contenteditable="true"], .selectable-text {
   }
 }
 
-/* Horizontal safe area protection for side notches in landscape (e.g. iPhone 17 Pro Max landscape) */
-.safe-nav-container {
+/* Horizontal safe area protection for side notches in landscape (e.g. iPhone 15/16/17 Pro Max landscape) */
+.safe-nav-container,
+.safe-area-x {
   padding-left: max(env(safe-area-inset-left, 0px), 1rem);
   padding-right: max(env(safe-area-inset-right, 0px), 1rem);
 }
 
 .safe-bottom-nav {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 1.25rem);
+}
+
+/* Optimized touch interactions and momentum scrolling for iOS (iPhone & iPad) */
+@media (hover: none) and (pointer: coarse) {
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+
+/* Modal responsive viewport safety for iPhone landscape (low height ~375px) and iPad */
+.ios-safe-modal {
+  max-height: calc(100dvh - max(env(safe-area-inset-top, 0px), 1rem) - max(env(safe-area-inset-bottom, 0px), 1rem) - 1.5rem);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Background Subtle Dot-Grid Pattern */

@@ -110,6 +110,20 @@
      4. Odysis Suites Osaka Airport Hotel (14 - 15 ธ.ค., 1 คืน, 1,900 THB)
    - คัดลอกไฟล์ต้นฉบับไปไว้ที่ `Knowledge/Japan_Osaka-Kyoto_04-15Dec2026_v4.xlsx` เพื่อเป็นเอกสารอ้างอิงของโปรเจกต์
 
+### [2026-10-20] ปรับปรุงแผนเที่ยว Day 8 (11 ธ.ค. 2026): Nara ➔ Korea Town ➔ Den Den Town ➔ Shinsaibashi & Dotonbori
+- **แก้ปัญหาเส้นทางย้อนไปมา**: เปลี่ยนรูทการเดินทางให้เรียงต่อกันเป็นแนวเส้นตรงบนสาย Kintetsu Line (Osaka-Namba ➔ Kintetsu-Nara ➔ Tsuruhashi ➔ Kintetsu-Nipponbashi ➔ Shinsaibashi)
+- **4 ช่วงเวลาหลัก**:
+  1. `08:00 – 12:00 น.`: ไฮไลต์เมืองนารายามเช้า (Nakatanidou โมจิตำสด, Nara Park ถ่ายรูปฝูงกวาง, ไหว้พระใหญ่ Todai-ji Temple)
+  2. `12:15 – 15:00 น.`: นั่ง Kintetsu ตรงมาลง Tsuruhashi มื้อกลางวันปิ้งย่างเกาหลีชื่อดังหน้าสถานี เดินเล่นถนนคนเดิน Miyuki-dori (Ikuno Korea Town) ชิมสตรีทฟู้ด (ต๊อกบกกี คอร์นด็อก ขนมโฮต็อก) แวะดูเครื่องสำอางและของฝาก
+  3. `15:15 – 17:45 น.`: นั่ง Kintetsu เพียง 2 สถานีลง Kintetsu-Nipponbashi ลุยโซนของเล่น Den Den Town คัดเฉพาะร้านไฮไลท์ 2.5 ชม. (Joshin Super Kids Land Main Store & Character Hall, Surugaya Nipponbashi, Mandarake Grandchaos, Gashapon Bandai Official Shop)
+  4. `18:00 น. เป็นต้นไป`: เดินทะลุเข้า Shinsaibashi เก็บของช้อปปิ้งที่โรงแรม Quintessa แล้วออกมาเดินรับลมริมคลองโดทงโบริ ถ่ายรูปป้ายกูลิโกะ และทานมื้อค่ำตามแผน (เทมปุระ Tenmasa, ราเมงข้อสอบ Ichiran, หรือโอโคโนมิยากิ Chibo/Mizuno)
+- **อัปเดตระบบครบทุกมิติ**:
+  - อัปเดตตารางฐานข้อมูล `itinerary_items` ใน Supabase แบบเรียลไทม์
+  - อัปเดต `scripts/v4_parsed_items.json`
+  - อัปเดต `TRIP_ITINERARY_SUMMARY.md`
+  - อัปเดต Master Excel: `Japan_Osaka-Kyoto_04-15Dec2026_v4.xlsx` และ `Knowledge/Japan_Osaka-Kyoto_04-15Dec2026_v4.xlsx`
+  - เพิ่ม Visual Card & Category Tags ใน `src/lib/placeThumbnails.ts` สำหรับ `Den Den Town` และ `Korea Town`
+
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน
 - เพิ่ม `AddMemberModal` ให้เลือกสมาชิกจากระบบได้โดยตรง

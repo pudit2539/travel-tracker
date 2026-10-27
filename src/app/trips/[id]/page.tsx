@@ -2356,7 +2356,7 @@ export default function TripDetailPage() {
       </nav>
 
       {/* ==================== MAIN CONTENT CONTAINER ==================== */}
-      <main className="relative z-10 max-w-5xl mx-auto px-3.5 sm:px-4 pt-3 sm:pt-4 pb-48 sm:pb-28 space-y-3.5 sm:space-y-4">
+      <main className="relative z-10 max-w-5xl mx-auto px-3.5 sm:px-4 safe-area-x pt-3 sm:pt-4 pb-48 sm:pb-28 space-y-3.5 sm:space-y-4">
 
         {/* Guest Preview & Join Invitation Banner */}
         {!currentUser && (

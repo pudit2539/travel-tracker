@@ -199,6 +199,16 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    // ดักจับกรณีผู้ใช้คลิกลิงก์ Reset Password จากอีเมลที่อาจถูกส่งมาที่ Root URL (/)
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+        window.location.replace(`/login${window.location.search}${window.location.hash}`);
+        return;
+      }
+    }
+
     // Clean up legacy unkeyed caches to prevent cross-account leak
     try {
       localStorage.removeItem('travel_tracker_home_trips_cache');
@@ -831,7 +841,7 @@ export default function HomePage() {
       </nav>
 
       {/* ==================== MAIN CONTENT CONTAINER ==================== */}
-      <main className="relative z-10 max-w-5xl mx-auto px-4 pt-6 space-y-6">
+      <main className="relative z-10 max-w-5xl mx-auto px-4 safe-area-x pt-6 space-y-6">
 
         {/* ==================== 1. TRAVO EDITORIAL HERO & SUPER-APP UTILITY DECK ==================== */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
