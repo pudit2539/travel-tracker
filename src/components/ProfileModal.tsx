@@ -24,7 +24,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
 
   // Profile data
   const [displayName, setDisplayName] = useState('');
-  const [selectedAvatarId, setSelectedAvatarId] = useState('cat_pink');
+  const [selectedAvatarId, setSelectedAvatarId] = useState('cat_ninja');
   const [loading, setLoading] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -102,10 +102,10 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
 
       if (data) {
         setDisplayName(data.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || '');
-        setSelectedAvatarId(data.avatar_id || user.user_metadata?.avatar_id || 'cat_pink');
+        setSelectedAvatarId(data.avatar_id || user.user_metadata?.avatar_id || 'cat_ninja');
       } else {
         setDisplayName(user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || '');
-        setSelectedAvatarId(user.user_metadata?.avatar_id || 'cat_pink');
+        setSelectedAvatarId(user.user_metadata?.avatar_id || 'cat_ninja');
       }
     } catch (err) {
       console.error('Fetch profile err:', err);

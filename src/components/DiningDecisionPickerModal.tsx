@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CURATED_EXPLORE_SPOTS, CuratedExploreSpot } from '@/data/curatedExploreSpots';
+import { triggerHaptic } from '@/lib/haptics';
 
 export interface DecisionItem {
   id: string;
@@ -356,6 +357,7 @@ export default function DiningDecisionPickerModal({
       counter++;
       const randomIdx = Math.floor(Math.random() * pool.length);
       setAnimationIndex(randomIdx);
+      triggerHaptic('selection');
 
       if (counter >= maxSteps) {
         if (shuffleIntervalRef.current) clearInterval(shuffleIntervalRef.current);
@@ -368,6 +370,7 @@ export default function DiningDecisionPickerModal({
         setBackupItems(backups);
         setIsShuffling(false);
         setHasPicked(true);
+        triggerHaptic('success');
         toast.success(`สุ่มได้: ${winner.name.slice(0, 32)} ✨`);
         setTimeout(() => {
           winnerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });

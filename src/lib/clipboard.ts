@@ -1,4 +1,4 @@
-// src/lib/clipboard.ts
+import { triggerHaptic } from '@/lib/haptics';
 
 /**
  * Robust copy helper that handles Permission Policy restrictions,
@@ -11,6 +11,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   try {
     if (navigator?.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
+      triggerHaptic('light');
       return true;
     }
   } catch (err) {
@@ -39,7 +40,10 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     textArea.select();
     const successful = document.execCommand('copy');
     document.body.removeChild(textArea);
-    if (successful) return true;
+    if (successful) {
+      triggerHaptic('light');
+      return true;
+    }
   } catch (fallbackErr) {
     console.error('Fallback execCommand copy failed:', fallbackErr);
   }

@@ -60,19 +60,19 @@ export default function PrintableItineraryModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none print:p-0 print:static print:bg-white" role="dialog" aria-modal="true">
       
       {/* Modal Container (Scrollable Preview on screen, Clean Page on Print) */}
-      <div className="w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#130d22] shadow-2xl border border-slate-200 dark:border-purple-800/60 max-h-[90dvh] flex flex-col overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in zoom-in-95 duration-200">
         
         {/* Screen Header (Hidden on print) */}
-        <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-purple-900/40 bg-slate-50 dark:bg-purple-950/40 print:hidden">
+        <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] bg-slate-50 dark:bg-[#181a20] print:hidden">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300">
+            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
               <Printer className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 ส่งออกแผนเที่ยวเป็น PDF / พิมพ์เอกสาร 📄
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-purple-300/70 font-medium">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 จัดหน้ากระดาษแบบ A4 Printable Booklet สวยงาม ชัดเจน พกติดตัวหรือยื่น ตม. ได้ทันที
               </p>
             </div>
@@ -81,13 +81,13 @@ export default function PrintableItineraryModal({
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-pink-500/25 flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-all"
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-all"
             >
               <Printer className="h-4 w-4" /> สั่งพิมพ์ / บันทึก PDF
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-purple-200 cursor-pointer"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -100,7 +100,7 @@ export default function PrintableItineraryModal({
           {/* Document Cover Header */}
           <div className="border-b-2 border-slate-900 pb-5 flex flex-wrap justify-between items-end gap-4">
             <div>
-              <span className="text-[11px] font-black uppercase tracking-widest text-pink-600 bg-pink-50 px-2.5 py-0.5 rounded border border-pink-200">
+              <span className="text-[11px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
                 Official Travel Itinerary & Guidebook
               </span>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-950 mt-2 tracking-tight">
@@ -163,7 +163,7 @@ export default function PrintableItineraryModal({
                                 {item.main_place}
                               </span>
                               {item.main_place_links && item.main_place_links.length > 0 && (
-                                <div className="text-[10px] text-pink-600 font-medium">
+                                <div className="text-[10px] text-blue-600 font-medium">
                                   🔗 Google Maps Link
                                 </div>
                               )}

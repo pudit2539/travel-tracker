@@ -16,6 +16,7 @@ import {
   PlacePhotoLightboxModal,
 } from '@/components/trip-detail/CustomPlacePhotoModal';
 import { usePlaceVisualMeta } from '@/lib/placeThumbnails';
+import { triggerHaptic } from '@/lib/haptics';
 
 export interface ItineraryStopCardProps {
   item: any;
@@ -51,6 +52,7 @@ function useStopVisitedState(item: any) {
     if (!activityKey) return;
     const next = toggleActivityVisited(tripId, activityKey);
     setVisited(next);
+    triggerHaptic(next ? 'success' : 'light');
   };
 
   return { visited, toggleVisited };

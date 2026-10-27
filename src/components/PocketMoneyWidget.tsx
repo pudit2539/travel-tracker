@@ -207,7 +207,7 @@ export default function PocketMoneyWidget({
                   💳 Travel Card {hasTravelCardBudget ? 'เหลือ' : 'ใช้ไป'} {cardSummaryDisp.primarySymbol}{cardSummaryDisp.primaryAmount.toLocaleString()}
                 </span>
                 {creditCardSpent > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/60">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-[#1e2027] text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-[#262932]">
                     💳 เครดิต {creditSummaryDisp.primarySymbol}{creditSummaryDisp.primaryAmount.toLocaleString()}
                   </span>
                 )}
@@ -359,12 +359,12 @@ export default function PocketMoneyWidget({
         </div>
 
         {/* Wallet 3: Credit Card */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-900/40 flex flex-col justify-between space-y-2">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/30 dark:bg-[#1e2027] border border-indigo-200/60 dark:border-[#262932] flex flex-col justify-between space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+            <span className="text-xs font-black text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
               <span>💳 บัตรเครดิต</span>
             </span>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-200">
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
               Visa / Master / JCB
             </span>
           </div>
@@ -373,20 +373,20 @@ export default function PocketMoneyWidget({
             const disp = resolveDisplayCurrency(creditCardSpent, currency, fxRate, currencyView);
             return (
               <div>
-                <div className="text-[10px] font-bold text-purple-700/80 dark:text-purple-300/70 mb-0.5">
+                <div className="text-[10px] font-bold text-indigo-700/80 dark:text-indigo-300/70 mb-0.5">
                   ยอดรูดจ่ายสะสม ({disp.primaryCurrency})
                 </div>
-                <div className="text-xl sm:text-2xl font-black font-mono text-purple-950 dark:text-purple-100 leading-tight">
+                <div className="text-xl sm:text-2xl font-black font-mono text-indigo-950 dark:text-indigo-100 leading-tight">
                   {disp.primarySymbol}<AnimatedNumber value={disp.primaryAmount} />
                 </div>
-                <div className="text-[11px] font-semibold text-purple-700 dark:text-purple-300/80 mt-0.5">
+                <div className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300/80 mt-0.5">
                   ≈ {disp.secondarySymbol}<AnimatedNumber value={disp.secondaryAmount} /> {disp.secondaryCurrency}
                 </div>
               </div>
             );
           })()}
 
-          <div className="text-[10px] text-purple-800/80 dark:text-purple-300/60 pt-1 border-t border-purple-200/60 dark:border-purple-900/30 flex justify-between">
+          <div className="text-[10px] text-indigo-800/80 dark:text-indigo-300/60 pt-1 border-t border-indigo-200/60 dark:border-[#262932] flex justify-between">
             <span>ยอดรูดรอบบิลนี้</span>
             <span>{expenses.filter(e => e.payment_method === 'credit_card').length} รายการ</span>
           </div>

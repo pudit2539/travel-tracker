@@ -262,6 +262,28 @@ export default function TripDetailPage() {
     }
   };
 
+  const handleNativeShare = async () => {
+    if (typeof window === 'undefined') return;
+    const shareUrl = `${window.location.origin}/trips/${tripId}?invite=${tripId}`;
+    const tripName = trip?.name || trip?.title || 'ทริปท่องเที่ยว';
+    if (navigator?.share) {
+      try {
+        await navigator.share({
+          title: `${tripName} - Travel Tracker`,
+          text: `ชวนมาดูแผนเที่ยวและช่วยกันจดค่าใช้จ่ายทริป "${tripName}" ✈️`,
+          url: shareUrl,
+        });
+        toast.success('แชร์เรียบร้อยแล้ว ✨');
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          copyInviteLink();
+        }
+      }
+    } else {
+      copyInviteLink();
+    }
+  };
+
   // Form states for Expense
   const [scannedData, setScannedData] = useState<any>({
     title: '',
@@ -3630,6 +3652,16 @@ export default function TripDetailPage() {
             </div>
 
             <div className="space-y-3.5">
+              {/* 1-Tap LINE / AirDrop / Native Share Sheet */}
+              <button
+                type="button"
+                onClick={handleNativeShare}
+                className="w-full py-3 min-h-[44px] rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 touch-manipulation"
+              >
+                <Share2 className="h-4 w-4" />
+                <span>แชร์ส่งเข้า LINE / AirDrop ทันที 📲</span>
+              </button>
+
               <div className="p-3.5 rounded-2xl border border-blue-100 dark:border-[#262932] bg-blue-50/20 dark:bg-[#1e2027] space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">

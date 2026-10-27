@@ -13,7 +13,7 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#faf8fd' },
-    { media: '(prefers-color-scheme: dark)', color: '#181b2a' },
+    { media: '(prefers-color-scheme: dark)', color: '#121316' },
   ],
 };
 
@@ -28,7 +28,7 @@ export const metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'TravelTracker',
   },
 };
@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
-      <body className="min-h-screen antialiased bg-[#faf8fd] text-[#1e293b] dark:bg-[#181b2a] dark:text-[#f1f5f9] selection:bg-rose-400 selection:text-white">
+      <body className="min-h-screen antialiased bg-[#faf8fd] text-[#1e293b] dark:bg-[#121316] dark:text-[#f1f5f9] selection:bg-blue-600 selection:text-white">
         <ThemeProvider>
           <PWAHandler />
           <ErrorBoundary>

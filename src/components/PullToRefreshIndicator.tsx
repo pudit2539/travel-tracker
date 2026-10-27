@@ -24,25 +24,25 @@ export default function PullToRefreshIndicator({
         transform: `translateY(${Math.min(pullDistance * 0.7, 48)}px)`,
       }}
     >
-      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-[#130d22] border border-pink-300 dark:border-purple-800 shadow-xl animate-in fade-in zoom-in-90 duration-150">
+      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] shadow-xl animate-in fade-in zoom-in-90 duration-150">
         {isRefreshing ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin text-pink-500" />
-            <span className="text-xs font-bold bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 bg-clip-text text-transparent">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
               กำลังรีเฟรชข้อมูลล่าสุด...
             </span>
           </>
         ) : (
           <>
             <div 
-              className="p-1 rounded-full bg-pink-100 dark:bg-pink-950/80 text-pink-600 dark:text-pink-400 transition-transform duration-150"
+              className="p-1 rounded-full bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 transition-transform duration-150"
               style={{
                 transform: `rotate(${isReadyToRefresh ? 180 : (pullDistance / 65) * 180}deg)`,
               }}
             >
               <ArrowDown className="h-3.5 w-3.5" />
             </div>
-            <span className="text-xs font-bold text-slate-700 dark:text-purple-200">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
               {isReadyToRefresh ? 'ปล่อยนิ้วเพื่อรีเฟรช 🚀' : 'ดึงลงเพื่อรีเฟรช'}
             </span>
           </>

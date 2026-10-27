@@ -73,7 +73,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
         </div>
 
         {/* Roles explainer banner (Clean Corporate Style) */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121622] border border-slate-200/70 dark:border-[#262932] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
           <div className="flex items-center gap-2">
             <Edit3 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             <span className="font-bold text-slate-800 dark:text-slate-200">Editor:</span>
@@ -110,13 +110,14 @@ export const TripMembersTab = React.memo(function TripMembersTab({
             return (
               <div 
                 key={m.id} 
-                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md flex items-center justify-between gap-3"
+                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
+                {/* Member Info (Avatar, Name, Badges, Role Description) */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`relative shrink-0 ${isTripOwner ? 'ring-2 ring-amber-400 dark:ring-amber-500 rounded-full' : ''}`}>
                     <CatAvatarBadge avatarId={avatarId} size="lg" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                       <span className="truncate">{mName}</span>
                       {isCurrent && (
@@ -131,7 +132,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">
                       {isTripOwner
                         ? 'สิทธิ์เต็ม — ผู้สร้างทริป (Owner)'
                         : m.role === 'editor'
@@ -145,65 +146,66 @@ export const TripMembersTab = React.memo(function TripMembersTab({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Member Actions (Role Selector, Transfer, Delete) */}
+                <div className="flex items-center gap-2 pt-2.5 sm:pt-0 border-t border-slate-200/60 dark:border-[#262932] sm:border-t-0 shrink-0">
                   {isOwner && !isTripOwner ? (
-                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto">
                       <select
                         value={m.role || 'viewer'}
                         onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as TripRole)}
-                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-500 shadow-2xs transition-colors"
+                        className="flex-1 sm:flex-initial px-3 py-2 min-h-[44px] rounded-xl text-xs font-bold border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-500 shadow-2xs transition-colors touch-manipulation"
                       >
                         <option value="editor">Editor — แก้ไขแผนและรายจ่าย</option>
-                        <option value="contributor">Contributor — ดูแผน และ บันทึกรายจ่ายได้</option>
+                        <option value="contributor">Contributor — ดูแผนและรายจ่าย</option>
                         <option value="viewer">Viewer — ดูอย่างเดียว</option>
-                        <option value="plan_only">Plan Only — ดูเฉพาะแผนเที่ยว</option>
+                        <option value="plan_only">Plan Only — ดูเฉพาะแผน</option>
                       </select>
 
                       {onInitiateTransferOwnership && (
                         <button
                           type="button"
                           onClick={() => onInitiateTransferOwnership(m)}
-                          className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800/60 transition-all cursor-pointer flex items-center gap-1 active:scale-95 shadow-2xs"
+                          className="px-3 py-2 min-h-[44px] rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800/60 transition-all cursor-pointer flex items-center gap-1 active:scale-95 shadow-2xs shrink-0 touch-manipulation"
                           title="โอนสิทธิ์เจ้าของทริปให้สมาชิกคนนี้"
                         >
-                          <ArrowRightLeft className="h-3 w-3" />
+                          <ArrowRightLeft className="h-3.5 w-3.5" />
                           <span className="hidden sm:inline">โอนสิทธิ์</span>
                         </button>
                       )}
 
                       <button
                         onClick={() => handleRemoveMember(m.id, mName)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-all cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-900/50"
+                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-all cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-900/50 shrink-0 touch-manipulation active:scale-95"
                         title="ลบสมาชิกออกจากทริป"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
-                    <span className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 shadow-2xs font-mono">
+                    <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 shadow-2xs font-mono ml-auto sm:ml-0">
                       {isTripOwner ? (
                         <>
-                          <Crown className="h-3 w-3 text-amber-500" />
+                          <Crown className="h-3.5 w-3.5 text-amber-500" />
                           <span>Owner</span>
                         </>
                       ) : m.role === 'editor' ? (
                         <>
-                          <Edit3 className="h-3 w-3 text-emerald-500" />
+                          <Edit3 className="h-3.5 w-3.5 text-emerald-500" />
                           <span>Editor</span>
                         </>
                       ) : m.role === 'contributor' ? (
                         <>
-                          <Receipt className="h-3 w-3 text-blue-500" />
+                          <Receipt className="h-3.5 w-3.5 text-blue-500" />
                           <span>Contributor</span>
                         </>
                       ) : m.role === 'plan_only' ? (
                         <>
-                          <MapPin className="h-3 w-3 text-slate-400" />
+                          <MapPin className="h-3.5 w-3.5 text-slate-400" />
                           <span>Plan Only</span>
                         </>
                       ) : (
                         <>
-                          <Eye className="h-3 w-3 text-slate-400" />
+                          <Eye className="h-3.5 w-3.5 text-slate-400" />
                           <span>Viewer</span>
                         </>
                       )}
