@@ -182,9 +182,9 @@ export default function VersionRollbackModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
+        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
               <History className="h-5 w-5" />
@@ -200,7 +200,7 @@ export default function VersionRollbackModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -222,7 +222,7 @@ export default function VersionRollbackModal({
           )}
 
           {/* Quick Snapshot Creator */}
-          <div className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438] border border-blue-200/60 dark:border-[#222c42] space-y-2.5">
+          <div className="p-4 rounded-2xl bg-blue-50/40 dark:bg-[#1e2027] border border-blue-200/60 dark:border-[#262932] space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" /> บันทึก Snapshot เวอร์ชันปัจจุบัน (Create Restore Point)
@@ -232,7 +232,7 @@ export default function VersionRollbackModal({
               <input
                 type="text"
                 placeholder="ชื่อจุดบันทึก เช่น ก่อนเพิ่มแผนเกียวโต, ก่อนแก้ค่าใช้จ่าย"
-                className="flex-1 p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
+                className="flex-1 p-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
                 value={newSnapshotLabel}
                 onChange={(e) => setNewSnapshotLabel(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateSnapshot()}
@@ -259,7 +259,7 @@ export default function VersionRollbackModal({
             </div>
 
             {snapshots.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-[#222c42] rounded-2xl text-xs text-slate-400 dark:text-slate-500">
+              <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-2xl text-xs text-slate-400 dark:text-slate-500">
                 ยังไม่มีการบันทึก Snapshot ไว้ (กดบันทึกจุดถอยด้านบนเพื่อสร้าง)
               </div>
             ) : (
@@ -267,7 +267,7 @@ export default function VersionRollbackModal({
                 {snapshots.map((snap) => (
                   <div
                     key={snap.id}
-                    className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70 flex items-center justify-between gap-3 hover:border-blue-300 dark:hover:border-blue-700 transition-all"
+                    className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027]/70 flex items-center justify-between gap-3 hover:border-blue-300 dark:hover:border-blue-700 transition-all"
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -320,7 +320,7 @@ export default function VersionRollbackModal({
           </div>
 
           {/* Disaster Recovery JSON Export & Import */}
-          <div className="p-4 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/60 dark:bg-[#1c2438]/70 space-y-2.5">
+          <div className="p-4 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027]/70 space-y-2.5">
             <div>
               <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <FileJson className="h-4 w-4 text-blue-600 dark:text-blue-400" /> สำรองข้อมูลทั้งทริปเป็นไฟล์ JSON (Disaster Recovery)
@@ -334,12 +334,12 @@ export default function VersionRollbackModal({
               <button
                 type="button"
                 onClick={handleExportBackup}
-                className="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:border-blue-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer"
+                className="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:border-blue-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer"
               >
                 <Download className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> ดาวน์โหลด JSON Backup
               </button>
 
-              <label className="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#151b2b] text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:border-blue-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer">
+              <label className="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:border-blue-500 hover:scale-[1.02] shadow-2xs transition-all cursor-pointer">
                 <Upload className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> นำเข้ากู้คืน JSON
                 <input type="file" accept=".json" className="hidden" onChange={handleImportBackup} />
               </label>
@@ -349,11 +349,11 @@ export default function VersionRollbackModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 pt-3 border-t border-slate-100 dark:border-[#222c42] flex justify-end">
+        <div className="p-6 pt-3 border-t border-slate-100 dark:border-[#262932] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-slate-300 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            className="px-5 py-2 rounded-xl border border-slate-300 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
           >
             ปิดหน้าต่าง
           </button>

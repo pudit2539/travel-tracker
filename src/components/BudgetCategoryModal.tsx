@@ -388,14 +388,14 @@ export default function BudgetCategoryModal({
       aria-modal="true"
     >
       <div 
-        className="w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#222c42] shadow-2xl flex flex-col overflow-hidden max-h-[90dvh] glow-blue animate-in zoom-in-95 duration-150 modal-safe-card"
+        className="w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-[#262932] shadow-2xl flex flex-col overflow-hidden max-h-[90dvh] glow-blue animate-in zoom-in-95 duration-150 modal-safe-card"
         onClick={(e) => e.stopPropagation()}
       >
         
         {/* Header (Clean, Corporate, Outline style) */}
-        <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-[#222c42] flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-[#151b2b]/50">
+        <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-[#262932] flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-[#181a20]/50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#1a2133] text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#1a2133] text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0">
               <Wallet className="h-4 w-4" />
             </div>
             <div>
@@ -403,7 +403,7 @@ export default function BudgetCategoryModal({
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                   วางแผนงบประมาณทริป
                 </h2>
-                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#263147]">
+                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#262932]">
                   {formatExchangeRateDisplay(currency, fxRate)}
                 </span>
               </div>
@@ -417,7 +417,7 @@ export default function BudgetCategoryModal({
             <select
               value={currency}
               onChange={(e) => handleCurrencyChange(e.target.value)}
-              className="py-1 px-2 rounded-lg text-xs font-mono font-bold bg-white dark:bg-[#182030] border border-slate-300 dark:border-[#2b354f] text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+              className="py-1 px-2 rounded-lg text-xs font-mono font-bold bg-white dark:bg-[#1e2027] border border-slate-300 dark:border-[#262932] text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
             >
               {SUPPORTED_CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -428,7 +428,7 @@ export default function BudgetCategoryModal({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
               title="ปิดหน้าต่าง"
             >
               <X className="h-5 w-5" />
@@ -440,7 +440,7 @@ export default function BudgetCategoryModal({
         <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1 text-left">
 
           {/* Section 1: Pre-paid & Fixed Costs */}
-          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/40 dark:bg-[#151b2b]/40 space-y-3">
+          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-slate-50/40 dark:bg-[#181a20]/40 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-slate-500 dark:text-slate-400" />
@@ -467,7 +467,7 @@ export default function BudgetCategoryModal({
                   step="100"
                   value={fixedCostsInput}
                   onChange={(e) => setFixedCostsInput(e.target.value)}
-                  className="w-full pr-16 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#182030] text-sm sm:text-base font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
+                  className="w-full pr-16 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-sm sm:text-base font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
                   placeholder="0"
                 />
                 <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold font-mono text-slate-400">
@@ -483,7 +483,7 @@ export default function BudgetCategoryModal({
           </div>
 
           {/* Section 2: Daily Allowance & Pocket Money */}
-          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/40 dark:bg-[#151b2b]/40 space-y-3">
+          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-slate-50/40 dark:bg-[#181a20]/40 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-1.5">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
@@ -509,7 +509,7 @@ export default function BudgetCategoryModal({
                     step="100"
                     value={dailyPerPersonInput}
                     onChange={(e) => handleDailyPerPersonChange(e.target.value)}
-                    className="w-full pr-20 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#182030] text-sm font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
+                    className="w-full pr-20 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-sm font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
                     placeholder="2500"
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold font-mono text-slate-400">
@@ -524,7 +524,7 @@ export default function BudgetCategoryModal({
                       key={preset}
                       type="button"
                       onClick={() => handleDailyPerPersonChange(String(preset))}
-                      className="px-2 py-0.5 rounded-md border border-slate-200 dark:border-[#2b354f] text-[10px] font-mono font-medium text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                      className="px-2 py-0.5 rounded-md border border-slate-200 dark:border-[#262932] text-[10px] font-mono font-medium text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
                     >
                       {preset.toLocaleString()}
                     </button>
@@ -544,7 +544,7 @@ export default function BudgetCategoryModal({
                     step="500"
                     value={dailyTotalInput}
                     onChange={(e) => handleDailyTotalChange(e.target.value)}
-                    className="w-full pr-16 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#182030] text-sm font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
+                    className="w-full pr-16 pl-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-sm font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
                     placeholder="60000"
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold font-mono text-slate-400">
@@ -561,7 +561,7 @@ export default function BudgetCategoryModal({
           </div>
 
           {/* Section 3: Summary & Member Allocation */}
-          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/40 dark:bg-[#151b2b]/40 space-y-3.5">
+          <div className="p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-slate-50/40 dark:bg-[#181a20]/40 space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
@@ -571,7 +571,7 @@ export default function BudgetCategoryModal({
               </div>
 
               {/* Toggle Split Mode */}
-              <div className="flex items-center gap-1 p-0.5 rounded-lg border border-slate-200 dark:border-[#2b354f] bg-white dark:bg-[#182030] text-[10px] font-bold">
+              <div className="flex items-center gap-1 p-0.5 rounded-lg border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-[10px] font-bold">
                 <button
                   type="button"
                   onClick={() => setSplitMode('even')}
@@ -625,7 +625,7 @@ export default function BudgetCategoryModal({
                 return (
                   <div 
                     key={m.key}
-                    className="p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#182030] flex items-center justify-between gap-3"
+                    className="p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <CatAvatarBadge avatarId={m.avatar} size="sm" />
@@ -650,8 +650,8 @@ export default function BudgetCategoryModal({
                           onChange={(e) => handleMemberBudgetChange(m.key, e.target.value)}
                           className={`w-28 sm:w-36 pr-12 pl-2.5 py-1.5 rounded-lg border text-xs font-mono font-bold outline-none text-right ${
                             splitMode === 'even'
-                              ? 'bg-slate-100 dark:bg-[#121622] border-slate-200 dark:border-[#263147] text-slate-700 dark:text-slate-300 cursor-not-allowed'
-                              : 'bg-white dark:bg-[#1c2438] border-slate-300 dark:border-[#2b354f] text-slate-900 dark:text-white focus:border-blue-500'
+                              ? 'bg-slate-100 dark:bg-[#121316] border-slate-200 dark:border-[#262932] text-slate-700 dark:text-slate-300 cursor-not-allowed'
+                              : 'bg-white dark:bg-[#1e2027] border-slate-300 dark:border-[#262932] text-slate-900 dark:text-white focus:border-blue-500'
                           }`}
                           placeholder="0"
                         />
@@ -667,11 +667,11 @@ export default function BudgetCategoryModal({
           </div>
 
           {/* Section 4 (Optional Collapsible): Category Breakdown */}
-          <div className="rounded-2xl border border-slate-200/80 dark:border-[#222c42] overflow-hidden">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-[#262932] overflow-hidden">
             <button
               type="button"
               onClick={() => setShowCategorySection(!showCategorySection)}
-              className="w-full p-3.5 bg-slate-50/50 dark:bg-[#151b2b]/50 hover:bg-slate-100/50 dark:hover:bg-[#182030] flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              className="w-full p-3.5 bg-slate-50/50 dark:bg-[#181a20]/50 hover:bg-slate-100/50 dark:hover:bg-[#1e2027] flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2">
                 <Sliders className="h-4 w-4 text-slate-500 dark:text-slate-400" />
@@ -685,7 +685,7 @@ export default function BudgetCategoryModal({
             </button>
 
             {showCategorySection && (
-              <div className="p-4 bg-white dark:bg-[#121622] space-y-2.5 border-t border-slate-200/80 dark:border-[#222c42]">
+              <div className="p-4 bg-white dark:bg-[#121316] space-y-2.5 border-t border-slate-200/80 dark:border-[#262932]">
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
                   คุณสามารถกำหนดงบประมาณแยกตามหมวดหมู่ได้ตามต้องการ (หากไม่ระบุ ระบบจะใช้ยอดรวมหลัก)
                 </p>
@@ -694,7 +694,7 @@ export default function BudgetCategoryModal({
                   {categories.map((cat) => (
                     <div 
                       key={cat.id}
-                      className="p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50/30 dark:bg-[#182030] flex items-center justify-between gap-2"
+                      className="p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50/30 dark:bg-[#1e2027] flex items-center justify-between gap-2"
                     >
                       <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
                         {cat.label}
@@ -706,7 +706,7 @@ export default function BudgetCategoryModal({
                           step="100"
                           value={categoryBudgets[cat.id] || ''}
                           onChange={(e) => handleCategoryBudgetChange(cat.id, e.target.value)}
-                          className="w-24 pr-8 pl-2 py-1 rounded-md border border-slate-300 dark:border-[#2b354f] bg-white dark:bg-[#121622] text-xs font-mono font-bold text-right outline-none focus:border-blue-500"
+                          className="w-24 pr-8 pl-2 py-1 rounded-md border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#121316] text-xs font-mono font-bold text-right outline-none focus:border-blue-500"
                           placeholder="0"
                         />
                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold font-mono text-slate-400">
@@ -723,7 +723,7 @@ export default function BudgetCategoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-200/80 dark:border-[#222c42] flex flex-wrap items-center justify-between gap-2 shrink-0 bg-slate-50/50 dark:bg-[#151b2b]/50">
+        <div className="p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-200/80 dark:border-[#262932] flex flex-wrap items-center justify-between gap-2 shrink-0 bg-slate-50/50 dark:bg-[#181a20]/50">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -751,7 +751,7 @@ export default function BudgetCategoryModal({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="py-2 px-3.5 rounded-xl border border-slate-300 dark:border-[#2b354f] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+              className="py-2 px-3.5 rounded-xl border border-slate-300 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
             >
               ยกเลิก
             </button>

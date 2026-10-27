@@ -852,7 +852,7 @@ export function AccommodationsCard({
       {/* Accordion Trigger Header */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1c2438]/60 transition-colors"
+        className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1e2027]/60 transition-colors"
       >
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <div className="w-9 h-9 rounded-2xl bg-emerald-600 dark:bg-emerald-600 flex items-center justify-center text-white shadow-xs shrink-0">
@@ -893,7 +893,7 @@ export function AccommodationsCard({
             <span className="hidden sm:inline">เพิ่มที่พัก</span>
           </button>
 
-          <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#1c2438] text-slate-500 dark:text-slate-300 border border-slate-200/80 dark:border-[#262932]">
+          <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#1e2027] text-slate-500 dark:text-slate-300 border border-slate-200/80 dark:border-[#262932]">
             {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
         </div>
@@ -956,20 +956,20 @@ export function AccommodationsCard({
                 return (
                   <div
                     key={stay.id}
-                    className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#111624] shadow-xs hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3 relative group"
+                    className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#121316] shadow-xs hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3 relative group"
                   >
                     {/* Top Header: Real Hotel Photo Banner, Stay Index & Hotel Name */}
                     <div className="space-y-2.5">
                       <StayPhotoBanner stay={stay} idx={idx} mapsUrl={mapsUrl} tripId={tripId} />
                       <div className="flex items-center justify-between gap-1.5">
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 font-mono">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 font-mono">
                           ที่พัก {idx + 1}
                         </span>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(stay)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                            className="p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
                             title="แก้ไขข้อมูลที่พัก"
                           >
                             <Edit3 className="h-3.5 w-3.5" />
@@ -977,7 +977,7 @@ export function AccommodationsCard({
                           <button
                             type="button"
                             onClick={() => handleDelete(stay.id, stay.name)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
                             title="ลบที่พัก"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -995,7 +995,7 @@ export function AccommodationsCard({
                           </h4>
                           <div className="flex flex-wrap items-center gap-1.5 mt-1 text-left">
                             {stay.city && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300">
                                 📍 {stay.city}
                               </span>
                             )}
@@ -1165,7 +1165,7 @@ export function AccommodationsCard({
                           href={mapsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] hover:border-emerald-400 text-slate-700 dark:text-slate-300 hover:text-emerald-600 text-[11px] font-bold transition-all text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
+                          className="flex-1 py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] hover:border-emerald-400 text-slate-700 dark:text-slate-300 hover:text-emerald-600 text-[11px] font-bold transition-all text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
                         >
                           <MapPin className="h-3 w-3 text-rose-500" />
                           <span>Google Maps</span>
@@ -1220,7 +1220,7 @@ export function AccommodationsCard({
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1241,7 +1241,7 @@ export function AccommodationsCard({
                   placeholder="เช่น Shinjuku Granbell Hotel หรือ Hakone Ryokan"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -1256,7 +1256,7 @@ export function AccommodationsCard({
                     placeholder="เช่น Tokyo, Shinjuku"
                     value={formCity}
                     onChange={(e) => setFormCity(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -1268,7 +1268,7 @@ export function AccommodationsCard({
                     placeholder="เช่น Deluxe Twin, Tatami"
                     value={formRoomType}
                     onChange={(e) => setFormRoomType(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -1284,7 +1284,7 @@ export function AccommodationsCard({
                     required
                     value={formCheckIn}
                     onChange={(e) => handleCheckInChange(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -1300,7 +1300,7 @@ export function AccommodationsCard({
                     className={`w-full p-2.5 rounded-xl border text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${
                       formCheckIn && formCheckOut && calculateDaysDifference(formCheckIn, formCheckOut) <= 0
                         ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300'
-                        : 'border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438]'
+                        : 'border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027]'
                     }`}
                   />
                 </div>
@@ -1315,7 +1315,7 @@ export function AccommodationsCard({
                       required
                       value={formNights}
                       onChange={(e) => handleNightsChange(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">คืน</span>
                   </div>
@@ -1353,7 +1353,7 @@ export function AccommodationsCard({
                     className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       formPaymentStatus === 'paid'
                         ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-xs ring-1 ring-emerald-500'
-                        : 'bg-slate-50 dark:bg-[#1c2438] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                        : 'bg-slate-50 dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
                     }`}
                   >
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -1368,7 +1368,7 @@ export function AccommodationsCard({
                     className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       formPaymentStatus === 'unpaid'
                         ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 text-amber-700 dark:text-amber-300 shadow-xs ring-1 ring-amber-500'
-                        : 'bg-slate-50 dark:bg-[#1c2438] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                        : 'bg-slate-50 dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
                     }`}
                   >
                     <Clock className="h-4 w-4 text-amber-500" />
@@ -1392,7 +1392,7 @@ export function AccommodationsCard({
                     placeholder="เช่น 45000"
                     value={formPrice}
                     onChange={(e) => setFormPrice(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                   {formPrice && parseFloat(formPrice) > 0 && formCurrency !== 'THB' && (
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 block font-bold">
@@ -1407,7 +1407,7 @@ export function AccommodationsCard({
                   <select
                     value={formCurrency}
                     onChange={(e) => setFormCurrency(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   >
                     <option value="JPY">JPY (¥)</option>
                     <option value="THB">THB (฿)</option>
@@ -1430,7 +1430,7 @@ export function AccommodationsCard({
                     placeholder="เช่น Agoda: #81923019"
                     value={formBookingRef}
                     onChange={(e) => setFormBookingRef(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -1442,7 +1442,7 @@ export function AccommodationsCard({
                     placeholder="เช่น +81 3-1234-5678"
                     value={formPhone}
                     onChange={(e) => setFormPhone(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -1457,7 +1457,7 @@ export function AccommodationsCard({
                   placeholder="https://maps.app.goo.gl/... (ไม่ใส่ก็ได้ ระบบจะค้นหาให้อัตโนมัติ)"
                   value={formGoogleMapsUrl}
                   onChange={(e) => setFormGoogleMapsUrl(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -1471,7 +1471,7 @@ export function AccommodationsCard({
                   placeholder="เช่น เช็คอินได้หลัง 15:00 น., รวมอาหารเช้า, ฝากกระเป๋าได้ก่อนเวลา"
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -1529,7 +1529,7 @@ export function AccommodationsCard({
                             <span>ดูตัวอย่าง</span>
                           </button>
                           <label 
-                            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-[#2b354d] hover:bg-slate-100 dark:hover:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer touch-manipulation min-h-[36px]"
+                            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-[#2b354d] hover:bg-slate-100 dark:hover:bg-[#1e2027] text-slate-700 dark:text-slate-300 text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer touch-manipulation min-h-[36px]"
                             title="เปลี่ยนไฟล์ใบจองใหม่"
                           >
                             <Upload className="h-3 w-3" />
@@ -1628,7 +1628,7 @@ export function AccommodationsCard({
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors touch-manipulation"
+                  className="px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer transition-colors touch-manipulation"
                 >
                   ยกเลิก
                 </button>

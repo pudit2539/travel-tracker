@@ -39,7 +39,7 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
       
       {/* Top row: City selector & Refresh */}
       <div className="relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932] shadow-2xs">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] shadow-2xs">
           <button
             onClick={() => setCity('osaka')}
             className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
@@ -65,7 +65,7 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
         <button
           onClick={() => loadWeather(city)}
           disabled={loading}
-          className="p-2 rounded-xl text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-[#1c2438] hover:rotate-180 transition-all duration-500 cursor-pointer shadow-2xs"
+          className="p-2 rounded-xl text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-[#1e2027] hover:rotate-180 transition-all duration-500 cursor-pointer shadow-2xs"
           title="อัปเดตสภาพอากาศล่าสุด"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
@@ -76,7 +76,7 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
       {weather && (
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="shrink-0 w-13 h-13 sm:w-15 sm:h-15 flex items-center justify-center text-3xl sm:text-4xl rounded-2xl bg-blue-50/50 dark:bg-[#1c2438] border border-blue-100 dark:border-[#262932] shadow-xs">
+            <div className="shrink-0 w-13 h-13 sm:w-15 sm:h-15 flex items-center justify-center text-3xl sm:text-4xl rounded-2xl bg-blue-50/50 dark:bg-[#1e2027] border border-blue-100 dark:border-[#262932] shadow-xs">
               {weather.weatherEmoji}
             </div>
             <div className="min-w-0 flex-1">
@@ -108,7 +108,7 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
 
       {/* Smart Travel Advice Banner */}
       {weather && (
-        <div className="relative z-10 p-3.5 rounded-2xl bg-blue-50/40 dark:bg-[#1c2438]/90 border border-blue-100 dark:border-[#262932] text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium flex items-center gap-2.5">
+        <div className="relative z-10 p-3.5 rounded-2xl bg-blue-50/40 dark:bg-[#1e2027]/90 border border-blue-100 dark:border-[#262932] text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium flex items-center gap-2.5">
           <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
           <span className="flex-1 leading-snug">{weather.travelAdvice}</span>
         </div>

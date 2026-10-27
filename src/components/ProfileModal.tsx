@@ -284,7 +284,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -322,7 +322,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                         className={`relative p-2 rounded-2xl border transition-all flex flex-col items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 ${
                           isSelected
                             ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/60 ring-2 ring-blue-500/50 scale-105 shadow-sm'
-                            : 'border-slate-200 dark:border-[#262932] bg-slate-50/70 dark:bg-[#1c2438] hover:border-slate-300 dark:hover:border-slate-600'
+                            : 'border-slate-200 dark:border-[#262932] bg-slate-50/70 dark:bg-[#1e2027] hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
                         {isSelected && (
@@ -358,7 +358,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                       type="text"
                       required
                       placeholder="เช่น Alex, น้องน้ำ, พุด"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                     />
@@ -411,7 +411,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                 </button>
 
                 {showPasswordSection && (
-                  <form onSubmit={handleChangePassword} className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#262932] space-y-3 animate-in fade-in">
+                  <form onSubmit={handleChangePassword} className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] space-y-3 animate-in fade-in">
                     <div>
                       <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
                         รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)
@@ -421,7 +421,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                           type={showNewPassword ? 'text' : 'password'}
                           required
                           placeholder="••••••••"
-                          className="w-full p-2.5 pr-9 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
+                          className="w-full p-2.5 pr-9 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                         />
@@ -443,7 +443,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                         type="password"
                         required
                         placeholder="••••••••"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a3650] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                       />

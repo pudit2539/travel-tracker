@@ -74,10 +74,10 @@ export function TransferOwnershipModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-amber animate-in zoom-in-95 duration-200 space-y-4 max-h-[90dvh] overflow-y-auto">
+      <div className="w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-amber animate-in zoom-in-95 duration-200 space-y-4 max-h-[90dvh] overflow-y-auto">
         
         {/* Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-slate-200/90 dark:border-[#222c42]">
+        <div className="flex justify-between items-center pb-3 border-b border-slate-200/90 dark:border-[#262932]">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-md">
               <Crown className="h-5 w-5" />
@@ -95,14 +95,14 @@ export function TransferOwnershipModal({
             type="button"
             onClick={handleModalClose}
             disabled={loading}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer disabled:opacity-50"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Target Member Card */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1c2438] border border-slate-200/90 dark:border-[#222c42] flex items-center gap-3">
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1e2027] border border-slate-200/90 dark:border-[#262932] flex items-center gap-3">
           <div className="ring-2 ring-amber-400 dark:ring-amber-500 rounded-full shrink-0">
             <CatAvatarBadge avatarId={targetAvatar} size="md" />
           </div>
@@ -158,7 +158,7 @@ export function TransferOwnershipModal({
                 disabled={loading}
                 placeholder="กรอกรหัสผ่านเพื่อยืนยัน..."
                 autoFocus
-                className="w-full p-2.5 pr-10 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#121316] text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors"
+                className="w-full p-2.5 pr-10 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#121316] text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors"
               />
               <button
                 type="button"
@@ -180,7 +180,7 @@ export function TransferOwnershipModal({
               type="button"
               onClick={handleModalClose}
               disabled={loading}
-              className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-all cursor-pointer disabled:opacity-50"
+              className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-all cursor-pointer disabled:opacity-50"
             >
               ยกเลิก
             </button>

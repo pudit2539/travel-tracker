@@ -110,7 +110,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
             return (
               <div 
                 key={m.id} 
-                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md flex items-center justify-between gap-3"
+                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`relative shrink-0 ${isTripOwner ? 'ring-2 ring-amber-400 dark:ring-amber-500 rounded-full' : ''}`}>

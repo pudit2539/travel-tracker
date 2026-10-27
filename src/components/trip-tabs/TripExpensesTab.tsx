@@ -285,7 +285,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs">
               {tripBaseCurrency} Workspace
             </span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1c2438] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932] font-mono">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1e2027] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932] font-mono">
               {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
             </span>
           </div>
@@ -512,7 +512,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
               expensePayerFilter === 'all'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
+                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
             }`}
           >
             📋 รวมทุกคน ({expenses.length})
@@ -527,7 +527,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
               expensePayerFilter === 'me'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
+                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
             }`}
           >
             <CatAvatarBadge cat={userCat} size="xs" />
@@ -549,7 +549,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
+                    : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
                 }`}
               >
                 <CatAvatarBadge cat={pCat} size="xs" />
@@ -596,7 +596,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               onClick={() => handleSwitchExpenseView('grouped')}
               className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                 expenseViewMode === 'grouped'
-                  ? 'bg-white dark:bg-[#1c2438] text-blue-600 dark:text-blue-400 shadow-xs'
+                  ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="จัดกลุ่มตามวันที่"
@@ -609,7 +609,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               onClick={() => handleSwitchExpenseView('thumbnail')}
               className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                 expenseViewMode === 'thumbnail'
-                  ? 'bg-white dark:bg-[#1c2438] text-blue-600 dark:text-blue-400 shadow-xs'
+                  ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="มุมมองการ์ดใบเสร็จ Thumbnail"
@@ -622,7 +622,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               onClick={() => handleSwitchExpenseView('compact')}
               className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                 expenseViewMode === 'compact'
-                  ? 'bg-white dark:bg-[#1c2438] text-blue-600 dark:text-blue-400 shadow-xs'
+                  ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="มุมมองตารางรายการย่อ"
@@ -650,7 +650,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                     setExpensePayerFilter('all');
                     setExpenseCategoryFilter('all');
                   }}
-                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
                 >
                   ล้างตัวกรองทั้งหมด
                 </button>

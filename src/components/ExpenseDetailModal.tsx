@@ -382,11 +382,11 @@ export function ExpenseDetailModal({
       aria-modal="true"
     >
       <div 
-        className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200/90 dark:border-[#222c42] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out modal-safe-card"
+        className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out modal-safe-card"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#222c42] shrink-0">
+        <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="text-xl p-2 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs shrink-0">
               {currentCategoryMeta.icon}
@@ -417,7 +417,7 @@ export function ExpenseDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
             >
               <X className="h-5 w-5" />
             </button>
@@ -438,7 +438,7 @@ export function ExpenseDetailModal({
                   type="text"
                   required
                   placeholder="เช่น สุกี้ตี๋น้อย, Shabu Buffet, Matsumoto Kiyoshi"
-                  className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all touch-manipulation min-h-[44px]"
+                  className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all touch-manipulation min-h-[44px]"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                 />
@@ -455,7 +455,7 @@ export function ExpenseDetailModal({
                     step="any"
                     required
                     placeholder="0.00"
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-black transition-all touch-manipulation min-h-[44px]"
+                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-black transition-all touch-manipulation min-h-[44px]"
                     value={form.amount}
                     onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   />
@@ -465,7 +465,7 @@ export function ExpenseDetailModal({
                     สกุลเงิน
                   </label>
                   <select
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
+                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
                     value={form.currency}
                     onChange={(e) => setForm({ ...form, currency: e.target.value })}
                   >
@@ -488,7 +488,7 @@ export function ExpenseDetailModal({
                     หมวดหมู่
                   </label>
                   <select
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
+                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
                   >
@@ -506,7 +506,7 @@ export function ExpenseDetailModal({
                   <input
                     type="date"
                     required
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
+                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
                     value={form.spent_at}
                     onChange={(e) => setForm({ ...form, spent_at: e.target.value })}
                   />
@@ -519,7 +519,7 @@ export function ExpenseDetailModal({
                   💳 ใครเป็นคนสำรองจ่ายเงิน?
                 </label>
                 <select
-                  className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#222c42] bg-white dark:bg-[#1c2438] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
+                  className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
                   value={form.payer_id}
                   onChange={(e) => setForm({ ...form, payer_id: e.target.value })}
                 >
@@ -543,7 +543,7 @@ export function ExpenseDetailModal({
                     className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
                       form.payment_method === 'cash'
                         ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 shadow-xs'
-                        : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        : 'bg-white dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:border-slate-300'
                     }`}
                   >
                     <span className="text-lg">💵</span>
@@ -556,7 +556,7 @@ export function ExpenseDetailModal({
                     className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
                       form.payment_method === 'travel_card'
                         ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 shadow-xs'
-                        : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        : 'bg-white dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:border-slate-300'
                     }`}
                   >
                     <span className="text-lg">💳</span>
@@ -569,7 +569,7 @@ export function ExpenseDetailModal({
                     className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
                       form.payment_method === 'credit_card'
                         ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/20 shadow-xs'
-                        : 'bg-white dark:bg-[#1c2438] border-slate-200 dark:border-[#222c42] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        : 'bg-white dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:border-slate-300'
                     }`}
                   >
                     <span className="text-lg">💳</span>
@@ -600,7 +600,7 @@ export function ExpenseDetailModal({
                     className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
                       splitWith.length === memberOptions.length
                         ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                        : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:border-blue-300'
+                        : 'bg-slate-50 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-blue-300'
                     }`}
                   >
                     <span>👥 หารทุกคน ({memberOptions.length} คน)</span>
@@ -614,7 +614,7 @@ export function ExpenseDetailModal({
                     className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
                       splitWith.length === 1 && splitWith[0] === (form.payer_id || myId)
                         ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                        : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:border-amber-300'
+                        : 'bg-slate-50 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-amber-300'
                     }`}
                   >
                     <span>👤 จ่ายคนเดียว (ไม่หาร)</span>
@@ -622,7 +622,7 @@ export function ExpenseDetailModal({
                 </div>
 
                 {/* Member Toggle Pills */}
-                <div className="p-2.5 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438]/50 space-y-2">
+                <div className="p-2.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/50 dark:bg-[#1e2027]/50 space-y-2">
                   <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
                     แตะเลือกสมาชิกที่ร่วมหาร:
                   </span>
@@ -647,7 +647,7 @@ export function ExpenseDetailModal({
                           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                             isSelected
                               ? 'bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 shadow-2xs'
-                              : 'bg-white dark:bg-[#151b2b] text-slate-400 dark:text-slate-500 border-slate-200 dark:border-[#222c42] opacity-60 hover:opacity-90'
+                              : 'bg-white dark:bg-[#181a20] text-slate-400 dark:text-slate-500 border-slate-200 dark:border-[#262932] opacity-60 hover:opacity-90'
                           }`}
                         >
                           <div
@@ -665,7 +665,7 @@ export function ExpenseDetailModal({
                   </div>
 
                   {/* Live split calculation preview */}
-                  <div className="pt-2 border-t border-slate-200/70 dark:border-[#222c42] flex items-center justify-between text-xs">
+                  <div className="pt-2 border-t border-slate-200/70 dark:border-[#262932] flex items-center justify-between text-xs">
                     <span className="text-slate-600 dark:text-slate-300 font-medium">
                       ยอดหารเฉลี่ย ({splitWith.length} คน):
                     </span>
@@ -694,7 +694,7 @@ export function ExpenseDetailModal({
                   🧾 รูปใบเสร็จ (แนบหรือเปลี่ยนรูป)
                 </label>
                 {receiptImage ? (
-                  <div className="relative rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] p-2 flex items-center justify-between gap-3">
+                  <div className="relative rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] p-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <img 
                         src={receiptImage} 
@@ -725,7 +725,7 @@ export function ExpenseDetailModal({
                     </div>
                   </div>
                 ) : (
-                  <label className="flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438]/50 hover:border-blue-400 cursor-pointer transition-all">
+                  <label className="flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#262932] bg-slate-50/50 dark:bg-[#1e2027]/50 hover:border-blue-400 cursor-pointer transition-all">
                     {uploadingReceipt ? (
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     ) : (
@@ -776,7 +776,7 @@ export function ExpenseDetailModal({
               {/* Info Cards Grid */}
               <div className="grid grid-cols-2 gap-2.5">
                 {/* Payer Card */}
-                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42]">
+                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932]">
                   <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
                     ผู้สำรองจ่ายเงิน
                   </span>
@@ -796,12 +796,12 @@ export function ExpenseDetailModal({
                 </div>
 
                 {/* Category Card */}
-                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42]">
+                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932]">
                   <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
                     หมวดหมู่
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-base p-1.5 rounded-xl bg-white dark:bg-[#151b2b] border border-slate-200 dark:border-[#222c42] shadow-2xs">
+                    <span className="text-base p-1.5 rounded-xl bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] shadow-2xs">
                       {currentCategoryMeta.icon}
                     </span>
                     <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
@@ -811,7 +811,7 @@ export function ExpenseDetailModal({
                 </div>
 
                 {/* Payment Method Card */}
-                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42]">
+                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932]">
                   <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
                     วิธีชำระเงิน
                   </span>
@@ -845,7 +845,7 @@ export function ExpenseDetailModal({
                 </div>
 
                 {/* Date Card */}
-                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] flex flex-col justify-center">
+                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
                     วันที่ใช้จ่าย
                   </span>
@@ -861,7 +861,7 @@ export function ExpenseDetailModal({
               {/* Split Info Card in View Mode */}
               <div 
                 onClick={canEdit ? handleSwitchToEdit : undefined}
-                className={`p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#222c42] space-y-2.5 ${canEdit ? 'cursor-pointer hover:border-blue-400 transition-all group' : ''}`}
+                className={`p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] space-y-2.5 ${canEdit ? 'cursor-pointer hover:border-blue-400 transition-all group' : ''}`}
                 title={canEdit ? 'คลิกเพื่อแก้ไขคนร่วมหาร' : undefined}
               >
                 <div className="flex items-center justify-between">
@@ -895,7 +895,7 @@ export function ExpenseDetailModal({
                     return (
                       <span
                         key={id}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white dark:bg-[#151b2b] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#222c42] shadow-2xs"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white dark:bg-[#181a20] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#262932] shadow-2xs"
                       >
                         <CatAvatarBadge cat={cat} size="xs" />
                         <span>{m.name}</span>
@@ -911,7 +911,7 @@ export function ExpenseDetailModal({
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-slate-200/70 dark:border-[#222c42] flex items-center justify-between text-xs">
+                <div className="pt-2 border-t border-slate-200/70 dark:border-[#262932] flex items-center justify-between text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-medium">ยอดแชร์ต่อคน:</span>
                   <div className="text-right">
                     <span className="font-mono font-black text-blue-600 dark:text-blue-400">
@@ -963,14 +963,14 @@ export function ExpenseDetailModal({
                 </div>
 
                 {loadingReceipt ? (
-                  <div className="p-6 rounded-2xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] flex flex-col items-center justify-center gap-2 text-slate-400">
+                  <div className="p-6 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] flex flex-col items-center justify-center gap-2 text-slate-400">
                     <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                     <span className="text-xs font-medium">กำลังโหลดรูปใบเสร็จ...</span>
                   </div>
                 ) : receiptImage ? (
                   <div 
                     onClick={() => onOpenReceiptFullscreen ? onOpenReceiptFullscreen(receiptImage) : null}
-                    className="group relative rounded-2xl overflow-hidden border border-slate-200 dark:border-[#222c42] bg-slate-950/10 cursor-pointer max-h-56 flex items-center justify-center"
+                    className="group relative rounded-2xl overflow-hidden border border-slate-200 dark:border-[#262932] bg-slate-950/10 cursor-pointer max-h-56 flex items-center justify-center"
                     title="คลิกเพื่อขยายดูรูปใบเสร็จ"
                   >
                     <img 
@@ -983,7 +983,7 @@ export function ExpenseDetailModal({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-[#222c42] bg-slate-50/50 dark:bg-[#1c2438]/50 text-center">
+                  <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-[#262932] bg-slate-50/50 dark:bg-[#1e2027]/50 text-center">
                     <p className="text-xs text-slate-400 font-medium">ไม่มีรูปใบเสร็จแนบในรายการนี้</p>
                     {canEdit && (
                       <button
@@ -1002,7 +1002,7 @@ export function ExpenseDetailModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#222c42] flex items-center justify-end gap-2 bg-slate-50/90 dark:bg-[#1c2438]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+        <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#262932] flex items-center justify-end gap-2 bg-slate-50/90 dark:bg-[#1e2027]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           {isEditing ? (
             <>
               {canEdit && (
@@ -1010,7 +1010,7 @@ export function ExpenseDetailModal({
                   type="button"
                   key="edit-delete-btn"
                   onClick={handleDelete}
-                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 min-h-[42px] touch-manipulation active:scale-95"
+                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 min-h-[44px] touch-manipulation active:scale-95"
                   title="ลบรายการนี้"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1022,7 +1022,7 @@ export function ExpenseDetailModal({
                 key="edit-cancel-btn"
                 onClick={onClose}
                 disabled={saving}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer min-h-[44px] touch-manipulation active:scale-95"
               >
                 ปิด
               </button>
@@ -1032,7 +1032,7 @@ export function ExpenseDetailModal({
                 key="edit-save-btn"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95 min-h-[42px] touch-manipulation"
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95 min-h-[44px] touch-manipulation"
               >
                 {saving ? (
                   <>
@@ -1055,7 +1055,7 @@ export function ExpenseDetailModal({
                   type="button"
                   key="view-delete-btn"
                   onClick={handleDelete}
-                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 min-h-[42px] touch-manipulation active:scale-95"
+                  className="px-3.5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 min-h-[44px] touch-manipulation active:scale-95"
                   title="ลบรายการนี้"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1067,7 +1067,7 @@ export function ExpenseDetailModal({
                   type="button"
                   key="view-edit-btn"
                   onClick={handleSwitchToEdit}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.01] active:scale-95 min-h-[42px] touch-manipulation"
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.01] active:scale-95 min-h-[44px] touch-manipulation"
                 >
                   <Edit3 className="h-4 w-4" />
                   <span>แก้ไขข้อมูล</span>
@@ -1077,7 +1077,7 @@ export function ExpenseDetailModal({
                 type="button"
                 key="view-close-btn"
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
+                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer min-h-[44px] touch-manipulation active:scale-95"
               >
                 ปิด
               </button>

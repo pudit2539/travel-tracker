@@ -88,9 +88,9 @@ export default function AIAssistantModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-      <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151b2b] shadow-2xl border border-slate-200 dark:border-[#222c42] card-elevation max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
+      <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200 dark:border-[#262932] card-elevation max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
-        <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-[#222c42] shrink-0">
+        <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 dark:bg-blue-700 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Bot className="h-5 w-5" />
@@ -109,7 +109,7 @@ export default function AIAssistantModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -125,7 +125,7 @@ export default function AIAssistantModal({
               <input
                 type="text"
                 placeholder="เช่น Namba, Kyoto"
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#111624] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold"
+                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
               />
@@ -136,7 +136,7 @@ export default function AIAssistantModal({
                 <input
                   type="text"
                   placeholder="เช่น ราเมงเปิดดึก, คาเฟ่แมว, ตลาดปลา"
-                  className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#111624] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
+                  className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
                   value={customQuery}
                   onChange={(e) => setCustomQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
@@ -164,7 +164,7 @@ export default function AIAssistantModal({
                     setCustomQuery(preset.query);
                     handleAskAI(preset.query);
                   }}
-                  className="px-2.5 py-1 rounded-full text-[11px] font-bold border border-slate-200 dark:border-[#222c42] bg-slate-50 hover:bg-blue-50 dark:bg-[#1c2438] dark:hover:bg-[#222c42] text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer shadow-2xs"
+                  className="px-2.5 py-1 rounded-full text-[11px] font-bold border border-slate-200 dark:border-[#262932] bg-slate-50 hover:bg-blue-50 dark:bg-[#1e2027] dark:hover:bg-[#262932] text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer shadow-2xs"
                 >
                   {preset.label}
                 </button>
@@ -193,7 +193,7 @@ export default function AIAssistantModal({
                 {results.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#222c42] bg-slate-50/70 dark:bg-[#111624] shadow-xs space-y-1.5"
+                    className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-slate-50/70 dark:bg-[#121316] shadow-xs space-y-1.5"
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div>
@@ -209,7 +209,7 @@ export default function AIAssistantModal({
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.mapsQuery || item.name)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-[#1c2438] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#222c42] text-[10px] font-bold hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition-all shrink-0 cursor-pointer shadow-2xs"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-[#1e2027] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#262932] text-[10px] font-bold hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition-all shrink-0 cursor-pointer shadow-2xs"
                       >
                         <ExternalLink className="h-3 w-3" /> เปิดแผนที่
                       </a>
@@ -227,11 +227,11 @@ export default function AIAssistantModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-[#222c42] flex justify-end">
+        <div className="p-4 border-t border-slate-100 dark:border-[#262932] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-slate-200 dark:border-[#222c42] text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            className="px-5 py-2 rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
           >
             ปิดหน้าต่าง
           </button>

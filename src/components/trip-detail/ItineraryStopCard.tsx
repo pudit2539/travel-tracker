@@ -164,7 +164,7 @@ function ItineraryStopCardComponent({
               </span>
 
               {item.time_slot && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1c2438] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#222c42]">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1e2027] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932]">
                   <Clock className="h-3 w-3 text-blue-500" />
                   <span>{item.time_slot}</span>
                 </span>
@@ -199,14 +199,14 @@ function ItineraryStopCardComponent({
                   <button
                     type="button"
                     onClick={() => setShowAdminMenu((v) => !v)}
-                    className="p-1.5 rounded-xl border border-slate-200/80 dark:border-[#222c42] bg-slate-50 dark:bg-[#1c2438] text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-colors"
+                    className="p-1.5 rounded-xl border border-slate-200/80 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-colors"
                     title="จัดการกิจกรรม (แก้ไข / เลื่อนลำดับ / ลบ)"
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
 
                   {showAdminMenu && (
-                    <div className="absolute right-0 top-9 z-30 w-44 rounded-2xl bg-white dark:bg-[#1c2438] border border-slate-200 dark:border-[#2a3652] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-9 z-30 w-44 rounded-2xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
                       <button
                         type="button"
                         onClick={() => {
@@ -279,7 +279,7 @@ function ItineraryStopCardComponent({
                 type="button"
                 onClick={() => setShowLightbox(true)}
                 style={{ aspectRatio: '1 / 1' }}
-                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gradient-to-br ${visual.gradient} border border-slate-200/80 dark:border-[#2a3652] shadow-xs relative block cursor-pointer`}
+                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gradient-to-br ${visual.gradient} border border-slate-200/80 dark:border-[#262932] shadow-xs relative block cursor-pointer`}
                 title="แตะเพื่อขยายดูรูปสถานที่จริง / ดูหน้าร้าน Street View"
               >
                 {!imgError && (
@@ -319,7 +319,7 @@ function ItineraryStopCardComponent({
                     ✨ รูปของฉัน
                   </span>
                 ) : visual.photoSource === 'google_places' ? (
-                  <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-[#1c2438] text-slate-500 dark:text-slate-400 text-[9px] font-semibold">
+                  <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-[#1e2027] text-slate-500 dark:text-slate-400 text-[9px] font-semibold">
                     Google Maps
                   </span>
                 ) : null}
@@ -405,7 +405,7 @@ function ItineraryStopCardComponent({
                 {isPlanBOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
               </button>
               {isPlanBOpen && (
-                <div className="p-3.5 mt-2 rounded-2xl bg-slate-50 dark:bg-[#111624] text-xs text-slate-700 dark:text-slate-200 space-y-2.5 border border-slate-200/70 dark:border-[#222c42] text-left">
+                <div className="p-3.5 mt-2 rounded-2xl bg-slate-50 dark:bg-[#121316] text-xs text-slate-700 dark:text-slate-200 space-y-2.5 border border-slate-200/70 dark:border-[#262932] text-left">
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-left">
                     รายการสถานที่ & ร้านอาหารสำรอง:
                   </div>
@@ -431,7 +431,7 @@ function ItineraryStopCardComponent({
                         return (
                           <div
                             key={lineIdx}
-                            className="p-2.5 rounded-xl bg-white dark:bg-[#182033] border border-slate-200/60 dark:border-[#222c42] flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left"
+                            className="p-2.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200/60 dark:border-[#262932] flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left"
                           >
                             <span className="font-medium text-slate-800 dark:text-slate-200 leading-relaxed text-left flex-1">
                               {line}
@@ -789,7 +789,7 @@ function ItineraryCompactRowComponent({
             className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all cursor-pointer active:scale-90 ${
               visited
                 ? 'bg-emerald-500 text-white border-emerald-500 shadow-2xs'
-                : 'bg-slate-50 dark:bg-[#1c2438] text-slate-400 border-slate-200 dark:border-[#2a3652] hover:border-blue-400 hover:text-blue-500'
+                : 'bg-slate-50 dark:bg-[#1e2027] text-slate-400 border-slate-200 dark:border-[#262932] hover:border-blue-400 hover:text-blue-500'
             }`}
             title={visited ? 'แวะแล้ว (済)' : 'กดเพื่อเช็กอิน'}
           >
@@ -877,7 +877,7 @@ function ItineraryCompactRowComponent({
             <button
               type="button"
               onClick={() => onOpenEditActivity(item)}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
               title="แก้ไข"
             >
               <Edit3 className="h-3.5 w-3.5" />

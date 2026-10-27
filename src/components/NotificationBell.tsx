@@ -287,7 +287,7 @@ export default function NotificationBell({
                   <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                     <span>การแจ้งเตือน</span>
                     {isMuted && (
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1c2438] px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1e2027] px-2 py-0.5 rounded-full">
                         🔕 โหมดเงียบ
                       </span>
                     )}
@@ -311,7 +311,7 @@ export default function NotificationBell({
                   className={`p-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                     isMuted
                       ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800'
-                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-[#1c2438]'
+                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-[#1e2027]'
                   }`}
                   title={isMuted ? 'ปิดโหมดเงียบ' : 'เปิดโหมดเงียบ (ไม่รบกวน)'}
                 >
@@ -342,7 +342,7 @@ export default function NotificationBell({
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] rounded-xl transition-colors cursor-pointer"
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] rounded-xl transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -350,14 +350,14 @@ export default function NotificationBell({
             </div>
 
             {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 px-4 py-2 bg-slate-50/70 dark:bg-[#111624]/60 border-b border-slate-100 dark:border-[#262932]">
+            <div className="flex items-center gap-1.5 px-4 py-2 bg-slate-50/70 dark:bg-[#121316]/60 border-b border-slate-100 dark:border-[#262932]">
               <button
                 type="button"
                 onClick={() => setActiveFilter('all')}
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-black shrink-0 transition-all cursor-pointer ${
                   activeFilter === 'all'
                     ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1c2438]'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
                 }`}
               >
                 ทั้งหมด ({notifications.length})
@@ -368,7 +368,7 @@ export default function NotificationBell({
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                   activeFilter === 'expense'
                     ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1c2438]'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
                 }`}
               >
                 🧾 เพื่อนบันทึกรายจ่าย
@@ -379,7 +379,7 @@ export default function NotificationBell({
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                   activeFilter === 'member'
                     ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1c2438]'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
                 }`}
               >
                 👥 สมาชิกใหม่
@@ -390,7 +390,7 @@ export default function NotificationBell({
             <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-[#262932]">
               {filteredNotifications.length === 0 ? (
                 <div className="p-8 text-center space-y-2">
-                  <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#1c2438] flex items-center justify-center text-slate-400 mx-auto">
+                  <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#1e2027] flex items-center justify-center text-slate-400 mx-auto">
                     <ShieldCheck className="h-5 w-5 text-emerald-500" />
                   </div>
                   <p className="text-xs font-bold text-slate-800 dark:text-white">
@@ -410,10 +410,10 @@ export default function NotificationBell({
                     className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer group ${
                       !notif.read
                         ? 'bg-blue-50/40 dark:bg-blue-950/30 border-l-2 border-blue-500 hover:bg-blue-50/70 dark:hover:bg-blue-950/50'
-                        : 'hover:bg-slate-50 dark:hover:bg-[#1c2438]/50'
+                        : 'hover:bg-slate-50 dark:hover:bg-[#1e2027]/50'
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#111624] border border-slate-200/80 dark:border-[#262932] flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] flex items-center justify-center shrink-0 shadow-2xs">
                       {getIcon(notif.type)}
                     </div>
 
@@ -442,7 +442,7 @@ export default function NotificationBell({
             </div>
 
             {/* Quiet Mode Footnote */}
-            <div className="px-4 py-2.5 bg-slate-50/70 dark:bg-[#111624]/60 border-t border-slate-100 dark:border-[#262932] flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+            <div className="px-4 py-2.5 bg-slate-50/70 dark:bg-[#121316]/60 border-t border-slate-100 dark:border-[#262932] flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1">
                 <span>🔔 แจ้งเฉพาะข้อมูลจริงจากเพื่อน</span>
               </span>

@@ -528,7 +528,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               </button>
 
               {showFileMenu && (
-                <div className="absolute right-0 top-11 z-30 w-48 rounded-2xl bg-white dark:bg-[#1c2438] border border-slate-200 dark:border-[#2a3652] shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-11 z-30 w-48 rounded-2xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-150">
                   <button
                     type="button"
                     onClick={() => {
@@ -594,7 +594,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
                 selectedDayFilter === 'all'
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
+                  : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
               }`}
             >
               📅 ทุกวัน ({itinerary.length})
@@ -607,7 +607,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
                   selectedDayFilter === day
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
+                    : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
                 }`}
               >
                 Day {dIdx + 1} • {day}

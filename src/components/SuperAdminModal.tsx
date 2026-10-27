@@ -564,7 +564,7 @@ export default function SuperAdminModal({
                                 {userCreatedTrips.map((t) => (
                                   <div
                                     key={t.id}
-                                    className="p-2.5 rounded-xl bg-slate-100/70 dark:bg-[#1c2438] flex items-center justify-between gap-2 text-xs"
+                                    className="p-2.5 rounded-xl bg-slate-100/70 dark:bg-[#1e2027] flex items-center justify-between gap-2 text-xs"
                                   >
                                     <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
                                       {t.name || t.title}
@@ -598,7 +598,7 @@ export default function SuperAdminModal({
                                   return (
                                     <div
                                       key={m.id}
-                                      className="p-2.5 rounded-xl bg-slate-100/70 dark:bg-[#1c2438] flex items-center justify-between gap-2 text-xs"
+                                      className="p-2.5 rounded-xl bg-slate-100/70 dark:bg-[#1e2027] flex items-center justify-between gap-2 text-xs"
                                     >
                                       <div className="min-w-0">
                                         <span className="font-bold text-slate-800 dark:text-slate-200 block truncate">

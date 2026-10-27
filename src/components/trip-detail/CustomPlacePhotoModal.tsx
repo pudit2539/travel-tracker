@@ -225,7 +225,7 @@ export function CustomPlacePhotoModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-[#1c2438] text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer shrink-0"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-[#1e2027] text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer shrink-0"
             aria-label="ปิดหน้าต่าง"
           >
             <X className="h-4 w-4" />
@@ -273,7 +273,7 @@ export function CustomPlacePhotoModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="พิมพ์ชื่อโรงแรม / สถานที่เที่ยว เช่น Quintessa Hotel Osaka..."
-              className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-white dark:bg-[#111624] border border-slate-200 dark:border-[#2a3652] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-white dark:bg-[#121316] border border-slate-200 dark:border-[#262932] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
             />
             <button
               type="submit"
@@ -374,7 +374,7 @@ export function CustomPlacePhotoModal({
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://..."
-              className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1c2438] border border-slate-200 dark:border-[#2a3652] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
             />
             <button
               type="button"
@@ -393,7 +393,7 @@ export function CustomPlacePhotoModal({
         )}
 
         {/* Footer Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#222c42]">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#262932]">
           {hasCustomOverride || previewUrl ? (
             <button
               type="button"
@@ -413,7 +413,7 @@ export function CustomPlacePhotoModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2438] cursor-pointer"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer"
             >
               ยกเลิก
             </button>

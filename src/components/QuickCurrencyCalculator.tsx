@@ -299,7 +299,7 @@ export default function QuickCurrencyCalculator({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -322,7 +322,7 @@ export default function QuickCurrencyCalculator({
               className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                 foreignCurrency === c.code
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-[#1c2438] text-slate-600 dark:text-slate-300 hover:bg-slate-200 border border-slate-200/60 dark:border-[#262932]'
+                  : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 hover:bg-slate-200 border border-slate-200/60 dark:border-[#262932]'
               }`}
             >
               <span>{c.symbol} {c.code}</span>
@@ -331,7 +331,7 @@ export default function QuickCurrencyCalculator({
         </div>
 
         {/* Exchange Rate Badge & Direction Switcher */}
-        <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c2438] border border-slate-200/80 dark:border-[#262932]">
+        <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932]">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
             <span>เรทแลกเปลี่ยน:</span>
             {foreignCurrency === 'JPY' && editingRate ? (
@@ -388,7 +388,7 @@ export default function QuickCurrencyCalculator({
                 className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                   taxMode === '10'
                     ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
+                    : 'bg-slate-50 dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
@@ -404,7 +404,7 @@ export default function QuickCurrencyCalculator({
                 className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                   taxMode === '8'
                     ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 text-amber-900 dark:text-amber-200 font-bold shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
+                    : 'bg-slate-50 dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
@@ -420,7 +420,7 @@ export default function QuickCurrencyCalculator({
                 className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                   taxMode === 'none'
                     ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-900 dark:text-blue-200 font-bold shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#1a2234] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
+                    : 'bg-slate-50 dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
@@ -450,7 +450,7 @@ export default function QuickCurrencyCalculator({
                 className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border flex items-center gap-1 ${
                   itemTitle === p.label
                     ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222c42] hover:bg-slate-100'
+                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
                 }`}
               >
                 <span>{p.icon}</span>
@@ -470,7 +470,7 @@ export default function QuickCurrencyCalculator({
             value={itemTitle}
             onChange={(e) => setItemTitle(e.target.value)}
             placeholder="เช่น ดองกี้ ชินไซบาชิ, รองเท้า Onitsuka..."
-            className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#222c42] bg-slate-50 dark:bg-[#111726] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
 
@@ -495,7 +495,7 @@ export default function QuickCurrencyCalculator({
               placeholder="0"
               value={inputAmount}
               onChange={(e) => setInputAmount(e.target.value)}
-              className="w-full text-2xl sm:text-3xl font-black p-3 rounded-2xl border-2 border-blue-500/70 dark:border-blue-500/80 bg-slate-50 dark:bg-[#111726] text-slate-900 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/20 shadow-inner"
+              className="w-full text-2xl sm:text-3xl font-black p-3 rounded-2xl border-2 border-blue-500/70 dark:border-blue-500/80 bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/20 shadow-inner"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-blue-600 dark:text-blue-400">
               {direction === 'foreign_to_thb' ? `${activeMeta.symbol} ${activeMeta.code}` : '฿ THB'}
@@ -506,7 +506,7 @@ export default function QuickCurrencyCalculator({
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
             <button
               onClick={() => setInputAmount('0')}
-              className="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-[#1c2438] text-slate-700 dark:text-slate-300 text-xs font-bold shrink-0 hover:bg-slate-300 cursor-pointer"
+              className="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 text-xs font-bold shrink-0 hover:bg-slate-300 cursor-pointer"
             >
               C
             </button>
@@ -529,7 +529,7 @@ export default function QuickCurrencyCalculator({
         </div>
 
         {/* Converted Result Display Box */}
-        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-[#1c2438] dark:to-[#161d2d] border border-blue-200/80 dark:border-[#222c42] space-y-1.5 text-center shadow-xs">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-[#1e2027] dark:to-[#181a20] border border-blue-200/80 dark:border-[#262932] space-y-1.5 text-center shadow-xs">
           <div className="flex items-center justify-between px-2">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
               {direction === 'foreign_to_thb' ? 'ยอดที่ต้องจ่ายจริง (THB)' : `ยอดเงิน ${activeMeta.code}`}
@@ -558,7 +558,7 @@ export default function QuickCurrencyCalculator({
 
         {/* Quick Split & Payment Method Controls (For 1-Click Save) */}
         {tripId && (
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1a2234] border border-slate-200 dark:border-[#222c42] space-y-2.5">
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] space-y-2.5">
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
               <span className="flex items-center gap-1">
                 <Users className="h-3.5 w-3.5 text-blue-500" />
@@ -571,7 +571,7 @@ export default function QuickCurrencyCalculator({
                   className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
                     splitMode === 'me_only'
                       ? 'bg-blue-600 text-white shadow-2xs'
-                      : 'bg-white dark:bg-[#111726] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#222c42]'
+                      : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#262932]'
                   }`}
                 >
                   👤 ของฉันคนเดียว
@@ -582,7 +582,7 @@ export default function QuickCurrencyCalculator({
                   className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
                     splitMode === 'all'
                       ? 'bg-blue-600 text-white shadow-2xs'
-                      : 'bg-white dark:bg-[#111726] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#222c42]'
+                      : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#262932]'
                   }`}
                 >
                   👥 หารทุกคน ({allMembers.length > 0 ? allMembers.length : 2} คน)
@@ -602,7 +602,7 @@ export default function QuickCurrencyCalculator({
                   className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
                     paymentMethod === 'travel_card'
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-white dark:bg-[#111726] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#222c42]'
+                      : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#262932]'
                   }`}
                 >
                   💳 Travel Card
@@ -613,7 +613,7 @@ export default function QuickCurrencyCalculator({
                   className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
                     paymentMethod === 'cash'
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-white dark:bg-[#111726] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#222c42]'
+                      : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#262932]'
                   }`}
                 >
                   💵 เงินสด
@@ -624,7 +624,7 @@ export default function QuickCurrencyCalculator({
                   className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
                     paymentMethod === 'credit_card'
                       ? 'bg-blue-600 text-white'
-                      : 'bg-white dark:bg-[#111726] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#222c42]'
+                      : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#262932]'
                   }`}
                 >
                   💳 บัตรเครดิต
@@ -677,7 +677,7 @@ export default function QuickCurrencyCalculator({
               <button
                 onClick={handleTransferToFullForm}
                 disabled={numInput <= 0 || isSubmitting}
-                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2438] dark:hover:bg-[#25304a] text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 border border-slate-200 dark:border-[#222c42]"
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1e2027] dark:hover:bg-[#262932] text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 border border-slate-200 dark:border-[#262932]"
               >
                 <Plus className="h-3.5 w-3.5 text-blue-500" />
                 <span>เปิดในฟอร์มละเอียด (แนบใบเสร็จ)</span>
@@ -686,7 +686,7 @@ export default function QuickCurrencyCalculator({
 
             <button
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#222c42] text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1c2438] transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#262932] text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
             >
               ปิด
             </button>
