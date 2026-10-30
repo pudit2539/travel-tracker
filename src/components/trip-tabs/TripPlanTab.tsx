@@ -36,7 +36,6 @@ import {
   updateStopMeta,
   subscribeStopMeta,
   calculateDayCascadeSchedule,
-  buildChunkedDayRoutes,
 } from '@/lib/smartTimeline';
 import {
   ShoppingBagItem,
@@ -146,7 +145,6 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
-  const [routeTravelMode, setRouteTravelMode] = useState<'transit' | 'walking' | 'driving'>('transit');
   const [showScrollJump, setShowScrollJump] = useState(false);
 
   const tripId = trip?.id || '';
@@ -258,12 +256,6 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const dayCascadeSchedule = useMemo(
     () => calculateDayCascadeSchedule(displayedItinerary, stopMetaMap),
     [displayedItinerary, stopMetaMap]
-  );
-
-  // TabiPlan 5-Stop Chunked Route Deep Links + Apple Maps
-  const chunkedRouteLegs = useMemo(
-    () => buildChunkedDayRoutes(displayedItinerary, stopMetaMap, routeTravelMode),
-    [displayedItinerary, stopMetaMap, routeTravelMode]
   );
 
   // Sub-layout state for itinerary ('card' | 'thumbnail' | 'compact' | 'map')
@@ -880,65 +872,19 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 )}
               </div>
 
-              {/* Travel Mode Selector for Chunked Route Links */}
-              <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] text-[10px] font-bold">
-                {(
-                  [
-                    { id: 'transit', label: '🚇 รถไฟ' },
-                    { id: 'walking', label: '🚶 เดิน' },
-                    { id: 'driving', label: '🚗 ขับรถ' },
-                  ] as const
-                ).map((mode) => (
-                  <button
-                    key={mode.id}
-                    type="button"
-                    onClick={() => setRouteTravelMode(mode.id)}
-                    className={`px-2 py-1 rounded-lg cursor-pointer transition-all ${
-                      routeTravelMode === mode.id
-                        ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
-                    }`}
-                  >
-                    {mode.label}
-                  </button>
-                ))}
-              </div>
+              {multiStopRouteUrl && (
+                <a
+                  href={multiStopRouteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-2xs hover:scale-102 active:scale-95 transition-all shrink-0 cursor-pointer"
+                >
+                  <Navigation className="h-3 w-3" />
+                  <span>เปิดเส้นทางใน Google Maps</span>
+                  <ExternalLink className="h-2.5 w-2.5" />
+                </a>
+              )}
             </div>
-
-            {/* Middle Row: 5-Stop Chunked Google Maps & Apple Maps Route Pills */}
-            {chunkedRouteLegs.length > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[11px] font-black text-slate-600 dark:text-slate-300 mr-1 flex items-center gap-1">
-                    <Navigation className="h-3 w-3 text-blue-500" />
-                    <span>นำทางแบ่งช่วง 5 จุด (ไม่เกินลิมิต Maps):</span>
-                  </span>
-                  {chunkedRouteLegs.map((leg) => (
-                    <div key={leg.index} className="inline-flex items-center gap-1">
-                      <a
-                        href={leg.googleMapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-2xs hover:scale-102 active:scale-95 transition-all cursor-pointer"
-                        title={`เปิด Google Maps นำทางจาก ${leg.fromName} ➔ ${leg.toName}`}
-                      >
-                        <span>🗺️ {leg.label}</span>
-                        <ExternalLink className="h-2.5 w-2.5" />
-                      </a>
-                      <a
-                        href={leg.appleMapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#121316] hover:bg-slate-200 dark:hover:bg-[#22252e] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#262932] text-[11px] font-bold transition-all cursor-pointer"
-                        title={`เปิดใน Apple Maps (${leg.rangeText})`}
-                      >
-                        <span>🍎 Apple Maps</span>
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Sequential Route Trail Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar text-xs">
