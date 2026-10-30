@@ -771,68 +771,36 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
         </div>
 
-        {/* Bottom Row: Swipeable Day Filter Pills + Split Group View Toggle */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 pb-0.5">
-          {availableDays.length > 1 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar flex-1 min-w-0">
+        {/* Bottom Row: Swipeable Day Filter Pills */}
+        {availableDays.length > 1 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pt-1 pb-0.5">
+            <button
+              type="button"
+              onClick={() => handleSelectDay('all')}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                selectedDayFilter === 'all'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
+              }`}
+            >
+              📅 ทุกวัน ({itinerary.length})
+            </button>
+            {availableDays.map((day, dIdx) => (
               <button
+                key={day}
                 type="button"
-                onClick={() => handleSelectDay('all')}
+                onClick={() => handleSelectDay(day)}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                  selectedDayFilter === 'all'
+                  selectedDayFilter === day
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
                 }`}
               >
-                📅 ทุกวัน ({itinerary.length})
+                Day {dIdx + 1} • {day}
               </button>
-              {availableDays.map((day, dIdx) => (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => handleSelectDay(day)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                    selectedDayFilter === day
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
-                  }`}
-                >
-                  Day {dIdx + 1} • {day}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* TabiPlan Split Group View Toggle: แผนทั้งกลุ่ม vs เฉพาะแผนของฉัน */}
-          <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] shrink-0">
-            <button
-              type="button"
-              onClick={() => setGroupViewFilter('all')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
-                groupViewFilter === 'all'
-                  ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
-              }`}
-              title="แสดงจุดแวะของทุกคนในทริป"
-            >
-              <Users className="h-3 w-3" />
-              <span>ทั้งกลุ่ม</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setGroupViewFilter('mine')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
-                groupViewFilter === 'mine'
-                  ? 'bg-white dark:bg-[#181a20] text-emerald-600 dark:text-emerald-400 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
-              }`}
-              title={`แสดงเฉพาะจุดแวะที่ ${currentUserName} ร่วมไป`}
-            >
-              <UserCheck className="h-3 w-3" />
-              <span>แผนของฉัน</span>
-            </button>
+            ))}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Active Stay Banner for selected day if applicable */}

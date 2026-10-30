@@ -851,7 +851,7 @@ function ItineraryStopCardComponent({
                 type="button"
                 onClick={() => setShowStopNotes((v) => !v)}
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                  showStopNotes || pinnedNotesCount > 0 || goersList.length > 0
+                  showStopNotes || pinnedNotesCount > 0
                     ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
                     : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-emerald-400'
                 }`}
@@ -859,7 +859,6 @@ function ItineraryStopCardComponent({
                 <MessageSquare className="h-3 w-3" />
                 <span>
                   โน้ตกลุ่ม{pinnedNotesCount > 0 ? ` (${pinnedNotesCount})` : ''}
-                  {goersList.length > 0 ? ` • 👥 ${goersList.length} คน` : ''}
                 </span>
               </button>
             </div>
@@ -1067,13 +1066,13 @@ function ItineraryStopCardComponent({
               </div>
             )}
 
-            {/* 3. Stop-Pinned Group Chat & Split Group Goers Drawer */}
+            {/* 3. Stop-Pinned Group Chat Drawer */}
             {showStopNotes && (
               <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/50 space-y-3 text-xs animate-in fade-in duration-150">
                 <div className="flex items-center justify-between">
                   <span className="font-black text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>ผู้ร่วมแวะจุดนี้ & โน้ตปักหมุดจากเพื่อน</span>
+                    <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>โน้ตปักหมุดจุดแวะนี้</span>
                   </span>
                   <button
                     type="button"
@@ -1083,34 +1082,6 @@ function ItineraryStopCardComponent({
                     ปิด
                   </button>
                 </div>
-
-                {/* Split Group Goers Selector */}
-                {memberNames.length > 0 && (
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 block">
-                      👥 ใครแวะจุดนี้บ้าง? (ไม่เลือก = ไปด้วยกันทั้งกลุ่ม):
-                    </span>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {memberNames.map((name) => {
-                        const selected = goersList.includes(name);
-                        return (
-                          <button
-                            key={name}
-                            type="button"
-                            onClick={() => handleToggleGoer(name)}
-                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold border cursor-pointer transition-all ${
-                              selected
-                                ? 'bg-emerald-600 text-white border-emerald-600'
-                                : 'bg-white dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                            }`}
-                          >
-                            {selected ? `✓ ${name}` : name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
 
                 {/* Pinned Notes List */}
                 <div className="space-y-1.5">
