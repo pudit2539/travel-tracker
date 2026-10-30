@@ -122,7 +122,7 @@ describe('TabiPlan Upgrades — Smart Timeline & Shopping Bag', () => {
       store: 'Joshin Super Kids Land',
       dayLabel: 'Day 8 (11 ธ.ค.)',
       stopName: 'Den Den Town',
-      category: 'gashapon',
+      category: 'game',
       estPrice: 4500,
       quantity: 1,
       status: 'planned',
