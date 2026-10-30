@@ -54,6 +54,9 @@ import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
 import { hydrateCustomPlacePhotosFromMap } from '@/lib/placeThumbnails';
 import { hydrateVisitedStampsFromSupabase } from '@/lib/visitedStamps';
+import { hydrateStopMetaFromSupabase, KANSAI_TRANSIT_SUGGESTIONS } from '@/lib/smartTimeline';
+import { hydrateShoppingBagFromSupabase, updateShoppingBagItem, ShoppingBagItem, ShoppingItemStatus } from '@/lib/shoppingBag';
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { useTripModals } from '@/hooks/useTripModals';
 import type { 
   TripRow, 
@@ -199,6 +202,10 @@ export default function TripDetailPage() {
 
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('');
   const [hasSavedGeminiKey, setHasSavedGeminiKey] = useState(false);
+  const [sharePrivacy, setSharePrivacy] = useState<{ hideDates?: boolean; hideHotels?: boolean }>({
+    hideDates: false,
+    hideHotels: false,
+  });
 
   // Lock body scroll on mobile/iPad when any page modal is active
   useEffect(() => {
@@ -488,6 +495,25 @@ export default function TripDetailPage() {
             }
             if (parsed.checkedInSpots && typeof parsed.checkedInSpots === 'object' && typeof window !== 'undefined') {
               hydrateVisitedStampsFromSupabase(tripId, parsed.checkedInSpots);
+            }
+            if (parsed.stopMetaMap && typeof parsed.stopMetaMap === 'object' && typeof window !== 'undefined') {
+              hydrateStopMetaFromSupabase(tripId, parsed.stopMetaMap);
+            }
+            if (parsed.shoppingBag && Array.isArray(parsed.shoppingBag) && typeof window !== 'undefined') {
+              hydrateShoppingBagFromSupabase(tripId, parsed.shoppingBag);
+            }
+            if (parsed.trainBookings && Array.isArray(parsed.trainBookings) && typeof window !== 'undefined') {
+              localStorage.setItem(`travel_train_bookings_${tripId}`, JSON.stringify(parsed.trainBookings));
+            }
+            if (parsed.sharedFunds && Array.isArray(parsed.sharedFunds) && typeof window !== 'undefined') {
+              localStorage.setItem(`travel_shared_funds_${tripId}`, JSON.stringify(parsed.sharedFunds));
+            }
+            if (parsed.guardianMap && typeof parsed.guardianMap === 'object' && typeof window !== 'undefined') {
+              localStorage.setItem(`travel_guardian_map_${tripId}`, JSON.stringify(parsed.guardianMap));
+            }
+            if (parsed.sharePrivacy && typeof parsed.sharePrivacy === 'object' && typeof window !== 'undefined') {
+              setSharePrivacy(parsed.sharePrivacy);
+              localStorage.setItem(`travel_share_privacy_${tripId}`, JSON.stringify(parsed.sharePrivacy));
             }
           } catch (e) {
             console.warn('Trip meta parse error:', e);
@@ -968,6 +994,82 @@ export default function TripDetailPage() {
     if (!error) {
       fetchTripData();
       showToast('ลบกิจกรรมออกจากแผนเที่ยวแล้ว', 'info');
+    }
+  };
+
+  // TabiPlan Upgrade: ย้ายจุดแวะไปวันอื่นในคลิกเดียว (Move Stop to Another Day)
+  const handleMoveStopToDay = async (item: any, targetDayLabel: string) => {
+    if (!item?.id || !targetDayLabel) return;
+    markLocalAction();
+    const { error } = await supabase
+      .from('itinerary_items')
+      .update({ date_label: targetDayLabel })
+      .eq('id', item.id);
+    if (!error) {
+      setItinerary((prev) =>
+        prev.map((it) => (it.id === item.id ? { ...it, date_label: targetDayLabel } : it))
+      );
+      fetchTripData();
+      toast.success(`📅 ย้าย "${item.main_place}" ไปยัง ${targetDayLabel} เรียบร้อยแล้ว!`);
+    } else {
+      toast.error('ไม่สามารถย้ายวันได้: ' + error.message);
+    }
+  };
+
+  // TabiPlan Upgrade: ซิงก์รายการกระเป๋าช้อปปิ้งเข้าบิลค่าใช้จ่ายอัตโนมัติเมื่อติ๊ก "ซื้อแล้ว"
+  const handleSyncShoppingExpense = async (shopItem: ShoppingBagItem, nextStatus: ShoppingItemStatus) => {
+    if (!tripId) return;
+    try {
+      if (nextStatus === 'bought') {
+        const unitPrice = Number(shopItem.actualPrice ?? shopItem.estPrice ?? 0);
+        const totalAmt = Math.round(unitPrice * Math.max(1, Number(shopItem.quantity || 1)));
+        if (totalAmt <= 0) {
+          toast.success(`✅ ติ๊กซื้อ "${shopItem.name}" แล้ว`);
+          return;
+        }
+        const payerName =
+          userProfile?.display_name ||
+          currentUser?.user_metadata?.display_name ||
+          currentUser?.email?.split('@')[0] ||
+          'ฉัน';
+        const payerAvatar =
+          userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id || 'cat_pink';
+
+        const rowToInsert = {
+          trip_id: tripId,
+          title: `🛍️ ช้อป: ${shopItem.name}${shopItem.quantity > 1 ? ` (x${shopItem.quantity})` : ''}`,
+          amount: totalAmt,
+          currency: 'JPY',
+          category: 'shopping',
+          spent_at: new Date().toISOString().split('T')[0],
+          payer_id: currentUser?.id || null,
+          payer_name: payerName,
+          payer_avatar: payerAvatar,
+        };
+
+        markLocalAction();
+        const { data: insertedRows, error } = await supabase
+          .from('expenses')
+          .insert([rowToInsert])
+          .select();
+
+        if (!error && insertedRows && insertedRows[0]?.id) {
+          updateShoppingBagItem(tripId, shopItem.id, { linkedExpenseId: insertedRows[0].id });
+          fetchTripData();
+          triggerConfetti();
+          toast.success(`🛍️ ซื้อ "${shopItem.name}" แล้ว! ตัดงบอัตโนมัติ ${totalAmt.toLocaleString()} ${rowToInsert.currency}`);
+        } else {
+          toast.success(`✅ ติ๊กซื้อ "${shopItem.name}" แล้ว`);
+        }
+      } else if (shopItem.linkedExpenseId) {
+        markLocalAction();
+        await supabase.from('expenses').delete().eq('id', shopItem.linkedExpenseId);
+        updateShoppingBagItem(tripId, shopItem.id, { linkedExpenseId: undefined });
+        fetchTripData();
+        toast.info(`คืนยอดงบประมาณของ "${shopItem.name}" เรียบร้อยแล้ว`);
+      }
+    } catch (err) {
+      console.warn('Shopping expense sync warning:', err);
     }
   };
 
@@ -2449,6 +2551,8 @@ export default function TripDetailPage() {
                   setShowDiningDecisionModal(true);
                 }}
                 onOpenTicketLocker={() => setShowTicketPassLockerModal(true)}
+                onMoveStopToDay={handleMoveStopToDay}
+                onSyncShoppingExpense={handleSyncShoppingExpense}
               />
             </div>
           )}
@@ -2657,208 +2761,236 @@ export default function TripDetailPage() {
       {/* ==================== MODALS ==================== */}
 
       {/* 1. Quick Currency & Tax-Free Calculator Modal */}
-      <QuickCurrencyCalculator
-        isOpen={showCurrencyCalculator}
-        onClose={() => setShowCurrencyCalculator(false)}
-        defaultCurrency={tripBaseCurrency}
-        fxRate={fxRate}
-        tripId={tripId}
-        currentUser={currentUser}
-        userDisplayName={userDisplayName}
-        userProfile={userProfile}
-        allMembers={allMembersForSplit}
-        onExpenseLogged={fetchTripData}
-        onApplyExpense={(amount, curr, note) => {
-          setScannedData((prev: any) => ({
-            ...prev,
-            amount: String(amount),
-            currency: curr,
-            title: note || prev.title,
-          }));
-          setShowScanModal(true);
-        }}
-      />
+      {showCurrencyCalculator && (
+        <QuickCurrencyCalculator
+          isOpen={showCurrencyCalculator}
+          onClose={() => setShowCurrencyCalculator(false)}
+          defaultCurrency={tripBaseCurrency}
+          fxRate={fxRate}
+          tripId={tripId}
+          currentUser={currentUser}
+          userDisplayName={userDisplayName}
+          userProfile={userProfile}
+          allMembers={allMembersForSplit}
+          onExpenseLogged={fetchTripData}
+          onApplyExpense={(amount, curr, note) => {
+            setScannedData((prev: any) => ({
+              ...prev,
+              amount: String(amount),
+              currency: curr,
+              title: note || prev.title,
+            }));
+            setShowScanModal(true);
+          }}
+        />
+      )}
 
       {/* Gourmet & Cafe Radar Modal */}
-      <GourmetRadarModal
-        isOpen={showGourmetRadarModal}
-        onClose={() => setShowGourmetRadarModal(false)}
-        itinerary={itinerary}
-        tripId={tripId}
-        fxRate={fxRate}
-        onOpenDecisionPicker={(city) => {
-          setDiningPickerDefaultCity(city);
-          setShowDiningDecisionModal(true);
-        }}
-      />
+      {showGourmetRadarModal && (
+        <GourmetRadarModal
+          isOpen={showGourmetRadarModal}
+          onClose={() => setShowGourmetRadarModal(false)}
+          itinerary={itinerary}
+          tripId={tripId}
+          fxRate={fxRate}
+          onOpenDecisionPicker={(city) => {
+            setDiningPickerDefaultCity(city);
+            setShowDiningDecisionModal(true);
+          }}
+        />
+      )}
 
       {/* Dining Decision Concierge / Smart Picker Modal */}
-      <DiningDecisionPickerModal
-        isOpen={showDiningDecisionModal}
-        onClose={() => setShowDiningDecisionModal(false)}
-        itinerary={itinerary}
-        defaultCity={diningPickerDefaultCity}
-        tripId={tripId}
-        onOpenRadar={() => setShowGourmetRadarModal(true)}
-      />
+      {showDiningDecisionModal && (
+        <DiningDecisionPickerModal
+          isOpen={showDiningDecisionModal}
+          onClose={() => setShowDiningDecisionModal(false)}
+          itinerary={itinerary}
+          defaultCity={diningPickerDefaultCity}
+          tripId={tripId}
+          onOpenRadar={() => setShowGourmetRadarModal(true)}
+        />
+      )}
 
       {/* Pass & Offline Ticket Locker Modal */}
-      <TicketPassLockerModal
-        isOpen={showTicketPassLockerModal}
-        onClose={() => setShowTicketPassLockerModal(false)}
-        tripId={tripId}
-        tripName={trip?.name}
-        members={members}
-        currentUser={currentUser}
-        userDisplayName={userDisplayName}
-      />
+      {showTicketPassLockerModal && (
+        <TicketPassLockerModal
+          isOpen={showTicketPassLockerModal}
+          onClose={() => setShowTicketPassLockerModal(false)}
+          tripId={tripId}
+          tripName={trip?.name}
+          members={members}
+          currentUser={currentUser}
+          userDisplayName={userDisplayName}
+        />
+      )}
 
       {/* 2. Packing Checklist Modal */}
-      <PackingChecklistModal
-        isOpen={showPackingModal}
-        onClose={() => setShowPackingModal(false)}
-        tripId={tripId}
-        tripName={trip?.name || trip?.title || undefined}
-        tripCountry={trip?.country || undefined}
-        tripStartDate={trip?.start_date || undefined}
-      />
+      {showPackingModal && (
+        <PackingChecklistModal
+          isOpen={showPackingModal}
+          onClose={() => setShowPackingModal(false)}
+          tripId={tripId}
+          tripName={trip?.name || trip?.title || undefined}
+          tripCountry={trip?.country || undefined}
+          tripStartDate={trip?.start_date || undefined}
+        />
+      )}
 
       {/* 3. Profile Modal */}
-      <ProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        user={currentUser}
-        onProfileUpdated={(updated) => {
-          setUserProfile((prev: any) => ({ ...prev, ...updated }));
-          setCurrentUser((prev: any) => ({
-            ...prev,
-            user_metadata: { ...(prev?.user_metadata || {}), ...updated },
-          }));
-          setMembers((prev) =>
-            prev.map((m) =>
-              m.user_id === currentUser?.id
-                ? {
-                    ...m,
-                    profiles: {
-                      id: currentUser?.id || '',
-                      display_name: updated?.display_name || m.profiles?.display_name || null,
-                      avatar_id: updated?.avatar_id || m.profiles?.avatar_id || null,
-                      email: (updated as any)?.email || m.profiles?.email || null,
-                      role: m.profiles?.role || null,
-                      is_super_admin: m.profiles?.is_super_admin || null,
-                      created_at: m.profiles?.created_at || null,
-                      updated_at: m.profiles?.updated_at || null,
-                    },
-                  }
-                : m
-            )
-          );
-        }}
-      />
+      {showProfileModal && (
+        <ProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          user={currentUser}
+          onProfileUpdated={(updated) => {
+            setUserProfile((prev: any) => ({ ...prev, ...updated }));
+            setCurrentUser((prev: any) => ({
+              ...prev,
+              user_metadata: { ...(prev?.user_metadata || {}), ...updated },
+            }));
+            setMembers((prev) =>
+              prev.map((m) =>
+                m.user_id === currentUser?.id
+                  ? {
+                      ...m,
+                      profiles: {
+                        id: currentUser?.id || '',
+                        display_name: updated?.display_name || m.profiles?.display_name || null,
+                        avatar_id: updated?.avatar_id || m.profiles?.avatar_id || null,
+                        email: (updated as any)?.email || m.profiles?.email || null,
+                        role: m.profiles?.role || null,
+                        is_super_admin: m.profiles?.is_super_admin || null,
+                        created_at: m.profiles?.created_at || null,
+                        updated_at: m.profiles?.updated_at || null,
+                      },
+                    }
+                  : m
+              )
+            );
+          }}
+        />
+      )}
 
       {/* Travel Command Center Hub Modal (5-in-1) */}
-      <TravelHubModal
-        isOpen={showTravelHubModal}
-        onClose={() => setShowTravelHubModal(false)}
-        trip={trip}
-        expenses={expenses}
-        itinerary={itinerary}
-        members={members}
-        userDisplayName={userDisplayName}
-        fxRate={fxRate}
-        onOpenScrapbook={() => setShowScrapbookModal(true)}
-        onOpenPacking={() => setShowPackingModal(true)}
-      />
+      {showTravelHubModal && (
+        <TravelHubModal
+          isOpen={showTravelHubModal}
+          onClose={() => setShowTravelHubModal(false)}
+          trip={trip}
+          expenses={expenses}
+          itinerary={itinerary}
+          members={members}
+          userDisplayName={userDisplayName}
+          fxRate={fxRate}
+          onOpenScrapbook={() => setShowScrapbookModal(true)}
+          onOpenPacking={() => setShowPackingModal(true)}
+        />
+      )}
 
       {/* 4. Settlement Modal */}
-      <SettlementModal
-        isOpen={showSettlementModal}
-        onClose={() => setShowSettlementModal(false)}
-        expenses={expenses}
-        members={members}
-        currentUser={currentUser}
-        userDisplayName={userDisplayName}
-        currency={trip?.currency || 'THB'}
-        fxRate={fxRate}
-        tripId={tripId}
-      />
+      {showSettlementModal && (
+        <SettlementModal
+          isOpen={showSettlementModal}
+          onClose={() => setShowSettlementModal(false)}
+          expenses={expenses}
+          members={members}
+          currentUser={currentUser}
+          userDisplayName={userDisplayName}
+          currency={trip?.currency || 'THB'}
+          fxRate={fxRate}
+          tripId={tripId}
+        />
+      )}
 
       {/* 5. AI Assistant Modal */}
-      <AIAssistantModal
-        isOpen={showAIAssistantModal}
-        onClose={() => setShowAIAssistantModal(false)}
-        currentCity={itinerary[0]?.city || 'Osaka'}
-      />
+      {showAIAssistantModal && (
+        <AIAssistantModal
+          isOpen={showAIAssistantModal}
+          onClose={() => setShowAIAssistantModal(false)}
+          currentCity={itinerary[0]?.city || 'Osaka'}
+        />
+      )}
 
       {/* 6. Budget & Category Manager Modal */}
-      <BudgetCategoryModal
-        isOpen={showBudgetCategoryModal}
-        onClose={() => setShowBudgetCategoryModal(false)}
-        trip={trip}
-        expenses={expenses}
-        members={members}
-        currentUser={currentUser}
-        userDisplayName={userDisplayName}
-        fxRate={fxRate}
-        initialTab={budgetModalInitialTab}
-        onUpdated={fetchTripData}
-        onOpenRollback={() => setShowRollbackModal(true)}
-        onShowToast={showToast}
-      />
+      {showBudgetCategoryModal && (
+        <BudgetCategoryModal
+          isOpen={showBudgetCategoryModal}
+          onClose={() => setShowBudgetCategoryModal(false)}
+          trip={trip}
+          expenses={expenses}
+          members={members}
+          currentUser={currentUser}
+          userDisplayName={userDisplayName}
+          fxRate={fxRate}
+          initialTab={budgetModalInitialTab}
+          onUpdated={fetchTripData}
+          onOpenRollback={() => setShowRollbackModal(true)}
+          onShowToast={showToast}
+        />
+      )}
 
       {/* 7. Printable PDF Itinerary Modal */}
-      <PrintableItineraryModal
-        isOpen={showPrintableModal}
-        onClose={() => setShowPrintableModal(false)}
-        trip={trip}
-        itinerary={itinerary}
-        expenses={expenses}
-        categories={categories}
-      />
+      {showPrintableModal && (
+        <PrintableItineraryModal
+          isOpen={showPrintableModal}
+          onClose={() => setShowPrintableModal(false)}
+          trip={trip}
+          itinerary={itinerary}
+          expenses={expenses}
+          categories={categories}
+        />
+      )}
 
       {/* 8. Photo Scrapbook Modal */}
-      <PhotoScrapbookModal
-        isOpen={showScrapbookModal}
-        onClose={() => {
-          setShowScrapbookModal(false);
-          setPhotosCount(getTripPhotos(tripId).length);
-        }}
-        tripId={tripId}
-        tripName={trip?.name || trip?.title || ''}
-      />
+      {showScrapbookModal && (
+        <PhotoScrapbookModal
+          isOpen={showScrapbookModal}
+          onClose={() => {
+            setShowScrapbookModal(false);
+            setPhotosCount(getTripPhotos(tripId).length);
+          }}
+          tripId={tripId}
+          tripName={trip?.name || trip?.title || ''}
+        />
+      )}
 
       {/* 9. Version Rollback Modal */}
-      <VersionRollbackModal
-        isOpen={showRollbackModal}
-        onClose={() => setShowRollbackModal(false)}
-        tripId={tripId}
-        trip={trip}
-        itinerary={itinerary}
-        expenses={expenses}
-        categories={categories}
-        categoryBudgets={categoryBudgets}
-        photos={getTripPhotos(tripId)}
-        onRestored={fetchTripData}
-      />
+      {showRollbackModal && (
+        <VersionRollbackModal
+          isOpen={showRollbackModal}
+          onClose={() => setShowRollbackModal(false)}
+          tripId={tripId}
+          trip={trip}
+          itinerary={itinerary}
+          expenses={expenses}
+          categories={categories}
+          categoryBudgets={categoryBudgets}
+          photos={getTripPhotos(tripId)}
+          onRestored={fetchTripData}
+        />
+      )}
 
       {/* Expense Detail & Edit Modal */}
-      <ExpenseDetailModal
-        isOpen={!!selectedExpenseForDetail}
-        onClose={() => setSelectedExpenseForDetail(null)}
-        expense={selectedExpenseForDetail}
-        categories={categories}
-        members={members}
-        currentUser={currentUser}
-        userDisplayName={userDisplayName}
-        tripBaseCurrency={tripBaseCurrency}
-        fxRate={fxRate}
-        canEdit={checkCanModifyExpense(selectedExpenseForDetail)}
-        startInEditMode={startInExpenseEditMode}
-        tripId={tripId}
-        onSaveExpense={handleSaveUpdatedExpense}
-        onDeleteExpense={handleDeleteExpense}
-        onOpenReceiptFullscreen={(img) => setPreviewImage(img)}
-      />
+      {selectedExpenseForDetail && (
+        <ExpenseDetailModal
+          isOpen={!!selectedExpenseForDetail}
+          onClose={() => setSelectedExpenseForDetail(null)}
+          expense={selectedExpenseForDetail}
+          categories={categories}
+          members={members}
+          currentUser={currentUser}
+          userDisplayName={userDisplayName}
+          tripBaseCurrency={tripBaseCurrency}
+          fxRate={fxRate}
+          canEdit={checkCanModifyExpense(selectedExpenseForDetail)}
+          startInEditMode={startInExpenseEditMode}
+          tripId={tripId}
+          onSaveExpense={handleSaveUpdatedExpense}
+          onDeleteExpense={handleDeleteExpense}
+          onOpenReceiptFullscreen={(img) => setPreviewImage(img)}
+        />
+      )}
 
       {/* 10. Scan / Add Expense Modal (Unified Single Clean Form) */}
       {showScanModal && mounted && createPortal(
@@ -3546,6 +3678,43 @@ export default function TripDetailPage() {
                     value={activityForm.transport_info}
                     onChange={(e) => setActivityForm({ ...activityForm, transport_info: e.target.value })}
                   />
+                  {/* TabiPlan Smart Transit Autocomplete Templates */}
+                  <div className="pt-2 space-y-1.5">
+                    <div className="text-[10px] font-black text-blue-600 dark:text-blue-400">
+                      ⚡ กดเลือกสายรถไฟและเส้นทางยอดฮิตภูมิภาคคันไซ (คลิกเพื่อเติมอัตโนมัติ):
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {KANSAI_TRANSIT_SUGGESTIONS.filter((s) => s.category === 'route-template').map((tpl) => (
+                        <button
+                          key={tpl.label}
+                          type="button"
+                          onClick={() => setActivityForm({ ...activityForm, transport_info: tpl.insertText })}
+                          className="px-2 py-1 rounded-lg bg-white dark:bg-[#181a20] hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-300 border border-blue-200/70 dark:border-[#2a2e39] text-[10px] font-bold cursor-pointer transition-all"
+                        >
+                          {tpl.badge} {tpl.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      {KANSAI_TRANSIT_SUGGESTIONS.filter((s) => s.category === 'station').map((stTpl) => (
+                        <button
+                          key={stTpl.label}
+                          type="button"
+                          onClick={() =>
+                            setActivityForm({
+                              ...activityForm,
+                              transport_info: activityForm.transport_info
+                                ? `${activityForm.transport_info} • ${stTpl.insertText}`
+                                : stTpl.insertText,
+                            })
+                          }
+                          className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#14161b] hover:bg-blue-100 text-slate-600 dark:text-slate-400 text-[9px] font-bold cursor-pointer"
+                        >
+                          + {stTpl.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -3738,6 +3907,41 @@ export default function TripDetailPage() {
                     {copiedCode ? 'คัดลอกแล้ว' : 'คัดลอก'}
                   </button>
                 </div>
+              </div>
+
+              {/* TabiPlan Privacy Share Toggles */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/70 dark:bg-[#14161b] space-y-2.5">
+                <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span>🛡️ ตั้งค่าความเป็นส่วนตัวเมื่อแชร์ทริป (Share Privacy)</span>
+                </div>
+                <label className="flex items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-300 font-bold cursor-pointer">
+                  <span>ซ่อนวันที่เดินทางจริง (แสดงเฉพาะ Day 1, Day 2...)</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(sharePrivacy.hideDates)}
+                    onChange={(e) => {
+                      const next = { ...sharePrivacy, hideDates: e.target.checked };
+                      setSharePrivacy(next);
+                      localStorage.setItem(`travel_share_privacy_${tripId}`, JSON.stringify(next));
+                      syncTripMetadataToSupabase(tripId, { sharePrivacy: next }).catch(() => {});
+                    }}
+                    className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-300 font-bold cursor-pointer">
+                  <span>ซ่อนชื่อโรงแรมและรหัสการจองที่พักจากผู้ชมทั่วไป</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(sharePrivacy.hideHotels)}
+                    onChange={(e) => {
+                      const next = { ...sharePrivacy, hideHotels: e.target.checked };
+                      setSharePrivacy(next);
+                      localStorage.setItem(`travel_share_privacy_${tripId}`, JSON.stringify(next));
+                      syncTripMetadataToSupabase(tripId, { sharePrivacy: next }).catch(() => {});
+                    }}
+                    className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                  />
+                </label>
               </div>
             </div>
           </div>

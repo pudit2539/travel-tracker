@@ -2,7 +2,8 @@ import React from 'react';
 import { 
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
-  Navigation, Eye, MoreHorizontal, Check, Camera, ZoomIn, RotateCcw
+  Navigation, Eye, MoreHorizontal, Check, Camera, ZoomIn,
+  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Users, Calendar, Plus, Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseTransitInfo } from '@/lib/transitGuide';
@@ -13,6 +14,23 @@ import {
   getActivityCheckInMeta,
   CheckInMeta,
 } from '@/lib/visitedStamps';
+import {
+  StopSmartMeta,
+  ComputedStopSchedule,
+  getStopKey,
+  getStopMeta,
+  updateStopMeta,
+  subscribeStopMeta,
+  detectStopAmenities,
+} from '@/lib/smartTimeline';
+import {
+  ShoppingBagItem,
+  SHOPPING_CATEGORY_META,
+  getShoppingBag,
+  getShoppingItemsForStop,
+  addShoppingBagItem,
+  subscribeShoppingBag,
+} from '@/lib/shoppingBag';
 import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
 import {
   CustomPlacePhotoModal,
@@ -33,6 +51,15 @@ export interface ItineraryStopCardProps {
   onMoveActivity: (idx: number, direction: 'up' | 'down') => void;
   onOpenEditActivity: (item: any) => void;
   onDeleteActivity: (id: string) => void;
+  // TabiPlan Smart Timeline & Shopping Integrations
+  computedSchedule?: ComputedStopSchedule;
+  stopMeta?: StopSmartMeta;
+  onUpdateStopMeta?: (stopKey: string, patch: Partial<StopSmartMeta>) => void;
+  availableDays?: string[];
+  onMoveStopToDay?: (item: any, targetDayLabel: string) => void;
+  stopShoppingItems?: ShoppingBagItem[];
+  onToggleShoppingItemStatus?: (item: ShoppingBagItem) => void;
+  memberNames?: string[];
 }
 
 function useStopVisitedState(item: any, canEditPlan: boolean = true, currentUser?: any) {
@@ -135,17 +162,154 @@ function ItineraryStopCardComponent({
   onMoveActivity,
   onOpenEditActivity,
   onDeleteActivity,
+  computedSchedule,
+  stopMeta: propStopMeta,
+  onUpdateStopMeta,
+  availableDays = [],
+  onMoveStopToDay,
+  stopShoppingItems: propShoppingItems,
+  onToggleShoppingItemStatus,
+  memberNames = [],
 }: ItineraryStopCardProps) {
   const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [showAdminMenu, setShowAdminMenu] = React.useState(false);
+  const [showMoveDayList, setShowMoveDayList] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
 
+  // TabiPlan Interactive Panels
+  const [showTimeTuner, setShowTimeTuner] = React.useState(false);
+  const [showStopShopping, setShowStopShopping] = React.useState(false);
+  const [showStopNotes, setShowStopNotes] = React.useState(false);
+  const [newNoteText, setNewNoteText] = React.useState('');
+  const [quickShopName, setQuickShopName] = React.useState('');
+  const [quickShopPrice, setQuickShopPrice] = React.useState('');
+
+  const stopKey = React.useMemo(() => getStopKey(item), [item]);
+  const tripId = item?.trip_id || '';
+
+  const [localStopMeta, setLocalStopMeta] = React.useState<StopSmartMeta>(() =>
+    propStopMeta !== undefined ? propStopMeta : getStopMeta(tripId, stopKey, item?.main_place)
+  );
+  const [localShoppingItems, setLocalShoppingItems] = React.useState<ShoppingBagItem[]>(() =>
+    propShoppingItems !== undefined
+      ? propShoppingItems
+      : getShoppingItemsForStop(getShoppingBag(tripId), item)
+  );
+
+  React.useEffect(() => {
+    if (!tripId || propStopMeta !== undefined) return;
+    const syncMeta = () => setLocalStopMeta(getStopMeta(tripId, stopKey, item?.main_place));
+    syncMeta();
+    return subscribeStopMeta(syncMeta);
+  }, [tripId, stopKey, item?.main_place, propStopMeta]);
+
+  React.useEffect(() => {
+    if (!tripId || propShoppingItems !== undefined) return;
+    const syncShop = () =>
+      setLocalShoppingItems(getShoppingItemsForStop(getShoppingBag(tripId), item));
+    syncShop();
+    return subscribeShoppingBag(syncShop);
+  }, [tripId, item, propShoppingItems]);
+
+  const activeStopMeta = propStopMeta || localStopMeta;
+  const activeShoppingItems = propShoppingItems || localShoppingItems;
+  const isSkipped = Boolean(activeStopMeta?.skipped);
+
+  const handlePatchMeta = (patch: Partial<StopSmartMeta>) => {
+    if (onUpdateStopMeta) {
+      onUpdateStopMeta(stopKey, patch);
+    } else if (tripId) {
+      updateStopMeta(tripId, stopKey, patch);
+    }
+  };
+
+  const handleToggleSkip = () => {
+    const nextSkipped = !isSkipped;
+    handlePatchMeta({
+      skipped: nextSkipped,
+      skippedAt: nextSkipped ? new Date().toISOString() : undefined,
+    });
+    triggerHaptic('light');
+    if (nextSkipped) {
+      toast.info(`ข้ามจุดแวะ "${item.main_place}" ชั่วคราว ⏭️`, {
+        description: 'คำนวณเวลาเดินทางและเส้นทาง Google Maps ใหม่โดยไม่นับจุดนี้แล้ว',
+      });
+    } else {
+      toast.success(`นำ "${item.main_place}" กลับเข้าตารางเวลาแล้ว ↩️`);
+    }
+  };
+
+  const handleAddPinnedNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newNoteText.trim();
+    if (!trimmed) return;
+    const author =
+      currentUser?.user_metadata?.display_name ||
+      currentUser?.user_metadata?.full_name ||
+      currentUser?.email?.split('@')[0] ||
+      'สมาชิก';
+    const existingNotes = activeStopMeta.pinnedNotes || [];
+    const nextNotes = [
+      ...existingNotes,
+      {
+        id: `note-${Date.now()}`,
+        author,
+        text: trimmed,
+        createdAt: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+      },
+    ];
+    handlePatchMeta({ pinnedNotes: nextNotes });
+    setNewNoteText('');
+    toast.success('ปักหมุดโน้ตไว้ที่จุดแวะนี้แล้ว 💬');
+  };
+
+  const handleDeletePinnedNote = (noteId: string) => {
+    const existingNotes = activeStopMeta.pinnedNotes || [];
+    handlePatchMeta({ pinnedNotes: existingNotes.filter((n) => n.id !== noteId) });
+  };
+
+  const handleToggleGoer = (memberName: string) => {
+    const currentGoers = activeStopMeta.goers || [];
+    const exists = currentGoers.includes(memberName);
+    const nextGoers = exists
+      ? currentGoers.filter((m) => m !== memberName)
+      : [...currentGoers, memberName];
+    handlePatchMeta({ goers: nextGoers });
+  };
+
+  const handleQuickAddShopping = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = quickShopName.trim();
+    if (!trimmed || !tripId) return;
+    const price = parseInt(quickShopPrice, 10) || 1500;
+    addShoppingBagItem(tripId, {
+      name: trimmed,
+      category: 'other',
+      estPrice: price,
+      quantity: 1,
+      store: item.main_place,
+      dayLabel: item.date_label,
+      stopId: item.id,
+      stopName: item.main_place,
+      status: 'planned',
+      taxFreeEligible: price >= 5000,
+    });
+    setQuickShopName('');
+    setQuickShopPrice('');
+    toast.success(`เพิ่ม "${trimmed}" ผูกกับจุดแวะนี้แล้ว 🛍️`);
+  };
+
+  const amenities = React.useMemo(
+    () => detectStopAmenities(item, activeStopMeta.amenityTags),
+    [item, activeStopMeta.amenityTags]
+  );
+
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
-  const transitGuide = parseTransitInfo(item.transport_info);
-  const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+  const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
+  const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = React.useMemo(() => buildStopUrls(item), [item]);
 
   React.useEffect(() => {
     setImgError(false);
@@ -170,80 +334,46 @@ function ItineraryStopCardComponent({
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanFoodQuery)}`
       : '';
 
-  const [touchStartX, setTouchStartX] = React.useState<number | null>(null);
-  const [swipeOffset, setSwipeOffset] = React.useState<number>(0);
-  const [isSwiping, setIsSwiping] = React.useState<boolean>(false);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (reordering) return;
-    setTouchStartX(e.touches[0].clientX);
-    setIsSwiping(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartX === null || !isSwiping) return;
-    const currentX = e.touches[0].clientX;
-    const deltaX = currentX - touchStartX;
-    if (deltaX > 0) {
-      setSwipeOffset(Math.min(deltaX, 85));
-    } else {
-      setSwipeOffset(0);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (swipeOffset >= 60) {
-      toggleVisited();
-    }
-    setSwipeOffset(0);
-    setIsSwiping(false);
-    setTouchStartX(null);
-  };
+  const boughtShopCount = activeShoppingItems.filter((s) => s.status === 'bought').length;
+  const pinnedNotesCount = activeStopMeta.pinnedNotes?.length || 0;
+  const goersList = activeStopMeta.goers || [];
 
   return (
     <>
-      <div 
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+      <div
         className={`group rounded-3xl border transition-all duration-300 relative overflow-hidden card-elevation ${
-          visited 
-            ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/20' 
+          isSkipped
+            ? 'border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-[#14161b]/70 opacity-65'
+            : visited
+            ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/20'
             : 'border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-400/60 dark:hover:border-blue-500/40'
         }`}
       >
-        {/* Swipe Reveal Action Background */}
-        {swipeOffset > 8 && (
-          <div
-            className={`absolute inset-y-0 left-0 w-36 flex items-center pl-4 font-black text-xs gap-1.5 z-0 transition-opacity ${
-              visited ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
-            }`}
-          >
-            {visited ? (
-              <>
-                <RotateCcw className="h-4 w-4 stroke-[3]" />
-                <span className="text-[11px] font-bold">ยกเลิกเช็กอิน</span>
-              </>
-            ) : (
-              <>
-                <Check className="h-4 w-4 stroke-[3]" />
-                <span className="text-[11px] font-bold">เช็กอิน</span>
-              </>
-            )}
-          </div>
-        )}
-
         <div
-          style={{
-            transform: swipeOffset > 0 ? `translateX(${swipeOffset}px)` : undefined,
-            transition: isSwiping ? 'none' : 'transform 0.25s ease-out',
-          }}
           className={`relative z-10 transition-colors ${
-            visited 
-              ? 'bg-emerald-50/30 dark:bg-[#181a20]' 
+            visited
+              ? 'bg-emerald-50/30 dark:bg-[#181a20]'
               : 'bg-white dark:bg-[#181a20]'
           }`}
         >
+          {/* Skipped Stop Banner */}
+          {isSkipped && (
+            <div className="px-4 py-2 bg-slate-200/80 dark:bg-slate-800/80 border-b border-slate-300/70 dark:border-slate-700 flex items-center justify-between gap-2 text-xs">
+              <span className="font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <SkipForward className="h-3.5 w-3.5 text-amber-600" />
+                <span>ข้ามจุดแวะนี้ชั่วคราว (ไม่นับรวมในเวลาและเส้นทางนำทาง)</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleToggleSkip}
+                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] flex items-center gap-1 cursor-pointer shrink-0"
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>คืนค่าเข้าแผน</span>
+              </button>
+            </div>
+          )}
+
           {/* Top Notice / Platform Banner */}
         {transitGuide.hasGuide && (
           <div className="px-4 py-2 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-b border-amber-200/70 dark:border-amber-900/40 flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -286,6 +416,31 @@ function ItineraryStopCardComponent({
                 </span>
               )}
 
+              {/* TabiPlan Smart Cascade Time Badge */}
+              {!isSkipped && computedSchedule && (
+                <button
+                  type="button"
+                  onClick={() => setShowTimeTuner((v) => !v)}
+                  className="inline-flex items-center gap-1 text-[11px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-950/50 px-2.5 py-0.5 rounded-full border border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                  title="แตะเพื่อปรับเวลาแวะพัก / เวลานัดหมาย / เวลาเปิด-ปิดร้าน (คำนวณไหลอัตโนมัติ)"
+                >
+                  <span>⚡ {computedSchedule.arriveTime}–{computedSchedule.leaveTime}</span>
+                  <span className="opacity-75">({computedSchedule.durationMin}น.)</span>
+                </button>
+              )}
+
+              {!isSkipped && computedSchedule && computedSchedule.waitMin > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/60">
+                  ⏳ รอเปิด/นัด {computedSchedule.waitMin} นาที
+                </span>
+              )}
+
+              {!isSkipped && computedSchedule && computedSchedule.lateMin > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-black text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800 animate-pulse">
+                  ⚠️ {computedSchedule.lateReason || `สาย ${computedSchedule.lateMin} นาที!`}
+                </span>
+              )}
+
               {item.city && (
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                   📍 {item.city}
@@ -320,15 +475,66 @@ function ItineraryStopCardComponent({
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setShowAdminMenu((v) => !v)}
+                    onClick={() => {
+                      setShowAdminMenu((v) => !v);
+                      setShowMoveDayList(false);
+                    }}
                     className="p-1.5 rounded-xl border border-slate-200/80 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-colors"
-                    title="จัดการกิจกรรม (แก้ไข / เลื่อนลำดับ / ลบ)"
+                    title="จัดการกิจกรรม (แก้ไข / ข้ามจุดแวะ / ย้ายวัน / ลบ)"
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
 
                   {showAdminMenu && (
-                    <div className="absolute right-0 top-9 z-30 w-44 rounded-2xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-9 z-30 w-52 rounded-2xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          handleToggleSkip();
+                        }}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/50 flex items-center gap-2 cursor-pointer"
+                      >
+                        <SkipForward className="h-3.5 w-3.5 text-amber-500" />
+                        <span>{isSkipped ? 'คืนค่าเข้าตารางเที่ยว' : 'ข้ามจุดแวะนี้ชั่วคราว'}</span>
+                      </button>
+
+                      {availableDays.length > 1 && onMoveStopToDay && (
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setShowMoveDayList((v) => !v)}
+                            className="w-full px-3 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center justify-between gap-2 cursor-pointer"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                              <span>ย้ายไปวันอื่น...</span>
+                            </span>
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </button>
+                          {showMoveDayList && (
+                            <div className="pl-3 pr-1 py-1 space-y-0.5 max-h-40 overflow-y-auto border-l-2 border-indigo-200 dark:border-indigo-800 ml-3 my-1">
+                              {availableDays
+                                .filter((d) => d !== item.date_label)
+                                .map((dayLabel) => (
+                                  <button
+                                    key={dayLabel}
+                                    type="button"
+                                    onClick={() => {
+                                      setShowAdminMenu(false);
+                                      setShowMoveDayList(false);
+                                      onMoveStopToDay(item, dayLabel);
+                                    }}
+                                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 truncate cursor-pointer"
+                                  >
+                                    ➔ {dayLabel}
+                                  </button>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => {
@@ -575,6 +781,386 @@ function ItineraryStopCardComponent({
               )}
             </div>
           )}
+
+          {/* TabiPlan Amenity & Weather Readiness Tags + Quick Smart Toolbar */}
+          <div className="pt-1.5 border-t border-slate-100 dark:border-[#22252e] space-y-2.5 text-left">
+            {amenities.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {amenities.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${tag.colorClass}`}
+                  >
+                    <span>{tag.emoji}</span>
+                    <span>{tag.label}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Quick Smart Action Pills (Time Tuner / Skip / Stop Shopping / Group Notes) */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setShowTimeTuner((v) => !v)}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                  showTimeTuner
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-indigo-400'
+                }`}
+              >
+                <Clock className="h-3 w-3" />
+                <span>
+                  ปรับเวลาแวะ ({activeStopMeta.durationMin ?? computedSchedule?.durationMin ?? 90}น.)
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleToggleSkip}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                  isSkipped
+                    ? 'bg-amber-500 text-white border-amber-500'
+                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-amber-400'
+                }`}
+                title="ข้ามจุดแวะนี้ชั่วคราวโดยไม่ต้องลบ ระบบจะคำนวณเวลาจุดถัดไปใหม่ทันที"
+              >
+                <SkipForward className="h-3 w-3" />
+                <span>{isSkipped ? 'ยกเลิกการข้าม' : 'ข้ามชั่วคราว'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowStopShopping((v) => !v)}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                  showStopShopping || activeShoppingItems.length > 0
+                    ? 'bg-fuchsia-50 dark:bg-fuchsia-950/50 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800/60'
+                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-fuchsia-400'
+                }`}
+              >
+                <ShoppingBag className="h-3 w-3" />
+                <span>
+                  ของต้องซื้อจุดนี้
+                  {activeShoppingItems.length > 0
+                    ? ` (${boughtShopCount}/${activeShoppingItems.length})`
+                    : ''}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowStopNotes((v) => !v)}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                  showStopNotes || pinnedNotesCount > 0 || goersList.length > 0
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-emerald-400'
+                }`}
+              >
+                <MessageSquare className="h-3 w-3" />
+                <span>
+                  โน้ตกลุ่ม{pinnedNotesCount > 0 ? ` (${pinnedNotesCount})` : ''}
+                  {goersList.length > 0 ? ` • 👥 ${goersList.length} คน` : ''}
+                </span>
+              </button>
+            </div>
+
+            {/* 1. Smart Cascade Time Tuner Drawer */}
+            {showTimeTuner && (
+              <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/25 border border-indigo-200/80 dark:border-indigo-800/50 space-y-3 text-xs animate-in fade-in duration-150">
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-indigo-900 dark:text-indigo-200">
+                    ⚡ ตั้งค่าเวลาแวะ & คำนวณตารางไหลอัตโนมัติ (Smart Cascade)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowTimeTuner(false)}
+                    className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                  >
+                    ปิด
+                  </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                    เวลาที่ใช้ในจุดนี้ (นาที):
+                  </label>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[30, 45, 60, 90, 120, 150, 180].map((mins) => {
+                      const activeDur =
+                        activeStopMeta.durationMin ?? computedSchedule?.durationMin ?? 90;
+                      return (
+                        <button
+                          key={mins}
+                          type="button"
+                          onClick={() => handlePatchMeta({ durationMin: mins })}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-black border cursor-pointer transition-all ${
+                            activeDur === mins
+                              ? 'bg-indigo-600 text-white border-indigo-600'
+                              : 'bg-white dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {mins} นาที
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                      เวลานัดจอง (ถ้ามี)
+                    </label>
+                    <input
+                      type="time"
+                      value={activeStopMeta.fixedStartTime || ''}
+                      onChange={(e) =>
+                        handlePatchMeta({ fixedStartTime: e.target.value || undefined })
+                      }
+                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                      เวลาเปิดร้าน
+                    </label>
+                    <input
+                      type="time"
+                      value={activeStopMeta.openTime || ''}
+                      onChange={(e) => handlePatchMeta({ openTime: e.target.value || undefined })}
+                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                      เวลาปิดร้าน
+                    </label>
+                    <input
+                      type="time"
+                      value={activeStopMeta.closeTime || ''}
+                      onChange={(e) => handlePatchMeta({ closeTime: e.target.value || undefined })}
+                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                      ค่ารถไปจุดถัดไป (¥)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="เช่น 240"
+                      value={activeStopMeta.fareToNext ?? ''}
+                      onChange={(e) =>
+                        handlePatchMeta({
+                          fareToNext: e.target.value ? parseInt(e.target.value, 10) : undefined,
+                        })
+                      }
+                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. Stop-Linked Shopping Bag Drawer */}
+            {showStopShopping && (
+              <div className="p-3.5 rounded-2xl bg-fuchsia-50/60 dark:bg-fuchsia-950/20 border border-fuchsia-200/80 dark:border-fuchsia-800/50 space-y-2.5 text-xs animate-in fade-in duration-150">
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-fuchsia-900 dark:text-fuchsia-200 flex items-center gap-1.5">
+                    <ShoppingBag className="h-3.5 w-3.5 text-fuchsia-600" />
+                    <span>รายการของต้องซื้อที่จุดแวะนี้ (ติ๊กแล้วตัดงบอัตโนมัติ)</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowStopShopping(false)}
+                    className="text-[11px] font-bold text-fuchsia-600 dark:text-fuchsia-400 hover:underline cursor-pointer"
+                  >
+                    ปิด
+                  </button>
+                </div>
+
+                {activeShoppingItems.length === 0 ? (
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    ยังไม่มีรายการของต้องซื้อผูกกับจุดนี้ เพิ่มด่วนด้านล่างได้เลย!
+                  </p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {activeShoppingItems.map((shopItem) => {
+                      const isBought = shopItem.status === 'bought';
+                      const catMeta = SHOPPING_CATEGORY_META[shopItem.category] || SHOPPING_CATEGORY_META.other;
+                      return (
+                        <div
+                          key={shopItem.id}
+                          className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                            isBought
+                              ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60'
+                              : 'bg-white dark:bg-[#1e2027] border-slate-200/80 dark:border-[#262932]'
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span>{catMeta.emoji}</span>
+                              <span
+                                className={`font-black text-xs ${
+                                  isBought
+                                    ? 'line-through text-slate-500 dark:text-slate-400'
+                                    : 'text-slate-900 dark:text-white'
+                                }`}
+                              >
+                                {shopItem.name}
+                              </span>
+                              <span className="text-[10px] font-mono font-bold text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-100/70 dark:bg-fuchsia-900/40 px-1.5 py-0.2 rounded">
+                                ¥{(shopItem.actualPrice ?? shopItem.estPrice).toLocaleString()} × {shopItem.quantity || 1}
+                              </span>
+                              {shopItem.taxFreeEligible && (
+                                <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-600 dark:text-rose-300">
+                                  Tax-Free
+                                </span>
+                              )}
+                            </div>
+                            {shopItem.note && (
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                                💡 {shopItem.note}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onToggleShoppingItemStatus?.(shopItem)}
+                            className={`px-2.5 py-1 rounded-xl text-[11px] font-black shrink-0 cursor-pointer transition-all ${
+                              isBought
+                                ? 'bg-emerald-600 text-white shadow-2xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-fuchsia-600 hover:text-white'
+                            }`}
+                          >
+                            {isBought ? '✓ ซื้อแล้ว' : 'ติ๊กซื้อแล้ว'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <form onSubmit={handleQuickAddShopping} className="flex items-center gap-1.5 pt-1">
+                  <input
+                    type="text"
+                    placeholder="เพิ่มของต้องซื้อที่จุดนี้..."
+                    value={quickShopName}
+                    onChange={(e) => setQuickShopName(e.target.value)}
+                    className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                  />
+                  <input
+                    type="number"
+                    placeholder="¥ ราคา"
+                    value={quickShopPrice}
+                    onChange={(e) => setQuickShopPrice(e.target.value)}
+                    className="w-20 px-2 py-1.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    className="px-2.5 py-1.5 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black text-xs inline-flex items-center gap-1 shrink-0 cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>เพิ่ม</span>
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* 3. Stop-Pinned Group Chat & Split Group Goers Drawer */}
+            {showStopNotes && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/50 space-y-3 text-xs animate-in fade-in duration-150">
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>ผู้ร่วมแวะจุดนี้ & โน้ตปักหมุดจากเพื่อน</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowStopNotes(false)}
+                    className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    ปิด
+                  </button>
+                </div>
+
+                {/* Split Group Goers Selector */}
+                {memberNames.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 block">
+                      👥 ใครแวะจุดนี้บ้าง? (ไม่เลือก = ไปด้วยกันทั้งกลุ่ม):
+                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {memberNames.map((name) => {
+                        const selected = goersList.includes(name);
+                        return (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => handleToggleGoer(name)}
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold border cursor-pointer transition-all ${
+                              selected
+                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                : 'bg-white dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                            }`}
+                          >
+                            {selected ? `✓ ${name}` : name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pinned Notes List */}
+                <div className="space-y-1.5">
+                  {(activeStopMeta.pinnedNotes || []).map((note) => (
+                    <div
+                      key={note.id}
+                      className="p-2.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] flex items-start justify-between gap-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-black text-[11px] text-emerald-700 dark:text-emerald-400">
+                            {note.author}
+                          </span>
+                          <span className="text-[10px] text-slate-400">{note.createdAt}</span>
+                        </div>
+                        <p className="text-xs text-slate-700 dark:text-slate-200 mt-0.5 break-words">
+                          {note.text}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePinnedNote(note.id)}
+                        className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer"
+                        title="ลบโน้ต"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={handleAddPinnedNote} className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    placeholder="ฝากโน้ต/จุดนัดพบไว้ที่สถานที่นี้..."
+                    value={newNoteText}
+                    onChange={(e) => setNewNoteText(e.target.value)}
+                    className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs inline-flex items-center gap-1 shrink-0 cursor-pointer"
+                  >
+                    <Send className="h-3 w-3" />
+                    <span>ปักหมุด</span>
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Clean 2-Button Action Footer (Navigate Maps | Show to Staff Card) */}
@@ -602,39 +1188,45 @@ function ItineraryStopCardComponent({
       </div>
     </div>
 
-      <ShowToStaffModal
-        isOpen={showStaffModal}
-        onClose={() => setShowStaffModal(false)}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        timeSlot={item.time_slot}
-        transportInfo={item.transport_info}
-        mapsUrl={mainPlaceMapsUrl}
-        directionsUrl={mainPlaceDirectionsUrl}
-      />
+      {showStaffModal && (
+        <ShowToStaffModal
+          isOpen={showStaffModal}
+          onClose={() => setShowStaffModal(false)}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          timeSlot={item.time_slot}
+          transportInfo={item.transport_info}
+          mapsUrl={mainPlaceMapsUrl}
+          directionsUrl={mainPlaceDirectionsUrl}
+        />
+      )}
 
-      <CustomPlacePhotoModal
-        isOpen={showCustomPhotoModal}
-        onClose={() => setShowCustomPhotoModal(false)}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        itemId={item.id}
-        tripId={item.trip_id}
-        currentAutoImageUrl={visual.imageUrl}
-      />
+      {showCustomPhotoModal && (
+        <CustomPlacePhotoModal
+          isOpen={showCustomPhotoModal}
+          onClose={() => setShowCustomPhotoModal(false)}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          itemId={item.id}
+          tripId={item.trip_id}
+          currentAutoImageUrl={visual.imageUrl}
+        />
+      )}
 
-      <PlacePhotoLightboxModal
-        isOpen={showLightbox}
-        onClose={() => setShowLightbox(false)}
-        imageUrl={visual.imageUrl}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        tagLabel={visual.tagLabel}
-        emoji={visual.emoji}
-        mapsUrl={mainPlaceMapsUrl}
-        directionsUrl={mainPlaceDirectionsUrl}
-        onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
-      />
+      {showLightbox && (
+        <PlacePhotoLightboxModal
+          isOpen={showLightbox}
+          onClose={() => setShowLightbox(false)}
+          imageUrl={visual.imageUrl}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          tagLabel={visual.tagLabel}
+          emoji={visual.emoji}
+          mapsUrl={mainPlaceMapsUrl}
+          directionsUrl={mainPlaceDirectionsUrl}
+          onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
+        />
+      )}
     </>
   );
 }
@@ -663,8 +1255,8 @@ function ItineraryThumbnailCardComponent({
   const [imgError, setImgError] = React.useState(false);
 
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
-  const transitGuide = parseTransitInfo(item.transport_info);
-  const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+  const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
+  const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = React.useMemo(() => buildStopUrls(item), [item]);
 
   React.useEffect(() => {
     setImgError(false);
@@ -834,39 +1426,45 @@ function ItineraryThumbnailCardComponent({
         </div>
       </div>
 
-      <ShowToStaffModal
-        isOpen={showStaffModal}
-        onClose={() => setShowStaffModal(false)}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        timeSlot={item.time_slot}
-        transportInfo={item.transport_info}
-        mapsUrl={mainPlaceMapsUrl}
-        directionsUrl={mainPlaceDirectionsUrl}
-      />
+      {showStaffModal && (
+        <ShowToStaffModal
+          isOpen={showStaffModal}
+          onClose={() => setShowStaffModal(false)}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          timeSlot={item.time_slot}
+          transportInfo={item.transport_info}
+          mapsUrl={mainPlaceMapsUrl}
+          directionsUrl={mainPlaceDirectionsUrl}
+        />
+      )}
 
-      <CustomPlacePhotoModal
-        isOpen={showCustomPhotoModal}
-        onClose={() => setShowCustomPhotoModal(false)}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        itemId={item.id}
-        tripId={item.trip_id}
-        currentAutoImageUrl={visual.imageUrl}
-      />
+      {showCustomPhotoModal && (
+        <CustomPlacePhotoModal
+          isOpen={showCustomPhotoModal}
+          onClose={() => setShowCustomPhotoModal(false)}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          itemId={item.id}
+          tripId={item.trip_id}
+          currentAutoImageUrl={visual.imageUrl}
+        />
+      )}
 
-      <PlacePhotoLightboxModal
-        isOpen={showLightbox}
-        onClose={() => setShowLightbox(false)}
-        imageUrl={visual.imageUrl}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        tagLabel={visual.tagLabel}
-        emoji={visual.emoji}
-        mapsUrl={mainPlaceMapsUrl}
-        directionsUrl={mainPlaceDirectionsUrl}
-        onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
-      />
+      {showLightbox && (
+        <PlacePhotoLightboxModal
+          isOpen={showLightbox}
+          onClose={() => setShowLightbox(false)}
+          imageUrl={visual.imageUrl}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          tagLabel={visual.tagLabel}
+          emoji={visual.emoji}
+          mapsUrl={mainPlaceMapsUrl}
+          directionsUrl={mainPlaceDirectionsUrl}
+          onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
+        />
+      )}
     </>
   );
 }
@@ -1013,39 +1611,45 @@ function ItineraryCompactRowComponent({
         </div>
       </div>
 
-      <ShowToStaffModal
-        isOpen={showStaffModal}
-        onClose={() => setShowStaffModal(false)}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        timeSlot={item.time_slot}
-        transportInfo={item.transport_info}
-        mapsUrl={mainPlaceMapsUrl}
-        directionsUrl={mainPlaceDirectionsUrl}
-      />
+      {showStaffModal && (
+        <ShowToStaffModal
+          isOpen={showStaffModal}
+          onClose={() => setShowStaffModal(false)}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          timeSlot={item.time_slot}
+          transportInfo={item.transport_info}
+          mapsUrl={mainPlaceMapsUrl}
+          directionsUrl={mainPlaceDirectionsUrl}
+        />
+      )}
 
-      <CustomPlacePhotoModal
-        isOpen={showCustomPhotoModal}
-        onClose={() => setShowCustomPhotoModal(false)}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        itemId={item.id}
-        tripId={item.trip_id}
-        currentAutoImageUrl={visual.imageUrl}
-      />
+      {showCustomPhotoModal && (
+        <CustomPlacePhotoModal
+          isOpen={showCustomPhotoModal}
+          onClose={() => setShowCustomPhotoModal(false)}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          itemId={item.id}
+          tripId={item.trip_id}
+          currentAutoImageUrl={visual.imageUrl}
+        />
+      )}
 
-      <PlacePhotoLightboxModal
-        isOpen={showLightbox}
-        onClose={() => setShowLightbox(false)}
-        imageUrl={visual.imageUrl}
-        placeName={item.main_place || 'จุดหมาย'}
-        city={item.city}
-        tagLabel={visual.tagLabel}
-        emoji={visual.emoji}
-        mapsUrl={mainPlaceMapsUrl}
-        directionsUrl={mainPlaceDirectionsUrl}
-        onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
-      />
+      {showLightbox && (
+        <PlacePhotoLightboxModal
+          isOpen={showLightbox}
+          onClose={() => setShowLightbox(false)}
+          imageUrl={visual.imageUrl}
+          placeName={item.main_place || 'จุดหมาย'}
+          city={item.city}
+          tagLabel={visual.tagLabel}
+          emoji={visual.emoji}
+          mapsUrl={mainPlaceMapsUrl}
+          directionsUrl={mainPlaceDirectionsUrl}
+          onOpenCustomPhoto={() => setShowCustomPhotoModal(true)}
+        />
+      )}
     </>
   );
 }

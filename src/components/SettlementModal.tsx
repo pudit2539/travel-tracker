@@ -15,8 +15,23 @@ import {
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
   Users, DollarSign, Calculator, ChevronRight, SlidersHorizontal,
   QrCode, Utensils, Split, Edit2, CheckCircle2, Circle, AlertCircle, 
-  Share2, ArrowUpRight, UserCheck, CheckSquare, Square, Download
+  Share2, ArrowUpRight, UserCheck, CheckSquare, Square, Download, Plus, Trash2
 } from 'lucide-react';
+
+export interface SharedFundTopup {
+  id: string;
+  memberName: string;
+  amount: number;
+  createdAt: string;
+}
+
+export interface SharedFundPool {
+  id: string;
+  name: string;
+  currency: string;
+  topups: SharedFundTopup[];
+  spentAmount: number;
+}
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -44,7 +59,14 @@ export default function SettlementModal({
   const [fxRate, setFxRate] = useState<number>(() => propFxRate ?? getCustomJpyToThbRate());
   const [showRateSettings, setShowRateSettings] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
-  const [activeTab, setActiveTab] = useState<'transfers' | 'dishes'>('transfers');
+  const [activeTab, setActiveTab] = useState<'transfers' | 'dishes' | 'funds'>('transfers');
+
+  // TabiPlan Shared Funds & Guardian Mode State
+  const [sharedFunds, setSharedFunds] = useState<SharedFundPool[]>([]);
+  const [guardianMap, setGuardianMap] = useState<Record<string, string>>({});
+  const [newFundName, setNewFundName] = useState('');
+  const [topupAmountByFund, setTopupAmountByFund] = useState<Record<string, string>>({});
+  const [topupMemberByFund, setTopupMemberByFund] = useState<Record<string, string>>({});
 
   // Dynamic PromptPay modal state
   const [selectedTransferForQr, setSelectedTransferForQr] = useState<TransferPlan | null>(null);
@@ -93,8 +115,103 @@ export default function SettlementModal({
         const savedSettled = localStorage.getItem(`travel_tracker_settled_transfers_${effectiveTripId}`);
         if (savedSettled) setSettledTransfers(JSON.parse(savedSettled));
       } catch {}
+      try {
+        const rawFunds = localStorage.getItem(`travel_shared_funds_${effectiveTripId}`);
+        if (rawFunds) {
+          setSharedFunds(JSON.parse(rawFunds));
+        } else {
+          const defaultFunds: SharedFundPool[] = [
+            {
+              id: 'fund-food',
+              name: '🍱 กองกลางค่าอาหาร & ของกินเล่น',
+              currency: currency || 'JPY',
+              topups: [],
+              spentAmount: 0,
+            },
+          ];
+          setSharedFunds(defaultFunds);
+        }
+        const rawGuards = localStorage.getItem(`travel_guardian_map_${effectiveTripId}`);
+        if (rawGuards) setGuardianMap(JSON.parse(rawGuards));
+      } catch {}
     }
-  }, [effectiveTripId, isOpen]);
+  }, [effectiveTripId, isOpen, currency]);
+
+  const saveSharedFunds = (next: SharedFundPool[]) => {
+    setSharedFunds(next);
+    if (!effectiveTripId) return;
+    try {
+      localStorage.setItem(`travel_shared_funds_${effectiveTripId}`, JSON.stringify(next));
+      syncTripMetadataToSupabase(effectiveTripId, { sharedFunds: next });
+    } catch {}
+  };
+
+  const handleSetGuardian = (dependentName: string, guardianName: string) => {
+    const next = { ...guardianMap };
+    if (!guardianName || guardianName === dependentName) {
+      delete next[dependentName];
+    } else {
+      next[dependentName] = guardianName;
+    }
+    setGuardianMap(next);
+    if (effectiveTripId) {
+      try {
+        localStorage.setItem(`travel_guardian_map_${effectiveTripId}`, JSON.stringify(next));
+        syncTripMetadataToSupabase(effectiveTripId, { guardianMap: next });
+      } catch {}
+    }
+  };
+
+  const handleCreateFundPool = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFundName.trim()) return;
+    const pool: SharedFundPool = {
+      id: `fund-${Date.now()}`,
+      name: newFundName.trim(),
+      currency: currency || 'JPY',
+      topups: [],
+      spentAmount: 0,
+    };
+    saveSharedFunds([...sharedFunds, pool]);
+    setNewFundName('');
+    toast.success(`สร้างกระเป๋ากองกลาง "${pool.name}" แล้ว 🏦`);
+  };
+
+  const handleAddTopup = (fundId: string, defaultMember: string) => {
+    const rawAmt = topupAmountByFund[fundId] || '';
+    const amt = parseInt(rawAmt, 10);
+    if (!amt || amt <= 0) return;
+    const memberName = topupMemberByFund[fundId] || defaultMember;
+    const next = sharedFunds.map((f) => {
+      if (f.id !== fundId) return f;
+      return {
+        ...f,
+        topups: [
+          ...f.topups,
+          {
+            id: `topup-${Date.now()}`,
+            memberName,
+            amount: amt,
+            createdAt: new Date().toLocaleDateString('th-TH'),
+          },
+        ],
+      };
+    });
+    saveSharedFunds(next);
+    setTopupAmountByFund((prev) => ({ ...prev, [fundId]: '' }));
+    toast.success(`เติมเงินเข้ากองกลางโดย ${memberName} เรียบร้อย 💰`);
+  };
+
+  const handleUpdateFundSpent = (fundId: string, spentAmount: number) => {
+    const next = sharedFunds.map((f) =>
+      f.id === fundId ? { ...f, spentAmount: Math.max(0, spentAmount) } : f
+    );
+    saveSharedFunds(next);
+  };
+
+  const handleDeleteFundPool = (fundId: string) => {
+    saveSharedFunds(sharedFunds.filter((f) => f.id !== fundId));
+  };
 
   // Build full members list (Owner + Joined Members)
   const membersList = useMemo(() => {
@@ -148,10 +265,70 @@ export default function SettlementModal({
     return list;
   }, [members, currentUser, userDisplayName, expenses]);
 
-  // Calculate settlement with live splitsMap
+  // Calculate settlement with live splitsMap + Guardian Mode roll-up
   const settlement = useMemo(() => {
-    return calculateSettlement(expenses, membersList, currency, fxRate, splitsMap);
-  }, [expenses, membersList, currency, fxRate, splitsMap]);
+    const raw = calculateSettlement(expenses, membersList, currency, fxRate, splitsMap);
+    const activeGuardians = Object.entries(guardianMap).filter(
+      ([dep, guard]) => dep && guard && dep !== guard
+    );
+    if (activeGuardians.length === 0) return raw;
+
+    // Roll up dependent balances into their assigned guardian
+    const balancesCopy = raw.balances.map((b) => ({ ...b }));
+    for (const [depName, guardName] of activeGuardians) {
+      const depObj = balancesCopy.find((b) => b.name === depName);
+      const guardObj = balancesCopy.find((b) => b.name === guardName);
+      if (depObj && guardObj) {
+        guardObj.totalPaid += depObj.totalPaid;
+        guardObj.fairShare += depObj.fairShare;
+        guardObj.netBalance += depObj.netBalance;
+        depObj.totalPaid = 0;
+        depObj.fairShare = 0;
+        depObj.netBalance = 0;
+      }
+    }
+
+    // Recompute minimal transfers from updated netBalances
+    const debtors = balancesCopy
+      .filter((b) => b.netBalance < -0.5)
+      .map((b) => ({ ...b, abs: Math.abs(b.netBalance) }))
+      .sort((a, b) => b.abs - a.abs);
+    const creditors = balancesCopy
+      .filter((b) => b.netBalance > 0.5)
+      .map((b) => ({ ...b, abs: b.netBalance }))
+      .sort((a, b) => b.abs - a.abs);
+
+    const nextTransfers: TransferPlan[] = [];
+    let dIdx = 0;
+    let cIdx = 0;
+    while (dIdx < debtors.length && cIdx < creditors.length) {
+      const d = debtors[dIdx];
+      const c = creditors[cIdx];
+      const amt = Math.min(d.abs, c.abs);
+      if (amt >= 1) {
+        const rounded = Math.round(amt);
+        nextTransfers.push({
+          from: d.name,
+          fromAvatar: d.avatar,
+          to: c.name,
+          toAvatar: c.avatar,
+          amount: rounded,
+          currency,
+          amountTHB: currency === 'THB' ? rounded : Math.round(rounded * fxRate),
+        });
+      }
+      d.abs -= amt;
+      c.abs -= amt;
+      if (d.abs < 0.5) dIdx++;
+      if (c.abs < 0.5) cIdx++;
+    }
+
+    return {
+      ...raw,
+      balances: balancesCopy,
+      transfers: nextTransfers,
+    };
+  }, [expenses, membersList, currency, fxRate, splitsMap, guardianMap]);
 
   const handleRateChange = (newRate: number) => {
     setFxRate(newRate);
@@ -302,6 +479,18 @@ export default function SettlementModal({
           >
             <Utensils className="h-3.5 w-3.5" />
             <span>แยกจานอาหาร & บิล ({expenses.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('funds')}
+            className={`pb-2.5 text-xs font-bold transition-all relative flex items-center gap-1.5 cursor-pointer min-h-[40px] touch-manipulation ${
+              activeTab === 'funds'
+                ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+            }`}
+          >
+            <Wallet className="h-3.5 w-3.5" />
+            <span>🏦 กองกลาง & ผู้ดูแล ({sharedFunds.length})</span>
           </button>
         </div>
 
@@ -664,6 +853,206 @@ export default function SettlementModal({
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB 3: TABIPLAN MULTIPLE SHARED FUNDS & GUARDIAN MODE */}
+          {activeTab === 'funds' && (
+            <div className="space-y-4 text-left">
+              {/* 1. Guardian / Dependent Assignment Card */}
+              <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/80 dark:border-indigo-900/50 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                    <UserCheck className="h-4 w-4 text-indigo-600" />
+                    <span>👨‍👩‍👧 โหมดผู้ปกครอง / ดูแลจ่ายแทน (Guardian Mode)</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  หากมีสมาชิกในกลุ่มที่ไม่ได้แยกโอนเอง (เช่น คุณพ่อคุณแม่ ลูก หรือแฟนที่จ่ายกระเป๋าเดียวกัน) สามารถเลือก &ldquo;ผู้ดูแลจ่ายแทน&rdquo; ด้านล่างเพื่อให้ระบบรวมยอดหารไปที่ผู้ดูแลอัตโนมัติ
+                </p>
+
+                <div className="space-y-2 pt-1">
+                  {membersList.map((m) => {
+                    const currentGuard = guardianMap[m.name] || '';
+                    return (
+                      <div
+                        key={m.id || m.name}
+                        className="p-2.5 rounded-xl bg-white dark:bg-[#181a20] border border-slate-200/80 dark:border-[#262932] flex items-center justify-between gap-2 text-xs"
+                      >
+                        <span className="font-bold text-slate-900 dark:text-white truncate">
+                          👤 {m.name}
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[11px] text-slate-500">ผู้ดูแลจ่ายแทน:</span>
+                          <select
+                            value={currentGuard}
+                            onChange={(e) => handleSetGuardian(m.name, e.target.value)}
+                            className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2027] text-xs font-bold text-indigo-700 dark:text-indigo-300 cursor-pointer"
+                          >
+                            <option value="">-- จ่ายแยกด้วยตัวเอง --</option>
+                            {membersList
+                              .filter((other) => other.name !== m.name)
+                              .map((other) => (
+                                <option key={other.id || other.name} value={other.name}>
+                                  รวมยอดไปที่ {other.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Multiple Shared Funds (กระเป๋าเงินกองกลาง + บันทึกเติมเงิน Top-up) */}
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Wallet className="h-4 w-4 text-emerald-600" />
+                    <span>🏦 กระเป๋าเงินกองกลาง (Multiple Shared Funds)</span>
+                  </span>
+                </div>
+
+                <form onSubmit={handleCreateFundPool} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="ตั้งชื่อกระเป๋ากองกลางใหม่ เช่น กองกลางค่ารถไฟ, กองกลางร้านเนื้อย่าง..."
+                    value={newFundName}
+                    onChange={(e) => setNewFundName(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold text-slate-900 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center gap-1 shrink-0 cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>สร้างกระเป๋า</span>
+                  </button>
+                </form>
+
+                {sharedFunds.map((fund) => {
+                  const totalTopup = fund.topups.reduce((s, t) => s + (t.amount || 0), 0);
+                  const remaining = totalTopup - (fund.spentAmount || 0);
+                  const refundPerPerson =
+                    membersList.length > 0 && remaining > 0
+                      ? Math.floor(remaining / membersList.length)
+                      : 0;
+
+                  return (
+                    <div
+                      key={fund.id}
+                      className="p-4 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/70 dark:bg-[#1e2027]/70 space-y-3 text-xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h4 className="font-black text-sm text-slate-900 dark:text-white">
+                            {fund.name}
+                          </h4>
+                          <div className="flex items-center gap-3 mt-1 text-[11px] font-mono">
+                            <span className="text-slate-600 dark:text-slate-300">
+                              รวมเงินเติม: <b>{totalTopup.toLocaleString()} {fund.currency}</b>
+                            </span>
+                            <span
+                              className={`font-black ${
+                                remaining >= 0
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : 'text-rose-600 dark:text-rose-400'
+                              }`}
+                            >
+                              คงเหลือ: {remaining.toLocaleString()} {fund.currency}
+                            </span>
+                          </div>
+                          {refundPerPerson > 0 && (
+                            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 block mt-0.5">
+                              💡 หากคืนเงินกองกลางตอนนี้ จะได้คืนคนละ ≈ {refundPerPerson.toLocaleString()} {fund.currency}
+                            </span>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteFundPool(fund.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 cursor-pointer"
+                          title="ลบกระเป๋ากองกลาง"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      {/* Spent from pool input */}
+                      <div className="flex items-center gap-2 bg-white dark:bg-[#181a20] p-2.5 rounded-xl border border-slate-200/80 dark:border-[#262932]">
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                          ยอดที่ใช้จ่ายจากกระเป๋านี้แล้ว ({fund.currency}):
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={fund.spentAmount || ''}
+                          placeholder="0"
+                          onChange={(e) =>
+                            handleUpdateFundSpent(fund.id, parseInt(e.target.value, 10) || 0)
+                          }
+                          className="w-28 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#15171e] font-mono font-bold text-xs text-slate-900 dark:text-white ml-auto"
+                        />
+                      </div>
+
+                      {/* Topups List */}
+                      {fund.topups.length > 0 && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {fund.topups.map((t) => (
+                            <span
+                              key={t.id}
+                              className="px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50 text-[10px] font-bold"
+                            >
+                              +{t.amount.toLocaleString()} โดย {t.memberName}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Add Top-up Row */}
+                      <div className="flex items-center gap-1.5 pt-1">
+                        <select
+                          value={topupMemberByFund[fund.id] || membersList[0]?.name || 'ฉัน'}
+                          onChange={(e) =>
+                            setTopupMemberByFund((prev) => ({
+                              ...prev,
+                              [fund.id]: e.target.value,
+                            }))
+                          }
+                          className="px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#181a20] text-xs font-bold text-slate-800 dark:text-white"
+                        >
+                          {membersList.map((m) => (
+                            <option key={m.id || m.name} value={m.name}>
+                              {m.name}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          placeholder={`จำนวนเงินเติม (${fund.currency})`}
+                          value={topupAmountByFund[fund.id] || ''}
+                          onChange={(e) =>
+                            setTopupAmountByFund((prev) => ({
+                              ...prev,
+                              [fund.id]: e.target.value,
+                            }))
+                          }
+                          className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#181a20] text-xs font-mono font-bold text-slate-900 dark:text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddTopup(fund.id, membersList[0]?.name || 'ฉัน')}
+                          className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shrink-0 cursor-pointer"
+                        >
+                          + เติมเงิน
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

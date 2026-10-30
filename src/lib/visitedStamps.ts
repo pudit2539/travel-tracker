@@ -72,17 +72,38 @@ export function getTripVisitedMeta(tripId?: string): Record<string, CheckInMeta>
   return {};
 }
 
+const visitedMemoryCache = new Map<string, { raw: string | null; parsed: Record<string, any> }>();
+
+function readParsedStampsForTrip(tripId: string): Record<string, any> {
+  if (typeof window === 'undefined' || !tripId) return {};
+  try {
+    const raw = localStorage.getItem(`trip_visited_stamps_${tripId}`);
+    const cached = visitedMemoryCache.get(tripId);
+    if (cached && cached.raw === raw) {
+      return cached.parsed;
+    }
+    if (!raw) {
+      const empty: Record<string, any> = {};
+      visitedMemoryCache.set(tripId, { raw: null, parsed: empty });
+      return empty;
+    }
+    const parsed = JSON.parse(raw);
+    const valid = parsed && typeof parsed === 'object' ? parsed : {};
+    visitedMemoryCache.set(tripId, { raw, parsed: valid });
+    return valid;
+  } catch {
+    return {};
+  }
+}
+
 export function isActivityVisited(tripId: string | undefined, activityId: string): boolean {
   if (typeof window === 'undefined' || !activityId) return false;
   try {
     if (tripId) {
-      const raw = localStorage.getItem(`trip_visited_stamps_${tripId}`);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed[activityId] !== undefined) {
-          const val = parsed[activityId];
-          return typeof val === 'boolean' ? val : Boolean(val?.visited);
-        }
+      const parsed = readParsedStampsForTrip(tripId);
+      if (parsed && parsed[activityId] !== undefined) {
+        const val = parsed[activityId];
+        return typeof val === 'boolean' ? val : Boolean(val?.visited);
       }
     }
     return localStorage.getItem(`visited_activity_${activityId}`) === 'true';
@@ -94,15 +115,12 @@ export function isActivityVisited(tripId: string | undefined, activityId: string
 export function getActivityCheckInMeta(tripId: string | undefined, activityId: string): CheckInMeta | null {
   if (typeof window === 'undefined' || !activityId || !tripId) return null;
   try {
-    const raw = localStorage.getItem(`trip_visited_stamps_${tripId}`);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const val = parsed?.[activityId];
-      if (typeof val === 'object' && val !== null) {
-        return val as CheckInMeta;
-      } else if (val === true) {
-        return { visited: true };
-      }
+    const parsed = readParsedStampsForTrip(tripId);
+    const val = parsed?.[activityId];
+    if (typeof val === 'object' && val !== null) {
+      return val as CheckInMeta;
+    } else if (val === true) {
+      return { visited: true };
     }
   } catch {
     return null;

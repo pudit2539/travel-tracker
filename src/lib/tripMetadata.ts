@@ -16,6 +16,16 @@ export interface TripMetadataPayload {
   checkedInSpots?: Record<string, boolean>;
   ticketsVault?: any[];
   customPlacePhotos?: Record<string, string>;
+  stopMetaMap?: Record<string, any>;
+  shoppingBag?: any[];
+  trainBookings?: any[];
+  sharedFunds?: any[];
+  guardianMap?: Record<string, string>;
+  livePresence?: Record<string, any>;
+  sharePrivacy?: {
+    hideDates?: boolean;
+    hideLodging?: boolean;
+  };
 }
 
 // In-memory Mutex Queue per tripId to serialize concurrent writes and prevent race conditions
@@ -85,6 +95,27 @@ export async function syncTripMetadataToSupabase(
         customPlacePhotos: updates.customPlacePhotos !== undefined 
           ? { ...(payload.customPlacePhotos || {}), ...updates.customPlacePhotos }
           : payload.customPlacePhotos,
+        stopMetaMap: updates.stopMetaMap !== undefined
+          ? { ...(payload.stopMetaMap || {}), ...updates.stopMetaMap }
+          : payload.stopMetaMap,
+        shoppingBag: updates.shoppingBag !== undefined
+          ? updates.shoppingBag
+          : payload.shoppingBag,
+        trainBookings: updates.trainBookings !== undefined
+          ? updates.trainBookings
+          : payload.trainBookings,
+        sharedFunds: updates.sharedFunds !== undefined
+          ? updates.sharedFunds
+          : payload.sharedFunds,
+        guardianMap: updates.guardianMap !== undefined
+          ? { ...(payload.guardianMap || {}), ...updates.guardianMap }
+          : payload.guardianMap,
+        livePresence: updates.livePresence !== undefined
+          ? { ...(payload.livePresence || {}), ...updates.livePresence }
+          : payload.livePresence,
+        sharePrivacy: updates.sharePrivacy !== undefined
+          ? { ...(payload.sharePrivacy || {}), ...updates.sharePrivacy }
+          : payload.sharePrivacy,
       };
 
       const jsonString = JSON.stringify(merged);

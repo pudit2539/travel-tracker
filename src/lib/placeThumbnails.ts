@@ -432,6 +432,8 @@ export function getPlaceVisualMeta(placeName?: string, city?: string, index = 0)
 const CUSTOM_PLACE_PHOTO_STORAGE_KEY = 'travel_tracker_custom_place_photos_v1';
 export const CUSTOM_PHOTO_CHANGED_EVENT = 'custom-place-photo-changed';
 const memoryCustomPhotoCache = new Map<string, string>();
+let lastCustomPhotoRaw: string | null = null;
+let lastCustomPhotoParsed: Record<string, string> = {};
 
 export function getCustomPlacePhotoKey(placeName?: string, itemId?: string): string {
   if (itemId) return `item:${itemId}`;
@@ -442,7 +444,12 @@ function readCustomPhotoMap(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   try {
     const raw = localStorage.getItem(CUSTOM_PLACE_PHOTO_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    if (raw === lastCustomPhotoRaw) {
+      return lastCustomPhotoParsed;
+    }
+    lastCustomPhotoRaw = raw;
+    lastCustomPhotoParsed = raw ? JSON.parse(raw) : {};
+    return lastCustomPhotoParsed;
   } catch {
     return {};
   }
@@ -761,7 +768,25 @@ export interface ResolvedPhotoRecord {
 }
 
 const memoryPhotoCache = new Map<string, ResolvedPhotoRecord>();
+const negativePhotoCache = new Set<string>();
 const inflightRequests = new Map<string, Promise<ResolvedPhotoRecord | null>>();
+let lastPhotoCacheRaw: string | null = null;
+let lastPhotoCacheParsed: Record<string, any> = {};
+
+function readPhotoCacheStorageMap(): Record<string, any> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(PHOTO_CACHE_STORAGE_KEY);
+    if (raw === lastPhotoCacheRaw) {
+      return lastPhotoCacheParsed;
+    }
+    lastPhotoCacheRaw = raw;
+    lastPhotoCacheParsed = raw ? JSON.parse(raw) : {};
+    return lastPhotoCacheParsed;
+  } catch {
+    return {};
+  }
+}
 
 function loadCachedPhotoRecord(cacheKey: string): ResolvedPhotoRecord | null {
   if (memoryPhotoCache.has(cacheKey)) {
@@ -769,9 +794,7 @@ function loadCachedPhotoRecord(cacheKey: string): ResolvedPhotoRecord | null {
   }
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(PHOTO_CACHE_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
+    const parsed = readPhotoCacheStorageMap();
     const entry = parsed?.[cacheKey];
     if (typeof entry === 'string' && entry) {
       const rec: ResolvedPhotoRecord = { url: entry, source: 'wikimedia_hd' };
@@ -790,10 +813,11 @@ function saveCachedPhotoRecord(cacheKey: string, record: ResolvedPhotoRecord): v
   memoryPhotoCache.set(cacheKey, record);
   if (typeof window === 'undefined') return;
   try {
-    const raw = localStorage.getItem(PHOTO_CACHE_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    parsed[cacheKey] = record;
-    localStorage.setItem(PHOTO_CACHE_STORAGE_KEY, JSON.stringify(parsed));
+    const parsed = { ...readPhotoCacheStorageMap(), [cacheKey]: record };
+    const serialized = JSON.stringify(parsed);
+    lastPhotoCacheRaw = serialized;
+    lastPhotoCacheParsed = parsed;
+    localStorage.setItem(PHOTO_CACHE_STORAGE_KEY, serialized);
   } catch {}
 }
 
@@ -891,6 +915,7 @@ export async function fetchRealPlacePhotoRecord(
   const cacheKey = `${baseQuery.toLowerCase()}|${(explicitWikiQuery || '').toLowerCase()}|${(city || '').toLowerCase()}`;
   const cached = loadCachedPhotoRecord(cacheKey);
   if (cached) return cached;
+  if (negativePhotoCache.has(cacheKey)) return null;
 
   if (inflightRequests.has(cacheKey)) {
     return inflightRequests.get(cacheKey)!;
@@ -939,6 +964,7 @@ export async function fetchRealPlacePhotoRecord(
       return record;
     }
 
+    negativePhotoCache.add(cacheKey);
     inflightRequests.delete(cacheKey);
     return null;
   })();
@@ -1006,10 +1032,17 @@ export function usePlaceVisualMeta(
     const extracted = extractAttractionSearchQuery(placeName, city).trim();
     const baseQuery = (extracted || baseMeta.wikiQuery || '').trim();
     if (!baseQuery) return;
+    const cacheKey = `${baseQuery.toLowerCase()}|${(baseMeta.wikiQuery || '').toLowerCase()}|${(city || '').toLowerCase()}`;
+    const cached = loadCachedPhotoRecord(cacheKey);
+    if (cached) {
+      setResolvedRecord((prev) => (prev?.url === cached.url ? prev : cached));
+      return;
+    }
+    if (negativePhotoCache.has(cacheKey)) return;
 
     fetchRealPlacePhotoRecord(placeName, city, baseMeta.wikiQuery).then((rec) => {
       if (!cancelled && rec) {
-        setResolvedRecord(rec);
+        setResolvedRecord((prev) => (prev?.url === rec.url ? prev : rec));
       }
     });
 

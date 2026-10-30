@@ -124,6 +124,45 @@
   - อัปเดต Master Excel: `Japan_Osaka-Kyoto_04-15Dec2026_v4.xlsx` และ `Knowledge/Japan_Osaka-Kyoto_04-15Dec2026_v4.xlsx`
   - เพิ่ม Visual Card & Category Tags ใน `src/lib/placeThumbnails.ts` สำหรับ `Den Den Town` และ `Korea Town`
 
+### [2026-10-30] อัปเกรดระบบครั้งใหญ่จาก TabiPlan (12 หมวดฟีเจอร์ครบวงจร) + ยกเลิกระบบปัดขวาเช็คอินบนมือถือ
+1. **ยกเลิกระบบปัดขวาเช็คอินบนการ์ดสถานที่ (`Swipe-Right Check-in Removed`)**:
+   - ถอด `handleTouchStart`, `handleTouchMove`, `handleTouchEnd`, `swipeOffset` และ Overlay ปัดขวาออกจาก `src/components/trip-detail/ItineraryStopCard.tsx` อย่างสมบูรณ์ เพื่อแก้ปัญหาเวลาใช้นิ้วเลื่อนหน้าจอบนโทรศัพท์แล้วเผลอไปโดนเช็คอินโดยไม่ตั้งใจ
+   - คงเหลือเฉพาะการกดปุ่ม **`📍 เช็คอิน`** บนการ์ดโดยตรง และการเช็คอินอัตโนมัติด้วย GPS จริงเมื่อเข้าใกล้พิกัดในรัศมี 80 เมตร
+2. **Smart Cascading Timeline & Time Engine (`src/lib/smartTimeline.ts`, `ItineraryStopCard.tsx`, `TripPlanTab.tsx`)**:
+   - คำนวณเวลาถึง-เวลาออกต่อเนื่องกันทั้งวันอัตโนมัติ (`⚡ 08:30–10:00 (90น.)`) พร้อมสรุปชั่วโมงเที่ยว เวลาเดินทาง และค่ารถไฟรวมประจำวัน
+   - แจ้งเตือนอัตโนมัติเมื่อไปถึงก่อนร้านเปิด (`⏳ รอร้านเปิด`) หรือเสี่ยงไม่ทันเวลาจอง/ร้านปิด (`⚠️ เสี่ยงไม่ทัน`)
+   - ปุ่ม **`⏭️ ข้ามจุดแวะชั่วคราว (Skip Stop)`** โดยไม่ต้องลบข้อมูลออกจากทริป และปุ่ม **`📅 ย้ายไปวันอื่น`** ในคลิกเดียว
+   - แท็กความพร้อมหน้างานอัตโนมัติ (`☔ เหมาะวันฝนตก/ในร่ม`, `🧳 มีตู้ล็อกเกอร์ฝากกระเป๋า`, `🚻 จุดแวะห้องน้ำ`, `🚉 ติดสถานีรถไฟ`, `🛍️ Tax-Free`)
+   - ชิป Autocomplete สายรถไฟและเส้นทางยอดฮิตคันไซ (`KANSAI_TRANSIT_SUGGESTIONS`) ในฟอร์มเพิ่ม/แก้ไขกิจกรรม
+3. **5-Stop Chunked Google Maps & Apple Maps Route Bar (`TripPlanTab.tsx`)**:
+   - แบ่งจุดแวะรายวันออกเป็นช่วงละไม่เกิน 5 จุดแวะเชื่อมต่อกัน เพื่อแก้ปัญหา Google Maps ตัดพิกัดทิ้งเมื่อส่งเกินลิมิต พร้อมรองรับทั้ง **Google Maps** และ **Apple Maps** และสลับโหมด `🚇 รถไฟ`, `🚶 เดิน`, `🚗 ขับรถ`
+   - เพิ่มปุ่มลอย **`⬆️ บนสุด` / `⬇️ ล่างสุด`** สำหรับวันที่มีจุดแวะยาว
+4. **Split Group View & Stop-Pinned Group Notes (`ItineraryStopCard.tsx`, `TripPlanTab.tsx`)**:
+   - ระบุผู้ร่วมเดินทางแยกตามจุดแวะ (`👥 ไปทุกคน` หรือเลือกเฉพาะสมาชิกเมื่อแยกกันเดิน เช่น ทีมช้อปปิ้ง vs ทีมของเล่น) พร้อมตัวกรองสลับ **`👥 ทั้งกลุ่ม` ⟷ `👤 แผนของฉัน`**
+   - ระบบปักหมุดโน้ตกลุ่มรายจุดแวะ (`💬 โน้ตกลุ่ม`) พร้อมชื่อผู้เขียนและเวลา
+5. **Interactive Chibi Companion + Real-Time GPS Vector Projection (`src/components/LiveTripCard.tsx`)**:
+   - ตัวละคร Chibi Companion แบบ Layered SVG สลับได้ระหว่าง **`👧 สาวคาวาอี้`** และ **`👦 หนุ่มนักสำรวจ`** เปลี่ยนพร็อพตามเมือง (`🍁 เกียวโต`, `🎀 โอซาก้า`, `🦌 นารา`, `⚓ โกเบ`) และถือถุงช้อปปิ้งเพิ่มขึ้นจริงตามของที่ติ๊กซื้อแล้ว พร้อมเสียงพูดเชียร์ 2 ภาษา (TH/JP)
+   - ระบบ **`📍 จับพิกัด GPS จริง`** คำนวณ Vector Projection ลงบนเส้นทางระหว่างจุดแวะ แจ้งเตือนเมื่อออกนอกเส้นทางเกิน 120 เมตร และ **Auto Check-in อัตโนมัติเมื่อเข้าใกล้จุดแวะในรัศมี 80 เมตร** พร้อมโหมด **`🚶 จำลองเดินเที่ยว`** และตัวเลือกความเป็นส่วนตัว (`ปิด` / `เฉพาะ %` / `เฉพาะย่าน` / `พิกัดละเอียด`)
+6. **Stop-Linked Shopping Bag + Auto Expense Sync + 8-Dimension Wishlist (`src/lib/shoppingBag.ts`, `WishlistDrawer.tsx`, `ItineraryStopCard.tsx`)**:
+   - ระบบกระเป๋าช้อปปิ้งผูกกับวันและจุดแวะ (ตั้งค่าเริ่มต้นของฝากคันไซ 8 รายการ) เมื่อติ๊ก **`✅ ซื้อแล้ว`** ระบบจะสร้างบิลรายจ่ายเข้าแท็บค่าใช้จ่ายให้อัตโนมัติทันที
+   - อัปเกรดคลังพิกัดสำรอง (`WishlistDrawer.tsx`) เพิ่มตัวกรอง 8 มิติ (`☔ วันฝนตก/ในร่ม`, `🚉 ติดสถานี`, `🧳 มีตู้ฝากกระเป๋า`, `♿ ทางราบ/เดินน้อย`, `🚫🐷 ไม่ทานหมู/เนื้อ/ปลา`, `🛍️ Tax-Free 10%`) และป้าย `(✓ มีในแผนแล้ว)`
+7. **Train Seat Reservations + Inspector View + Japan Rules & Etiquette (`src/components/TravelHubModal.tsx`)**:
+   - ระบบบันทึกตั๋วรถไฟด่วน (`Haruka`, `Rapi:t`, `Shinkansen`, `Kintetsu`) ระบุขบวน ตู้ที่ (Car) เลขที่นั่ง (Seat) และโหมดเต็มจอ **"โชว์ให้นายสถานีดู 👮"**
+   - แท็บใหม่ **`🇯🇵 กฎ & มารยาทญี่ปุ่น`** ครบ 5 หมวด (กฎหมายเข้มงวด, มารยาทคันไซ vs คันโต, ทริคเอาตัวรอดหน้างาน, ข้อมูลด่วน, ลิงก์ทางการ JNTO/Customs)
+8. **Multi-Shared Fund Pools & Guardian Mode (`src/components/SettlementModal.tsx`)**:
+   - แท็บใหม่ **`🏦 กองกลาง & ผู้ดูแล`** รองรับการตั้งวงเงินกองกลางหลายก้อน บันทึกยอดเติมเงินรายคน คำนวณเงินคงเหลือและยอดคืนเงินต่อคนอัตโนมัติ
+   - **โหมดผู้ปกครอง/ดูแลจ่ายแทน (`👨‍👩‍👧 Guardian Mode`)** ผูกสมาชิกให้ผู้ดูแลรับผิดชอบยอดจ่ายและยอดเคลียร์หนี้แทนโดยอัตโนมัติ
+9. **Landscape A4 One-Page Poster Print + Ink-Saver + Share Privacy (`src/components/PrintableItineraryModal.tsx`, `src/app/trips/[id]/page.tsx`)**:
+   - เพิ่มโหมด **`🗺️ โปสเตอร์สรุปทริปแผ่นเดียว A4 แนวนอน`** พร้อมปุ่มซูม (`60%–115%`) และสลับโหมด **`🖨️ ประหยัดหมึก ขาวดำ`**
+   - เพิ่มตัวเลือกความเป็นส่วนตัวใน Modal แชร์ทริป (ซ่อนวันที่เดินทางจริง / ซ่อนชื่อโรงแรมเมื่อแชร์สาธารณะ)
+
+10. **Performance Optimization & Code Review (แก้ปัญหาระบบหน่วง/ช้า)**:
+   - **Conditional Modal Mounting (`page.tsx`, `TripPlanTab.tsx`, `ItineraryStopCard.tsx`, `LiveTripCard.tsx`)**: เปลี่ยนจากการ Mount โมดอลทั้ง 16 ตัวใน `page.tsx` และ 3 โมดอลย่อยในการ์ดสถานที่ 42 ใบ (`42 × 3 = 126 instances`) ตลอดเวลา ให้เป็น Conditional Mount (`{showX && <X />}`) และทำ Dynamic Import สำหรับ `WishlistDrawer` และ `InteractiveTripMap` ลดจำนวน Component ที่ต้องรันตอนเปิดหน้าแรกกว่า 140+ ตัว
+   - **ลด Re-render ของ `LiveTripCard` 60 ครั้ง/นาที**: ปรับ Interval นาฬิกาเวลาญี่ปุ่นจากทุก 1 วินาที (`1000ms`) เป็นทุก 30 วินาที (`30000ms`) และหุ้มด้วย `React.memo` ป้องกันการวาด SVG ตัวละคร Chibi ใหม่ทุกวินาที
+   - **ตัดการอ่าน `localStorage` และ Event Listener ซ้ำซ้อนในการ์ดสถานที่ 42 ใบ (`ItineraryStopCard.tsx`)**: ใช้ข้อมูล `stopMeta` และ `stopShoppingItems` ที่คำนวณจาก `TripPlanTab` โดยตรงแทนการให้การ์ดทั้ง 42 ใบแยกกันอ่าน `localStorage` และผูก `window.addEventListener` ซ้ำ 84 ตัว
+   - **รักษา Reference ให้ `React.memo(ItineraryStopCard)` ทำงานได้ 100% (`TripPlanTab.tsx`)**: ใช้ `stopShoppingByKey` (`useMemo` + `EMPTY_SHOPPING_ITEMS`) และ `handleTogglePlanB` (`useCallback`) เพื่อไม่ให้สร้าง Array/Function ใหม่ทุกครั้งที่หน้าจอขยับ
+   - **เพิ่ม O(1) In-Memory Cache แทนการเรียก `JSON.parse(localStorage)` ซ้ำๆ (`placeThumbnails.ts`, `visitedStamps.ts`, `smartTimeline.ts`, `shoppingBag.ts`)**: แคชผลลัพธ์ `JSON.parse` ในหน่วยความจำ (ตรวจสอบด้วย `raw === cached.raw`) และเพิ่ม `negativePhotoCache` ป้องกันการยิง API รูปภาพซ้ำเมื่อการ์ด Re-mount
+
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน
 - เพิ่ม `AddMemberModal` ให้เลือกสมาชิกจากระบบได้โดยตรง

@@ -5,14 +5,17 @@ import {
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
   BookmarkCheck, List, Building2, Utensils, Dices, QrCode,
-  LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles, ExternalLink
+  LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles, ExternalLink,
+  Users, UserCheck, Clock, Train, ArrowUpToLine, ArrowDownToLine, ShoppingBag
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import LiveTripCard from '@/components/LiveTripCard';
-import WishlistDrawer from '@/components/WishlistDrawer';
 import { getAccommodations, getGoogleMapsUrl } from '@/lib/accommodations';
 import WeatherWidget from '@/components/WeatherWidget';
 import RouteVisualizer from '@/components/RouteVisualizer';
-import InteractiveTripMap from '@/components/InteractiveTripMap';
+
+const WishlistDrawer = dynamic(() => import('@/components/WishlistDrawer'), { ssr: false });
+const InteractiveTripMap = dynamic(() => import('@/components/InteractiveTripMap'), { ssr: false });
 import { 
   ItineraryStopCard, 
   ItineraryThumbnailCard, 
@@ -26,6 +29,24 @@ import AnimatedNumber from '@/components/AnimatedNumber';
 import { formatExchangeRateDisplay } from '@/lib/currency';
 import { resolveDisplayCurrency } from '@/lib/tripStatus';
 import { triggerViewTransition } from '@/lib/placeThumbnails';
+import {
+  StopSmartMeta,
+  getStopKey,
+  getTripStopMetaMap,
+  updateStopMeta,
+  subscribeStopMeta,
+  calculateDayCascadeSchedule,
+  buildChunkedDayRoutes,
+} from '@/lib/smartTimeline';
+import {
+  ShoppingBagItem,
+  EMPTY_SHOPPING_ITEMS,
+  getShoppingBag,
+  updateShoppingBagItem,
+  subscribeShoppingBag,
+  getShoppingItemsForStop,
+  getShoppingBagSummary,
+} from '@/lib/shoppingBag';
 
 export type ItineraryDisplayLayout = 'card' | 'thumbnail' | 'compact' | 'map';
 
@@ -75,6 +96,11 @@ interface TripPlanTabProps {
   onOpenGourmetRadar?: () => void;
   onOpenDiningDecision?: (city?: string) => void;
   onOpenTicketLocker?: () => void;
+  onMoveStopToDay?: (item: any, targetDayLabel: string) => void;
+  onSyncShoppingExpense?: (
+    item: ShoppingBagItem,
+    nextStatus: 'planned' | 'bought' | 'out_of_stock' | 'skipped'
+  ) => Promise<void> | void;
 }
 
 export const TripPlanTab = React.memo(function TripPlanTab({
@@ -114,9 +140,131 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   onOpenGourmetRadar,
   onOpenDiningDecision,
   onOpenTicketLocker,
+  onMoveStopToDay,
+  onSyncShoppingExpense,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
+  const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
+  const [routeTravelMode, setRouteTravelMode] = useState<'transit' | 'walking' | 'driving'>('transit');
+  const [showScrollJump, setShowScrollJump] = useState(false);
+
+  const tripId = trip?.id || '';
+  const [stopMetaMap, setStopMetaMap] = useState<Record<string, StopSmartMeta>>(() =>
+    getTripStopMetaMap(tripId)
+  );
+  const [shoppingBag, setShoppingBag] = useState<ShoppingBagItem[]>(() => getShoppingBag(tripId));
+
+  React.useEffect(() => {
+    if (!tripId) return;
+    const syncMeta = () => setStopMetaMap(getTripStopMetaMap(tripId));
+    syncMeta();
+    return subscribeStopMeta(syncMeta);
+  }, [tripId]);
+
+  React.useEffect(() => {
+    if (!tripId) return;
+    const syncShop = () => setShoppingBag(getShoppingBag(tripId));
+    syncShop();
+    return subscribeShoppingBag(syncShop);
+  }, [tripId]);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onScroll = () => {
+      setShowScrollJump(window.scrollY > 420);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const currentUserName = useMemo(() => {
+    return (
+      currentUser?.user_metadata?.display_name ||
+      currentUser?.user_metadata?.full_name ||
+      currentUser?.email?.split('@')[0] ||
+      'ฉัน'
+    );
+  }, [currentUser]);
+
+  const memberNames = useMemo(() => {
+    const names = new Set<string>();
+    if (currentUserName) names.add(currentUserName);
+    (members || []).forEach((m: any) => {
+      const n = m?.display_name || m?.name || m?.email?.split('@')[0];
+      if (n) names.add(n);
+    });
+    return Array.from(names);
+  }, [members, currentUserName]);
+
+  const handleUpdateStopMeta = React.useCallback(
+    (stopKey: string, patch: Partial<StopSmartMeta>) => {
+      if (!tripId) return;
+      const next = updateStopMeta(tripId, stopKey, patch);
+      setStopMetaMap(next);
+    },
+    [tripId]
+  );
+
+  const handleToggleShoppingItemStatus = React.useCallback(
+    async (shopItem: ShoppingBagItem) => {
+      if (!tripId) return;
+      const nextStatus = shopItem.status === 'bought' ? 'planned' : 'bought';
+      if (onSyncShoppingExpense) {
+        await onSyncShoppingExpense(shopItem, nextStatus);
+      } else {
+        updateShoppingBagItem(tripId, shopItem.id, {
+          status: nextStatus,
+          boughtAt: nextStatus === 'bought' ? new Date().toISOString() : undefined,
+        });
+      }
+      setShoppingBag(getShoppingBag(tripId));
+    },
+    [tripId, onSyncShoppingExpense]
+  );
+
+  const shoppingSummary = useMemo(() => getShoppingBagSummary(shoppingBag), [shoppingBag]);
+
+  const handleTogglePlanB = React.useCallback(
+    (id: string) => {
+      setExpandedPlanB((prev) => ({ ...prev, [id]: !prev[id] }));
+    },
+    [setExpandedPlanB]
+  );
+
+  // Filter stops by Split Group View ('all' vs 'mine')
+  const displayedItinerary = useMemo(() => {
+    if (groupViewFilter === 'all') return filteredItinerary;
+    return filteredItinerary.filter((item) => {
+      const key = getStopKey(item);
+      const meta = stopMetaMap[key] || stopMetaMap[(item.main_place || '').trim()];
+      if (!meta?.goers || meta.goers.length === 0) return true; // Everyone goes
+      return meta.goers.includes(currentUserName);
+    });
+  }, [filteredItinerary, groupViewFilter, stopMetaMap, currentUserName]);
+
+  // Pre-compute shopping items per stop once per render so React.memo(ItineraryStopCard) gets stable array references
+  const stopShoppingByKey = useMemo(() => {
+    const map: Record<string, ShoppingBagItem[]> = {};
+    for (const item of displayedItinerary) {
+      const key = getStopKey(item);
+      const matched = getShoppingItemsForStop(shoppingBag, item);
+      map[key] = matched.length > 0 ? matched : EMPTY_SHOPPING_ITEMS;
+    }
+    return map;
+  }, [displayedItinerary, shoppingBag]);
+
+  // TabiPlan Smart Cascade Schedule for displayed stops
+  const dayCascadeSchedule = useMemo(
+    () => calculateDayCascadeSchedule(displayedItinerary, stopMetaMap),
+    [displayedItinerary, stopMetaMap]
+  );
+
+  // TabiPlan 5-Stop Chunked Route Deep Links + Apple Maps
+  const chunkedRouteLegs = useMemo(
+    () => buildChunkedDayRoutes(displayedItinerary, stopMetaMap, routeTravelMode),
+    [displayedItinerary, stopMetaMap, routeTravelMode]
+  );
 
   // Sub-layout state for itinerary ('card' | 'thumbnail' | 'compact' | 'map')
   const [displayLayout, setDisplayLayout] = useState<ItineraryDisplayLayout>(() =>
@@ -153,7 +301,6 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   };
 
   // Check if any accommodation is for this day
-  const tripId = trip?.id;
   const stays = useMemo(() => (tripId ? getAccommodations(tripId) : []), [tripId]);
   const activeStayForSelectedDay = useMemo(() => {
     if (selectedDayFilter === 'all' || stays.length === 0) return null;
@@ -312,10 +459,12 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             <button
               type="button"
               onClick={() => setShowWishlistDrawer(true)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-amber-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-fuchsia-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <BookmarkCheck className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <span>Wishlist</span>
+              <ShoppingBag className="h-3.5 w-3.5 text-fuchsia-500 shrink-0" />
+              <span>
+                ช้อปปิ้ง & พิกัด ({shoppingSummary.boughtCount}/{shoppingSummary.totalCount})
+              </span>
             </button>
           </div>
 
@@ -601,36 +750,68 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
         </div>
 
-        {/* Bottom Row: Swipeable Day Filter Pills */}
-        {availableDays.length > 1 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 custom-scrollbar">
-            <button
-              type="button"
-              onClick={() => handleSelectDay('all')}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                selectedDayFilter === 'all'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
-              }`}
-            >
-              📅 ทุกวัน ({itinerary.length})
-            </button>
-            {availableDays.map((day, dIdx) => (
+        {/* Bottom Row: Swipeable Day Filter Pills + Split Group View Toggle */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 pb-0.5">
+          {availableDays.length > 1 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar flex-1 min-w-0">
               <button
-                key={day}
                 type="button"
-                onClick={() => handleSelectDay(day)}
+                onClick={() => handleSelectDay('all')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                  selectedDayFilter === day
+                  selectedDayFilter === 'all'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
                 }`}
               >
-                Day {dIdx + 1} • {day}
+                📅 ทุกวัน ({itinerary.length})
               </button>
-            ))}
+              {availableDays.map((day, dIdx) => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => handleSelectDay(day)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                    selectedDayFilter === day
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
+                  }`}
+                >
+                  Day {dIdx + 1} • {day}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* TabiPlan Split Group View Toggle: แผนทั้งกลุ่ม vs เฉพาะแผนของฉัน */}
+          <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] shrink-0">
+            <button
+              type="button"
+              onClick={() => setGroupViewFilter('all')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
+                groupViewFilter === 'all'
+                  ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+              }`}
+              title="แสดงจุดแวะของทุกคนในทริป"
+            >
+              <Users className="h-3 w-3" />
+              <span>ทั้งกลุ่ม</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setGroupViewFilter('mine')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
+                groupViewFilter === 'mine'
+                  ? 'bg-white dark:bg-[#181a20] text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+              }`}
+              title={`แสดงเฉพาะจุดแวะที่ ${currentUserName} ร่วมไป`}
+            >
+              <UserCheck className="h-3 w-3" />
+              <span>แผนของฉัน</span>
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Active Stay Banner for selected day if applicable */}
@@ -664,47 +845,131 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
       {/* 5. Main Itinerary Content Area (4 View Modes with Accessibility Focus Target) */}
       <div id="itinerary-view-container" tabIndex={-1} className="outline-none">
-        {/* 4.5 Sequential Route Flow & 1-Tap Google Maps Multi-Stop Navigation */}
-        {filteredItinerary.length > 1 && (
-          <div className="mb-3.5 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs space-y-2.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                <div className="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Navigation className="h-3.5 w-3.5" />
-                </div>
-                <span>เส้นทางจุดแวะวันนี้ ({filteredItinerary.length} จุด)</span>
+        {/* 4.5 TabiPlan Smart Cascade Summary & 5-Stop Chunked Route Deep Links */}
+        {displayedItinerary.length > 0 && (
+          <div className="mb-3.5 p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs space-y-3">
+            {/* Top Row: Smart Cascade Schedule Summary Pills */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-[#232630]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-white">
+                  <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                  <span>
+                    ตารางเวลาไหลอัตโนมัติ: {dayCascadeSchedule.dayStartTime}–{dayCascadeSchedule.dayEndTime}
+                  </span>
+                </span>
+                <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/50">
+                  🎯 เวลาเที่ยว {(dayCascadeSchedule.totalSightseeingMin / 60).toFixed(1)} ชม.
+                </span>
+                <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/50">
+                  🚆 เดินทางรวม {dayCascadeSchedule.totalTravelMin} นาที
+                </span>
+                {dayCascadeSchedule.totalTransitFareJpy > 0 && (
+                  <span className="px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50">
+                    💴 ค่ารถไฟ ≈ ¥{dayCascadeSchedule.totalTransitFareJpy.toLocaleString()}
+                  </span>
+                )}
+                {dayCascadeSchedule.skippedStopsCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    ⏭️ ข้ามชั่วคราว {dayCascadeSchedule.skippedStopsCount} จุด
+                  </span>
+                )}
+                {dayCascadeSchedule.lateStopsCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-lg text-[11px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+                    ⚠️ สายกว่าเวลานัด {dayCascadeSchedule.lateStopsCount} จุด!
+                  </span>
+                )}
               </div>
-              {multiStopRouteUrl && (
-                <a
-                  href={multiStopRouteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-xs hover:scale-102 active:scale-95 transition-all cursor-pointer min-h-[36px]"
-                  title="เปิดเส้นทางรวมทุกจุดแบบ Multi-Stop ใน Google Maps ทันที"
-                >
-                  <span>เปิดเส้นทางใน Google Maps 🚗 / 🚶</span>
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
+
+              {/* Travel Mode Selector for Chunked Route Links */}
+              <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] text-[10px] font-bold">
+                {(
+                  [
+                    { id: 'transit', label: '🚇 รถไฟ' },
+                    { id: 'walking', label: '🚶 เดิน' },
+                    { id: 'driving', label: '🚗 ขับรถ' },
+                  ] as const
+                ).map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setRouteTravelMode(mode.id)}
+                    className={`px-2 py-1 rounded-lg cursor-pointer transition-all ${
+                      routeTravelMode === mode.id
+                        ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
+                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+                    }`}
+                  >
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Middle Row: 5-Stop Chunked Google Maps & Apple Maps Route Pills */}
+            {chunkedRouteLegs.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-black text-slate-600 dark:text-slate-300 mr-1 flex items-center gap-1">
+                    <Navigation className="h-3 w-3 text-blue-500" />
+                    <span>นำทางแบ่งช่วง 5 จุด (ไม่เกินลิมิต Maps):</span>
+                  </span>
+                  {chunkedRouteLegs.map((leg) => (
+                    <div key={leg.index} className="inline-flex items-center gap-1">
+                      <a
+                        href={leg.googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-2xs hover:scale-102 active:scale-95 transition-all cursor-pointer"
+                        title={`เปิด Google Maps นำทางจาก ${leg.fromName} ➔ ${leg.toName}`}
+                      >
+                        <span>🗺️ {leg.label}</span>
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                      <a
+                        href={leg.appleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#121316] hover:bg-slate-200 dark:hover:bg-[#22252e] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#262932] text-[11px] font-bold transition-all cursor-pointer"
+                        title={`เปิดใน Apple Maps (${leg.rangeText})`}
+                      >
+                        <span>🍎 Apple Maps</span>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Sequential Route Trail Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar text-xs">
-              {filteredItinerary.map((stop, sIdx) => {
-                const isLast = sIdx === filteredItinerary.length - 1;
+              {displayedItinerary.map((stop, sIdx) => {
+                const isLast = sIdx === displayedItinerary.length - 1;
                 const stopName = stop.main_place || stop.title || `จุดที่ ${sIdx + 1}`;
+                const stopKey = getStopKey(stop);
+                const sched = dayCascadeSchedule.byStopKey[stopKey];
+                const isSkipped = Boolean(sched?.skipped);
                 return (
                   <React.Fragment key={stop.id || sIdx}>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] shrink-0 text-slate-700 dark:text-slate-300">
-                      <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-mono font-black flex items-center justify-center shrink-0">
+                    <div
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border shrink-0 ${
+                        isSkipped
+                          ? 'bg-slate-100/60 dark:bg-slate-900/40 border-dashed border-slate-300 dark:border-slate-700 text-slate-400 line-through'
+                          : 'bg-slate-50 dark:bg-[#121316] border-slate-200/80 dark:border-[#262932] text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`w-4 h-4 rounded-full text-white text-[10px] font-mono font-black flex items-center justify-center shrink-0 ${
+                          isSkipped ? 'bg-slate-400' : 'bg-blue-600'
+                        }`}
+                      >
                         {sIdx + 1}
                       </span>
                       <span className="font-bold text-[11px] max-w-[120px] sm:max-w-[160px] truncate" title={stopName}>
                         {stopName}
                       </span>
-                      {stop.time_slot && (
-                        <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
-                          {stop.time_slot.split('–')[0]?.trim()}
+                      {!isSkipped && sched && (
+                        <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">
+                          {sched.arriveTime}
                         </span>
                       )}
                     </div>
@@ -720,7 +985,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
         )}
 
-        {filteredItinerary.length === 0 ? (
+        {displayedItinerary.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl p-6 bg-white dark:bg-[#181a20]">
             <Navigation className="h-10 w-10 text-blue-500 mx-auto mb-2 animate-float-slow" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีกิจกรรมในแผนเที่ยวนี้</h3>
@@ -741,10 +1006,10 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             <div className="hidden lg:block lg:col-span-5 space-y-2 max-h-[75dvh] overflow-y-auto pr-1 custom-scrollbar">
               <div className="px-2 py-1 text-xs font-black text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                <span>📋 รายการจุดแวะ ({filteredItinerary.length} จุด)</span>
+                <span>📋 รายการจุดแวะ ({displayedItinerary.length} จุด)</span>
                 <span>iPad / Split View</span>
               </div>
-              {filteredItinerary.map((item, idx) => (
+              {displayedItinerary.map((item, idx) => (
                 <ItineraryCompactRow
                   key={item.id || idx}
                   item={item}
@@ -762,7 +1027,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         ) : displayLayout === 'thumbnail' ? (
           /* Thumbnail / Magazine Grid Mode (Trip.com / Airbnb Style) */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-            {filteredItinerary.map((item, idx) => (
+            {displayedItinerary.map((item, idx) => (
               <ItineraryThumbnailCard
                 key={item.id || idx}
                 item={item}
@@ -777,10 +1042,10 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           /* Compact Timeline / Checklist Mode (Wanderlog / Google Calendar Style) */
           <div className="p-3 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation space-y-2">
             <div className="flex items-center justify-between px-1 pb-1 border-b border-slate-100 dark:border-[#262932] text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              <span>⚡ มุมมองตารางเวลาย่อ ({filteredItinerary.length} รายการ)</span>
+              <span>⚡ มุมมองตารางเวลาย่อ ({displayedItinerary.length} รายการ)</span>
               <span>แตะไอคอนด้านซ้ายเพื่อเช็กอิน</span>
             </div>
-            {filteredItinerary.map((item, idx) => (
+            {displayedItinerary.map((item, idx) => (
               <ItineraryCompactRow
                 key={item.id || idx}
                 item={item}
@@ -794,8 +1059,12 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         ) : (
           /* Detailed Card Mode */
           <div className="space-y-3">
-            {filteredItinerary.map((item, idx) => {
-              const nextItem = filteredItinerary[idx + 1];
+            {displayedItinerary.map((item, idx) => {
+              const nextItem = displayedItinerary[idx + 1];
+              const stopKey = getStopKey(item);
+              const stopMeta = stopMetaMap[stopKey] || stopMetaMap[(item.main_place || '').trim()];
+              const computedSchedule = dayCascadeSchedule.byStopKey[stopKey];
+              const stopShopping = stopShoppingByKey[stopKey] || EMPTY_SHOPPING_ITEMS;
               return (
                 <React.Fragment key={item.id || idx}>
                   <ItineraryStopCard
@@ -806,10 +1075,18 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                     currentUser={currentUser}
                     reordering={reordering}
                     isPlanBOpen={expandedPlanB[item.id] || false}
-                    onTogglePlanB={(id) => setExpandedPlanB((prev) => ({ ...prev, [id]: !prev[id] }))}
+                    onTogglePlanB={handleTogglePlanB}
                     onMoveActivity={handleMoveActivity}
                     onOpenEditActivity={handleOpenEditActivity}
                     onDeleteActivity={handleDeleteActivity}
+                    computedSchedule={computedSchedule}
+                    stopMeta={stopMeta}
+                    onUpdateStopMeta={handleUpdateStopMeta}
+                    availableDays={availableDays}
+                    onMoveStopToDay={onMoveStopToDay}
+                    stopShoppingItems={stopShopping}
+                    onToggleShoppingItemStatus={handleToggleShoppingItemStatus}
+                    memberNames={memberNames}
                   />
                   {nextItem && (
                     <TransitConnector
@@ -827,22 +1104,50 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         )}
       </div>
 
-      {/* Wishlist Drawer Modal */}
-      <WishlistDrawer
-        isOpen={showWishlistDrawer}
-        onClose={() => setShowWishlistDrawer(false)}
-        tripId={trip?.id}
-        selectedDay={selectedDayFilter}
-        availableDays={availableDays}
-        onAddToItinerary={(item) => {
-          handleOpenAddActivity({
-            title: item.title,
-            category: item.category,
-            location: item.location,
-          }, selectedDayFilter === 'all' ? availableDays[0] : selectedDayFilter);
-        }}
-        onShowToast={onShowToast}
-      />
+      {/* TabiPlan Floating Scroll Jump Buttons (บนสุด / ล่างสุด) */}
+      {showScrollJump && (
+        <div className="fixed right-3 sm:right-5 bottom-24 z-30 flex flex-col gap-1.5">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="w-9 h-9 rounded-full bg-white/90 dark:bg-[#1e2027]/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all cursor-pointer"
+            title="เลื่อนกลับขึ้นบนสุด"
+          >
+            <ArrowUpToLine className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+            }
+            className="w-9 h-9 rounded-full bg-white/90 dark:bg-[#1e2027]/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all cursor-pointer"
+            title="เลื่อนลงล่างสุด"
+          >
+            <ArrowDownToLine className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Wishlist & Shopping Bag Drawer Modal */}
+      {showWishlistDrawer && (
+        <WishlistDrawer
+          isOpen={showWishlistDrawer}
+          onClose={() => setShowWishlistDrawer(false)}
+          tripId={trip?.id}
+          selectedDay={selectedDayFilter}
+          availableDays={availableDays}
+          itinerary={itinerary}
+          onSyncShoppingExpense={onSyncShoppingExpense}
+          onAddToItinerary={(item) => {
+            handleOpenAddActivity({
+              title: item.title,
+              category: item.category,
+              location: item.location,
+            }, selectedDayFilter === 'all' ? availableDays[0] : selectedDayFilter);
+          }}
+          onShowToast={onShowToast}
+        />
+      )}
     </div>
   );
 });

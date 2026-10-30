@@ -15,6 +15,37 @@ import {
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
+import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+
+export interface TrainBookingItem {
+  id: string;
+  trainNo: string;
+  fromStation: string;
+  toStation: string;
+  departureTime: string;
+  arrivalTime?: string;
+  carNo: string;
+  seatNo: string;
+  platform?: string;
+  dayLabel?: string;
+  note?: string;
+}
+
+const DEFAULT_KANSAI_TRAIN_BOOKINGS: TrainBookingItem[] = [
+  {
+    id: 'train-rapit-kix',
+    trainNo: 'Nankai Limited Express Rapi:t β',
+    fromStation: 'Kansai Airport (KIX)',
+    toStation: 'Nankai Namba (難波)',
+    departureTime: '16:35',
+    arrivalTime: '17:13',
+    carNo: 'ตู้ที่ 5 (Car 5)',
+    seatNo: '12A, 12B',
+    platform: 'ชานชาลา 1–2 (Nankai)',
+    dayLabel: 'Day 1 (10 ธ.ค.)',
+    note: 'แสดง QR Voucher เพื่อแลกตั๋วระบุที่นั่งก่อนเข้าเกต',
+  },
+];
 
 interface TravelHubModalProps {
   isOpen: boolean;
@@ -168,8 +199,8 @@ export default function TravelHubModal({
   onOpenScrapbook,
   onOpenPacking,
 }: TravelHubModalProps) {
-  // Navigation Tabs: 'calculator' | 'tickets' | 'phrases' | 'radar' | 'story'
-  const [activeTab, setActiveTab] = useState<'calculator' | 'tickets' | 'phrases' | 'radar' | 'story'>('calculator');
+  // Navigation Tabs: 'calculator' | 'tickets' | 'phrases' | 'rules' | 'radar' | 'story'
+  const [activeTab, setActiveTab] = useState<'calculator' | 'tickets' | 'phrases' | 'rules' | 'radar' | 'story'>('calculator');
 
   // ==================== 1. TAX-FREE & CURRENCY CALCULATOR STATE ====================
   const [calcInput, setCalcInput] = useState<string>('5500');
@@ -239,14 +270,86 @@ export default function TravelHubModal({
     }
   };
 
-  // ==================== 2. TICKETS & QR VAULT STATE ====================
+  // ==================== 2. TICKETS & QR VAULT + TRAIN SEAT RESERVATIONS STATE ====================
   const [tickets, setTickets] = useState<TicketPass[]>([]);
   const [ticketTitle, setTicketTitle] = useState('');
   const [ticketCategory, setTicketCategory] = useState<TicketPass['category']>('vjw');
   const [uploadingTicket, setUploadingTicket] = useState(false);
   const [previewPassImage, setPreviewPassImage] = useState<string | null>(null);
 
+  // Train Seat Reservations (TabiPlan TrainBooking)
+  const [trainBookings, setTrainBookings] = useState<TrainBookingItem[]>([]);
+  const [showAddTrainForm, setShowAddTrainForm] = useState(false);
+  const [trainNo, setTrainNo] = useState('');
+  const [trainFrom, setTrainFrom] = useState('Kansai Airport (KIX)');
+  const [trainTo, setTrainTo] = useState('Nankai Namba');
+  const [trainDepTime, setTrainDepTime] = useState('10:00');
+  const [trainArrTime, setTrainArrTime] = useState('10:38');
+  const [trainCar, setTrainCar] = useState('ตู้ที่ 4');
+  const [trainSeat, setTrainSeat] = useState('8A, 8B');
+  const [trainPlatform, setTrainPlatform] = useState('ชานชาลา 1');
+
   const tripId = trip?.id;
+
+  useEffect(() => {
+    if (!tripId || typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(`travel_train_bookings_${tripId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setTrainBookings(parsed);
+          return;
+        }
+      }
+      localStorage.setItem(
+        `travel_train_bookings_${tripId}`,
+        JSON.stringify(DEFAULT_KANSAI_TRAIN_BOOKINGS)
+      );
+      setTrainBookings(DEFAULT_KANSAI_TRAIN_BOOKINGS);
+    } catch {
+      setTrainBookings(DEFAULT_KANSAI_TRAIN_BOOKINGS);
+    }
+  }, [tripId, isOpen]);
+
+  const handleAddTrainBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trainNo.trim() || !tripId) return;
+    const created: TrainBookingItem = {
+      id: `tb-${Date.now()}`,
+      trainNo: trainNo.trim(),
+      fromStation: trainFrom.trim(),
+      toStation: trainTo.trim(),
+      departureTime: trainDepTime,
+      arrivalTime: trainArrTime,
+      carNo: trainCar.trim(),
+      seatNo: trainSeat.trim(),
+      platform: trainPlatform.trim(),
+    };
+    const next = [created, ...trainBookings];
+    setTrainBookings(next);
+    try {
+      localStorage.setItem(`travel_train_bookings_${tripId}`, JSON.stringify(next));
+      syncTripMetadataToSupabase(tripId, { trainBookings: next });
+    } catch {
+      // ignore
+    }
+    setTrainNo('');
+    setShowAddTrainForm(false);
+    toast.success('บันทึกตั๋วรถไฟและเลขที่นั่งเรียบร้อย 🚅');
+  };
+
+  const handleDeleteTrainBooking = (id: string) => {
+    if (!tripId) return;
+    const next = trainBookings.filter((b) => b.id !== id);
+    setTrainBookings(next);
+    try {
+      localStorage.setItem(`travel_train_bookings_${tripId}`, JSON.stringify(next));
+      syncTripMetadataToSupabase(tripId, { trainBookings: next });
+    } catch {
+      // ignore
+    }
+  };
 
   const loadTickets = useCallback(async () => {
     if (!tripId) return;
@@ -517,6 +620,18 @@ export default function TravelHubModal({
           >
             <Languages className="h-3.5 w-3.5" />
             <span>การ์ดยื่น & วลี</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('rules')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              activeTab === 'rules'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#222530]'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>🇯🇵 กฎ & มารยาทญี่ปุ่น</span>
           </button>
 
           <button
@@ -884,6 +999,162 @@ export default function TravelHubModal({
                 )}
               </div>
 
+              {/* TabiPlan Train Seat Reservations Section (บันทึกตั๋วรถไฟและเลขที่นั่งระบุขบวน) */}
+              <div className="p-4 rounded-3xl border border-indigo-200/80 dark:border-indigo-900/50 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Train className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <span className="text-xs font-black text-slate-900 dark:text-white">
+                      🚅 ตั๋วรถไฟระบุที่นั่ง & ชานชาลา ({trainBookings.length} ขบวน)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddTrainForm((v) => !v)}
+                    className="px-2.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>{showAddTrainForm ? 'ปิดฟอร์ม' : 'เพิ่มขบวนรถไฟ'}</span>
+                  </button>
+                </div>
+
+                {showAddTrainForm && (
+                  <form
+                    onSubmit={handleAddTrainBooking}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#2b2f3d] space-y-2.5 text-xs"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        required
+                        placeholder="ชื่อขบวน เช่น Nankai Rapi:t / JR Haruka"
+                        value={trainNo}
+                        onChange={(e) => setTrainNo(e.target.value)}
+                        className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] font-bold text-slate-900 dark:text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="ชานชาลา เช่น ชานชาลา 1"
+                        value={trainPlatform}
+                        onChange={(e) => setTrainPlatform(e.target.value)}
+                        className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] font-bold text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="ต้นทาง เช่น KIX"
+                        value={trainFrom}
+                        onChange={(e) => setTrainFrom(e.target.value)}
+                        className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] text-slate-900 dark:text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="ปลายทาง เช่น Namba"
+                        value={trainTo}
+                        onChange={(e) => setTrainTo(e.target.value)}
+                        className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <input
+                        type="time"
+                        value={trainDepTime}
+                        onChange={(e) => setTrainDepTime(e.target.value)}
+                        className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] text-slate-900 dark:text-white"
+                      />
+                      <input
+                        type="time"
+                        value={trainArrTime}
+                        onChange={(e) => setTrainArrTime(e.target.value)}
+                        className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] text-slate-900 dark:text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="ตู้ที่ เช่น ตู้ 5"
+                        value={trainCar}
+                        onChange={(e) => setTrainCar(e.target.value)}
+                        className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] font-bold text-slate-900 dark:text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="ที่นั่ง เช่น 12A"
+                        value={trainSeat}
+                        onChange={(e) => setTrainSeat(e.target.value)}
+                        className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] font-bold text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs cursor-pointer"
+                    >
+                      บันทึกตั๋วรถไฟระบุที่นั่ง
+                    </button>
+                  </form>
+                )}
+
+                <div className="space-y-2">
+                  {trainBookings.map((tb) => (
+                    <div
+                      key={tb.id}
+                      className="p-3.5 rounded-2xl bg-white dark:bg-[#1f222e] border border-slate-200/90 dark:border-[#262932] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs"
+                    >
+                      <div className="space-y-1 text-left">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-black">
+                            🚅 {tb.trainNo}
+                          </span>
+                          {tb.platform && (
+                            <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] font-black">
+                              🚉 {tb.platform}
+                            </span>
+                          )}
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-black">
+                            💺 {tb.carNo} • ที่นั่ง {tb.seatNo}
+                          </span>
+                        </div>
+                        <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>{tb.fromStation}</span>
+                          <span className="text-indigo-500">➔</span>
+                          <span>{tb.toStation}</span>
+                          <span className="text-xs font-mono text-blue-600 dark:text-blue-400">
+                            ({tb.departureTime}
+                            {tb.arrivalTime ? `–${tb.arrivalTime}` : ''})
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBigCardPhrase({
+                              id: tb.id,
+                              category: 'transport',
+                              japanese: `${tb.trainNo} (${tb.fromStation} ➔ ${tb.toStation})`,
+                              romaji: `Dep: ${tb.departureTime} | ${tb.carNo} | Seat: ${tb.seatNo}`,
+                              thai: `รบกวนถามชานชาลาขบวน ${tb.trainNo} (${tb.carNo} ที่นั่ง ${tb.seatNo})`,
+                              context: tb.platform || '',
+                            })
+                          }
+                          className="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[11px] font-black hover:bg-indigo-600 hover:text-white transition-colors cursor-pointer"
+                        >
+                          โชว์ให้นายสถานีดู 👮
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTrainBooking(tb.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 cursor-pointer"
+                          title="ลบขบวนรถไฟ"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -1011,6 +1282,127 @@ export default function TravelHubModal({
                 })}
               </div>
 
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 3.5: JAPAN COUNTRY RULES & KANSAI ETIQUETTE (TABIPLAN)
+          ======================================================== */}
+          {activeTab === 'rules' && (
+            <div className="space-y-4 text-left">
+              {/* 1. Strict Laws */}
+              <div className="p-4 rounded-3xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50 space-y-2.5">
+                <h3 className="text-xs sm:text-sm font-black text-rose-800 dark:text-rose-300 flex items-center gap-2">
+                  <span>⛔ 1. กฎหมายญี่ปุ่นที่ห้ามฝ่าฝืนเด็ดขาด (Strict Laws)</span>
+                </h3>
+                <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-200 font-medium list-disc pl-5">
+                  <li>
+                    <strong>ต้องพกพาสปอร์ตตัวจริงติดตัวตลอดเวลา:</strong> กฎหมายญี่ปุ่นกำหนดให้นักท่องเที่ยวแสดงเล่มจริงเมื่อเจ้าหน้าที่ขอตรวจ (รูปถ่ายในมือถือใช้แทนไม่ได้ และต้องใช้เล่มจริงทำ Tax-Free)
+                  </li>
+                  <li>
+                    <strong>ห้ามเดินสูบบุหรี่ริมถนนเด็ดขาด:</strong> โอซาก้าและเกียวโตมีโทษปรับทันที ¥2,000–¥5,000 ต้องสูบในจุด <em>Smoking Area (喫煙所)</em> ที่จัดไว้เท่านั้น
+                  </li>
+                  <li>
+                    <strong>ห้ามนำเนื้อสัตว์ทุกชนิดเข้าญี่ปุ่น:</strong> ไส้กรอก หมูหยอง แหนม เนื้อแปรรูป และผลไม้สด ผิดกฎหมายกักกันโรคสัตว์ มีโทษปรับสูงสุด ¥3,000,000
+                  </li>
+                  <li>
+                    <strong>ห้ามบินโดรนในเขตวัด/เมือง & ห้ามเมาแล้วปั่นจักรยาน:</strong> เขตเกียวโตและปราสาทโอซาก้าห้ามบินโดรนทุกกรณี
+                  </li>
+                </ul>
+              </div>
+
+              {/* 2. Kansai vs Kanto Etiquette */}
+              <div className="p-4 rounded-3xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/50 space-y-2.5">
+                <h3 className="text-xs sm:text-sm font-black text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                  <span>🙏 2. มารยาทสำคัญในคันไซ (Osaka vs Kyoto Etiquette)</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-amber-200/60 dark:border-[#2b2f3d]">
+                    <span className="font-black text-amber-700 dark:text-amber-400 block mb-1">
+                      🚶 บันไดเลื่อน: โอซาก้ายืนชิดขวา!
+                    </span>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      ใน <strong>โอซาก้า (Osaka)</strong> คนจะยืนชิดขวาและเว้นช่องซ้ายให้คนรีบเดิน ส่วนใน <strong>เกียวโต (Kyoto)</strong> มักยืนชิดซ้าย แนะนำให้สังเกตคนข้างหน้าเป็นหลัก
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-amber-200/60 dark:border-[#2b2f3d]">
+                    <span className="font-black text-amber-700 dark:text-amber-400 block mb-1">
+                      🚃 มารยาทบนรถไฟญี่ปุ่น
+                    </span>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      เปิดโหมดสั่น (Manner Mode) งดคุยโทรศัพท์บนรถไฟ และสะพายกระเป๋าเป้ไว้ด้านหน้าเมื่อคนแน่น
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-amber-200/60 dark:border-[#2b2f3d]">
+                    <span className="font-black text-amber-700 dark:text-amber-400 block mb-1">
+                      🍵 ร้านอาหาร & ไม่ต้องให้ทิป
+                    </span>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      ญี่ปุ่นไม่มีวัฒนธรรมการให้ทิป (พนักงานจะวิ่งนำเงินมาคืน) ผ้าเปียก Oshibori ใช้เช็ดมือเท่านั้น และนำบิลไปจ่ายที่แคชเชียร์หน้าร้าน
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-amber-200/60 dark:border-[#2b2f3d]">
+                    <span className="font-black text-amber-700 dark:text-amber-400 block mb-1">
+                      ⛩️ เขตวัดและย่านกิออน (Gion)
+                    </span>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      ห้ามดักถ่ายรูปไมโกะ/เกอิชาในซอยส่วนตัวย่านกิออน (มีป้ายเตือนปรับ ¥10,000) และถอดหมวกก่อนเข้าอาคารวิหารหลัก
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Field Tips & 4. Quick Facts */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-4 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-200/80 dark:border-indigo-900/50 space-y-2 text-xs">
+                  <h4 className="font-black text-indigo-900 dark:text-indigo-300">
+                    💡 3. ทิปส์เอาตัวรอดหน้างาน
+                  </h4>
+                  <ul className="space-y-1 text-[11px] text-slate-700 dark:text-slate-300 list-disc pl-4">
+                    <li>พกถุงพลาสติกเล็กติดกระเป๋าไว้ใส่ขยะตัวเอง เพราะถังขยะริมถนนหายาก</li>
+                    <li>เตรียมเหรียญ ¥100 ติดตัวเสมอสำหรับตู้ล็อกเกอร์ กาชาปอง และเครื่องรางวัด</li>
+                    <li>ห้องน้ำฟรีและสะอาดมีทุกสถานีรถไฟ ห้างสรรพสินค้า และร้านสะดวกซื้อส่วนใหญ่</li>
+                  </ul>
+                </div>
+
+                <div className="p-4 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/50 space-y-2 text-xs">
+                  <h4 className="font-black text-emerald-900 dark:text-emerald-300">
+                    ⚡ 4. ข้อมูลด่วน (Quick Facts)
+                  </h4>
+                  <ul className="space-y-1 text-[11px] text-slate-700 dark:text-slate-300 list-disc pl-4">
+                    <li><strong>กระแสไฟฟ้า:</strong> 100V / 60Hz (คันไซ) ปลั๊กขาแบนคู่ Type A</li>
+                    <li><strong>น้ำประปา:</strong> ดื่มได้ปลอดภัย (ยกเว้นป้าย 飲用不可)</li>
+                    <li><strong>สายด่วนฉุกเฉิน:</strong> ตำรวจ 110 • รถพยาบาล 119 • JNTO 050-3816-2787</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* 5. Official References */}
+              <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-[#1f222e] border border-slate-200 dark:border-[#2b2f3d] flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="font-black text-slate-700 dark:text-slate-200">
+                  🏛️ 5. ลิงก์ทางการอ้างอิง (Official Sources):
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <a
+                    href="https://services.digital.go.jp/en/visit-japan-web/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 font-bold text-[11px] border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1"
+                  >
+                    <span>Visit Japan Web</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                  <a
+                    href="https://www.japan.travel/th/plan/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 font-bold text-[11px] border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1"
+                  >
+                    <span>JNTO คู่มือเที่ยวญี่ปุ่น</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
             </div>
           )}
 
