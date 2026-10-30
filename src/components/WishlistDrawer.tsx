@@ -168,6 +168,72 @@ const CURATED_JAPAN_WISHLIST: WishlistItem[] = [
     isCurated: true,
     facets: ['rainy-day', 'near-station', 'luggage-storage', 'wheelchair'],
   },
+  {
+    id: 'w-christmas-tennoji',
+    title: 'Osaka Christmas Market 2026 @ สวนเท็นโนจิ (Tenshiba)',
+    japaneseTitle: '大阪クリスマスマーケット (てんしば)',
+    category: 'sight',
+    district: 'Tennoji Osaka',
+    costEstimate: 'เข้าฟรี (อาหาร/ไวน์อุ่น ¥800 - ¥2,000)',
+    highlight: 'ไฮไลต์เดือนธันวาคม! ต้นคริสต์มาสยักษ์ ตลาดคริสต์มาสสไตล์เยอรมัน ไวน์อุ่น Glühwein และช็อกโกแลตร้อนติดสถานี Tennoji',
+    isCurated: true,
+    facets: ['near-station', 'luggage-storage', 'wheelchair'],
+  },
+  {
+    id: 'w-midosuji-illumination',
+    title: 'Midosuji Illumination & Nakanoshima Festival of Lights',
+    japaneseTitle: '御堂筋イルミネーション・OSAKA光のルネサンス',
+    category: 'sight',
+    district: 'Umeda ➔ Shinsaibashi ➔ Namba',
+    costEstimate: 'ชมฟรี',
+    highlight: 'อุโมงค์ไฟประดับฤดูหนาวตลอดถนนสายหลักมิโดสึจิยาวกว่า 4 กม. และงานแสดงไฟ 3D Mapping ที่เกาะนากาโนะชิมะ (17:00–23:00 น.)',
+    isCurated: true,
+    facets: ['near-station', 'wheelchair'],
+  },
+  {
+    id: 'w-katsuoji',
+    title: 'วัดคัตสึโอจิ (Katsuo-ji — วัดตุ๊กตาดารุมะแห่งชัยชนะ)',
+    japaneseTitle: '勝尾寺 (箕面)',
+    category: 'sight',
+    district: 'Minoh Osaka',
+    costEstimate: '¥500',
+    highlight: 'วัดตุ๊กตาดารุมะนับหมื่นตัวกลางหุบเขามิโนะ พร้อมกิจกรรมปั๊มโปสการ์ด 6 จุดรอบวัดจนครบเป็นภาพดารุมะสุดคลาสสิก',
+    isCurated: true,
+    facets: [],
+  },
+  {
+    id: 'w-teamlab-osaka',
+    title: 'teamLab Botanical Garden Osaka (สวนพฤกษศาสตร์เรืองแสง)',
+    japaneseTitle: 'チームラボ ボタニカルガーデン 大阪 (長居公園)',
+    category: 'sight',
+    district: 'Nagai Park (สาย Midosuji)',
+    costEstimate: '¥1,800 - ¥2,200',
+    highlight: 'นิทรรศการศิลปะดิจิทัลกลางแจ้งยามค่ำคืน ต้นไม้และไข่นกยักษ์เปลี่ยนสีตามการสัมผัส นั่งสายสีแดง Midosuji ตรงจาก Namba',
+    isCurated: true,
+    facets: ['near-station', 'wheelchair'],
+  },
+  {
+    id: 'w-umeda-sky',
+    title: 'Umeda Sky Building (จุดชมวิวลอยฟ้า 360 องศา)',
+    japaneseTitle: '梅田スカイビル 空中庭園展望台',
+    category: 'sight',
+    district: 'Umeda Osaka',
+    costEstimate: '¥1,500 - ¥2,000',
+    highlight: 'บันไดเลื่อนกระจกลอยฟ้าข้ามตึกคู่และดาดฟ้าเรืองแสงชมวิวเมืองโอซาก้ายามพระอาทิตย์ตกถึงค่ำ',
+    isCurated: true,
+    facets: ['rainy-day', 'near-station', 'luggage-storage', 'wheelchair'],
+  },
+  {
+    id: 'w-tofukuji-eikando',
+    title: 'วัดโทฟุคุจิ & วัดเอคันโด (ใบไม้เปลี่ยนสีช่วงท้ายต้นธันวาคม)',
+    japaneseTitle: '東福寺・永観堂 禅林寺',
+    category: 'sight',
+    district: 'Kyoto (1 สถานีจาก Kyoto Station)',
+    costEstimate: '¥600 - ¥1,000',
+    highlight: 'จุดชมใบเมเปิ้ลสีแดงสะพานไม้ Tsutenkyo ที่ยังคงมีใบไม้แดงช่วงสัปดาห์แรกของเดือนธันวาคม เดินทางง่ายติดสถานี Tofukuji',
+    isCurated: true,
+    facets: ['near-station'],
+  },
 ];
 
 interface WishlistDrawerProps {
@@ -177,6 +243,7 @@ interface WishlistDrawerProps {
   selectedDay: string;
   availableDays: string[];
   itinerary?: any[];
+  initialTab?: 'wishlist' | 'shopping';
   onSyncShoppingExpense?: (
     item: ShoppingBagItem,
     nextStatus: ShoppingItemStatus
@@ -197,11 +264,18 @@ export default function WishlistDrawer({
   selectedDay,
   availableDays = [],
   itinerary = [],
+  initialTab = 'wishlist',
   onSyncShoppingExpense,
   onAddToItinerary,
   onShowToast,
 }: WishlistDrawerProps) {
-  const [activeTab, setActiveTab] = useState<'shopping' | 'wishlist'>('shopping');
+  const [activeTab, setActiveTab] = useState<'shopping' | 'wishlist'>(initialTab);
+
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   // --- Shopping Bag State ---
   const [shoppingItems, setShoppingItems] = useState<ShoppingBagItem[]>([]);

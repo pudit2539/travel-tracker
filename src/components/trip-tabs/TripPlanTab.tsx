@@ -143,6 +143,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   onSyncShoppingExpense,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
+  const [wishlistInitialTab, setWishlistInitialTab] = useState<'wishlist' | 'shopping'>('wishlist');
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
   const [showScrollJump, setShowScrollJump] = useState(false);
@@ -450,12 +451,27 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
             <button
               type="button"
-              onClick={() => setShowWishlistDrawer(true)}
+              onClick={() => {
+                setWishlistInitialTab('wishlist');
+                setShowWishlistDrawer(true);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 hover:border-emerald-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+            >
+              <BookmarkCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+              <span>ที่เที่ยวแนะนำ</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setWishlistInitialTab('shopping');
+                setShowWishlistDrawer(true);
+              }}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-fuchsia-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
               <ShoppingBag className="h-3.5 w-3.5 text-fuchsia-500 shrink-0" />
               <span>
-                ช้อปปิ้ง & พิกัด ({shoppingSummary.boughtCount}/{shoppingSummary.totalCount})
+                กระเป๋าช้อป ({shoppingSummary.boughtCount}/{shoppingSummary.totalCount})
               </span>
             </button>
           </div>
@@ -728,6 +744,19 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 </div>
               )}
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setWishlistInitialTab('wishlist');
+                setShowWishlistDrawer(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 text-xs font-bold transition-all cursor-pointer active:scale-95"
+              title="เปิดดูที่เที่ยวแนะนำและคลังพิกัดสำรอง"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+              <span>ที่เที่ยวแนะนำ</span>
+            </button>
 
             {canEditPlan && (
               <button
@@ -1083,6 +1112,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           selectedDay={selectedDayFilter}
           availableDays={availableDays}
           itinerary={itinerary}
+          initialTab={wishlistInitialTab}
           onSyncShoppingExpense={onSyncShoppingExpense}
           onAddToItinerary={(item) => {
             handleOpenAddActivity({
