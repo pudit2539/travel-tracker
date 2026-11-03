@@ -164,6 +164,10 @@
    - **ตัดการอ่าน `localStorage` และ Event Listener ซ้ำซ้อนในการ์ดสถานที่ 42 ใบ (`ItineraryStopCard.tsx`)**: ใช้ข้อมูล `stopMeta` และ `stopShoppingItems` ที่คำนวณจาก `TripPlanTab` โดยตรงแทนการให้การ์ดทั้ง 42 ใบแยกกันอ่าน `localStorage` และผูก `window.addEventListener` ซ้ำ 84 ตัว
    - **รักษา Reference ให้ `React.memo(ItineraryStopCard)` ทำงานได้ 100% (`TripPlanTab.tsx`)**: ใช้ `stopShoppingByKey` (`useMemo` + `EMPTY_SHOPPING_ITEMS`) และ `handleTogglePlanB` (`useCallback`) เพื่อไม่ให้สร้าง Array/Function ใหม่ทุกครั้งที่หน้าจอขยับ
    - **เพิ่ม O(1) In-Memory Cache แทนการเรียก `JSON.parse(localStorage)` ซ้ำๆ (`placeThumbnails.ts`, `visitedStamps.ts`, `smartTimeline.ts`, `shoppingBag.ts`)**: แคชผลลัพธ์ `JSON.parse` ในหน่วยความจำ (ตรวจสอบด้วย `raw === cached.raw`) และเพิ่ม `negativePhotoCache` ป้องกันการยิง API รูปภาพซ้ำเมื่อการ์ด Re-mount
+11. **Decluttered Stop Cards, Station Elevator Exits & Last Train Alerts, and 100% Offline-First Expense Queue**:
+   - **Declutter การ์ดสถานที่ (`ItineraryStopCard.tsx`)**: ย้ายปุ่มตั้งค่า (`ปรับเวลาแวะ`, `ของต้องซื้อจุดนี้`, `โน้ตกลุ่มปักหมุด`, `ข้ามจุดแวะชั่วคราว`) เข้าไปรวมในเมนู `...` มุมขวาบนของการ์ด และจะแสดงป้ายบนตัวการ์ดเฉพาะเมื่อจุดแวะนั้นมีข้อมูลจริงเท่านั้น ลดความรกบนหน้าจอมือถือกว่า 168 ปุ่ม
+   - **ทางออกสถานีที่มีลิฟต์ (`🛗`) & เตือนรถไฟขบวนสุดท้าย (`🚇`) (`smartTimeline.ts`, `ItineraryStopCard.tsx`)**: แสดงหมายเลขทางออกสถานีที่มีลิฟต์สำหรับวันลากกระเป๋าเข้า-ออกโรงแรมหลักทั้ง 4 แห่งของทริป (Kyoto Station Hachijo East Exit, Kyoto-Kawaramachi Exit 3 / Karasuma Exit 12, Shinsaibashi Crysta Nagahori North 4/5, Rinku-Town 2F Walkway) และแจ้งเตือนเวลารถไฟขบวนสุดท้ายสำหรับจุดแวะช่วงค่ำ (`>= 18:30`)
+   - **100% Offline-First Expense Queue (`useOfflineSync.ts`, `src/app/trips/[id]/page.tsx`)**: รองรับการจดค่าใช้จ่ายขณะไม่มีสัญญาณเน็ตหรืออยู่ในรถไฟใต้ดิน โดยบันทึกลงคิวออฟไลน์ (`travel_offline_expense_queue_${tripId}`) พร้อมแสดงรายการในหน้าแอปทันที และซิงก์ขึ้น Supabase อัตโนมัติทันทีที่สัญญาณเน็ตกลับมา
 
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน

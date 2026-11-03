@@ -271,6 +271,88 @@ export function detectStopAmenities(
     .filter(Boolean);
 }
 
+export interface StationElevatorAndLastTrainInfo {
+  elevatorTip?: string;
+  lastTrainTip?: string;
+}
+
+/**
+ * Provides real-world Japan station elevator exit tips (for hotel check-in/out & luggage transfers)
+ * and last-train warnings for evening stops in Osaka, Kyoto, Nara, and Kobe.
+ */
+export function detectStationElevatorAndLastTrain(
+  item: {
+    main_place?: string;
+    location_name?: string;
+    city?: string;
+    time_slot?: string;
+    transport_info?: string;
+    backup_plan?: string;
+  },
+  computedSchedule?: ComputedStopSchedule
+): StationElevatorAndLastTrainInfo {
+  const text = [
+    item.main_place || '',
+    item.location_name || '',
+    item.city || '',
+    item.transport_info || '',
+    item.backup_plan || '',
+  ]
+    .join(' ')
+    .toLowerCase();
+
+  const timeText = (item.time_slot || '').toLowerCase();
+  let elevatorTip: string | undefined;
+  let lastTrainTip: string | undefined;
+
+  const isHotelOrLuggageOrTransfer =
+    /hotel|โรงแรม|ที่พัก|เช็คอิน|เช็กอิน|เช็คเอาท์|เช็กเอาต์|check-in|check in|check-out|check out|กระเป๋า|ย้ายโรงแรม|ย้ายเมือง|haruka|rapi:t|สนามบิน|airport/.test(
+      text
+    );
+
+  if (isHotelOrLuggageOrTransfer) {
+    if (/m's kyoto|ms kyoto|kyoto station|สถานีเกียวโต|haruka/.test(text)) {
+      elevatorTip =
+        'ลิฟต์สถานี Kyoto (ฝั่งโรงแรม The M\'s Kyoto): ออกทาง Hachijo East Exit (八条東口) มีลิฟต์ลงชั้น 1 เดินทางราบ 5 นาทีถึงโรงแรม';
+    } else if (/musse|kawaramachi|คาวาระมาจิ|shijo|ชิโจ|gion-shijo/.test(text)) {
+      elevatorTip =
+        'ลิฟต์สถานี Kyoto-Kawaramachi (Hankyu): ใช้ลิฟต์ใหญ่ที่ทางออก Exit 3 (หน้า Takashimaya/Kotocross) หรือสถานี Karasuma Exit 12 มีลิฟต์ขึ้นระดับถนน';
+    } else if (/quintessa|shinsaibashi|ชินไซบาชิ|nagahoribashi/.test(text)) {
+      elevatorTip =
+        'ลิฟต์สถานี Shinsaibashi (ไปโรงแรม Quintessa): ลงทางเชื่อมใต้ดิน Crysta Nagahori มีลิฟต์ขึ้นระดับถนนที่ทางออก North 4 / North 5 เดินทางราบถึงหน้าโรงแรม';
+    } else if (/odysis|rinku|ริงกุ|kix|kansai airport/.test(text)) {
+      elevatorTip =
+        'ลิฟต์สถานี Rinku-Town (ไปโรงแรม Odysis Suites): ออกประตูตรวจตั๋วชั้น 2 เดินตามทางเชื่อมในร่มเข้าตึก SiS Rinku Tower มีลิฟต์ขึ้นล็อบบี้โดยตรง ไม่ต้องยกกระเป๋าขึ้นลงบันได';
+    } else if (/namba|นัมบะ/.test(text)) {
+      elevatorTip =
+        'ลิฟต์สถานี Namba: โซน Nankai ใช้ลิฟต์โถงกลางชั้น 1F–3F, โซน Metro Midosuji ใช้ลิฟต์ที่ทางออก Exit 15B หรือ Exit 5';
+    }
+  }
+
+  // Detect evening/night stop (after 18:30 or evening dinner/illumination)
+  const isEveningStop =
+    (computedSchedule && !computedSchedule.skipped && computedSchedule.arriveMinutes >= 18 * 60 + 30) ||
+    /(18|19|20|21|22|23)[:.]\d{2}|ค่ำ|มื้อเย็น|ดึก|night|illumination|ไฟประดับ/.test(timeText + ' ' + text);
+
+  if (isEveningStop && !/โรงแรม|เข้าที่พัก|พักผ่อนตามอัธยาศัย|odysis/.test((item.main_place || '').toLowerCase())) {
+    if (/nara|นารา/.test(text)) {
+      lastTrainTip =
+        'ขบวนสุดท้ายจาก Nara กลับ Osaka-Namba (สาย Kintetsu Nara): รอบประมาณ 23:25 น. (แนะนำขึ้นก่อน 22:30 น.)';
+    } else if (/kobe|โกเบ|sannomiya/.test(text)) {
+      lastTrainTip =
+        'ขบวนสุดท้ายจาก Kobe (Sannomiya) กลับ Osaka/Umeda: สาย JR / Hankyu / Hanshin รอบประมาณ 23:40–23:55 น.';
+    } else if (/kyoto|เกียวโต|uji|อุจิ|fushimi|kiyomizu|gion|arashiyama|kawaramachi/.test(text)) {
+      lastTrainTip =
+        'รถไฟขบวนสุดท้ายในเกียวโต (Keihan / Hankyu / Subway): ประมาณ 23:30–23:45 น. (รถบัสเมืองเกียวโตส่วนใหญ่หมด 22:00–22:30 น.)';
+    } else {
+      lastTrainTip =
+        'รถไฟขบวนสุดท้ายกลับ Shinsaibashi (สายสีแดง Osaka Metro Midosuji): รอบสุดท้ายจาก Umeda/Tennoji ประมาณ 23:55–00:05 น.';
+    }
+  }
+
+  return { elevatorTip, lastTrainTip };
+}
+
 // ---------------------------------------------------------------------------
 // Smart Cascade Timeline Calculator (TabiPlan Engine)
 // ---------------------------------------------------------------------------

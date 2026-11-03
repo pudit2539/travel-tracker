@@ -4,6 +4,57 @@
 import { useState, useCallback, useSyncExternalStore } from 'react';
 
 const OFFLINE_CACHE_PREFIX = 'travel_tracker_offline_cache_';
+const OFFLINE_EXPENSE_QUEUE_PREFIX = 'travel_offline_expense_queue_';
+
+export interface OfflineQueuedExpense {
+  localId: string;
+  queuedAt: string;
+  payload: Record<string, any>;
+}
+
+export function getOfflineExpenseQueue(tripId?: string): OfflineQueuedExpense[] {
+  if (!tripId || typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`${OFFLINE_EXPENSE_QUEUE_PREFIX}${tripId}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function enqueueOfflineExpense(
+  tripId: string,
+  payload: Record<string, any>
+): OfflineQueuedExpense {
+  const item: OfflineQueuedExpense = {
+    localId: `offline-exp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    queuedAt: new Date().toISOString(),
+    payload,
+  };
+  if (typeof window !== 'undefined' && tripId) {
+    try {
+      const current = getOfflineExpenseQueue(tripId);
+      const next = [...current, item];
+      localStorage.setItem(`${OFFLINE_EXPENSE_QUEUE_PREFIX}${tripId}`, JSON.stringify(next));
+    } catch (e) {
+      console.error('Failed to enqueue offline expense', e);
+    }
+  }
+  return item;
+}
+
+export function removeOfflineQueuedExpense(tripId: string, localId: string) {
+  if (!tripId || typeof window === 'undefined') return;
+  try {
+    const current = getOfflineExpenseQueue(tripId);
+    const next = current.filter((item) => item.localId !== localId);
+    localStorage.setItem(`${OFFLINE_EXPENSE_QUEUE_PREFIX}${tripId}`, JSON.stringify(next));
+  } catch (e) {
+    console.error('Failed to remove offline queued expense', e);
+  }
+}
 
 function subscribeOnline(callback: () => void) {
   window.addEventListener('online', callback);

@@ -15,7 +15,12 @@ import { TripPlanTab } from '@/components/trip-tabs/TripPlanTab';
 import { TripExpensesTab } from '@/components/trip-tabs/TripExpensesTab';
 import { TripAnalyticsTab } from '@/components/trip-tabs/TripAnalyticsTab';
 import { TripMembersTab } from '@/components/trip-tabs/TripMembersTab';
-import { useOfflineSync } from '@/hooks/useOfflineSync';
+import {
+  useOfflineSync,
+  getOfflineExpenseQueue,
+  enqueueOfflineExpense,
+  removeOfflineQueuedExpense,
+} from '@/hooks/useOfflineSync';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
@@ -588,6 +593,55 @@ export default function TripDetailPage() {
   useEffect(() => {
     fetchTripData();
   }, [tripId]);
+
+  // 100% Offline-First Expense Queue Auto-Flush when internet reconnects
+  useEffect(() => {
+    if (!isOnline || !tripId) return;
+    const queued = getOfflineExpenseQueue(tripId);
+    if (queued.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      let syncedCount = 0;
+      for (const item of queued) {
+        if (cancelled) break;
+        try {
+          const row = item.payload;
+          const { data: insertedRows, error } = await supabase
+            .from('expenses')
+            .insert([row as any])
+            .select();
+          if (error) {
+            const { payment_method, ...fallbackRow } = row;
+            const { data: fbRows, error: err2 } = await supabase
+              .from('expenses')
+              .insert([fallbackRow as any])
+              .select();
+            if (err2) throw err2;
+            if (fbRows && fbRows[0]) {
+              setExpensePaymentMethod(tripId, fbRows[0].id, row.payment_method || 'cash');
+            }
+          } else if (insertedRows && insertedRows[0]) {
+            setExpensePaymentMethod(tripId, insertedRows[0].id, row.payment_method || 'cash');
+          }
+          removeOfflineQueuedExpense(tripId, item.localId);
+          syncedCount += 1;
+        } catch (err) {
+          console.warn('Offline expense sync deferred:', err);
+          break;
+        }
+      }
+      if (syncedCount > 0 && !cancelled) {
+        markLocalAction();
+        fetchTripData();
+        toast.success(`☁️ ซิงก์ค่าใช้จ่ายที่บันทึกไว้ตอนออฟไลน์ (${syncedCount} รายการ) ขึ้นระบบแล้ว!`);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOnline, tripId, fetchTripData, markLocalAction]);
 
   // Supabase Realtime Subscription: ฟังการเปลี่ยนแปลงแบบ Real-time (เมื่อสมาชิกใหม่เข้าร่วม, มีการปรับสิทธิ์, หรืออัปเดตข้อมูลทริป)
   useEffect(() => {
@@ -1310,18 +1364,44 @@ export default function TripDetailPage() {
           payment_method: scannedData.payment_method || 'cash',
         };
 
-        const { data: insertedRows, error } = await supabase.from('expenses').insert([rowToInsert]).select();
-        if (error) {
-          const { payment_method, ...fallbackRow } = rowToInsert;
-          const { data: fbRows, error: err2 } = await supabase.from('expenses').insert([fallbackRow]).select();
-          if (err2) throw err2;
-          if (fbRows && fbRows[0]) {
-            setExpensePaymentMethod(tripId, fbRows[0].id, scannedData.payment_method || 'cash');
-            primaryExpenseId = fbRows[0].id;
+        if (!isOnline) {
+          const queuedItem = enqueueOfflineExpense(tripId, rowToInsert);
+          primaryExpenseId = queuedItem.localId;
+          setExpensePaymentMethod(tripId, queuedItem.localId, scannedData.payment_method || 'cash');
+          setExpenses((prev) => [
+            {
+              id: queuedItem.localId,
+              ...rowToInsert,
+              created_at: queuedItem.queuedAt,
+            } as any,
+            ...prev,
+          ]);
+        } else {
+          const { data: insertedRows, error } = await supabase.from('expenses').insert([rowToInsert]).select();
+          if (error) {
+            const { payment_method, ...fallbackRow } = rowToInsert;
+            const { data: fbRows, error: err2 } = await supabase.from('expenses').insert([fallbackRow]).select();
+            if (err2) {
+              // If network failed mid-request, fallback to offline queue seamlessly
+              const queuedItem = enqueueOfflineExpense(tripId, rowToInsert);
+              primaryExpenseId = queuedItem.localId;
+              setExpensePaymentMethod(tripId, queuedItem.localId, scannedData.payment_method || 'cash');
+              setExpenses((prev) => [
+                {
+                  id: queuedItem.localId,
+                  ...rowToInsert,
+                  created_at: queuedItem.queuedAt,
+                } as any,
+                ...prev,
+              ]);
+            } else if (fbRows && fbRows[0]) {
+              setExpensePaymentMethod(tripId, fbRows[0].id, scannedData.payment_method || 'cash');
+              primaryExpenseId = fbRows[0].id;
+            }
+          } else if (insertedRows && insertedRows[0]) {
+            setExpensePaymentMethod(tripId, insertedRows[0].id, scannedData.payment_method || 'cash');
+            primaryExpenseId = insertedRows[0].id;
           }
-        } else if (insertedRows && insertedRows[0]) {
-          setExpensePaymentMethod(tripId, insertedRows[0].id, scannedData.payment_method || 'cash');
-          primaryExpenseId = insertedRows[0].id;
         }
       }
 
@@ -1373,8 +1453,12 @@ export default function TripDetailPage() {
         payment_method: 'cash',
         items: [] as ItemizedDish[],
       });
-      fetchTripData();
-      toast.success('บันทึกค่าใช้จ่ายใหม่เรียบร้อยแล้ว! 🎉');
+      if (primaryExpenseId?.startsWith('offline-exp-')) {
+        toast.success('💾 บันทึกค่าใช้จ่ายลงเครื่องแบบออฟไลน์แล้ว! จะซิงก์ขึ้นคลาวด์อัตโนมัติเมื่อมีสัญญาณเน็ต');
+      } else {
+        fetchTripData();
+        toast.success('บันทึกค่าใช้จ่ายใหม่เรียบร้อยแล้ว! 🎉');
+      }
     } catch (err: any) {
       toast.error('เกิดข้อผิดพลาดในการบันทึกค่าใช้จ่าย: ' + (err?.message || err));
     } finally {

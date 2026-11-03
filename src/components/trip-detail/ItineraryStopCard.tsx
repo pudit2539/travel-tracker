@@ -22,6 +22,7 @@ import {
   updateStopMeta,
   subscribeStopMeta,
   detectStopAmenities,
+  detectStationElevatorAndLastTrain,
 } from '@/lib/smartTimeline';
 import {
   ShoppingBagItem,
@@ -307,6 +308,18 @@ function ItineraryStopCardComponent({
     [item, activeStopMeta.amenityTags]
   );
 
+  const { elevatorTip, lastTrainTip } = React.useMemo(
+    () => detectStationElevatorAndLastTrain(item, computedSchedule),
+    [item, computedSchedule]
+  );
+
+  const hasCustomTime = Boolean(
+    activeStopMeta.durationMin !== undefined ||
+    activeStopMeta.fixedStartTime ||
+    activeStopMeta.openTime ||
+    activeStopMeta.closeTime
+  );
+
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = React.useMemo(() => buildStopUrls(item), [item]);
@@ -470,132 +483,178 @@ function ItineraryStopCardComponent({
                 <span>{visited ? 'แวะแล้ว' : 'เช็กอิน'}</span>
               </button>
 
-              {/* Decluttered Admin Menu Button */}
-              {canEditPlan && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAdminMenu((v) => !v);
-                      setShowMoveDayList(false);
-                    }}
-                    className="p-1.5 rounded-xl border border-slate-200/80 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-colors"
-                    title="จัดการกิจกรรม (แก้ไข / ข้ามจุดแวะ / ย้ายวัน / ลบ)"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
+              {/* Decluttered Stop Action & Admin Menu Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAdminMenu((v) => !v);
+                    setShowMoveDayList(false);
+                  }}
+                  className="p-1.5 rounded-xl border border-slate-200/80 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-colors"
+                  title="ตัวเลือกเพิ่มเติม (ปรับเวลาแวะ / ของต้องซื้อ / โน้ตกลุ่ม / จัดการจุดแวะ)"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
 
-                  {showAdminMenu && (
-                    <div className="absolute right-0 top-9 z-30 w-52 rounded-2xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAdminMenu(false);
-                          handleToggleSkip();
-                        }}
-                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/50 flex items-center gap-2 cursor-pointer"
-                      >
-                        <SkipForward className="h-3.5 w-3.5 text-amber-500" />
-                        <span>{isSkipped ? 'คืนค่าเข้าตารางเที่ยว' : 'ข้ามจุดแวะนี้ชั่วคราว'}</span>
-                      </button>
+                {showAdminMenu && (
+                  <div className="absolute right-0 top-9 z-30 w-56 rounded-2xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAdminMenu(false);
+                        setShowTimeTuner((v) => !v);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                      <span>ปรับเวลาแวะ / เวลาเปิด-ปิดร้าน</span>
+                    </button>
 
-                      {availableDays.length > 1 && onMoveStopToDay && (
-                        <div>
-                          <button
-                            type="button"
-                            onClick={() => setShowMoveDayList((v) => !v)}
-                            className="w-full px-3 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center justify-between gap-2 cursor-pointer"
-                          >
-                            <span className="flex items-center gap-2">
-                              <Calendar className="h-3.5 w-3.5 text-indigo-500" />
-                              <span>ย้ายไปวันอื่น...</span>
-                            </span>
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          </button>
-                          {showMoveDayList && (
-                            <div className="pl-3 pr-1 py-1 space-y-0.5 max-h-40 overflow-y-auto border-l-2 border-indigo-200 dark:border-indigo-800 ml-3 my-1">
-                              {availableDays
-                                .filter((d) => d !== item.date_label)
-                                .map((dayLabel) => (
-                                  <button
-                                    key={dayLabel}
-                                    type="button"
-                                    onClick={() => {
-                                      setShowAdminMenu(false);
-                                      setShowMoveDayList(false);
-                                      onMoveStopToDay(item, dayLabel);
-                                    }}
-                                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 truncate cursor-pointer"
-                                  >
-                                    ➔ {dayLabel}
-                                  </button>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAdminMenu(false);
+                        setShowStopShopping((v) => !v);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl text-xs font-bold text-fuchsia-700 dark:text-fuchsia-300 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <ShoppingBag className="h-3.5 w-3.5 text-fuchsia-500" />
+                      <span>
+                        ของต้องซื้อจุดนี้
+                        {activeShoppingItems.length > 0
+                          ? ` (${boughtShopCount}/${activeShoppingItems.length})`
+                          : ''}
+                      </span>
+                    </button>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAdminMenu(false);
-                          setShowCustomPhotoModal(true);
-                        }}
-                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 flex items-center gap-2 cursor-pointer"
-                      >
-                        <Camera className="h-3.5 w-3.5 text-emerald-500" />
-                        <span>เปลี่ยนรูปสถานที่</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAdminMenu(false);
-                          onOpenEditActivity(item);
-                        }}
-                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 flex items-center gap-2 cursor-pointer"
-                      >
-                        <Edit3 className="h-3.5 w-3.5 text-blue-500" />
-                        <span>แก้ไขรายละเอียด</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAdminMenu(false);
-                          onMoveActivity(idx, 'up');
-                        }}
-                        disabled={idx === 0 || reordering}
-                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
-                      >
-                        <ArrowUp className="h-3.5 w-3.5" />
-                        <span>เลื่อนขึ้น</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAdminMenu(false);
-                          onMoveActivity(idx, 'down');
-                        }}
-                        disabled={idx === totalItems - 1 || reordering}
-                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
-                      >
-                        <ArrowDown className="h-3.5 w-3.5" />
-                        <span>เลื่อนลง</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAdminMenu(false);
-                          onDeleteActivity(item.id);
-                        }}
-                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2 cursor-pointer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        <span>ลบกิจกรรมนี้</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAdminMenu(false);
+                        setShowStopNotes((v) => !v);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 text-emerald-500" />
+                      <span>
+                        โน้ตกลุ่มปักหมุด{pinnedNotesCount > 0 ? ` (${pinnedNotesCount})` : ''}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAdminMenu(false);
+                        handleToggleSkip();
+                      }}
+                      className="w-full px-3 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <SkipForward className="h-3.5 w-3.5 text-amber-500" />
+                      <span>{isSkipped ? 'คืนค่าเข้าตารางเที่ยว' : 'ข้ามจุดแวะนี้ชั่วคราว'}</span>
+                    </button>
+
+                    {canEditPlan && (
+                      <>
+                        <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                        {availableDays.length > 1 && onMoveStopToDay && (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setShowMoveDayList((v) => !v)}
+                              className="w-full px-3 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center justify-between gap-2 cursor-pointer"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                                <span>ย้ายไปวันอื่น...</span>
+                              </span>
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            </button>
+                            {showMoveDayList && (
+                              <div className="pl-3 pr-1 py-1 space-y-0.5 max-h-40 overflow-y-auto border-l-2 border-indigo-200 dark:border-indigo-800 ml-3 my-1">
+                                {availableDays
+                                  .filter((d) => d !== item.date_label)
+                                  .map((dayLabel) => (
+                                    <button
+                                      key={dayLabel}
+                                      type="button"
+                                      onClick={() => {
+                                        setShowAdminMenu(false);
+                                        setShowMoveDayList(false);
+                                        onMoveStopToDay(item, dayLabel);
+                                      }}
+                                      className="w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 truncate cursor-pointer"
+                                    >
+                                      ➔ {dayLabel}
+                                    </button>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAdminMenu(false);
+                            setShowCustomPhotoModal(true);
+                          }}
+                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 flex items-center gap-2 cursor-pointer"
+                        >
+                          <Camera className="h-3.5 w-3.5 text-emerald-500" />
+                          <span>เปลี่ยนรูปสถานที่</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAdminMenu(false);
+                            onOpenEditActivity(item);
+                          }}
+                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 flex items-center gap-2 cursor-pointer"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 text-blue-500" />
+                          <span>แก้ไขรายละเอียด</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAdminMenu(false);
+                            onMoveActivity(idx, 'up');
+                          }}
+                          disabled={idx === 0 || reordering}
+                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                          <span>เลื่อนขึ้น</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAdminMenu(false);
+                            onMoveActivity(idx, 'down');
+                          }}
+                          disabled={idx === totalItems - 1 || reordering}
+                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                          <span>เลื่อนลง</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAdminMenu(false);
+                            onDeleteActivity(item.id);
+                          }}
+                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2 cursor-pointer"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>ลบกิจกรรมนี้</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -782,86 +841,107 @@ function ItineraryStopCardComponent({
             </div>
           )}
 
-          {/* TabiPlan Amenity & Weather Readiness Tags + Quick Smart Toolbar */}
-          <div className="pt-1.5 border-t border-slate-100 dark:border-[#22252e] space-y-2.5 text-left">
-            {amenities.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {amenities.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${tag.colorClass}`}
-                  >
-                    <span>{tag.emoji}</span>
-                    <span>{tag.label}</span>
-                  </span>
-                ))}
-              </div>
-            )}
+          {/* TabiPlan Amenity, Elevator Exit, Last Train & Active Smart Pills (Decluttered: only renders when active) */}
+          {(amenities.length > 0 ||
+            elevatorTip ||
+            lastTrainTip ||
+            hasCustomTime ||
+            isSkipped ||
+            activeShoppingItems.length > 0 ||
+            pinnedNotesCount > 0 ||
+            showTimeTuner ||
+            showStopShopping ||
+            showStopNotes) && (
+            <div className="pt-2 border-t border-slate-100 dark:border-[#22252e] space-y-2 text-left">
+              {elevatorTip && (
+                <div className="p-2.5 rounded-xl bg-teal-50/90 dark:bg-teal-950/35 border border-teal-200/80 dark:border-teal-800/60 text-[11px] font-bold text-teal-800 dark:text-teal-200 leading-relaxed">
+                  {elevatorTip}
+                </div>
+              )}
 
-            {/* Quick Smart Action Pills (Time Tuner / Skip / Stop Shopping / Group Notes) */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                type="button"
-                onClick={() => setShowTimeTuner((v) => !v)}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                  showTimeTuner
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-indigo-400'
-                }`}
-              >
-                <Clock className="h-3 w-3" />
-                <span>
-                  ปรับเวลาแวะ ({activeStopMeta.durationMin ?? computedSchedule?.durationMin ?? 90}น.)
-                </span>
-              </button>
+              {lastTrainTip && (
+                <div className="p-2.5 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/60 text-[11px] font-bold text-indigo-800 dark:text-indigo-200 leading-relaxed">
+                  {lastTrainTip}
+                </div>
+              )}
 
-              <button
-                type="button"
-                onClick={handleToggleSkip}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                  isSkipped
-                    ? 'bg-amber-500 text-white border-amber-500'
-                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-amber-400'
-                }`}
-                title="ข้ามจุดแวะนี้ชั่วคราวโดยไม่ต้องลบ ระบบจะคำนวณเวลาจุดถัดไปใหม่ทันที"
-              >
-                <SkipForward className="h-3 w-3" />
-                <span>{isSkipped ? 'ยกเลิกการข้าม' : 'ข้ามชั่วคราว'}</span>
-              </button>
+              {amenities.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {amenities.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${tag.colorClass}`}
+                    >
+                      <span>{tag.emoji}</span>
+                      <span>{tag.label}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
 
-              <button
-                type="button"
-                onClick={() => setShowStopShopping((v) => !v)}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                  showStopShopping || activeShoppingItems.length > 0
-                    ? 'bg-fuchsia-50 dark:bg-fuchsia-950/50 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800/60'
-                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-fuchsia-400'
-                }`}
-              >
-                <ShoppingBag className="h-3 w-3" />
-                <span>
-                  ของต้องซื้อจุดนี้
-                  {activeShoppingItems.length > 0
-                    ? ` (${boughtShopCount}/${activeShoppingItems.length})`
-                    : ''}
-                </span>
-              </button>
+              {/* Active-only Smart Action Pills (Zero Clutter on normal cards; all options remain in '...' menu) */}
+              {(hasCustomTime ||
+                isSkipped ||
+                activeShoppingItems.length > 0 ||
+                pinnedNotesCount > 0 ||
+                showTimeTuner ||
+                showStopShopping ||
+                showStopNotes) && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(hasCustomTime || showTimeTuner) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTimeTuner((v) => !v)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                        showTimeTuner
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/60 hover:border-indigo-400'
+                      }`}
+                    >
+                      <Clock className="h-3 w-3" />
+                      <span>
+                        เวลาแวะ ({activeStopMeta.durationMin ?? computedSchedule?.durationMin ?? 90}น.)
+                      </span>
+                    </button>
+                  )}
 
-              <button
-                type="button"
-                onClick={() => setShowStopNotes((v) => !v)}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                  showStopNotes || pinnedNotesCount > 0
-                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
-                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-emerald-400'
-                }`}
-              >
-                <MessageSquare className="h-3 w-3" />
-                <span>
-                  โน้ตกลุ่ม{pinnedNotesCount > 0 ? ` (${pinnedNotesCount})` : ''}
-                </span>
-              </button>
-            </div>
+                  {isSkipped && (
+                    <button
+                      type="button"
+                      onClick={handleToggleSkip}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer bg-amber-500 text-white border-amber-500 hover:bg-amber-600"
+                      title="คืนค่าจุดแวะนี้กลับเข้าตารางเวลา"
+                    >
+                      <SkipForward className="h-3 w-3" />
+                      <span>ยกเลิกการข้าม</span>
+                    </button>
+                  )}
+
+                  {(activeShoppingItems.length > 0 || showStopShopping) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowStopShopping((v) => !v)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer bg-fuchsia-50 dark:bg-fuchsia-950/50 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800/60 hover:border-fuchsia-400"
+                    >
+                      <ShoppingBag className="h-3 w-3" />
+                      <span>
+                        ของต้องซื้อจุดนี้ ({boughtShopCount}/{activeShoppingItems.length})
+                      </span>
+                    </button>
+                  )}
+
+                  {(pinnedNotesCount > 0 || showStopNotes) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowStopNotes((v) => !v)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 hover:border-emerald-400"
+                    >
+                      <MessageSquare className="h-3 w-3" />
+                      <span>โน้ตกลุ่ม ({pinnedNotesCount})</span>
+                    </button>
+                  )}
+                </div>
+              )}
 
             {/* 1. Smart Cascade Time Tuner Drawer */}
             {showTimeTuner && (
@@ -1132,6 +1212,7 @@ function ItineraryStopCardComponent({
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Clean 2-Button Action Footer (Navigate Maps | Show to Staff Card) */}

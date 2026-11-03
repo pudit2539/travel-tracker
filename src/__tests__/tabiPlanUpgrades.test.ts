@@ -3,9 +3,15 @@ import {
   calculateDayCascadeSchedule,
   buildChunkedDayRoutes,
   detectStopAmenities,
+  detectStationElevatorAndLastTrain,
   getStopMeta,
   updateStopMeta,
 } from '@/lib/smartTimeline';
+import {
+  getOfflineExpenseQueue,
+  enqueueOfflineExpense,
+  removeOfflineQueuedExpense,
+} from '@/hooks/useOfflineSync';
 import {
   getShoppingBag,
   addShoppingBagItem,
@@ -150,5 +156,36 @@ describe('TabiPlan Upgrades — Smart Timeline & Shopping Bag', () => {
     const meta = getStopMeta(tripId, 'stop-99');
     expect(meta.durationMin).toBe(120);
     expect(meta.goers).toEqual(['Pudit', 'Friend']);
+  });
+
+  it('detects station elevator exits for trip hotels and last train alerts for evening stops', () => {
+    const hotelCheckin = detectStationElevatorAndLastTrain({
+      main_place: 'Quintessa Hotel Osaka Shinsaibashi Comic & Books',
+      city: 'Osaka',
+      time_slot: '15:00 - 16:00',
+    });
+    expect(hotelCheckin.elevatorTip).toContain('Crysta Nagahori');
+
+    const eveningNara = detectStationElevatorAndLastTrain({
+      main_place: 'Nara Park Illumination',
+      city: 'Nara',
+      time_slot: '19:30 - 21:00',
+    });
+    expect(eveningNara.lastTrainTip).toContain('Kintetsu Nara');
+  });
+
+  it('queues and removes offline expenses cleanly', () => {
+    const tripId = 'trip-offline-test';
+    const item = enqueueOfflineExpense(tripId, {
+      trip_id: tripId,
+      title: 'Ichiran Ramen',
+      amount: 1200,
+      currency: 'JPY',
+    });
+    expect(item.localId).toContain('offline-exp-');
+    expect(getOfflineExpenseQueue(tripId).length).toBe(1);
+
+    removeOfflineQueuedExpense(tripId, item.localId);
+    expect(getOfflineExpenseQueue(tripId).length).toBe(0);
   });
 });
