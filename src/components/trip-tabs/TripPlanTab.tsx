@@ -1,19 +1,20 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useDeferredValue } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
   BookmarkCheck, List, Building2, Utensils, Dices, QrCode,
   LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles, ExternalLink,
-  Users, UserCheck, Clock, Train, ArrowUpToLine, ArrowDownToLine, ShoppingBag
+  Users, UserCheck, Clock, Train, ArrowUpToLine, ArrowDownToLine, ShoppingBag,
+  Search, X, Shield, Calendar
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import LiveTripCard from '@/components/LiveTripCard';
 import { getAccommodations, getGoogleMapsUrl } from '@/lib/accommodations';
-import WeatherWidget from '@/components/WeatherWidget';
-import RouteVisualizer from '@/components/RouteVisualizer';
 
+const WeatherWidget = dynamic(() => import('@/components/WeatherWidget'), { ssr: false });
+const RouteVisualizer = dynamic(() => import('@/components/RouteVisualizer'), { ssr: false });
 const WishlistDrawer = dynamic(() => import('@/components/WishlistDrawer'), { ssr: false });
 const InteractiveTripMap = dynamic(() => import('@/components/InteractiveTripMap'), { ssr: false });
 import { 
@@ -147,6 +148,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
   const [showScrollJump, setShowScrollJump] = useState(false);
+  const [planSearchQuery, setPlanSearchQuery] = useState('');
+  const deferredPlanSearch = useDeferredValue(planSearchQuery);
 
   const tripId = trip?.id || '';
   const [stopMetaMap, setStopMetaMap] = useState<Record<string, StopSmartMeta>>(() =>
@@ -231,16 +234,56 @@ export const TripPlanTab = React.memo(function TripPlanTab({
     [setExpandedPlanB]
   );
 
-  // Filter stops by Split Group View ('all' vs 'mine')
+  // Filter stops by Split Group View + Quick Search Query
   const displayedItinerary = useMemo(() => {
-    if (groupViewFilter === 'all') return filteredItinerary;
-    return filteredItinerary.filter((item) => {
-      const key = getStopKey(item);
-      const meta = stopMetaMap[key] || stopMetaMap[(item.main_place || '').trim()];
-      if (!meta?.goers || meta.goers.length === 0) return true; // Everyone goes
-      return meta.goers.includes(currentUserName);
+    const base =
+      groupViewFilter === 'all'
+        ? filteredItinerary
+        : filteredItinerary.filter((item) => {
+            const key = getStopKey(item);
+            const meta = stopMetaMap[key] || stopMetaMap[(item.main_place || '').trim()];
+            if (!meta?.goers || meta.goers.length === 0) return true;
+            return meta.goers.includes(currentUserName);
+          });
+
+    const q = deferredPlanSearch.trim().toLowerCase();
+    if (!q) return base;
+    return base.filter((item) => {
+      const hay = [
+        item.main_place || '',
+        item.city || '',
+        item.date_label || '',
+        item.time_slot || '',
+        item.food_recommendation || '',
+        item.backup_plan || '',
+        item.transport_info || '',
+      ]
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
     });
-  }, [filteredItinerary, groupViewFilter, stopMetaMap, currentUserName]);
+  }, [filteredItinerary, groupViewFilter, stopMetaMap, currentUserName, deferredPlanSearch]);
+
+  const stopsWithPlanB = useMemo(
+    () => displayedItinerary.filter((it) => it.backup_plan && it.backup_plan !== '-'),
+    [displayedItinerary]
+  );
+
+  const allPlanBExpanded = useMemo(
+    () => stopsWithPlanB.length > 0 && stopsWithPlanB.every((it) => Boolean(expandedPlanB[it.id])),
+    [stopsWithPlanB, expandedPlanB]
+  );
+
+  const handleToggleAllPlanB = React.useCallback(() => {
+    const nextOpen = !allPlanBExpanded;
+    setExpandedPlanB((prev) => {
+      const next = { ...prev };
+      for (const it of stopsWithPlanB) {
+        if (it.id) next[it.id] = nextOpen;
+      }
+      return next;
+    });
+  }, [allPlanBExpanded, stopsWithPlanB, setExpandedPlanB]);
 
   // Pre-compute shopping items per stop once per render so React.memo(ItineraryStopCard) gets stable array references
   const stopShoppingByKey = useMemo(() => {
@@ -253,10 +296,13 @@ export const TripPlanTab = React.memo(function TripPlanTab({
     return map;
   }, [displayedItinerary, shoppingBag]);
 
-  // TabiPlan Smart Cascade Schedule for displayed stops
+  // TabiPlan Smart Cascade Schedule for displayed stops (Only calculated for a single day so 'all' 42 stops don't merge into 1 fake day)
   const dayCascadeSchedule = useMemo(
-    () => calculateDayCascadeSchedule(displayedItinerary, stopMetaMap),
-    [displayedItinerary, stopMetaMap]
+    () =>
+      selectedDayFilter === 'all'
+        ? calculateDayCascadeSchedule([], stopMetaMap)
+        : calculateDayCascadeSchedule(displayedItinerary, stopMetaMap),
+    [displayedItinerary, stopMetaMap, selectedDayFilter]
   );
 
   // Sub-layout state for itinerary ('card' | 'thumbnail' | 'compact' | 'map')
@@ -452,18 +498,6 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             <button
               type="button"
               onClick={() => {
-                setWishlistInitialTab('wishlist');
-                setShowWishlistDrawer(true);
-              }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 hover:border-emerald-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
-            >
-              <BookmarkCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-              <span>ที่เที่ยวแนะนำ</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
                 setWishlistInitialTab('shopping');
                 setShowWishlistDrawer(true);
               }}
@@ -618,7 +652,10 @@ export const TripPlanTab = React.memo(function TripPlanTab({
       />
 
       {/* 4. Unified Itinerary View Switcher + Day Filter Bar */}
-      <div className="p-3 sm:p-3.5 rounded-3xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs space-y-2.5">
+      <div
+        id="itinerary-day-bar"
+        className="p-3 sm:p-3.5 rounded-3xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs space-y-2.5 scroll-mt-20"
+      >
         {/* Top Row: 4-Mode View Switcher + File Menu & Add Button */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* 4-Mode Segmented View Switcher */}
@@ -771,6 +808,49 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
         </div>
 
+        {/* Quick Search Input + Expand/Collapse All Backup Plans */}
+        <div className="flex items-center gap-2 pt-0.5">
+          <div className="relative flex-1 min-w-0">
+            <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={planSearchQuery}
+              onChange={(e) => setPlanSearchQuery(e.target.value)}
+              placeholder="ค้นหาสถานที่, เมือง, ร้านอาหาร, แผนสำรอง..."
+              className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] text-xs font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+            {planSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setPlanSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                title="ล้างคำค้นหา"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {stopsWithPlanB.length > 0 && displayLayout === 'card' && (
+            <button
+              type="button"
+              onClick={handleToggleAllPlanB}
+              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold border shrink-0 transition-all cursor-pointer active:scale-95 ${
+                allPlanBExpanded
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                  : 'bg-slate-50 dark:bg-[#121316] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-amber-400'
+              }`}
+              title="เปิดหรือย่อแผนสำรองและร้านสำรองของทุกการ์ดพร้อมกัน"
+            >
+              <Shield className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <span className="hidden sm:inline">
+                {allPlanBExpanded ? 'ย่อแผนสำรองทั้งหมด' : 'เปิดแผนสำรองทั้งหมด'}
+              </span>
+              <span className="sm:hidden">{allPlanBExpanded ? 'ย่อสำรอง' : 'แผนสำรอง'}</span>
+            </button>
+          )}
+        </div>
+
         {/* Bottom Row: Swipeable Day Filter Pills */}
         {availableDays.length > 1 && (
           <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pt-1 pb-0.5">
@@ -834,8 +914,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
       {/* 5. Main Itinerary Content Area (4 View Modes with Accessibility Focus Target) */}
       <div id="itinerary-view-container" tabIndex={-1} className="outline-none">
-        {/* 4.5 TabiPlan Smart Cascade Summary & 5-Stop Chunked Route Deep Links */}
-        {displayedItinerary.length > 0 && (
+        {/* 4.5 TabiPlan Smart Cascade Summary (Shown when a specific day is selected) */}
+        {displayedItinerary.length > 0 && selectedDayFilter !== 'all' && (
           <div className="mb-3.5 p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs space-y-3">
             {/* Top Row: Smart Cascade Schedule Summary Pills */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-[#232630]">
@@ -1003,13 +1083,46 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           /* Detailed Card Mode */
           <div className="space-y-3">
             {displayedItinerary.map((item, idx) => {
+              const prevItem = idx > 0 ? displayedItinerary[idx - 1] : null;
               const nextItem = displayedItinerary[idx + 1];
+              const isNewDayGroup =
+                selectedDayFilter === 'all' &&
+                (!prevItem || prevItem.date_label !== item.date_label);
+              const dayNumber = availableDays.indexOf(item.date_label) + 1;
+              const dayStopsCount = isNewDayGroup
+                ? displayedItinerary.filter((d) => d.date_label === item.date_label).length
+                : 0;
               const stopKey = getStopKey(item);
               const stopMeta = stopMetaMap[stopKey] || stopMetaMap[(item.main_place || '').trim()];
               const computedSchedule = dayCascadeSchedule.byStopKey[stopKey];
               const stopShopping = stopShoppingByKey[stopKey] || EMPTY_SHOPPING_ITEMS;
               return (
                 <React.Fragment key={item.id || idx}>
+                  {isNewDayGroup && item.date_label && (
+                    <div className="pt-2 first:pt-0">
+                      <div className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-blue-600/10 via-indigo-500/5 to-transparent dark:from-blue-500/15 dark:via-indigo-500/10 border border-blue-200/70 dark:border-blue-800/40 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-blue-600 text-white text-[11px] font-black shrink-0">
+                            {dayNumber > 0 ? `Day ${dayNumber}` : 'วันเดินทาง'}
+                          </span>
+                          <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                            {item.date_label}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                            ({dayStopsCount} จุดแวะ)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectDay(item.date_label)}
+                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-0.5 shrink-0 cursor-pointer"
+                        >
+                          <span>ดูเฉพาะวันนี้</span>
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <ItineraryStopCard
                     item={item}
                     idx={idx}
@@ -1047,9 +1160,21 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         )}
       </div>
 
-      {/* TabiPlan Floating Scroll Jump Buttons (บนสุด / ล่างสุด) */}
+      {/* TabiPlan Floating Scroll Jump Buttons (เลือกวัน / บนสุด / ล่างสุด) */}
       {showScrollJump && (
         <div className="fixed right-3 sm:right-5 bottom-24 z-30 flex flex-col gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('itinerary-day-bar');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              else window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="w-9 h-9 rounded-full bg-blue-600 text-white shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all cursor-pointer"
+            title="เลื่อนไปแถบเลือกวัน & ค้นหา"
+          >
+            <Calendar className="h-4 w-4" />
+          </button>
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

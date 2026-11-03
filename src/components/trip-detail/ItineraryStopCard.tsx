@@ -354,6 +354,11 @@ function ItineraryStopCardComponent({
   return (
     <>
       <div
+        style={
+          idx > 2 && !showAdminMenu
+            ? { contentVisibility: 'auto', containIntrinsicSize: '0 260px' }
+            : undefined
+        }
         className={`group rounded-3xl border transition-all duration-300 relative overflow-hidden card-elevation ${
           isSkipped
             ? 'border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-[#14161b]/70 opacity-65'

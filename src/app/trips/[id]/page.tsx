@@ -6,15 +6,24 @@ import { createPortal } from 'react-dom';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { parseTripExcel } from '@/lib/excelParser';
 import { useTheme } from '@/components/ThemeProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import NotificationBell from '@/components/NotificationBell';
 import { TripPlanTab } from '@/components/trip-tabs/TripPlanTab';
-import { TripExpensesTab } from '@/components/trip-tabs/TripExpensesTab';
-import { TripAnalyticsTab } from '@/components/trip-tabs/TripAnalyticsTab';
-import { TripMembersTab } from '@/components/trip-tabs/TripMembersTab';
+
+const TripExpensesTab = dynamic(
+  () => import('@/components/trip-tabs/TripExpensesTab').then((m) => m.TripExpensesTab),
+  { ssr: false }
+);
+const TripAnalyticsTab = dynamic(
+  () => import('@/components/trip-tabs/TripAnalyticsTab').then((m) => m.TripAnalyticsTab),
+  { ssr: false }
+);
+const TripMembersTab = dynamic(
+  () => import('@/components/trip-tabs/TripMembersTab').then((m) => m.TripMembersTab),
+  { ssr: false }
+);
 import {
   useOfflineSync,
   getOfflineExpenseQueue,
@@ -54,7 +63,6 @@ import { getTripPaymentMethods, setExpensePaymentMethod, PaymentMethod } from '@
 import { syncExpenseToAccommodation } from '@/lib/accommodations';
 import { syncExpenseToFlight } from '@/lib/flights';
 import { calculateSettlement } from '@/lib/settlement';
-import { exportExpensesToExcel as runExportExpensesToExcel } from '@/lib/exportExpensesExcel';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
 import { hydrateCustomPlacePhotosFromMap } from '@/lib/placeThumbnails';
@@ -100,7 +108,6 @@ import {
   LogOut, ChevronRight, Eye, ShieldCheck, HardDriveDownload, Receipt,
   Luggage, Coins, Map as MapIcon, List, Compass
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 
 export default function TripDetailPage() {
   const params = useParams();
@@ -135,7 +142,7 @@ export default function TripDetailPage() {
   const [reordering, setReordering] = useState(false);
   const [fxRate, setFxRate] = useState<number>(0.235);
   const [currencyView, setCurrencyView] = useState<'foreign' | 'thb'>('foreign');
-  const [showWeatherSection, setShowWeatherSection] = useState(true);
+  const [showWeatherSection, setShowWeatherSection] = useState(false);
 
   // Track timestamps of self-initiated user actions to prevent duplicate/spammy Realtime toasts
   const lastLocalActionTime = useRef<number>(0);
@@ -831,7 +838,10 @@ export default function TripDetailPage() {
     if (!file) return;
 
     try {
-      const buffer = await file.arrayBuffer();
+      const [{ parseTripExcel }, buffer] = await Promise.all([
+        import('@/lib/excelParser'),
+        file.arrayBuffer(),
+      ]);
       const parsedItems = parseTripExcel(buffer);
 
       if (parsedItems.length === 0) {
@@ -1619,8 +1629,9 @@ export default function TripDetailPage() {
     }
   };
 
-  // ส่งออก Excel
-  const exportToExcel = () => {
+  // ส่งออก Excel (Dynamic import XLSX เพื่อไม่ให้หนัก Bundle หน้าแรก)
+  const exportToExcel = async () => {
+    const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
 
     const expenseRows = expenses.map((e, idx) => {
@@ -1659,7 +1670,7 @@ export default function TripDetailPage() {
   };
 
   // ส่งออกเฉพาะค่าใช้จ่ายและแผนเคลียร์หนี้เป็น Excel 4 Sheet ละเอียด
-  const exportExpensesToExcel = () => {
+  const exportExpensesToExcel = async () => {
     try {
       const currentTripCurrency = trip?.currency || 'THB';
       const myDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
@@ -1712,6 +1723,7 @@ export default function TripDetailPage() {
       const catNames: Record<string, string> = {};
       categories.forEach((c) => { catNames[c.id] = c.label; });
 
+      const { exportExpensesToExcel: runExportExpensesToExcel } = await import('@/lib/exportExpensesExcel');
       runExportExpensesToExcel({
         tripName: trip?.name || 'Trip',
         expenses,
