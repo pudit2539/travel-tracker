@@ -21,17 +21,20 @@
     "date_label": "5 ธ.ค.",
     "time_slot": "06:55 น.",
     "city": "KIX -> Kyoto",
-    "main_place": "ถึงสนามบินคันไซ (เที่ยวบิน VN334) ผ่าน ตม. แล้วนั่งรถไฟด่วน JR Haruka ยิงยาวตรงไปเกียวโต",
-    "main_place_links": [],
+    "main_place": "ถึงสนามบินคันไซ (เที่ยวบิน VN334) ผ่าน ตม. แล้วขึ้นรถบัสลีมูซีน (Airport Limousine Bus) ที่ชานชาลาที่ 8 ยิงยาวตรงไปเกียวโต",
+    "main_place_links": [
+      "https://maps.google.com/?q=Kansai+Airport+Terminal+1+Bus+Stop+8",
+      "https://maps.google.com/?q=Kyoto+Station+Hachijo+Exit"
+    ],
     "food_recommendation": "-",
     "food_links": [],
-    "backup_plan": "ร้านของว่างสำรอง: 551 Horai Kansai Airport (ซาลาเปาหมูสับนึ่งร้อนๆ ซิกเนเจอร์โอซาก้าหน้าสถานีรถไฟ KIX)\nคาเฟ่สำรอง: Tully's Coffee KIX Station (จิบกาแฟอุ่นๆ ระหว่างรอขบวนรถไฟ Haruka)\nที่พักผ่อนสำรอง: KIX Airport Lounge (จุดนั่งพักชาร์จแบตเตอรี่และเชื่อมต่อ Wi-Fi ในสนามบิน)",
+    "backup_plan": "ร้านของว่างสำรอง: 551 Horai Kansai Airport (ซาลาเปาหมูสับนึ่งร้อนๆ ซิกเนเจอร์โอซาก้าในสนามบิน KIX)\nคาเฟ่สำรอง: Tully's Coffee Kansai Airport (จิบกาแฟอุ่นๆ ระหว่างรอรถบัสลีมูซีนที่ชานชาลาที่ 8)\nที่พักผ่อนสำรอง: KIX Airport Lounge (จุดนั่งพักชาร์จแบตเตอรี่และเชื่อมต่อ Wi-Fi ในสนามบิน)",
     "backup_links": [
       "https://maps.google.com/?q=551+Horai+Kansai+Airport",
       "https://maps.google.com/?q=Tullys+Coffee+Kansai+Airport",
       "https://maps.google.com/?q=KIX+Airport+Lounge"
     ],
-    "transport_info": "รถไฟด่วน JR Haruka | ซื้อตั๋ว e-Ticket แยก หรือแตะ ICOCA (ประมาณ 2,200 - 3,110 เยน)"
+    "transport_info": "รถบัสลีมูซีนสนามบิน (Airport Limousine Bus) ขึ้นที่ชานชาลาที่ 8 (ชั้น 1 หน้าอาคารขาเข้า Terminal 1) ตรงไปลงสถานีเกียวโตฝั่ง Hachijo-guchi (เดินเข้าโรงแรม Hotel The M's Kyoto เพียง 3 นาที) | ประมาณ 85–90 นาที (ประมาณ 2,600 - 2,800 เยน)"
   },
   {
     "row_num": 4,

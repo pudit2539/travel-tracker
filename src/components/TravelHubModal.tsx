@@ -33,17 +33,17 @@ export interface TrainBookingItem {
 
 const DEFAULT_KANSAI_TRAIN_BOOKINGS: TrainBookingItem[] = [
   {
-    id: 'train-rapit-kix',
-    trainNo: 'Nankai Limited Express Rapi:t β',
-    fromStation: 'Kansai Airport (KIX)',
-    toStation: 'Nankai Namba (難波)',
-    departureTime: '16:35',
-    arrivalTime: '17:13',
-    carNo: 'ตู้ที่ 5 (Car 5)',
-    seatNo: '12A, 12B',
-    platform: 'ชานชาลา 1–2 (Nankai)',
-    dayLabel: 'Day 1 (10 ธ.ค.)',
-    note: 'แสดง QR Voucher เพื่อแลกตั๋วระบุที่นั่งก่อนเข้าเกต',
+    id: 'bus-limousine-kix-kyoto',
+    trainNo: 'Airport Limousine Bus (KIX ➔ Kyoto)',
+    fromStation: 'Kansai Airport Terminal 1 (ชั้น 1)',
+    toStation: 'Kyoto Station Hachijo-guchi (八条口)',
+    departureTime: '08:10',
+    arrivalTime: '09:40',
+    carNo: 'รถบัสลีมูซีนสนามบิน',
+    seatNo: 'ที่นั่งตามคิว/ตั๋ว',
+    platform: 'ชานชาลาที่ 8 (Bus Stop No. 8)',
+    dayLabel: 'Day 2 (5 ธ.ค.)',
+    note: 'ขึ้นที่ชานชาลาที่ 8 หน้าอาคารขาเข้า KIX Terminal 1 ฝากกระเป๋าใหญ่ใต้ท้องรถ จอดฝั่ง Hachijo-guchi ใกล้โรงแรม Hotel The M\'s Kyoto',
   },
 ];
 

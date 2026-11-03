@@ -306,12 +306,15 @@ export function detectStationElevatorAndLastTrain(
   let lastTrainTip: string | undefined;
 
   const isHotelOrLuggageOrTransfer =
-    /hotel|โรงแรม|ที่พัก|เช็คอิน|เช็กอิน|เช็คเอาท์|เช็กเอาต์|check-in|check in|check-out|check out|กระเป๋า|ย้ายโรงแรม|ย้ายเมือง|haruka|rapi:t|สนามบิน|airport/.test(
+    /hotel|โรงแรม|ที่พัก|เช็คอิน|เช็กอิน|เช็คเอาท์|เช็กเอาต์|check-in|check in|check-out|check out|กระเป๋า|ย้ายโรงแรม|ย้ายเมือง|ลีมูซีน|limousine|ชานชาลาที่ 8|haruka|rapi:t|สนามบิน|airport/.test(
       text
     );
 
   if (isHotelOrLuggageOrTransfer) {
-    if (/m's kyoto|ms kyoto|kyoto station|สถานีเกียวโต|haruka/.test(text)) {
+    if (/ลีมูซีน|limousine|ชานชาลาที่ 8|kix -> kyoto/.test(text)) {
+      elevatorTip =
+        'จุดขึ้นรถบัสลีมูซีน KIX ➔ Kyoto: ชั้น 1 หน้าอาคารผู้โดยสารขาเข้า Terminal 1 ชานชาลาที่ 8 (Bus Stop No. 8) จอดส่งที่สถานีเกียวโตฝั่ง Hachijo-guchi เดินทางราบเข้าโรงแรม Hotel The M\'s Kyoto ได้เลยใน 3 นาที';
+    } else if (/m's kyoto|ms kyoto|kyoto station|สถานีเกียวโต|haruka/.test(text)) {
       elevatorTip =
         'ลิฟต์สถานี Kyoto (ฝั่งโรงแรม The M\'s Kyoto): ออกทาง Hachijo East Exit (八条東口) มีลิฟต์ลงชั้น 1 เดินทางราบ 5 นาทีถึงโรงแรม';
     } else if (/musse|kawaramachi|คาวาระมาจิ|shijo|ชิโจ|gion-shijo/.test(text)) {
@@ -747,15 +750,16 @@ export interface TransitSuggestion {
 export const KANSAI_TRANSIT_SUGGESTIONS: TransitSuggestion[] = [
   // Route Templates
   {
+    label: 'Airport Limousine Bus ชานชาลาที่ 8 (KIX ➔ Kyoto)',
+    category: 'route-template',
+    insertText:
+      'รถบัสลีมูซีนสนามบิน (Airport Limousine Bus) ขึ้นที่ชานชาลาที่ 8 (ชั้น 1 หน้าอาคารขาเข้า Terminal 1) ตรงไปลงสถานีเกียวโตฝั่ง Hachijo-guchi (85–90 นาที / ¥2,600–2,800)',
+    badge: '🚌 สนามบิน',
+  },
+  {
     label: 'Nankai Rapi:t (KIX ➔ Namba 38 นาที)',
     category: 'route-template',
     insertText: 'รถไฟด่วน Nankai Limited Express Rapi:t จาก KIX ➔ สถานี Nankai Namba (38 นาที / ¥1,450)',
-    badge: '✈️ สนามบิน',
-  },
-  {
-    label: 'JR Haruka (KIX ➔ Tennoji / Kyoto)',
-    category: 'route-template',
-    insertText: 'รถไฟด่วน JR Haruka Express จาก KIX ➔ Tennoji (35 นาที) / Kyoto (75 นาที)',
     badge: '✈️ สนามบิน',
   },
   {
