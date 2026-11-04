@@ -402,11 +402,32 @@
     "transport_info": "Osaka Metro | แตะ ICOCA (190 เยน)"
   },
   {
+    "row_num": 75,
+    "date_label": "9 ธ.ค.",
+    "time_slot": "14:00 – 16:30 น.",
+    "city": "Osaka (Osaka Castle)",
+    "main_place": "เที่ยวชมปราสาทโอซาก้า Osaka Castle & Park (ชมหอคอยปราสาทและสวนประวัติศาสตร์ช่วงบ่าย)",
+    "main_place_links": [
+      "https://maps.google.com/?q=Osaka+Castle",
+      "https://maps.google.com/?q=Miraiza+Osaka-jo"
+    ],
+    "food_recommendation": "-",
+    "food_links": [],
+    "backup_plan": "ที่เที่ยวสำรองในสวนปราสาท: Miraiza Osaka-jo (อาคารประวัติศาสตร์สไตล์ยุโรปหน้าปราสาท รวมคาเฟ่และร้านขนม)\nจุดชมวิวสำรอง: จุดล่องเรือชมคูเมืองปราสาท Osaka Castle Gozabune Boat\nคาเฟ่สำรอง: R Baker Osaka Castle Park (เบเกอรี่และกาแฟในสวนร่มรื่น)",
+    "backup_links": [
+      "https://maps.google.com/?q=Yodobashi+Camera+Multimedia+Umeda",
+      "https://maps.google.com/?q=Quintessa+Hotel+Osaka+Shinsaibashi",
+      "https://maps.google.com/?q=Miraiza+Osakajo",
+      "https://maps.google.com/?q=The+Landmark+Square+Osaka"
+    ],
+    "transport_info": "นั่ง Osaka Metro จากสถานี Shinsaibashi / Nagahoribashi ไปลงสถานี Morinomiya หรือ Osakajokoen (ประมาณ 12 นาที / แตะ ICOCA 240 เยน)"
+  },
+  {
     "row_num": 43,
     "date_label": "9 ธ.ค.",
-    "time_slot": "15:00 น.",
+    "time_slot": "17:00 น. เป็นต้นไป",
     "city": "Osaka (Shinsaibashi & Dotonbori)",
-    "main_place": "เดินสำรวจย่านชินไซบาชิ ถ่ายรูปคู่ป้าย Dotonbori Glico Sign และเดินชมห้างสรรพสินค้า Daimaru Shinsaibashi",
+    "main_place": "Shinsaibashi & Dotonbori: เดินสำรวจถนนคนเดิน ถ่ายรูปคู่ป้าย Dotonbori Glico Sign และช้อปปิ้งห้าง Daimaru Shinsaibashi",
     "main_place_links": [
       "https://maps.google.com/?q=Dotonbori+Glico+Sign",
       "https://maps.google.com/?q=Daimaru+Shinsaibashi"
@@ -690,26 +711,6 @@
       "https://maps.google.com/?q=Hisakuni+Soushindou+Minoh"
     ],
     "transport_info": "เดินเท้าเลียบธารน้ำธรรมชาติมิโนะ | ฟรี"
-  },
-  {
-    "row_num": 75,
-    "date_label": "13 ธ.ค.",
-    "time_slot": "17:00 น.",
-    "city": "Osaka (Osaka Castle)",
-    "main_place": "เดินทางเข้าสู่ตัวเมืองโอซาก้า ชมสวนและบรรยากาศยามเย็นเปิดไฟประดับ (Light-up) ของปราสาทโอซาก้า Osaka Castle & Park (ปรับเป็นแผนสำรองหรือแวะชมช่วง 17:00 น.)",
-    "main_place_links": [
-      "https://maps.google.com/?q=Osaka+Castle"
-    ],
-    "food_recommendation": "-",
-    "food_links": [],
-    "backup_plan": "แผนสำรอง Umeda & Yodobashi: เดินทางสู่ย่าน Umeda ช้อปปิ้งเก็บตกห้าง Yodobashi Camera & LINKS UMEDA และชมวิวเมืองตึกแฝด Umeda Sky Building\nแผนสำรอง Shinsaibashi: เดินทางตรงกลับเข้าย่านชินไซบาชิ พักผ่อนเก็บของที่โรงแรม Quintessa\nคาเฟ่สำรอง: Miraiza Osaka-jo (อาคารประวัติศาสตร์สไตล์ยุโรปหน้าปราสาท รวมคาเฟ่และร้านขนม)\nร้านอาหารสำรอง: The Landmark Square Osaka (มื้ออาหารพร้อมวิวตัวปราสาทโอซาก้าแบบพาโนรามา)",
-    "backup_links": [
-      "https://maps.google.com/?q=Yodobashi+Camera+Multimedia+Umeda",
-      "https://maps.google.com/?q=Quintessa+Hotel+Osaka+Shinsaibashi",
-      "https://maps.google.com/?q=Miraiza+Osakajo",
-      "https://maps.google.com/?q=The+Landmark+Square+Osaka"
-    ],
-    "transport_info": "Osaka Metro | แตะ ICOCA (240 เยน)"
   },
   {
     "row_num": 77,
