@@ -1099,27 +1099,33 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               return (
                 <React.Fragment key={item.id || idx}>
                   {isNewDayGroup && item.date_label && (
-                    <div className="pt-2 first:pt-0">
-                      <div className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-blue-600/10 via-indigo-500/5 to-transparent dark:from-blue-500/15 dark:via-indigo-500/10 border border-blue-200/70 dark:border-blue-800/40 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="px-2.5 py-0.5 rounded-lg bg-blue-600 text-white text-[11px] font-black shrink-0">
-                            {dayNumber > 0 ? `Day ${dayNumber}` : 'วันเดินทาง'}
+                    <div className="pt-3 first:pt-0">
+                      <div className="px-4 py-3 rounded-xl bg-[#F8F6F0] dark:bg-[#181a20] border border-[#EBE4D8] dark:border-[#2C2A26] space-y-2">
+                        <div className="flex items-center justify-between gap-2 text-[11px] font-semibold tracking-widest uppercase text-[#8C8275] dark:text-slate-400">
+                          <span>
+                            {dayNumber > 0 ? `DAY ${String(dayNumber).padStart(2, '0')}` : 'TRAVEL DAY'} //{' '}
+                            {item.city || 'JAPAN'}
                           </span>
-                          <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
-                            {item.date_label}
-                          </span>
-                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
-                            ({dayStopsCount} จุดแวะ)
-                          </span>
+                          <span>{dayStopsCount} STOPS</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleSelectDay(item.date_label)}
-                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-0.5 shrink-0 cursor-pointer"
-                        >
-                          <span>ดูเฉพาะวันนี้</span>
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="flex items-end justify-between gap-2">
+                          <h3 className="font-serif text-lg sm:text-xl font-bold text-[#151515] dark:text-white tracking-tight leading-tight">
+                            {item.date_label}
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDay(item.date_label)}
+                            className="text-[11px] font-bold text-[#C83E2D] dark:text-amber-400 hover:underline inline-flex items-center gap-0.5 shrink-0 cursor-pointer"
+                          >
+                            <span>ดูเฉพาะวันนี้</span>
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <div className="flex gap-1 pt-0.5">
+                          <div className="h-0.5 flex-1 rounded-full bg-[#C83E2D]" />
+                          <div className="h-0.5 flex-1 rounded-full bg-[#E5DED2] dark:bg-slate-700" />
+                          <div className="h-0.5 flex-1 rounded-full bg-[#E5DED2] dark:bg-slate-700" />
+                        </div>
                       </div>
                     </div>
                   )}

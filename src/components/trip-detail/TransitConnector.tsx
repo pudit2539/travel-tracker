@@ -29,32 +29,31 @@ export const TransitConnector = React.memo(function TransitConnector({
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(cleanFrom)}&destination=${encodeURIComponent(cleanTo)}&travelmode=transit`;
 
   return (
-    <div className="relative py-2 pl-6 sm:pl-8 pr-2 flex items-center gap-3 group">
-      {/* Dashed vertical route line */}
-      <div className="absolute left-[26px] sm:left-[34px] top-0 bottom-0 w-0.5 border-l-2 border-dashed border-blue-200 dark:border-blue-950 z-0 group-hover:border-blue-500 transition-colors" />
-
-      {/* Transit pill badge */}
-      <div className="relative z-10 flex flex-wrap items-center gap-2 text-[11px] font-bold">
-        <a
-          href={directionsUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] text-slate-700 dark:text-slate-200 shadow-2xs hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer group-hover:scale-102"
-          title="เปิดเส้นทางนำทางและเช็กชานชาลาแบบ Real-time ใน Google Maps"
-        >
-          <Bus className="h-3 w-3 text-blue-500" />
-          <span>เส้นทางรถไฟ / นำทาง</span>
-          <span className="text-slate-300 dark:text-slate-600">•</span>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[130px] sm:max-w-[180px]">
-            {cleanFrom.split(',')[0]} ➔ {cleanTo.split(',')[0]}
-          </span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-extrabold border border-amber-200/60 dark:border-amber-900/40">
-            ชานชาลาสด
-          </span>
-          <Navigation className="h-2.5 w-2.5 text-blue-500" />
-          <ExternalLink className="h-2.5 w-2.5 text-slate-400 group-hover:text-blue-500" />
-        </a>
+    <div className="relative py-1.5 px-3 flex items-center gap-3 group">
+      {/* Option A Editorial Transit Circle Icon */}
+      <div className="w-6 h-6 rounded-full bg-[#EFE9DE] dark:bg-[#23262F] border border-[#D8CFC0] dark:border-[#343844] flex items-center justify-center text-[#6A6052] dark:text-amber-300 shrink-0 shadow-2xs">
+        <Bus className="h-3 w-3" />
       </div>
+
+      {/* Editorial Transit Info Row */}
+      <a
+        href={directionsUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#7A7062] dark:text-slate-300 hover:text-[#C83E2D] dark:hover:text-amber-300 transition-colors cursor-pointer"
+        title="เปิดเส้นทางนำทางและเช็กชานชาลาแบบ Real-time ใน Google Maps"
+      >
+        <span className="px-2 py-0.5 rounded-[3px] bg-[#EAE3D5] dark:bg-[#262932] text-[#38322A] dark:text-slate-100 font-semibold">
+          เส้นทางรถไฟ / นำทาง
+        </span>
+        <span className="truncate max-w-[160px] sm:max-w-[240px]">
+          {cleanFrom.split(',')[0]} → {cleanTo.split(',')[0]}
+        </span>
+        <span className="inline-flex items-center gap-1 text-[#C83E2D] dark:text-amber-400 font-semibold">
+          <span>เช็กชานชาลาสด</span>
+          <ExternalLink className="h-2.5 w-2.5" />
+        </span>
+      </a>
     </div>
   );
 });

@@ -1,0 +1,129 @@
+[
+  {
+    "file": "glass-cinema.png",
+    "target": "C:\\Users\\pudit.ye\\travel-tracker\\.oil-ui\\itinerary-cards-v2\\option-d.html",
+    "name": "Immersive Glass Cinema",
+    "state": null,
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "div.day-eyebrow「DAY 03 · KYOTO AUTUMN」"
+        ]
+      },
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 1,
+        "examples": [
+          "div.cinema-note「สั่ง Hot Kyoto Latte (Bl」（外层 article.hero-card）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "ryokan-luxury.png",
+    "target": "C:\\Users\\pudit.ye\\travel-tracker\\.oil-ui\\itinerary-cards-v2\\option-e.html",
+    "name": "Kyoto Ryokan Luxury & Gold",
+    "state": null,
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 2,
+        "examples": [
+          "div.gold-kicker「CHAPTER III · KYOTO」",
+          "div.caption-sub「KATSURA RIVERFRONT · SPE」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "bento-magazine.png",
+    "target": "C:\\Users\\pudit.ye\\travel-tracker\\.oil-ui\\itinerary-cards-v2\\option-f.html",
+    "name": "Neo-Tokyo Bento Magazine",
+    "state": null,
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.issue-tag「KYOTO GUIDE · DAY 03」"
+        ]
+      },
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 1,
+        "examples": [
+          "div.bento-tip-tile「สั่ง Hot Latte Blend แล้」（外层 article.bento-hero-box）"
+        ]
+      },
+      {
+        "rule": "tightLeading",
+        "label": "多行正文行高过紧",
+        "count": 1,
+        "examples": [
+          "div.bento-tip-tile「สั่ง Hot Latte Blend แล้」（1.30）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "sheet.png",
+    "width": 1250,
+    "height": 924,
+    "columns": 3,
+    "items": [
+      {
+        "naturalWidth": 390,
+        "naturalHeight": 844,
+        "width": 390,
+        "height": 844,
+        "labelHeight": 32,
+        "x": 24,
+        "y": 24,
+        "label": "Immersive Glass Cinema",
+        "labelY": 876
+      },
+      {
+        "naturalWidth": 390,
+        "naturalHeight": 844,
+        "width": 390,
+        "height": 844,
+        "labelHeight": 32,
+        "x": 430,
+        "y": 24,
+        "label": "Kyoto Ryokan Luxury & Gold",
+        "labelY": 876
+      },
+      {
+        "naturalWidth": 390,
+        "naturalHeight": 844,
+        "width": 390,
+        "height": 844,
+        "labelHeight": 32,
+        "x": 836,
+        "y": 24,
+        "label": "Neo-Tokyo Bento Magazine",
+        "labelY": 876
+      }
+    ],
+    "issues": []
+  }
+]

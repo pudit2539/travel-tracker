@@ -356,35 +356,29 @@ function ItineraryStopCardComponent({
       <div
         style={
           idx > 2 && !showAdminMenu
-            ? { contentVisibility: 'auto', containIntrinsicSize: '0 260px' }
+            ? { contentVisibility: 'auto', containIntrinsicSize: '0 320px' }
             : undefined
         }
-        className={`group rounded-3xl border transition-all duration-300 relative overflow-hidden card-elevation ${
+        className={`group rounded-xl border transition-all duration-300 relative overflow-hidden ${
           isSkipped
-            ? 'border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-[#14161b]/70 opacity-65'
+            ? 'border-dashed border-[#D6CEC0] dark:border-slate-700 bg-[#FDFCF9]/70 dark:bg-[#14161b]/70 opacity-65'
             : visited
-            ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/20'
-            : 'border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-400/60 dark:hover:border-blue-500/40'
+            ? 'border-[#DFD7C7] dark:border-emerald-800/60 border-l-4 border-l-[#C83E2D] bg-white dark:bg-[#181a20] shadow-[0_2px_10px_rgba(35,30,20,0.04)]'
+            : 'border-[#DFD7C7] dark:border-[#2C2A26] border-l-4 border-l-[#C83E2D] bg-white dark:bg-[#181a20] shadow-[0_3px_14px_rgba(35,30,20,0.05)] hover:shadow-[0_6px_20px_rgba(35,30,20,0.09)]'
         }`}
       >
-        <div
-          className={`relative z-10 transition-colors ${
-            visited
-              ? 'bg-emerald-50/30 dark:bg-[#181a20]'
-              : 'bg-white dark:bg-[#181a20]'
-          }`}
-        >
+        <div className="relative z-10 bg-white dark:bg-[#181a20]">
           {/* Skipped Stop Banner */}
           {isSkipped && (
-            <div className="px-4 py-2 bg-slate-200/80 dark:bg-slate-800/80 border-b border-slate-300/70 dark:border-slate-700 flex items-center justify-between gap-2 text-xs">
-              <span className="font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <SkipForward className="h-3.5 w-3.5 text-amber-600" />
+            <div className="px-4 py-2 bg-[#F4EFE6] dark:bg-slate-800/80 border-b border-[#E5DEC9] dark:border-slate-700 flex items-center justify-between gap-2 text-xs">
+              <span className="font-bold text-[#4A4640] dark:text-slate-300 flex items-center gap-1.5">
+                <SkipForward className="h-3.5 w-3.5 text-[#C83E2D]" />
                 <span>ข้ามจุดแวะนี้ชั่วคราว (ไม่นับรวมในเวลาและเส้นทางนำทาง)</span>
               </span>
               <button
                 type="button"
                 onClick={handleToggleSkip}
-                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] flex items-center gap-1 cursor-pointer shrink-0"
+                className="px-2.5 py-1 rounded bg-[#1C2630] hover:bg-[#2B3947] text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer shrink-0"
               >
                 <RotateCcw className="h-3 w-3" />
                 <span>คืนค่าเข้าแผน</span>
@@ -392,515 +386,371 @@ function ItineraryStopCardComponent({
             </div>
           )}
 
-          {/* Top Notice / Platform Banner */}
-        {transitGuide.hasGuide && (
-          <div className="px-4 py-2 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-b border-amber-200/70 dark:border-amber-900/40 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 font-black text-amber-800 dark:text-amber-300">
-                <span>🚉</span>
-                <span>{transitGuide.platform ? `ชานชาลา ${transitGuide.platform}` : 'การเดินทาง'}</span>
-              </span>
-              {transitGuide.bestTip && (
-                <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
-                  • {transitGuide.bestTip}
-                </span>
-              )}
-            </div>
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.main_place + ' ' + (item.city || 'Japan'))}&travelmode=transit`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-[11px] font-black text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 shrink-0"
+          {/* Editorial 16:9 Hero Header (Option A - POPEYE/BRUTUS Style) */}
+          <div
+            onClick={() => setShowLightbox(true)}
+            className="relative w-full h-36 sm:h-44 overflow-hidden bg-gradient-to-br from-[#1C2630] to-[#35475A] flex items-end p-3.5 sm:p-4 cursor-zoom-in"
+            title="แตะเพื่อขยายดูรูปสถานที่จริง / ดูหน้าร้าน Street View"
+          >
+            {/* Decorative Japanese wave fallback background */}
+            <svg
+              className="absolute inset-0 w-full h-full opacity-25 pointer-events-none"
+              viewBox="0 0 400 200"
+              preserveAspectRatio="none"
             >
-              <span>เช็กชานชาลาสด</span>
-              <ExternalLink className="h-2.5 w-2.5" />
-            </a>
-          </div>
-        )}
+              <path d="M0,80 C120,40 220,120 400,60 L400,200 L0,200 Z" fill="#4B627A" />
+              <path d="M0,130 C150,90 260,170 400,110 L400,200 L0,200 Z" fill="#243342" />
+            </svg>
 
-        {/* Main Card Body */}
-        <div className="p-4 sm:p-5 space-y-3">
-          {/* Top Header Line: Day badge, Time slot, City & Eki Stamp Checkin */}
-          <div className="flex justify-between items-center gap-2">
-            <div className="flex items-center gap-2 flex-wrap min-w-0">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/70 dark:border-blue-900/50 shadow-2xs">
-                {item.date_label || `Day ${idx + 1}`}
-              </span>
+            {!imgError && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={visual.imageUrl}
+                alt={item.main_place || 'Destination'}
+                loading="lazy"
+                onError={() => setImgError(true)}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            )}
 
-              {item.time_slot && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1e2027] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#262932]">
-                  <Clock className="h-3 w-3 text-blue-500" />
-                  <span>{item.time_slot}</span>
+            {/* Editorial Dark Gradient Scrim for Typography Legibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#141C24]/90 via-[#141C24]/35 to-black/25 pointer-events-none" />
+
+            {/* Top Row Overlay: Editorial Tag (Left) + Stamp Check-in & Menu (Right) */}
+            <div
+              className="absolute top-3 inset-x-3.5 sm:inset-x-4 flex items-center justify-between gap-2 z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="px-2 py-0.5 rounded-[3px] bg-white/95 text-[#1A1A1A] text-[10px] font-bold tracking-wider uppercase shadow-2xs">
+                  STOP {String(idx + 1).padStart(2, '0')} / {visual.tagLabel}
                 </span>
-              )}
-
-              {/* TabiPlan Smart Cascade Time Badge */}
-              {!isSkipped && computedSchedule && (
-                <button
-                  type="button"
-                  onClick={() => setShowTimeTuner((v) => !v)}
-                  className="inline-flex items-center gap-1 text-[11px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-950/50 px-2.5 py-0.5 rounded-full border border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                  title="แตะเพื่อปรับเวลาแวะพัก / เวลานัดหมาย / เวลาเปิด-ปิดร้าน (คำนวณไหลอัตโนมัติ)"
-                >
-                  <span>⚡ {computedSchedule.arriveTime}–{computedSchedule.leaveTime}</span>
-                  <span className="opacity-75">({computedSchedule.durationMin}น.)</span>
-                </button>
-              )}
-
-              {!isSkipped && computedSchedule && computedSchedule.waitMin > 0 && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/60">
-                  ⏳ รอเปิด/นัด {computedSchedule.waitMin} นาที
-                </span>
-              )}
-
-              {!isSkipped && computedSchedule && computedSchedule.lateMin > 0 && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-black text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800 animate-pulse">
-                  ⚠️ {computedSchedule.lateReason || `สาย ${computedSchedule.lateMin} นาที!`}
-                </span>
-              )}
-
-              {item.city && (
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                  📍 {item.city}
-                </span>
-              )}
-
-              {visited && meta?.by && (
-                <span className="inline-flex text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/50 border border-emerald-200/50 dark:border-emerald-900/40" title={`เช็กอินโดย ${meta.by} ${meta.at || ''}`}>
-                  ✓ {meta.by} {meta.at ? `(${meta.at})` : ''}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1.5 shrink-0 relative">
-              {/* Eki-Stamp / Paw Checkin Button */}
-              <button
-                type="button"
-                onClick={toggleVisited}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-95 ${
-                  visited
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs'
-                    : 'bg-slate-100 dark:bg-[#181a20] text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-[#262932] hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-                title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน (คืนค่าเดิม)' : 'ประทับตราเช็กอิน ⛩️'}
-              >
-                <span className={visited ? 'animate-bounce' : ''}>{visited ? '💮' : '🐾'}</span>
-                <span>{visited ? 'แวะแล้ว' : 'เช็กอิน'}</span>
-              </button>
-
-              {/* Decluttered Stop Action & Admin Menu Button */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAdminMenu((v) => !v);
-                    setShowMoveDayList(false);
-                  }}
-                  className="p-1.5 rounded-xl border border-slate-200/80 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-colors"
-                  title="ตัวเลือกเพิ่มเติม (ปรับเวลาแวะ / ของต้องซื้อ / โน้ตกลุ่ม / จัดการจุดแวะ)"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-
-                {showAdminMenu && (
-                  <div className="absolute right-0 top-9 z-30 w-56 rounded-2xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAdminMenu(false);
-                        setShowTimeTuner((v) => !v);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2 cursor-pointer"
-                    >
-                      <Clock className="h-3.5 w-3.5 text-indigo-500" />
-                      <span>ปรับเวลาแวะ / เวลาเปิด-ปิดร้าน</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAdminMenu(false);
-                        setShowStopShopping((v) => !v);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl text-xs font-bold text-fuchsia-700 dark:text-fuchsia-300 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/50 flex items-center gap-2 cursor-pointer"
-                    >
-                      <ShoppingBag className="h-3.5 w-3.5 text-fuchsia-500" />
-                      <span>
-                        ของต้องซื้อจุดนี้
-                        {activeShoppingItems.length > 0
-                          ? ` (${boughtShopCount}/${activeShoppingItems.length})`
-                          : ''}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAdminMenu(false);
-                        setShowStopNotes((v) => !v);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 flex items-center gap-2 cursor-pointer"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>
-                        โน้ตกลุ่มปักหมุด{pinnedNotesCount > 0 ? ` (${pinnedNotesCount})` : ''}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAdminMenu(false);
-                        handleToggleSkip();
-                      }}
-                      className="w-full px-3 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/50 flex items-center gap-2 cursor-pointer"
-                    >
-                      <SkipForward className="h-3.5 w-3.5 text-amber-500" />
-                      <span>{isSkipped ? 'คืนค่าเข้าตารางเที่ยว' : 'ข้ามจุดแวะนี้ชั่วคราว'}</span>
-                    </button>
-
-                    {canEditPlan && (
-                      <>
-                        <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                        {availableDays.length > 1 && onMoveStopToDay && (
-                          <div>
-                            <button
-                              type="button"
-                              onClick={() => setShowMoveDayList((v) => !v)}
-                              className="w-full px-3 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center justify-between gap-2 cursor-pointer"
-                            >
-                              <span className="flex items-center gap-2">
-                                <Calendar className="h-3.5 w-3.5 text-indigo-500" />
-                                <span>ย้ายไปวันอื่น...</span>
-                              </span>
-                              <ChevronDown className="h-3.5 w-3.5" />
-                            </button>
-                            {showMoveDayList && (
-                              <div className="pl-3 pr-1 py-1 space-y-0.5 max-h-40 overflow-y-auto border-l-2 border-indigo-200 dark:border-indigo-800 ml-3 my-1">
-                                {availableDays
-                                  .filter((d) => d !== item.date_label)
-                                  .map((dayLabel) => (
-                                    <button
-                                      key={dayLabel}
-                                      type="button"
-                                      onClick={() => {
-                                        setShowAdminMenu(false);
-                                        setShowMoveDayList(false);
-                                        onMoveStopToDay(item, dayLabel);
-                                      }}
-                                      className="w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 truncate cursor-pointer"
-                                    >
-                                      ➔ {dayLabel}
-                                    </button>
-                                  ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowAdminMenu(false);
-                            setShowCustomPhotoModal(true);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 flex items-center gap-2 cursor-pointer"
-                        >
-                          <Camera className="h-3.5 w-3.5 text-emerald-500" />
-                          <span>เปลี่ยนรูปสถานที่</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowAdminMenu(false);
-                            onOpenEditActivity(item);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 flex items-center gap-2 cursor-pointer"
-                        >
-                          <Edit3 className="h-3.5 w-3.5 text-blue-500" />
-                          <span>แก้ไขรายละเอียด</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowAdminMenu(false);
-                            onMoveActivity(idx, 'up');
-                          }}
-                          disabled={idx === 0 || reordering}
-                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
-                        >
-                          <ArrowUp className="h-3.5 w-3.5" />
-                          <span>เลื่อนขึ้น</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowAdminMenu(false);
-                            onMoveActivity(idx, 'down');
-                          }}
-                          disabled={idx === totalItems - 1 || reordering}
-                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
-                        >
-                          <ArrowDown className="h-3.5 w-3.5" />
-                          <span>เลื่อนลง</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowAdminMenu(false);
-                            onDeleteActivity(item.id);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2 cursor-pointer"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>ลบกิจกรรมนี้</span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Main Place Title + Real Place Thumbnail + Optional Stamp Watermark */}
-          <div className="pt-0.5 text-left w-full flex items-start justify-between gap-3">
-            {/* Real Place Thumbnail (Tap to expand Lightbox, Corner button to change photo) */}
-            <div className="relative shrink-0 group/thumb">
-              <button
-                type="button"
-                onClick={() => setShowLightbox(true)}
-                style={{ aspectRatio: '1 / 1' }}
-                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gradient-to-br ${visual.gradient} border border-slate-200/80 dark:border-[#262932] shadow-xs relative block cursor-pointer`}
-                title="แตะเพื่อขยายดูรูปสถานที่จริง / ดูหน้าร้าน Street View"
-              >
-                {!imgError && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={visual.imageUrl}
-                    alt={item.main_place || 'Destination'}
-                    loading="lazy"
-                    onError={() => setImgError(true)}
-                    className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
-                  />
-                )}
-                <span className="absolute bottom-1 left-1 px-1.5 py-0.2 rounded-md bg-black/65 text-white text-[9px] font-bold backdrop-blur-xs">
-                  {visual.emoji}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowCustomPhotoModal(true);
-                }}
-                className="absolute -top-1.5 -right-1.5 p-1 rounded-full bg-slate-900/85 hover:bg-blue-600 text-white border border-white/25 shadow-sm cursor-pointer transition-colors"
-                title="เปลี่ยนรูปสถานที่ (เลือกรูป Google Maps / อัปโหลด PNG)"
-              >
-                <Camera className="h-3 w-3" />
-              </button>
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
-                  {visual.emoji} {visual.tagLabel}
-                </span>
-                {visual.isCustomPhoto ? (
-                  <span className="px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[9px] font-black">
+                {visual.isCustomPhoto && (
+                  <span className="px-1.5 py-0.5 rounded-[3px] bg-emerald-600/90 text-white text-[9px] font-bold">
                     ✨ รูปของฉัน
                   </span>
-                ) : visual.photoSource === 'google_places' ? (
-                  <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-[#1e2027] text-slate-500 dark:text-slate-400 text-[9px] font-semibold">
-                    Google Maps
-                  </span>
-                ) : null}
+                )}
               </div>
+
+              <div className="flex items-center gap-1.5 shrink-0 relative">
+                {/* Editorial Stamp / Live Badge Check-in Button */}
+                <button
+                  type="button"
+                  onClick={toggleVisited}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-95 ${
+                    visited
+                      ? 'bg-[#FFF5F2]/95 text-[#C83E2D] border border-[#C83E2D] -rotate-2 shadow-xs'
+                      : 'bg-[#C83E2D] hover:bg-[#B33324] text-white shadow-xs'
+                  }`}
+                  title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน (คืนค่าเดิม)' : 'ประทับตราเช็กอิน ⛩️'}
+                >
+                  <span>{visited ? `VISITED ${meta?.at || '済'}` : 'CHECK-IN'}</span>
+                </button>
+
+                {/* Change Photo Quick Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowCustomPhotoModal(true)}
+                  className="p-1.5 rounded-[4px] bg-black/55 hover:bg-black/80 text-white border border-white/25 backdrop-blur-xs cursor-pointer transition-colors"
+                  title="เปลี่ยนรูปสถานที่ (เลือกรูป Google Maps / อัปโหลด PNG)"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                </button>
+
+                {/* Decluttered Stop Action & Admin Menu Button */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAdminMenu((v) => !v);
+                      setShowMoveDayList(false);
+                    }}
+                    className="p-1.5 rounded-[4px] bg-black/55 hover:bg-black/80 text-white border border-white/25 backdrop-blur-xs cursor-pointer transition-colors"
+                    title="ตัวเลือกเพิ่มเติม (ปรับเวลาแวะ / ของต้องซื้อ / โน้ตกลุ่ม / จัดการจุดแวะ)"
+                  >
+                    <MoreHorizontal className="h-3.5 w-3.5" />
+                  </button>
+
+                  {showAdminMenu && (
+                    <div className="absolute right-0 top-9 z-30 w-56 rounded-xl bg-white dark:bg-[#1e2027] border border-[#DFD7C7] dark:border-[#262932] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          setShowTimeTuner((v) => !v);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2 cursor-pointer"
+                      >
+                        <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>ปรับเวลาแวะ / เวลาเปิด-ปิดร้าน</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          setShowStopShopping((v) => !v);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg text-xs font-bold text-fuchsia-700 dark:text-fuchsia-300 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/50 flex items-center gap-2 cursor-pointer"
+                      >
+                        <ShoppingBag className="h-3.5 w-3.5 text-fuchsia-500" />
+                        <span>
+                          ของต้องซื้อจุดนี้
+                          {activeShoppingItems.length > 0
+                            ? ` (${boughtShopCount}/${activeShoppingItems.length})`
+                            : ''}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          setShowStopNotes((v) => !v);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 flex items-center gap-2 cursor-pointer"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>
+                          โน้ตกลุ่มปักหมุด{pinnedNotesCount > 0 ? ` (${pinnedNotesCount})` : ''}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminMenu(false);
+                          handleToggleSkip();
+                        }}
+                        className="w-full px-3 py-2 rounded-lg text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/50 flex items-center gap-2 cursor-pointer"
+                      >
+                        <SkipForward className="h-3.5 w-3.5 text-amber-500" />
+                        <span>{isSkipped ? 'คืนค่าเข้าตารางเที่ยว' : 'ข้ามจุดแวะนี้ชั่วคราว'}</span>
+                      </button>
+
+                      {canEditPlan && (
+                        <>
+                          <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                          {availableDays.length > 1 && onMoveStopToDay && (
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => setShowMoveDayList((v) => !v)}
+                                className="w-full px-3 py-2 rounded-lg text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center justify-between gap-2 cursor-pointer"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                                  <span>ย้ายไปวันอื่น...</span>
+                                </span>
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              </button>
+                              {showMoveDayList && (
+                                <div className="pl-3 pr-1 py-1 space-y-0.5 max-h-40 overflow-y-auto border-l-2 border-indigo-200 dark:border-indigo-800 ml-3 my-1">
+                                  {availableDays
+                                    .filter((d) => d !== item.date_label)
+                                    .map((dayLabel) => (
+                                      <button
+                                        key={dayLabel}
+                                        type="button"
+                                        onClick={() => {
+                                          setShowAdminMenu(false);
+                                          setShowMoveDayList(false);
+                                          onMoveStopToDay(item, dayLabel);
+                                        }}
+                                        className="w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 truncate cursor-pointer"
+                                      >
+                                        ➔ {dayLabel}
+                                      </button>
+                                    ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAdminMenu(false);
+                              setShowCustomPhotoModal(true);
+                            }}
+                            className="w-full px-3 py-2 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 flex items-center gap-2 cursor-pointer"
+                          >
+                            <Camera className="h-3.5 w-3.5 text-emerald-500" />
+                            <span>เปลี่ยนรูปสถานที่</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAdminMenu(false);
+                              onOpenEditActivity(item);
+                            }}
+                            className="w-full px-3 py-2 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 flex items-center gap-2 cursor-pointer"
+                          >
+                            <Edit3 className="h-3.5 w-3.5 text-blue-500" />
+                            <span>แก้ไขรายละเอียด</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAdminMenu(false);
+                              onMoveActivity(idx, 'up');
+                            }}
+                            disabled={idx === 0 || reordering}
+                            className="w-full px-3 py-2 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+                          >
+                            <ArrowUp className="h-3.5 w-3.5" />
+                            <span>เลื่อนขึ้น</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAdminMenu(false);
+                              onMoveActivity(idx, 'down');
+                            }}
+                            disabled={idx === totalItems - 1 || reordering}
+                            className="w-full px-3 py-2 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253048] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+                          >
+                            <ArrowDown className="h-3.5 w-3.5" />
+                            <span>เลื่อนลง</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAdminMenu(false);
+                              onDeleteActivity(item.id);
+                            }}
+                            className="w-full px-3 py-2 rounded-lg text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2 cursor-pointer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>ลบกิจกรรมนี้</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Place Title & Subtitle Overlay inside Hero */}
+            <div className="relative z-10 w-full text-left" onClick={(e) => e.stopPropagation()}>
               <a
                 href={mainPlaceMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-base sm:text-lg font-black text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center gap-1.5 transition-colors cursor-pointer group/title leading-relaxed text-left break-words"
+                className="font-serif text-lg sm:text-xl font-bold text-white hover:text-[#FFD8CE] inline-flex items-center gap-1.5 transition-colors cursor-pointer leading-snug drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] break-words"
               >
                 <span>{item.main_place}</span>
-                <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover/title:text-blue-500 transition-colors shrink-0" />
+                <ExternalLink className="h-3.5 w-3.5 text-white/75 shrink-0" />
               </a>
-            </div>
-
-            {visited && (
-              <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-dashed border-rose-500/70 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-black rotate-[-6deg]">
-                <span>済</span>
-                <span>VISITED</span>
-              </span>
-            )}
-          </div>
-
-          {/* Transit Details text if any */}
-          {transitGuide.details && (
-            <div className="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-800/40 text-left flex items-start gap-2.5">
-              <div className="w-6 h-6 rounded-lg bg-indigo-500/20 dark:bg-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
-                <Bus className="h-3.5 w-3.5" />
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300 mr-1.5">
-                  การเดินทาง:
+              <div className="flex items-center gap-2 flex-wrap mt-0.5 text-[11px] text-white/90 font-medium tracking-wide">
+                <span>
+                  {visual.emoji} {item.city || 'Japan'}
                 </span>
-                <span className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
-                  {transitGuide.details}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Food & Dining Recommendations */}
-          {item.food_recommendation && (
-            <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 text-left transition-all space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-amber-500/20 dark:bg-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-                    <Utensils className="h-3.5 w-3.5" />
-                  </div>
-                  <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
-                    ร้านอาหารแนะนำ / ของกินเด่น
+                {item.date_label && <span>· {item.date_label}</span>}
+                {visited && meta?.by && (
+                  <span className="text-emerald-300 font-semibold">
+                    · ✓ เช็กอินโดย {meta.by}
                   </span>
-                </div>
-                {foodSearchUrl && (
-                  <a
-                    href={foodSearchUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-500 shadow-2xs hover:scale-102 active:scale-98 transition-all shrink-0 cursor-pointer"
-                  >
-                    <span>แผนที่ร้าน 📍</span>
-                    <ExternalLink className="h-2.5 w-2.5 opacity-80" />
-                  </a>
                 )}
               </div>
-              <p className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed pl-8 text-left">
-                {item.food_recommendation}
-              </p>
             </div>
-          )}
+          </div>
 
-          {/* Backup Plan (Plan B) */}
-          {item.backup_plan && (
-            <div className="pt-1 text-left">
-              <button
-                type="button"
-                onClick={() => onTogglePlanB(item.id)}
-                className="text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
-              >
-                <div className="w-5 h-5 rounded-md bg-rose-500/15 dark:bg-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                  <Shield className="h-3 w-3" />
-                </div>
-                <span>แผนสำรอง (Plan B)</span>
-                {isPlanBOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              </button>
-              {isPlanBOpen && (
-                <div className="p-3.5 mt-2 rounded-2xl bg-slate-50 dark:bg-[#121316] text-xs text-slate-700 dark:text-slate-200 space-y-2.5 border border-slate-200/70 dark:border-[#262932] text-left">
-                  <div className="font-bold text-slate-900 dark:text-slate-100 text-left">
-                    รายการสถานที่ & ร้านอาหารสำรอง:
-                  </div>
-                  <div className="space-y-2">
-                    {item.backup_plan
-                      .split('\n')
-                      .filter((line: string) => line.trim().length > 0)
-                      .map((line: string, lineIdx: number) => {
-                        let cleanName = line
-                          .replace(/^(ร้านอาหารสำรอง|สถานที่สำรอง|จุดเที่ยวสำรอง|แผนสำรอง|\d+[\).:-]|\*|•)\s*/i, '')
-                          .trim();
-                        if (cleanName.includes(':')) {
-                          cleanName = cleanName.split(':')[1].trim();
-                        }
+          {/* Editorial Main Card Body */}
+          <div className="p-4 sm:p-5 space-y-3.5">
+            {/* Editorial Timing & Schedule Row */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#F0ECE3] dark:border-[#262932]">
+              <div className="flex items-center gap-2 flex-wrap">
+                {item.time_slot && (
+                  <span className="font-serif text-base sm:text-lg font-bold text-[#181818] dark:text-white tracking-tight">
+                    {item.time_slot.replace('-', ' — ')}
+                  </span>
+                )}
 
-                        const lineMapsUrl =
-                          item.backup_links && item.backup_links[lineIdx]
-                            ? item.backup_links[lineIdx]
-                            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                cleanName + ' ' + (item.city || 'Japan')
-                              )}`;
+                {!isSkipped && computedSchedule && (
+                  <button
+                    type="button"
+                    onClick={() => setShowTimeTuner((v) => !v)}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#685E50] dark:text-slate-300 bg-[#F4EFE6] dark:bg-[#22252E] px-2.5 py-0.5 rounded-[4px] border border-[#E5DEC9] dark:border-[#323642] hover:border-[#C83E2D] transition-colors cursor-pointer"
+                    title="แตะเพื่อปรับเวลาแวะพัก / เวลานัดหมาย / เวลาเปิด-ปิดร้าน (คำนวณไหลอัตโนมัติ)"
+                  >
+                    <span>
+                      {!item.time_slot
+                        ? `${computedSchedule.arriveTime} — ${computedSchedule.leaveTime} `
+                        : ''}
+                      ({computedSchedule.durationMin} นาที)
+                    </span>
+                  </button>
+                )}
 
-                        return (
-                          <div
-                            key={lineIdx}
-                            className="p-2.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200/60 dark:border-[#262932] flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left"
-                          >
-                            <span className="font-medium text-slate-800 dark:text-slate-200 leading-relaxed text-left flex-1">
-                              {line}
-                            </span>
-                            <a
-                              href={lineMapsUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition-all shrink-0 cursor-pointer shadow-2xs"
-                            >
-                              <span>แผนที่ 📍</span>
-                              <ExternalLink className="h-2.5 w-2.5" />
-                            </a>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
+                {!isSkipped && computedSchedule && computedSchedule.waitMin > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#685E50] dark:text-amber-300 bg-[#F4EFE6] dark:bg-amber-950/50 px-2 py-0.5 rounded-[4px]">
+                    ⏱️ รอคิว/รอเปิด ~{computedSchedule.waitMin} น.
+                  </span>
+                )}
+
+                {!isSkipped && computedSchedule && computedSchedule.lateMin > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#B52F1E] bg-[#FFF5F2] px-2 py-0.5 rounded-[4px] border border-[#F8D3CB] animate-pulse">
+                    ⚠️ {computedSchedule.lateReason || `สาย ${computedSchedule.lateMin} นาที!`}
+                  </span>
+                )}
+              </div>
+
+              {/* Right Pill: Platform / Live Transit Check */}
+              {transitGuide.hasGuide && (
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                    item.main_place + ' ' + (item.city || 'Japan')
+                  )}&travelmode=transit`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#F4EFE6] dark:bg-[#22252E] text-[#403B33] dark:text-amber-300 text-[11px] font-semibold hover:bg-[#EAE2D3] transition-colors shrink-0"
+                >
+                  <span>🚉 {transitGuide.platform ? `ชานชาลา ${transitGuide.platform}` : 'เช็กชานชาลาสด'}</span>
+                  <ExternalLink className="h-2.5 w-2.5 opacity-75" />
+                </a>
               )}
             </div>
-          )}
 
-          {/* TabiPlan Amenity, Elevator Exit, Last Train & Active Smart Pills (Decluttered: only renders when active) */}
-          {(amenities.length > 0 ||
-            elevatorTip ||
-            lastTrainTip ||
-            hasCustomTime ||
-            isSkipped ||
-            activeShoppingItems.length > 0 ||
-            pinnedNotesCount > 0 ||
-            showTimeTuner ||
-            showStopShopping ||
-            showStopNotes) && (
-            <div className="pt-2 border-t border-slate-100 dark:border-[#22252e] space-y-2 text-left">
-              {elevatorTip && (
-                <div className="p-2.5 rounded-xl bg-teal-50/90 dark:bg-teal-950/35 border border-teal-200/80 dark:border-teal-800/60 text-[11px] font-bold text-teal-800 dark:text-teal-200 leading-relaxed">
-                  {elevatorTip}
-                </div>
-              )}
-
-              {lastTrainTip && (
-                <div className="p-2.5 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/60 text-[11px] font-bold text-indigo-800 dark:text-indigo-200 leading-relaxed">
-                  {lastTrainTip}
-                </div>
-              )}
-
-              {amenities.length > 0 && (
+            {/* Editorial Pills Container (Amenities, Elevator, Last Train & Smart Badges) */}
+            {(amenities.length > 0 ||
+              elevatorTip ||
+              lastTrainTip ||
+              transitGuide.bestTip ||
+              hasCustomTime ||
+              isSkipped ||
+              activeShoppingItems.length > 0 ||
+              pinnedNotesCount > 0 ||
+              showTimeTuner ||
+              showStopShopping ||
+              showStopNotes) && (
+              <div className="space-y-2 text-left">
                 <div className="flex items-center gap-1.5 flex-wrap">
+                  {transitGuide.bestTip && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-semibold bg-[#FFF5F2] dark:bg-rose-950/40 border border-[#F8D3CB] dark:border-rose-800/50 text-[#B52F1E] dark:text-rose-300">
+                      <span>✨ {transitGuide.bestTip}</span>
+                    </span>
+                  )}
+
                   {amenities.map((tag) => (
                     <span
                       key={tag.id}
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${tag.colorClass}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-medium bg-[#F6F3EB] dark:bg-[#22242B] border border-[#EAE2D3] dark:border-[#323540] text-[#403B33] dark:text-slate-200"
                     >
                       <span>{tag.emoji}</span>
                       <span>{tag.label}</span>
                     </span>
                   ))}
-                </div>
-              )}
 
-              {/* Active-only Smart Action Pills (Zero Clutter on normal cards; all options remain in '...' menu) */}
-              {(hasCustomTime ||
-                isSkipped ||
-                activeShoppingItems.length > 0 ||
-                pinnedNotesCount > 0 ||
-                showTimeTuner ||
-                showStopShopping ||
-                showStopNotes) && (
-                <div className="flex items-center gap-1.5 flex-wrap">
                   {(hasCustomTime || showTimeTuner) && (
                     <button
                       type="button"
                       onClick={() => setShowTimeTuner((v) => !v)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-semibold border transition-all cursor-pointer ${
                         showTimeTuner
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/60 hover:border-indigo-400'
+                          ? 'bg-[#1C2630] text-white border-[#1C2630]'
+                          : 'bg-[#F6F3EB] dark:bg-[#22242B] text-[#403B33] dark:text-slate-200 border-[#EAE2D3] dark:border-[#323540]'
                       }`}
                     >
                       <Clock className="h-3 w-3" />
@@ -910,27 +760,15 @@ function ItineraryStopCardComponent({
                     </button>
                   )}
 
-                  {isSkipped && (
-                    <button
-                      type="button"
-                      onClick={handleToggleSkip}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer bg-amber-500 text-white border-amber-500 hover:bg-amber-600"
-                      title="คืนค่าจุดแวะนี้กลับเข้าตารางเวลา"
-                    >
-                      <SkipForward className="h-3 w-3" />
-                      <span>ยกเลิกการข้าม</span>
-                    </button>
-                  )}
-
                   {(activeShoppingItems.length > 0 || showStopShopping) && (
                     <button
                       type="button"
                       onClick={() => setShowStopShopping((v) => !v)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer bg-fuchsia-50 dark:bg-fuchsia-950/50 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800/60 hover:border-fuchsia-400"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-semibold border transition-all cursor-pointer bg-[#FFF5F2] dark:bg-rose-950/40 text-[#B52F1E] dark:text-rose-300 border-[#F8D3CB] dark:border-rose-800/50"
                     >
                       <ShoppingBag className="h-3 w-3" />
                       <span>
-                        ของต้องซื้อจุดนี้ ({boughtShopCount}/{activeShoppingItems.length})
+                        ของต้องซื้อ ({boughtShopCount}/{activeShoppingItems.length})
                       </span>
                     </button>
                   )}
@@ -939,14 +777,135 @@ function ItineraryStopCardComponent({
                     <button
                       type="button"
                       onClick={() => setShowStopNotes((v) => !v)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 hover:border-emerald-400"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-semibold border transition-all cursor-pointer bg-[#F6F3EB] dark:bg-[#22242B] text-[#403B33] dark:text-slate-200 border-[#EAE2D3] dark:border-[#323540]"
                     >
                       <MessageSquare className="h-3 w-3" />
                       <span>โน้ตกลุ่ม ({pinnedNotesCount})</span>
                     </button>
                   )}
                 </div>
-              )}
+
+                {elevatorTip && (
+                  <div className="px-3 py-2 rounded-[4px] bg-[#F6F3EB] dark:bg-teal-950/35 border border-[#EAE2D3] dark:border-teal-800/60 text-[11px] font-medium text-[#403B33] dark:text-teal-200 leading-relaxed">
+                    {elevatorTip}
+                  </div>
+                )}
+
+                {lastTrainTip && (
+                  <div className="px-3 py-2 rounded-[4px] bg-[#FFF5F2] dark:bg-indigo-950/35 border border-[#F8D3CB] dark:border-indigo-800/60 text-[11px] font-semibold text-[#B52F1E] dark:text-indigo-200 leading-relaxed">
+                    {lastTrainTip}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Editorial Traveler's Note Box (Transit Details + Food Recommendation) */}
+            {(transitGuide.details || item.food_recommendation) && (
+              <div className="bg-[#FAF7F2] dark:bg-[#1D1F26] border-l-2 border-l-[#C83E2D] rounded-r-md p-3 space-y-2.5 text-left">
+                {transitGuide.details && (
+                  <div>
+                    <div className="text-[10px] font-bold tracking-widest text-[#C83E2D] dark:text-[#E05A47] uppercase mb-0.5">
+                      Transit & Route Note
+                    </div>
+                    <p className="text-xs text-[#443E36] dark:text-slate-200 leading-relaxed">
+                      {transitGuide.details}
+                    </p>
+                  </div>
+                )}
+
+                {item.food_recommendation && (
+                  <div className={transitGuide.details ? 'pt-2 border-t border-[#EBE4D8] dark:border-[#2C2F3A]' : ''}>
+                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                      <span className="text-[10px] font-bold tracking-widest text-[#C83E2D] dark:text-[#E05A47] uppercase">
+                        Traveler’s Note · ร้านแนะนำ
+                      </span>
+                      {foodSearchUrl && (
+                        <a
+                          href={foodSearchUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-[3px] bg-[#1C2630] hover:bg-[#2D3B4A] text-white transition-all shrink-0 cursor-pointer"
+                        >
+                          <span>แผนที่ร้าน 📍</span>
+                          <ExternalLink className="h-2.5 w-2.5 opacity-80" />
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#443E36] dark:text-slate-200 leading-relaxed">
+                      {item.food_recommendation}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Backup Plan (Plan B) */}
+            {item.backup_plan && (
+              <div className="pt-0.5 text-left">
+                <button
+                  type="button"
+                  onClick={() => onTogglePlanB(item.id)}
+                  className="text-xs font-bold text-[#403B33] dark:text-slate-300 inline-flex items-center gap-1.5 hover:text-[#C83E2D] dark:hover:text-rose-400 transition-colors cursor-pointer"
+                >
+                  <div className="w-5 h-5 rounded-[4px] bg-[#FFF5F2] dark:bg-rose-500/20 border border-[#F8D3CB] dark:border-rose-800 flex items-center justify-center text-[#C83E2D] dark:text-rose-400">
+                    <Shield className="h-3 w-3" />
+                  </div>
+                  <span>แผนสำรอง (Plan B)</span>
+                  {isPlanBOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </button>
+                {isPlanBOpen && (
+                  <div className="p-3.5 mt-2 rounded-lg bg-[#FAF7F2] dark:bg-[#121316] text-xs text-[#443E36] dark:text-slate-200 space-y-2 border border-[#EAE2D3] dark:border-[#262932] text-left">
+                    <div className="text-[10px] font-bold tracking-widest uppercase text-[#8C8275] dark:text-slate-400 text-left">
+                      Backup Spots & Dining
+                    </div>
+                    <div className="space-y-1.5">
+                      {item.backup_plan
+                        .split('\n')
+                        .filter((line: string) => line.trim().length > 0)
+                        .map((line: string, lineIdx: number) => {
+                          let cleanName = line
+                            .replace(/^(ร้านอาหารสำรอง|สถานที่สำรอง|จุดเที่ยวสำรอง|แผนสำรอง|\d+[\).:-]|\*|•)\s*/i, '')
+                            .trim();
+                          if (cleanName.includes(':')) {
+                            cleanName = cleanName.split(':')[1].trim();
+                          }
+
+                          const lineMapsUrl =
+                            item.backup_links && item.backup_links[lineIdx]
+                              ? item.backup_links[lineIdx]
+                              : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                  cleanName + ' ' + (item.city || 'Japan')
+                                )}`;
+
+                          return (
+                            <div
+                              key={lineIdx}
+                              className="p-2.5 rounded-md bg-white dark:bg-[#1e2027] border border-[#EAE2D3] dark:border-[#262932] flex items-center justify-between gap-3 hover:border-[#C83E2D] transition-all text-left"
+                            >
+                              <span className="font-medium text-[#2D2820] dark:text-slate-200 leading-relaxed text-left flex-1">
+                                {line}
+                              </span>
+                              <a
+                                href={lineMapsUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-[4px] bg-[#F6F3EB] dark:bg-slate-800 text-[#2D2820] dark:text-slate-200 hover:bg-[#1C2630] hover:text-white transition-all shrink-0 cursor-pointer"
+                              >
+                                <span>แผนที่ 📍</span>
+                                <ExternalLink className="h-2.5 w-2.5" />
+                              </a>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Interactive Drawers (Time Tuner, Shopping, Group Notes) */}
+            {(showTimeTuner || showStopShopping || showStopNotes) && (
+              <div className="pt-2 border-t border-[#F0ECE3] dark:border-[#22252e] space-y-2 text-left">
 
             {/* 1. Smart Cascade Time Tuner Drawer */}
             {showTimeTuner && (
@@ -1218,32 +1177,32 @@ function ItineraryStopCardComponent({
             )}
           </div>
           )}
-        </div>
 
-        {/* Clean 2-Button Action Footer (Navigate Maps | Show to Staff Card) */}
-        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-[#262932] border-t border-slate-100 dark:border-[#262932] bg-slate-50/50 dark:bg-[#121316]/60 text-xs font-bold text-slate-700 dark:text-slate-300">
-          <a
-            href={mainPlaceDirectionsUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="min-h-11 py-2.5 px-3 flex items-center justify-center gap-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 active:bg-blue-100/50 transition-colors cursor-pointer text-center touch-manipulation"
-          >
-            <Navigation className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-            <span className="truncate">นำทาง Maps</span>
-          </a>
+            {/* Editorial 2-Button Action Grid (Option A - POPEYE/BRUTUS Style) */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <a
+                href={mainPlaceDirectionsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="min-h-10 py-2.5 px-3 rounded-md bg-[#1C2630] hover:bg-[#293847] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation shadow-2xs"
+              >
+                <Navigation className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">นำทาง Google Maps</span>
+              </a>
 
-          <button
-            type="button"
-            onClick={() => setShowStaffModal(true)}
-            className="min-h-11 py-2.5 px-3 flex items-center justify-center gap-1.5 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 active:bg-amber-100/50 transition-colors cursor-pointer text-center touch-manipulation"
-            title="แสดงชื่อสถานที่ตัวใหญ่ให้คนขับแท็กซี่หรือพนักงานสถานีรถไฟดู"
-          >
-            <Eye className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-            <span className="truncate">โชว์ถามทาง 🚕</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setShowStaffModal(true)}
+                className="min-h-10 py-2.5 px-3 rounded-md bg-white hover:bg-[#F8F6F0] dark:bg-[#22252E] dark:hover:bg-[#2B2F3A] text-[#2D2820] dark:text-slate-100 border border-[#D8D0C2] dark:border-[#363A45] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation"
+                title="แสดงชื่อสถานที่ภาษาญี่ปุ่นตัวใหญ่ให้คนขับแท็กซี่หรือพนักงานสถานีรถไฟดู"
+              >
+                <MessageSquare className="h-3.5 w-3.5 text-[#C83E2D] dark:text-rose-400 shrink-0" />
+                <span className="truncate">โชว์ชื่อภาษาญี่ปุ่น</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
       {showStaffModal && (
         <ShowToStaffModal
@@ -1289,7 +1248,7 @@ function ItineraryStopCardComponent({
 }
 
 /**
- * 2. Thumbnail / Magazine Grid View (Ref: Trip.com / Airbnb / Lemon8)
+ * 2. Thumbnail / Magazine Grid View (Option A - Modern Japanese Editorial)
  * Uses aspect-[16/10] (aspect-ratio) on image container to reserve layout space and prevent CLS.
  */
 function ItineraryThumbnailCardComponent({
@@ -1322,18 +1281,14 @@ function ItineraryThumbnailCardComponent({
   return (
     <>
       <div
-        className={`group rounded-3xl border overflow-hidden flex flex-col justify-between transition-all duration-300 card-elevation ${
-          visited
-            ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/15 dark:bg-emerald-950/15'
-            : 'border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500/60 hover:-translate-y-0.5'
-        }`}
+        className={`group rounded-xl border border-[#DFD7C7] dark:border-[#2C2A26] border-l-4 border-l-[#C83E2D] overflow-hidden flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#181a20] shadow-[0_3px_14px_rgba(35,30,20,0.05)] hover:-translate-y-0.5`}
       >
         {/* Top Visual Thumbnail with aspect-ratio to prevent CLS */}
         <div>
           <div
             style={{ aspectRatio: '16 / 10' }}
             onClick={() => setShowLightbox(true)}
-            className={`relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br ${visual.gradient} cursor-zoom-in`}
+            className="relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br from-[#1C2630] to-[#35475A] cursor-zoom-in"
             title="แตะที่รูปเพื่อขยายเต็มจอ / ดูหน้าร้าน Street View"
           >
             {!imgError && (
@@ -1346,7 +1301,7 @@ function ItineraryThumbnailCardComponent({
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/15" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#141C24]/90 via-[#141C24]/25 to-black/15" />
 
             {/* Top Overlay Badges */}
             <div
@@ -1354,11 +1309,11 @@ function ItineraryThumbnailCardComponent({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-1 flex-wrap">
-                <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-black/60 text-white backdrop-blur-md border border-white/15">
-                  {item.date_label || `Day ${idx + 1}`}
+                <span className="px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase bg-white/95 text-[#1A1A1A]">
+                  STOP {String(idx + 1).padStart(2, '0')}
                 </span>
                 {item.time_slot && (
-                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-600/85 text-white backdrop-blur-md">
+                  <span className="px-2 py-0.5 rounded-[3px] text-[10px] font-bold bg-[#1C2630]/90 text-white">
                     {item.time_slot}
                   </span>
                 )}
@@ -1367,38 +1322,29 @@ function ItineraryThumbnailCardComponent({
               <button
                 type="button"
                 onClick={toggleVisited}
-                className={`px-2.5 py-1 rounded-xl text-[10px] font-black backdrop-blur-md border transition-all cursor-pointer active:scale-95 ${
+                className={`px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-95 ${
                   visited
-                    ? 'bg-emerald-500 text-white border-emerald-300 shadow-md'
-                    : 'bg-black/55 text-white border-white/25 hover:bg-black/75'
+                    ? 'bg-[#FFF5F2]/95 text-[#C83E2D] border border-[#C83E2D] -rotate-2'
+                    : 'bg-[#C83E2D] text-white hover:bg-[#B23222]'
                 }`}
               >
-                {visited ? '💮 แวะแล้ว (済)' : '🐾 เช็กอิน'}
+                {visited ? `VISITED ${meta?.at || '済'}` : 'CHECK-IN'}
               </button>
             </div>
 
             {/* Bottom Overlay Landmark Tag & City */}
             <div className="absolute bottom-2.5 inset-x-3 flex items-end justify-between gap-2">
               <div className="min-w-0">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 drop-shadow-xs flex-wrap">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/85 tracking-wide flex-wrap">
                   <span>{visual.emoji}</span>
                   <span>
                     {visual.tagLabel}
                     {item.city && !visual.tagLabel.toLowerCase().includes(item.city.toLowerCase())
-                      ? ` • ${item.city}`
+                      ? ` · ${item.city}`
                       : ''}
                   </span>
-                  {visual.isCustomPhoto ? (
-                    <span className="px-1.5 py-0.2 rounded bg-emerald-500/80 text-white text-[9px] font-black">
-                      ✨ รูปของฉัน
-                    </span>
-                  ) : visual.photoSource === 'google_places' ? (
-                    <span className="px-1.5 py-0.2 rounded bg-white/20 text-white/95 text-[9px] font-semibold">
-                      Google Maps
-                    </span>
-                  ) : null}
                 </span>
-                <h3 className="text-sm sm:text-base font-black text-white leading-snug line-clamp-2 drop-shadow-sm">
+                <h3 className="font-serif text-sm sm:text-base font-bold text-white leading-snug line-clamp-2 drop-shadow-sm">
                   {item.main_place}
                 </h3>
               </div>
@@ -1410,7 +1356,7 @@ function ItineraryThumbnailCardComponent({
                 <button
                   type="button"
                   onClick={() => setShowLightbox(true)}
-                  className="p-1.5 rounded-xl bg-black/50 hover:bg-black/75 text-white/90 border border-white/20 backdrop-blur-md shrink-0 cursor-pointer"
+                  className="p-1.5 rounded-[4px] bg-black/55 hover:bg-black/80 text-white/90 border border-white/20 shrink-0 cursor-pointer"
                   title="ขยายดูรูปเต็มจอ / ดูหน้าร้าน Street View"
                 >
                   <ZoomIn className="h-3.5 w-3.5" />
@@ -1418,7 +1364,7 @@ function ItineraryThumbnailCardComponent({
                 <button
                   type="button"
                   onClick={() => setShowCustomPhotoModal(true)}
-                  className="p-1.5 rounded-xl bg-black/50 hover:bg-black/75 text-white/90 border border-white/20 backdrop-blur-md shrink-0 cursor-pointer"
+                  className="p-1.5 rounded-[4px] bg-black/55 hover:bg-black/80 text-white/90 border border-white/20 shrink-0 cursor-pointer"
                   title="เปลี่ยนรูปสถานที่ (เลือกรูป Google Maps / อัปโหลด PNG)"
                 >
                   <Camera className="h-3.5 w-3.5" />
@@ -1427,7 +1373,7 @@ function ItineraryThumbnailCardComponent({
                   <button
                     type="button"
                     onClick={() => onOpenEditActivity(item)}
-                    className="p-1.5 rounded-xl bg-black/50 hover:bg-black/75 text-white/90 border border-white/20 backdrop-blur-md shrink-0 cursor-pointer"
+                    className="p-1.5 rounded-[4px] bg-black/55 hover:bg-black/80 text-white/90 border border-white/20 shrink-0 cursor-pointer"
                     title="แก้ไข"
                   >
                     <Edit3 className="h-3.5 w-3.5" />
@@ -1440,45 +1386,45 @@ function ItineraryThumbnailCardComponent({
           {/* Compact Snippet Body */}
           <div className="p-3 sm:p-3.5 space-y-1.5 text-left">
             {transitGuide.details ? (
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-1 flex items-center gap-1.5 font-medium">
-                <Bus className="h-3 w-3 text-indigo-500 shrink-0" />
+              <p className="text-[11px] text-[#443E36] dark:text-slate-300 line-clamp-1 flex items-center gap-1.5 font-medium">
+                <Bus className="h-3 w-3 text-[#C83E2D] shrink-0" />
                 <span className="truncate">{transitGuide.details}</span>
               </p>
             ) : null}
 
             {item.food_recommendation ? (
-              <p className="text-[11px] text-amber-700 dark:text-amber-300 line-clamp-1 flex items-center gap-1.5 font-semibold">
-                <Utensils className="h-3 w-3 text-amber-500 shrink-0" />
+              <p className="text-[11px] text-[#B52F1E] dark:text-amber-300 line-clamp-1 flex items-center gap-1.5 font-semibold">
+                <Utensils className="h-3 w-3 text-[#C83E2D] shrink-0" />
                 <span className="truncate">{item.food_recommendation}</span>
               </p>
             ) : null}
 
             {!transitGuide.details && !item.food_recommendation && (
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                แตะที่รูปเพื่อขยายเต็มจอ หรือแตะปุ่มด้านล่างเพื่อนำทาง
+              <p className="text-[11px] text-[#8C8275] dark:text-slate-500 font-medium">
+                {item.date_label || `Day ${idx + 1}`} · แตะที่รูปเพื่อขยายเต็มจอ
               </p>
             )}
           </div>
         </div>
 
         {/* Bottom 2-Action Bar */}
-        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-[#262932] border-t border-slate-100 dark:border-[#262932] bg-slate-50/60 dark:bg-[#121316]/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+        <div className="grid grid-cols-2 gap-1.5 p-2.5 pt-0">
           <a
             href={mainPlaceDirectionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="min-h-10 py-2 px-2 flex items-center justify-center gap-1 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 active:bg-blue-100/50 transition-colors cursor-pointer touch-manipulation"
+            className="min-h-9 py-1.5 px-2 rounded bg-[#1C2630] hover:bg-[#293847] text-white text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer touch-manipulation"
           >
-            <Navigation className="h-3 w-3 text-blue-500 shrink-0" />
+            <Navigation className="h-3 w-3 shrink-0" />
             <span className="truncate">นำทาง Maps</span>
           </a>
           <button
             type="button"
             onClick={() => setShowStaffModal(true)}
-            className="min-h-10 py-2 px-2 flex items-center justify-center gap-1 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-400 active:bg-amber-100/50 transition-colors cursor-pointer touch-manipulation"
+            className="min-h-9 py-1.5 px-2 rounded bg-white hover:bg-[#F8F6F0] dark:bg-[#22252E] text-[#2D2820] dark:text-slate-200 border border-[#D8D0C2] dark:border-[#363A45] text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer touch-manipulation"
           >
-            <Eye className="h-3 w-3 text-amber-500 shrink-0" />
-            <span className="truncate">โชว์ถามทาง 🚕</span>
+            <MessageSquare className="h-3 w-3 text-[#C83E2D] shrink-0" />
+            <span className="truncate">โชว์ชื่อญี่ปุ่น</span>
           </button>
         </div>
       </div>
@@ -1527,7 +1473,7 @@ function ItineraryThumbnailCardComponent({
 }
 
 /**
- * 3. Compact Timeline / Checklist Row View (Ref: Wanderlog / Google Calendar)
+ * 3. Compact Timeline / Checklist Row View (Option A - Collapsed Stop Style)
  */
 function ItineraryCompactRowComponent({
   item,
@@ -1557,32 +1503,19 @@ function ItineraryCompactRowComponent({
   return (
     <>
       <div
-        className={`group flex items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl border transition-all ${
+        className={`group flex items-center justify-between gap-2.5 p-3 rounded-lg border transition-all ${
           visited
-            ? 'border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/25 dark:bg-emerald-950/20'
-            : 'border-slate-200/80 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-400/60'
+            ? 'border-[#EAE3D6] dark:border-emerald-800/60 bg-white dark:bg-[#181a20] shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
+            : 'border-[#EAE3D6] dark:border-[#262932] border-l-3 border-l-[#C83E2D] bg-white dark:bg-[#181a20] hover:border-[#C83E2D]/60 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
         }`}
       >
-        {/* Left: Check-in Circle + Real Place Mini Thumbnail + Time */}
+        {/* Left: Mini Thumbnail + Editorial Time & Serif Title */}
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={toggleVisited}
-            className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all cursor-pointer active:scale-90 ${
-              visited
-                ? 'bg-emerald-500 text-white border-emerald-500 shadow-2xs'
-                : 'bg-slate-50 dark:bg-[#1e2027] text-slate-400 border-slate-200 dark:border-[#262932] hover:border-blue-400 hover:text-blue-500'
-            }`}
-            title={visited ? 'แวะแล้ว (済)' : 'กดเพื่อเช็กอิน'}
-          >
-            {visited ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <span className="text-xs">{visual.emoji}</span>}
-          </button>
-
           <button
             type="button"
             onClick={() => setShowLightbox(true)}
             style={{ aspectRatio: '1 / 1' }}
-            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br ${visual.gradient} block cursor-zoom-in`}
+            className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-[#1C2630] border border-[#EAE3D6] dark:border-[#262932] block cursor-zoom-in"
             title="แตะเพื่อขยายดูรูปสถานที่จริง"
           >
             {!imgError && (
@@ -1598,20 +1531,9 @@ function ItineraryCompactRowComponent({
           </button>
 
           <div className="min-w-0 flex-1 text-left">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-mono">
-                {item.date_label || `D${idx + 1}`}
-              </span>
-              {item.time_slot && (
-                <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400">
-                  {item.time_slot}
-                </span>
-              )}
-              {item.city && (
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 truncate">
-                  • {item.city}
-                </span>
-              )}
+            <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-semibold text-[#7D7467] dark:text-slate-400">
+              <span>{item.time_slot || item.date_label || `STOP ${idx + 1}`}</span>
+              {item.city && <span>· {item.city}</span>}
             </div>
 
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -1619,28 +1541,36 @@ function ItineraryCompactRowComponent({
                 href={mainPlaceMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className={`text-xs sm:text-sm font-black truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
-                  visited ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white'
+                className={`font-serif text-sm font-semibold truncate hover:text-[#C83E2D] transition-colors ${
+                  visited ? 'text-[#4A4640] dark:text-slate-400' : 'text-[#1A1A1A] dark:text-white'
                 }`}
               >
-                {item.main_place}
+                {idx + 1}. {item.main_place}
               </a>
-              {visited && (
-                <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 shrink-0">
-                  済
-                </span>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Right: Quick Action Icons */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Right: Editorial Visited Stamp + Quick Action Icons */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={toggleVisited}
+            className={`px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer ${
+              visited
+                ? 'border border-[#C83E2D] text-[#C83E2D] -rotate-2 bg-[#FFF5F2]/60'
+                : 'border border-[#D8CFC0] dark:border-slate-700 text-[#7A7062] dark:text-slate-300 hover:border-[#C83E2D] hover:text-[#C83E2D]'
+            }`}
+            title={visited ? 'แวะแล้ว (済)' : 'กดเพื่อเช็กอิน'}
+          >
+            {visited ? `VISITED ${meta?.at || '済'}` : 'CHECK-IN'}
+          </button>
+
           <a
             href={mainPlaceDirectionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-md bg-[#1C2630] text-white hover:bg-[#2B3A48] transition-colors cursor-pointer"
             title="นำทาง Google Maps"
           >
             <Navigation className="h-3.5 w-3.5" />
@@ -1649,7 +1579,7 @@ function ItineraryCompactRowComponent({
           <button
             type="button"
             onClick={() => setShowStaffModal(true)}
-            className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-md bg-[#F8F6F0] dark:bg-[#22252E] text-[#2D2820] dark:text-slate-200 border border-[#D8D0C2] dark:border-[#363A45] hover:border-[#C83E2D] transition-colors cursor-pointer"
             title="โชว์ถามทาง / แท็กซี่"
           >
             <Eye className="h-3.5 w-3.5" />
@@ -1659,7 +1589,7 @@ function ItineraryCompactRowComponent({
             <button
               type="button"
               onClick={() => onOpenEditActivity(item)}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+              className="p-2 rounded-md text-[#8C8275] hover:text-[#1A1A1A] dark:hover:text-white hover:bg-[#F4EFE6] dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
               title="แก้ไข"
             >
               <Edit3 className="h-3.5 w-3.5" />

@@ -180,6 +180,12 @@
      - **Option B: Clean Flight & Transit HUD** (`option-b.html`): คอนเซปต์ Apple Maps Guides & Flighty, โหมด Dark Slate (`#0A0E17`, `#111827`), ข้อมูล Telemetry Matrix 3 ช่อง (เวลา, คิว, ลิฟต์), คมชัดอ่านง่ายกลางแดด
      - **Option C: Warm Minimalist Scrapbook** (`option-c.html`): คอนเซปต์ Kinfolk & Muji Travel Journal, ตั๋วรถไฟมีรอยปรุ Ticket Notch, ตราประทับ Eki Stamp / Inkan Seal, โทนสีเขียวมัทฉะและน้ำตาลคั่ว
    - คอมไพล์หน้าต่างเปรียบเทียบ Interactive Explorer ผ่าน `build_explorer.py` (`.oil-ui/itinerary-cards/style-explorer.html`) และถ่ายภาพสกรีนช็อตความละเอียดสูงครบทุกมุมมอง (`sheet.png`, `editorial.png`, `transit-hud.png`, `scrapbook.png`) ผ่าน `shoot.mjs` พร้อม Artifact `ui-style-comparison.md` เพื่อให้ผู้ใช้เลือกทิศทางที่ต้องการก่อนนำไปประยุกต์ใช้ในโค้ดหลัก
+14. **Applied Option A: Modern Japanese Editorial Design (`src/components/trip-detail/ItineraryStopCard.tsx`, `src/components/trip-detail/TransitConnector.tsx`, `src/components/trip-tabs/TripPlanTab.tsx`)**:
+   - ปรับโฉมการ์ดสถานที่ทั้ง 3 โหมด (`ItineraryStopCard`, `ItineraryThumbnailCard`, `ItineraryCompactRow`) ตามดีไซน์ **Option A (Modern Japanese Editorial — POPEYE/BRUTUS Style)** ที่ผู้ใช้เลือก:
+     - ขอบซ้ายสีแดงชาดเสาโทริอิ (`border-l-4 border-l-[#C83E2D]`) และกรอบการ์ดโทนกระดาษ Washi (`border-[#DFD7C7]`)
+     - ส่วนหัวการ์ดแบบ **16:9 Magazine Hero Banner** แสดงภาพสถานที่จริงพร้อมลวดลายคลื่นญี่ปุ่น (`#1C2630` → `#35475A`), ป้าย `STOP 0X / CATEGORY`, ปุ่มประทับตรา `VISITED 済` สไตล์ตราปั๊มสีแดงชาดเอียง `-2deg`, และชื่อสถานที่ฟอนต์ Serif คมชัด
+     - แถวตารางเวลาฟอนต์ Serif (`10:15 — 11:30`), ป้ายสิ่งอำนวยความสะดวกโทน Washi (`#F6F3EB`), กล่อง `TRAVELER'S NOTE & TRANSIT` ขอบซ้ายสีแดงชาด และปุ่มคู่ด้านล่างสีน้ำเงินครามเข้ม (`#1C2630`) คู่กับปุ่มกรอบกระดาษ Washi
+   - ปรับปรุง `TransitConnector.tsx` และแถบคั่นวันใน `TripPlanTab.tsx` (`DAY 0X // CITY` + แถบ Progress สีแดงชาด `#C83E2D`) ให้เข้าชุดกันทั้งหน้าไทม์ไลน์
 
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน

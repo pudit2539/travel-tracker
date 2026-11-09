@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "round": "02",
+  "nativeViewport": "390x844",
+  "candidates": [
+    {
+      "id": "glass-cinema",
+      "source": "option-d.html",
+      "name": "Immersive Glass Cinema",
+      "concept": "Apple Vision & Airbnb Luxe — พื้นหลังเบลอจากภาพถ่ายจริง การ์ดกระจกซ้อนเลเยอร์ พร้อมกรอบภาพ Picture-in-Picture กาแฟและวิวสะพาน",
+      "typography": "SF Pro Display + Prompt (Bold Cinema Hierarchy)",
+      "palette": ["#0D0B0A", "#1E1916", "#F97316", "#FDBA74", "#FAF7F2"],
+      "traits": [
+        "Real photo ambient blur backdrop",
+        "Picture-in-Picture dual photo card (River + Latte)",
+        "Photo-backed completed & next stop strips",
+        "Warm Sunset Amber glass accents"
+      ]
+    },
+    {
+      "id": "ryokan-luxury",
+      "source": "option-e.html",
+      "name": "Kyoto Ryokan Luxury & Gold",
+      "concept": "Aman Kyoto & Hoshinoya — ความหรูหราสงบนิ่งแบบเรียวกังระดับไฮเอนด์ สีดำถ่านไม้สน เส้นทอง Kintsugi และอักษรญี่ปุ่นแนวตั้ง",
+      "typography": "Editorial Mincho Serif + Clean Sans (Yu Mincho / Georgia / Prompt)",
+      "palette": ["#111311", "#181B18", "#D4AF37", "#E5C76B", "#FAF6EC"],
+      "traits": [
+        "Asymmetric Japanese Kanji vertical pillar",
+        "Kintsugi Gold hairline gallery frames",
+        "Dual-photo architectural inset",
+        "Concierge-style specification grid"
+      ]
+    },
+    {
+      "id": "bento-magazine",
+      "source": "option-f.html",
+      "name": "Neo-Tokyo Bento Magazine",
+      "concept": "Casa BRUTUS & Monocle — การ์ดโครงสร้าง Bento Grid แยกช่องภาพวิว ภาพกาแฟ และสถิติสำคัญอย่างมีมิติด้วยเงา Neo-Brutalist",
+      "typography": "Heavy Display Sans + Crisp UI (Inter / Prompt Black)",
+      "palette": ["#EFEAE0", "#FAF7F2", "#18181B", "#D9381E", "#1F4E3D"],
+      "traits": [
+        "Multi-cell Bento Grid photo & info layout",
+        "Tactile offset border & shadow (#18181B)",
+        "Dedicated visual tile for signature menu",
+        "Vibrant Vermilion & Forest Jade badges"
+      ]
+    }
+  ]
+}
+

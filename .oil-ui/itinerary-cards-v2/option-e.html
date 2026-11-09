@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, height=844, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>02 - Kyoto Ryokan Luxury & Gold</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    background-color: #111311;
+    color: #F5F1E6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Prompt", sans-serif;
+    overflow: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle Architectural Grid Lines */
+  .status-bar {
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #EDE7D9;
+  }
+  .status-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* Ryokan Header */
+  .ryokan-header {
+    padding: 6px 20px 14px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .gold-kicker {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #E2C15A;
+    text-transform: uppercase;
+  }
+  .ryokan-title {
+    font-family: "Georgia", "Yu Mincho", "Hiragino Mincho ProN", serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: #FAF6EC;
+    margin-top: 3px;
+    letter-spacing: -0.3px;
+  }
+  .kanji-seal {
+    border: 1px solid #D4AF37;
+    padding: 4px 10px;
+    color: #E5C76B;
+    font-family: "Yu Mincho", "Georgia", serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+
+  /* Stream */
+  .ryokan-stream {
+    padding: 14px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  /* Stop 1: Luxury Gallery Row */
+  .ryokan-row-card {
+    background: #191C19;
+    border: 1px solid rgba(212, 175, 55, 0.28);
+    border-radius: 6px;
+    padding: 8px 12px 8px 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ryokan-thumb {
+    width: 52px;
+    height: 46px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    flex-shrink: 0;
+  }
+  .ryokan-row-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .ryokan-row-sub {
+    font-size: 11px;
+    color: #C7BFA8;
+    letter-spacing: 0.4px;
+  }
+  .ryokan-row-title {
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    color: #FAF6EC;
+    margin-top: 1px;
+  }
+  .gold-stamp {
+    font-size: 11px;
+    font-weight: 700;
+    color: #E5C76B;
+    border: 1px solid rgba(229, 199, 107, 0.5);
+    padding: 3px 8px;
+    letter-spacing: 1px;
+  }
+
+  /* Transit Concierge Bar */
+  .ryokan-transit {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px;
+    background: #171A17;
+    border-top: 1px solid rgba(212, 175, 55, 0.2);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    font-size: 12px;
+    color: #DFD7C4;
+  }
+  .ryokan-transit-fare {
+    color: #E5C76B;
+    font-weight: 700;
+  }
+
+  /* Active Hero Card: Asymmetric Ryokan Suite Card */
+  .ryokan-hero {
+    background: #181B18;
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Split Visual Gallery Header */
+  .gallery-split {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    height: 184px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  }
+  .kanji-pillar {
+    background: #121512;
+    border-right: 1px solid rgba(212, 175, 55, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+  }
+  .pillar-num {
+    font-family: "Georgia", serif;
+    font-size: 13px;
+    color: #E5C76B;
+    font-weight: 700;
+  }
+  .pillar-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-family: "Yu Mincho", "Georgia", serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: #D8D0BE;
+  }
+
+  .gallery-stage {
+    position: relative;
+    overflow: hidden;
+  }
+  .stage-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .stage-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(17,19,17,0.2) 0%, rgba(17,19,17,0.88) 100%);
+  }
+
+  .stage-top-time {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    background: rgba(18, 21, 18, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    padding: 4px 10px;
+    font-family: "Georgia", serif;
+    font-size: 12px;
+    color: #F5F1E6;
+  }
+
+  .stage-inset-latte {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 66px;
+    height: 66px;
+    border: 1.5px solid #E5C76B;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+    overflow: hidden;
+  }
+  .stage-inset-latte img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .stage-bottom-caption {
+    position: absolute;
+    bottom: 10px;
+    left: 12px;
+    right: 12px;
+  }
+  .caption-sub {
+    font-size: 11px;
+    color: #E5C76B;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .caption-main {
+    font-family: "Georgia", serif;
+    font-size: 20px;
+    color: #FFFFFF;
+    margin-top: 2px;
+  }
+
+  /* Ryokan Body */
+  .ryokan-body {
+    padding: 14px 16px 16px;
+  }
+
+  /* Architectural Spec Grid */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    background: #141714;
+    margin-bottom: 12px;
+  }
+  .spec-cell {
+    padding: 7px 10px;
+    border-right: 1px solid rgba(212, 175, 55, 0.2);
+  }
+  .spec-cell:last-child { border-right: none; }
+  .spec-label {
+    font-size: 10px;
+    color: #BFB6A0;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .spec-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #FAF6EC;
+    margin-top: 2px;
+  }
+
+  .concierge-box {
+    padding: 10px 12px;
+    background: #141714;
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    font-size: 13px;
+    line-height: 1.45;
+    color: #E8E2D4;
+    margin-bottom: 12px;
+  }
+  .concierge-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #E5C76B;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  /* Luxury Buttons */
+  .ryokan-actions {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 8px;
+  }
+  .btn-gold {
+    padding: 11px 12px;
+    background: #D4AF37;
+    color: #111311;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-outline-gold {
+    padding: 11px 12px;
+    background: transparent;
+    color: #F5F1E6;
+    border: 1px solid rgba(212, 175, 55, 0.55);
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="status-icons">
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="none"><path d="M1 9.5H2.5V1.5H1V9.5ZM4.5 9.5H6V3.5H4.5V9.5ZM8.5 9.5H10V5.5H8.5V9.5ZM12.5 9.5H14V7.5H12.5V9.5Z" fill="#EDE7D9"/></svg>
+      <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M7 2C9.5 2 11.7 3.1 13.2 4.8L7 11L0.8 4.8C2.3 3.1 4.5 2 7 2Z" fill="#EDE7D9"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="#EDE7D9"/><rect x="2" y="2" width="13" height="7" rx="1" fill="#EDE7D9"/></svg>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="ryokan-header">
+    <div>
+      <div class="gold-kicker">CHAPTER III · KYOTO</div>
+      <h1 class="ryokan-title">Arashiyama Sanctuary</h1>
+    </div>
+    <div class="kanji-seal">嵐山・秋</div>
+  </header>
+
+  <!-- Feed -->
+  <main class="ryokan-stream">
+
+    <!-- Stop 01 -->
+    <div class="ryokan-row-card">
+      <img class="ryokan-thumb" src="assets/C8-53593907.jpg" alt="Kiyomizu-dera">
+      <div class="ryokan-row-info">
+        <div class="ryokan-row-sub">07:00 – 09:15 · 清水寺</div>
+        <div class="ryokan-row-title">I. Kiyomizu-dera (วัดน้ำใส)</div>
+      </div>
+      <span class="gold-stamp">VISITED</span>
+    </div>
+
+    <!-- Transit Bar -->
+    <div class="ryokan-transit">
+      <span>JR San-in Line · Kyoto → Saga-Arashiyama (17m)</span>
+      <span class="ryokan-transit-fare">Plat. 32 · ¥240</span>
+    </div>
+
+    <!-- Stop 02: Asymmetric Ryokan Hero Card -->
+    <article class="ryokan-hero">
+      <div class="gallery-split">
+        <div class="kanji-pillar">
+          <span class="pillar-num">02</span>
+          <span class="pillar-vertical">嵐山珈琲</span>
+          <span class="pillar-num">弐</span>
+        </div>
+
+        <div class="gallery-stage">
+          <img class="stage-main-img" src="assets/C3-83299425.jpg" alt="Togetsukyo Bridge">
+          <div class="stage-scrim"></div>
+
+          <div class="stage-top-time">10:15 — 11:30</div>
+
+          <div class="stage-inset-latte">
+            <img src="assets/C9-120919549.jpg" alt="Matcha & Latte Art">
+          </div>
+
+          <div class="stage-bottom-caption">
+            <div class="caption-sub">KATSURA RIVERFRONT · SPECIALTY COFFEE</div>
+            <h2 class="caption-main">% Arabica Kyoto Arashiyama</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="ryokan-body">
+        <div class="spec-grid">
+          <div class="spec-cell">
+            <div class="spec-label">SIGNATURE</div>
+            <div class="spec-val">Kyoto Latte</div>
+          </div>
+          <div class="spec-cell">
+            <div class="spec-label">EST. WAIT</div>
+            <div class="spec-val">~15-20 นาที</div>
+          </div>
+          <div class="spec-cell">
+            <div class="spec-label">STATION ACCESS</div>
+            <div class="spec-val">มีลิฟต์ JR</div>
+          </div>
+        </div>
+
+        <div class="concierge-box">
+          <div class="concierge-title">CONCIERGE NOTE</div>
+          แนะนำสั่ง Hot Kyoto Latte หรือ Matcha Latte แล้วเดินชมวิวสะพานไม้ Togetsukyo ริมน้ำท่ามกลางหุบเขาใบไม้เปลี่ยนสี
+        </div>
+
+        <div class="ryokan-actions">
+          <button class="btn-gold">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            <span>นำทางแผนที่</span>
+          </button>
+          <button class="btn-outline-gold">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>โชว์พนักงาน</span>
+          </button>
+        </div>
+      </div>
+    </article>
+
+    <!-- Stop 03 -->
+    <div class="ryokan-row-card">
+      <img class="ryokan-thumb" src="assets/C1-85860113.jpg" alt="Kimono Forest">
+      <div class="ryokan-row-info">
+        <div class="ryokan-row-sub">11:45 – 13:00 · เดินเลียบแม่น้ำ 350m</div>
+        <div class="ryokan-row-title">III. Togetsukyo & Kimono Forest</div>
+      </div>
+      <span class="gold-stamp">NEXT</span>
+    </div>
+
+  </main>
+
+</body>
+</html>
