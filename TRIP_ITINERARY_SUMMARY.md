@@ -219,8 +219,10 @@
 
 #### 📍 [17:00 น. เป็นต้นไป] Shinsaibashi & Dotonbori: เดินสำรวจถนนคนเดิน ถ่ายรูปคู่ป้าย Dotonbori Glico Sign และช้อปปิ้งห้าง Daimaru Shinsaibashi (Osaka (Shinsaibashi & Dotonbori))
 - 🚆 **การเดินทาง**: เดินเท้าจากโรงแรม | ฟรี
-- 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: เลือกได้ตามชอบ: Chibo Okonomiyaki Dotonbori (โอโคโนมิยากิกระทะร้อน) หรือ Hakugintei Ito Building Honmachi (ข้าวแกงกะหรี่หมูทอดมิชลิน สาขาเปิดรอบเย็น 17:30-20:30 น.) หรือ Tempura Makino Namba (เซตเทมปุระทอดสดหน้าเคาน์เตอร์)
+- 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: เลือกได้ตามชอบ: Chibo Okonomiyaki Dotonbori (โอโคโนมิยากิกระทะร้อน) หรือ Hakugintei Ito Building Honmachi (ข้าวแกงกะหรี่หมูทอดมิชลิน) หรือ Tempura Makino Namba (เซตเทมปุระทอดสด) หรือ Kura Sushi Dotonbori (ซูชิสายพานสาขาเรือธง) หรือ Mugen Ramen Sennichimae (ราเมงซุปกระดูกวัวเนื้อวากิว)
 - 🛡️ **แผนสำรอง & ร้านอาหาร/คาเฟ่สำรอง**:
+  - ร้านซูชิสายพานสำรอง: Kura Sushi Global Flagship Store Dotonbori (สาขาเรือธงดีไซน์งานเทศกาลญี่ปุ่น มีเกมหยอดจานลุ้นกาชาปอง Bikkura-Pon)
+  - ร้านราเมงซุปกระดูกวัวสำรอง: Mugen Ramen Sennichimae / Namba (無限ラーメン ราเมงซุปกระดูกวัว Gyukotsu เข้มข้น ท็อปเนื้อวากิวสไลด์แผ่นใหญ่)
   - ร้านข้าวแกงกะหรี่สำรอง: Hakugintei Ito Building Honmachi B2 (ข้าวแกงกะหรี่หมูทอดมิชลิน สาขาเชื่อมสถานี Honmachi เปิดรอบเย็น 17:30–20:30 น.)
   - ร้านเทมปุระสำรอง: Tempura Makino Namba Sennichimae (เซตเทมปุระทอดสดหน้าเคาน์เตอร์ + ปลาหมึกดองเกลือเติมฟรี)
   - ร้านอาหารสำรอง 6: Mizuno Okonomiyaki (โอโคโนมิยากิมิชลินบิบกูร์มองด์)
@@ -281,8 +283,10 @@
 
 #### 📍 [18:00 น. เป็นต้นไป] Shinsaibashi & มื้อค่ำ Dotonbori: เดินเท้าจาก Den Den Town ทะลุเข้าโซน Namba / Shinsaibashi เพื่อนำของที่ช้อปมากลับไปเก็บที่โรงแรม Quintessa แล้วออกมาเดินเล่นรับลมริมคลองโดทงโบริ ถ่ายรูปคู่ป้าย Dotonbori Glico Sign (Osaka (Shinsaibashi & Dotonbori))
 - 🚆 **การเดินทาง**: เดินเท้าจาก Den Den Town ทะลุเข้าย่าน Namba / Shinsaibashi กลับโรงแรม Quintessa Hotel Osaka Shinsaibashi Comic & Books | ฟรี
-- 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: ทานมื้อค่ำตามแผน (เลือกได้): ข้าวแกงกะหรี่หมูทอดมิชลิน Hakugintei (สาขา Ito Building เปิดรอบเย็น 17:30-20:30 น.) หรือ เซตเทมปุระทอดสด Tempura Makino Namba หรือ เทมปุระเจ้าดัง Tenmasa Osaka หรือ ราเมงข้อสอบ Ichiran Dotonbori หรือ โอโคโนมิยากิกระทะร้อน Chibo
+- 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: ทานมื้อค่ำตามแผน (เลือกได้): Kura Sushi Global Flagship Store Dotonbori (ซูชิสายพานสาขาเรือธง) หรือ Mugen Ramen Namba/Sennichimae (ราเมงซุปกระดูกวัวเนื้อวากิว) หรือ ข้าวแกงกะหรี่หมูทอดมิชลิน Hakugintei หรือ เซตเทมปุระทอดสด Tempura Makino Namba หรือ ราเมงข้อสอบ Ichiran Dotonbori
 - 🛡️ **แผนสำรอง & ร้านอาหาร/คาเฟ่สำรอง**:
+  - ร้านซูชิสายพานสำรอง: Kura Sushi Global Flagship Store Dotonbori (หรือสาขา Namba Parks South ซูชิสายพานเริ่มต้นจานละ ~150 เยน สั่งผ่านจอภาษาไทย/อังกฤษได้)
+  - ร้านราเมงซุปกระดูกวัวสำรอง: Mugen Ramen Sennichimae / Namba-Naka (無限ラーメン ราเมงซุปกระดูกวัวเข้มข้นและเนื้อวากิวสไลด์แผ่นใหญ่ / มีซุปหม่าล่า)
   - ร้านข้าวแกงกะหรี่มิชลิน: Hakugintei Ito Building Honmachi B2 (ข้าวแกงกะหรี่หมูทอดทงคัตสึ+ไข่ดิบ เปิดรอบเย็นวันศุกร์ 17:30–20:30 น.)
   - ร้านเทมปุระทอดสด: Tempura Makino Namba Sennichimae (เซตเทมปุระทอดสดทีละชิ้นหน้าเคาน์เตอร์ ใกล้ Namba/Dotonbori)
   - ที่เที่ยวสำรอง 1: เดินช้อปปิ้งถนนคนเดิน Shinsaibashi-Suji Shopping Street
@@ -354,6 +358,8 @@
 - 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: On Yasai Shabu Shabu Namba (⚠️ แนะนำให้จองคิวออนไลน์ล่วงหน้า 2–3 สัปดาห์ หรือให้พนักงาน Front โรงแรมช่วยโทรจองให้ตั้งแต่วันแรกที่ไปถึง เพราะช่วงมื้อค่ำเดือนธันวาคมคิว Walk-in ยาวมาก)
 - 🛡️ **แผนสำรอง & ร้านอาหาร/คาเฟ่สำรอง**:
   - ⚠️ ทิปสำคัญ: จองคิว On-Yasai Shabu ล่วงหน้าออนไลน์ 2–3 สัปดาห์ หรือให้พนักงานโรงแรมโทรจองให้ตั้งแต่วันแรกที่ไปถึง
+  - ร้านซูชิสายพานสำรอง: Kura Sushi Global Flagship Store Dotonbori / Namba Parks South (ซูชิสายพานยอดฮิต มีเกมหยอดจานลุ้นกาชาปอง)
+  - ร้านราเมงซุปกระดูกวัวสำรอง: Mugen Ramen Namba / Sennichimae (無限ラーメン ราเมงซุปกระดูกวัวท็อปเนื้อวากิวสไลด์แผ่นใหญ่)
   - ร้านอาหารสำรอง 11: ไก่ย่างเสียบไม้เตาถ่านชื่อดังของคนท้องถิ่น Yakitori Rikimaru Namba
   - คาเฟ่ของหวานสำรอง: Gram Cafe & Pancakes Shinsaibashi (แพนเค้กซูเฟล่ 3 ชั้นนุ่มเด้งละลายในปาก)
   - ร้านราเมนดึกสำรอง: Zundoya Ramen Shinsaibashi (ราเมนซุปกระดูกหมูเข้มข้นเปิด 24 ชม.)
