@@ -404,7 +404,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
       />
 
       {/* 2. Sleek Quick-Glance Logistics & Concierge Tray (Single Compact Row) */}
-      <div className="p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs">
+      <div className="p-2 sm:p-2.5 rounded-2xl bg-[#FDFBF7] dark:bg-[#181a20] border border-[#DFD7C7] dark:border-[#262932] shadow-[0_2px_10px_rgba(35,30,20,0.04)]">
         <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-0.5">
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Logistics Drawers Toggles */}
@@ -413,8 +413,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               onClick={() => toggleLogisticsPanel('flights')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                 showFlights
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                  : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-blue-400'
+                  ? 'bg-[#1C2630] dark:bg-blue-600 text-white border-[#1C2630] dark:border-blue-600 shadow-xs'
+                  : 'bg-[#F6F2E9] dark:bg-[#121316] text-[#2C2A26] dark:text-slate-300 border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D]'
               }`}
             >
               <Plane className="h-3.5 w-3.5 shrink-0" />
@@ -427,8 +427,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               onClick={() => toggleLogisticsPanel('hotels')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                 showHotels
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                  : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-emerald-400'
+                  ? 'bg-[#2E7D5B] text-white border-[#2E7D5B] shadow-xs'
+                  : 'bg-[#F6F2E9] dark:bg-[#121316] text-[#2C2A26] dark:text-slate-300 border-[#DFD7C7] dark:border-[#262932] hover:border-[#2E7D5B]'
               }`}
             >
               <Building2 className="h-3.5 w-3.5 shrink-0" />
@@ -442,8 +442,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 onClick={() => toggleLogisticsPanel('budget')}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                   showBudget
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                    : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-indigo-400'
+                    ? 'bg-[#C83E2D] text-white border-[#C83E2D] shadow-xs'
+                    : 'bg-[#F6F2E9] dark:bg-[#121316] text-[#2C2A26] dark:text-slate-300 border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D]'
                 }`}
               >
                 <Coins className="h-3.5 w-3.5 shrink-0" />
@@ -457,41 +457,41 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               onClick={() => setShowWeatherSection(!showWeatherSection)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                 showWeatherSection
-                  ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                  : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#262932] hover:border-sky-400'
+                  ? 'bg-[#1C2630] dark:bg-sky-600 text-white border-[#1C2630] dark:border-sky-600 shadow-xs'
+                  : 'bg-[#F6F2E9] dark:bg-[#121316] text-[#2C2A26] dark:text-slate-300 border-[#DFD7C7] dark:border-[#262932] hover:border-[#1C2630]'
               }`}
             >
               <CloudSun className="h-3.5 w-3.5 shrink-0" />
               <span>อากาศ</span>
             </button>
 
-            <div className="h-5 w-px bg-slate-200 dark:bg-[#262932] mx-0.5 shrink-0" />
+            <div className="h-5 w-px bg-[#DFD7C7] dark:bg-[#262932] mx-0.5 shrink-0" />
 
             {/* Concierge Tools */}
             <button
               type="button"
               onClick={onOpenTicketLocker}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-indigo-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <QrCode className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+              <QrCode className="h-3.5 w-3.5 text-[#1C2630] dark:text-indigo-500 shrink-0" />
               <span>QR Pass</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenGourmetRadar}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-orange-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <Utensils className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+              <Utensils className="h-3.5 w-3.5 text-[#C83E2D] shrink-0" />
               <span>ร้านอร่อย</span>
             </button>
 
             <button
               type="button"
               onClick={() => onOpenDiningDecision?.()}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <Dices className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+              <Dices className="h-3.5 w-3.5 text-[#1C2630] dark:text-blue-500 shrink-0" />
               <span>สุ่มมื้อ</span>
             </button>
 
@@ -501,9 +501,9 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 setWishlistInitialTab('shopping');
                 setShowWishlistDrawer(true);
               }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] hover:border-fuchsia-400 px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <ShoppingBag className="h-3.5 w-3.5 text-fuchsia-500 shrink-0" />
+              <ShoppingBag className="h-3.5 w-3.5 text-[#C83E2D] shrink-0" />
               <span>
                 กระเป๋าช้อป ({shoppingSummary.boughtCount}/{shoppingSummary.totalCount})
               </span>
@@ -513,7 +513,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           <button
             type="button"
             onClick={() => setShowTravelHubModal(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#1C2630] hover:bg-[#2A3744] dark:bg-blue-600 dark:hover:bg-blue-700 px-3 py-1.5 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
           >
             <Compass className="h-3.5 w-3.5 shrink-0" />
             <span>Travel Hub</span>

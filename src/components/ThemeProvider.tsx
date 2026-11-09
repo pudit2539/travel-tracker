@@ -56,10 +56,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const isDark = theme === 'system' ? mediaQuery.matches : theme === 'dark';
       if (isDark) {
         root.classList.add('dark');
+        root.classList.remove('light');
         root.style.colorScheme = 'dark';
         setResolvedTheme('dark');
       } else {
         root.classList.remove('dark');
+        root.classList.add('light');
         root.style.colorScheme = 'light';
         setResolvedTheme('light');
       }

@@ -2329,7 +2329,7 @@ export default function TripDetailPage() {
   }
 
   return (
-    <div className="relative min-h-screen pb-28 md:pb-20 bg-grid-pattern transition-colors duration-300">
+    <div className="relative min-h-screen pb-28 md:pb-20 bg-[#F8F6F0] dark:bg-[#121316] text-[#181a20] dark:text-[#f4f5f7] bg-grid-pattern transition-colors duration-300">
       
       {/* iOS/iPad Touch Pull-to-Refresh Indicator */}
       <PullToRefreshIndicator
@@ -2339,7 +2339,7 @@ export default function TripDetailPage() {
       />
       
       {/* ==================== TOP NAVIGATION & STICKY APP HEADER (Travo + TravelGo Hybrid) ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
+      <nav className="sticky top-0 z-40 border-b border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7]/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
         <div className="max-w-5xl mx-auto safe-nav-container px-3.5 sm:px-4 pb-2 sm:pb-2.5 space-y-2">
           
           {/* Row 1: Back Arrow, Trip Title & Action Icons */}
@@ -2740,25 +2740,25 @@ export default function TripDetailPage() {
       </main>
 
       {/* ==================== FLOATING CAT AI ASSISTANT PILL (TRIP.COM STYLE) ==================== */}
-      <div className="fixed bottom-20 left-3.5 sm:bottom-6 sm:left-6 z-40">
+      <div className="fixed bottom-[74px] left-3 sm:bottom-6 sm:left-6 z-40">
         <button
           type="button"
           onClick={() => setShowAIAssistantModal(true)}
-          className="group flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full bg-white/95 dark:bg-[#181a20]/95 border border-slate-200/90 dark:border-[#262932] shadow-xl shadow-blue-900/10 hover:shadow-blue-500/20 text-slate-800 dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
+          className="group flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-full bg-[#FDFBF7]/95 dark:bg-[#181a20]/95 border border-[#DFD7C7] dark:border-[#262932] shadow-lg shadow-black/10 text-[#1A1A1A] dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
           title="ถาม AI ผู้ช่วยวางแผนทริป"
         >
-          <span className="w-6 h-6 rounded-full bg-blue-600/15 dark:bg-blue-500/25 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
-            <Bot className="h-3.5 w-3.5" />
+          <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#C83E2D]/15 dark:bg-blue-500/25 text-[#C83E2D] dark:text-blue-400 flex items-center justify-center shadow-2xs">
+            <Bot className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </span>
-          <span className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1">
-            <span className="hidden xs:inline">ถาม</span> <span className="text-blue-600 dark:text-blue-400">AI ผู้ช่วย</span>
-            <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" />
+          <span className="text-[11px] sm:text-xs font-black text-[#1A1A1A] dark:text-slate-100 flex items-center gap-1">
+            <span className="hidden sm:inline">ถาม</span> <span className="text-[#C83E2D] dark:text-blue-400">AI ผู้ช่วย</span>
+            <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-500 animate-pulse" />
           </span>
         </button>
       </div>
 
       {/* ==================== STICKY FLOATING BOTTOM APP BAR (IPHONE / IPAD NATIVE STYLE) ==================== */}
-      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-white/95 dark:bg-[#181a20]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-[#262932] shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 sm:hidden px-3 pt-2 safe-bottom-nav bg-[#FDFBF7]/95 dark:bg-[#181a20]/95 backdrop-blur-xl border-t border-[#DFD7C7] dark:border-[#262932] shadow-2xl">
         <div className={`grid ${canSeeMoney ? 'grid-cols-4' : 'grid-cols-2'} gap-1 max-w-md mx-auto`}>
           <button
             type="button"

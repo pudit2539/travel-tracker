@@ -186,6 +186,10 @@
      - ส่วนหัวการ์ดแบบ **16:9 Magazine Hero Banner** แสดงภาพสถานที่จริงพร้อมลวดลายคลื่นญี่ปุ่น (`#1C2630` → `#35475A`), ป้าย `STOP 0X / CATEGORY`, ปุ่มประทับตรา `VISITED 済` สไตล์ตราปั๊มสีแดงชาดเอียง `-2deg`, และชื่อสถานที่ฟอนต์ Serif คมชัด
      - แถวตารางเวลาฟอนต์ Serif (`10:15 — 11:30`), ป้ายสิ่งอำนวยความสะดวกโทน Washi (`#F6F3EB`), กล่อง `TRAVELER'S NOTE & TRANSIT` ขอบซ้ายสีแดงชาด และปุ่มคู่ด้านล่างสีน้ำเงินครามเข้ม (`#1C2630`) คู่กับปุ่มกรอบกระดาษ Washi
    - ปรับปรุง `TransitConnector.tsx` และแถบคั่นวันใน `TripPlanTab.tsx` (`DAY 0X // CITY` + แถบ Progress สีแดงชาด `#C83E2D`) ให้เข้าชุดกันทั้งหน้าไทม์ไลน์
+15. **Mobile Light Mode Fix & Full Japanese Editorial Theme Harmonization (`ThemeProvider.tsx`, `globals.css`, `layout.tsx`, `LiveTripCard.tsx`, `page.tsx`, `TripPlanTab.tsx`, `CurrencyPillSwitcher.tsx`)**:
+   - **แก้บั๊กพื้นหลังสีดำในโหมด Light บนมือถือที่ตั้งค่า OS Dark Mode**: เพิ่มการสลับคลาส `.light` / `.dark` บน `document.documentElement` ใน `ThemeProvider.tsx` และ `layout.tsx` พร้อมถอด `@media (prefers-color-scheme: dark) { :root:not(.light) ... }` ใน `globals.css` ออก ทำให้เมื่อสลับเป็นโหมดสว่าง พื้นหลังทั้งหน้าเปลี่ยนเป็นสีกระดาษญี่ปุ่น Washi (`#F8F6F0`) ทันทีโดยไม่ค้างสีดำ (`#121316`)
+   - **ปรับโฉม `LiveTripCard.tsx` สำหรับโหมด Light และย่อขนาดบนหน้าจอมือถือ**: เปลี่ยนจากการ์ดสีมืดตายตัว เป็นโทนกระดาษ Washi (`#FDFBF7`) ขอบซ้ายสีแดงชาดเสาโทริอิ (`border-l-4 border-l-[#C83E2D]`) ในโหมดสว่าง และจัดวางตัวละคร Chibi Companion เป็นแนวนอนกะทัดรัด (`flex-row`) บนมือถือ ประหยัดพื้นที่แนวตั้งลงกว่า 110px
+   - **ปรับขนาดปุ่มลอย `AI ผู้ช่วย` และ `CurrencyPillSwitcher` บนมือถือ**: ย่อขนาดปุ่มลอยด้านล่างให้กะทัดรัด (`bottom-[74px]`) และเข้าชุดโทนสี Editorial เพื่อไม่ให้บังข้อความในการ์ด
 
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน

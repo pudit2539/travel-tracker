@@ -22,8 +22,8 @@ export default function CurrencyPillSwitcher({
   const isThbBase = (primaryCurrency || 'JPY').toUpperCase() === 'THB';
 
   return (
-    <div className="fixed bottom-20 sm:bottom-6 right-3.5 sm:right-6 z-40 animate-in fade-in slide-in-from-bottom-3 duration-300">
-      <div className="p-1 rounded-2xl bg-white/95 dark:bg-[#181a20]/95 backdrop-blur-xl border border-slate-200/90 dark:border-[#262932] shadow-xl flex items-center gap-1">
+    <div className="fixed bottom-[74px] sm:bottom-6 right-3 sm:right-6 z-40 animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="p-1 rounded-2xl bg-[#FDFBF7]/95 dark:bg-[#181a20]/95 backdrop-blur-xl border border-[#DFD7C7] dark:border-[#262932] shadow-lg shadow-black/10 flex items-center gap-1">
         {!isThbBase && (
           <>
             <button

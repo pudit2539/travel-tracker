@@ -4,19 +4,19 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f8f9fb;
+  --background: #F8F6F0;
   --foreground: #181a20;
   --card: #ffffff;
   --card-foreground: #181a20;
-  --border: #e6e8ec;
-  --primary-terracotta: #e79b71;
-  --primary-terracotta-hover: #d98254;
-  --primary-terracotta-subtle: rgba(231, 155, 113, 0.12);
-  --primary-blue: #0066f6;
-  --primary-blue-hover: #0052cc;
-  --primary-pink: #f43f5e;
-  --primary-pink-subtle: #fff1f2;
-  --primary-purple: #2563eb;
+  --border: #DFD7C7;
+  --primary-terracotta: #C83E2D;
+  --primary-terracotta-hover: #B03222;
+  --primary-terracotta-subtle: rgba(200, 62, 45, 0.10);
+  --primary-blue: #1C2630;
+  --primary-blue-hover: #2A3744;
+  --primary-pink: #C83E2D;
+  --primary-pink-subtle: #FDF3F1;
+  --primary-purple: #1C2630;
   --primary-black: #121316;
 }
 
@@ -34,24 +34,6 @@
   --primary-pink: #fb7185;
   --primary-pink-subtle: rgba(244, 63, 94, 0.12);
   --primary-purple: #3b82f6;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: #121316;
-    --foreground: #f4f5f7;
-    --card: #181a20;
-    --card-foreground: #f8fafc;
-    --border: #262932;
-    --primary-terracotta: #e79b71;
-    --primary-terracotta-hover: #f2a278;
-    --primary-terracotta-subtle: rgba(231, 155, 113, 0.15);
-    --primary-blue: #3b82f6;
-    --primary-blue-hover: #60a5fa;
-    --primary-pink: #fb7185;
-    --primary-pink-subtle: rgba(244, 63, 94, 0.12);
-    --primary-purple: #3b82f6;
-  }
 }
 
 @theme inline {
@@ -135,7 +117,7 @@ input, textarea, [contenteditable="true"], .selectable-text {
 
 /* Background Subtle Dot-Grid Pattern */
 .bg-grid-pattern {
-  background-image: radial-gradient(rgba(0, 102, 246, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(140, 125, 105, 0.09) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 .dark .bg-grid-pattern {

@@ -468,33 +468,33 @@ function LiveTripCard({
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-3xl p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#181a20] to-[#121316] text-white border border-blue-500/30 shadow-xl space-y-3.5 group">
-        {/* Decorative Background Glows */}
-        <div className="absolute -top-16 -right-16 w-44 h-44 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-44 h-44 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl p-3.5 sm:p-5 bg-[#FDFBF7] dark:bg-gradient-to-br dark:from-slate-900 dark:via-[#181a20] dark:to-[#121316] text-[#1A1A1A] dark:text-white border border-[#DFD7C7] dark:border-blue-500/30 border-l-4 border-l-[#C83E2D] shadow-[0_3px_14px_rgba(35,30,20,0.06)] dark:shadow-xl space-y-3 group">
+        {/* Decorative Background Glows (Dark Mode only, subtle warm wash in Light Mode) */}
+        <div className="hidden dark:block absolute -top-16 -right-16 w-44 h-44 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden dark:block absolute -bottom-16 -left-16 w-44 h-44 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Header: Live Local Time & Stamp Progress */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="flex h-2 w-2 sm:h-2.5 sm:w-2.5 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C83E2D] dark:bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-[#C83E2D] dark:bg-emerald-400" />
             </span>
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-blue-300">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#C83E2D] dark:text-blue-300">
               🇯🇵 LIVE COMPANION • เวลาญี่ปุ่น {destinationTimeString}
             </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F5EFE4] dark:bg-amber-500/15 text-[#9A5B13] dark:text-amber-300 border border-[#E5D6BE] dark:border-amber-400/30">
               {cityTheme.badgeText}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap">
             {activeDayActivities.length > 0 && (
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#EBF5EE] dark:bg-emerald-500/15 text-[#1F6E43] dark:text-emerald-300 border border-[#C5E3CE] dark:border-emerald-500/30">
                 ⛩️ เช็คอินแล้ว {visitedCount}/{activeDayActivities.length} จุด ({progressPct}%)
               </span>
             )}
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/10 text-white/90 backdrop-blur-md border border-white/10 max-w-[140px] truncate">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F3EFE6] dark:bg-white/10 text-[#4A443B] dark:text-white/90 border border-[#DFD7C7] dark:border-white/10 max-w-[140px] truncate">
               {activeDayLabel}
             </span>
           </div>
@@ -503,21 +503,21 @@ function LiveTripCard({
         {/* Mini Progress Bar (Reacts to Simulate Walk or GPS Vector Projection) */}
         {activeDayActivities.length > 0 && (
           <div className="relative z-10 space-y-1">
-            <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden relative">
+            <div className="w-full h-1.5 rounded-full bg-[#EAE3D5] dark:bg-white/10 overflow-hidden relative">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-400 transition-all duration-300"
+                className="h-full rounded-full bg-gradient-to-r from-[#C83E2D] via-[#D96B27] to-[#2E7D5B] dark:from-emerald-400 dark:via-teal-400 dark:to-blue-400 transition-all duration-300"
                 style={{ width: `${Math.max(effectiveWalkPct, 5)}%` }}
               />
             </div>
             {(simulatingWalk || (gpsActive && gpsMetrics)) && (
-              <div className="flex items-center justify-between text-[10px] text-emerald-300 font-bold">
+              <div className="flex items-center justify-between text-[10px] text-[#1F6E43] dark:text-emerald-300 font-bold">
                 <span>
                   {simulatingWalk
                     ? `🚶 กำลังจำลองเดินไป "${getActivityTitle(nextUpActivity)}" (${simProgressPct}%)`
                     : `📍 พิกัดจริง: คืบหน้า ${gpsMetrics?.pct}% (ห่างจุดหมาย ${gpsMetrics?.distToEndMeters} ม.)`}
                 </span>
                 {gpsActive && gpsMetrics && gpsMetrics.deviationMeters > 120 && (
-                  <span className="text-rose-300 font-black animate-pulse">
+                  <span className="text-[#C83E2D] dark:text-rose-300 font-black animate-pulse">
                     ⚠️ ออกนอกเส้นทาง {gpsMetrics.deviationMeters} ม.
                   </span>
                 )}
@@ -526,18 +526,18 @@ function LiveTripCard({
           </div>
         )}
 
-        {/* TabiPlan Interactive Chibi Companion + Speech Bubble Banner */}
-        <div className="relative z-10 p-3 rounded-2xl bg-gradient-to-r from-indigo-950/70 via-slate-900/80 to-blue-950/70 border border-indigo-400/25 flex flex-col sm:flex-row items-center gap-3">
+        {/* TabiPlan Interactive Chibi Companion + Speech Bubble Banner (Compact Horizontal on Mobile) */}
+        <div className="relative z-10 p-2.5 sm:p-3 rounded-xl bg-[#F6F2E9] dark:bg-gradient-to-r dark:from-indigo-950/70 dark:via-slate-900/80 dark:to-blue-950/70 border border-[#E5DEC9] dark:border-indigo-400/25 flex flex-row items-start sm:items-center gap-2.5 sm:gap-3">
           {/* Layered City-Reactive Chibi Avatar SVG */}
           <div className="relative shrink-0 flex flex-col items-center">
             <div
               onClick={handleToggleCompanionStyle}
-              className="w-20 h-20 rounded-2xl bg-gradient-to-b from-blue-500/20 to-indigo-500/20 border border-white/15 flex items-center justify-center relative cursor-pointer hover:scale-105 transition-transform"
+              className="w-15 h-15 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gradient-to-b dark:from-blue-500/20 dark:to-indigo-500/20 border border-[#DFD7C7] dark:border-white/15 flex items-center justify-center relative cursor-pointer hover:scale-105 transition-transform shadow-2xs"
               title="แตะเพื่อสลับตัวละคร (สาวคาวาอี้ ⟷ หนุ่มนักสำรวจ)"
             >
-              <svg viewBox="0 0 100 100" className="w-18 h-18 drop-shadow-md">
+              <svg viewBox="0 0 100 100" className="w-13 h-13 sm:w-18 sm:h-18 drop-shadow-xs">
                 {/* Base Aura */}
-                <circle cx="50" cy="52" r="38" fill="rgba(99,102,241,0.18)" />
+                <circle cx="50" cy="52" r="38" fill="rgba(200,62,45,0.10)" />
                 {/* Hair Back */}
                 {companionStyle === 'feminine' ? (
                   <path
@@ -618,44 +618,44 @@ function LiveTripCard({
                   </g>
                 )}
               </svg>
-              <span className="absolute -bottom-1.5 px-1.5 py-0.2 rounded-full bg-indigo-600 text-[9px] font-black text-white border border-white/25 shadow-xs">
+              <span className="absolute -bottom-1.5 px-1.5 py-0.2 rounded-full bg-[#1C2630] dark:bg-indigo-600 text-[8px] sm:text-[9px] font-black text-white border border-white/25 shadow-xs whitespace-nowrap">
                 {companionStyle === 'feminine' ? '👧 สาวคาวาอี้' : '👦 หนุ่มนักสำรวจ'}
               </span>
             </div>
           </div>
 
           {/* Companion Speech & Controls */}
-          <div className="flex-1 min-w-0 space-y-2 text-left">
-            <div className="flex flex-wrap items-center justify-between gap-1.5">
-              <span className="text-[11px] font-black text-indigo-300 flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-amber-300" />
-                <span>เครื่องแต่งกายประจำเมือง: {cityTheme.accessoryLabel}</span>
+          <div className="flex-1 min-w-0 space-y-1.5 text-left">
+            <div className="flex flex-wrap items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-[11px] font-black text-[#8A3B12] dark:text-indigo-300 flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-[#D97706] dark:text-amber-300 shrink-0" />
+                <span className="truncate">{cityTheme.accessoryLabel}</span>
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleSpeakCheer('th-TH')}
-                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] font-bold text-white inline-flex items-center gap-1 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-md bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/20 border border-[#DFD7C7] dark:border-white/10 text-[10px] font-bold text-[#2C2A26] dark:text-white inline-flex items-center gap-1 cursor-pointer"
                   title="ฟังเสียงพูดภาษาไทย"
                 >
-                  <Volume2 className="h-2.5 w-2.5 text-amber-300" />
+                  <Volume2 className="h-2.5 w-2.5 text-[#D97706] dark:text-amber-300" />
                   <span>เสียงไทย</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSpeakCheer('ja-JP')}
-                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] font-bold text-rose-200 inline-flex items-center gap-1 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-md bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/20 border border-[#DFD7C7] dark:border-white/10 text-[10px] font-bold text-[#C83E2D] dark:text-rose-200 inline-flex items-center gap-1 cursor-pointer"
                   title="ฟังเสียงพากย์ภาษาญี่ปุ่น"
                 >
-                  <Volume2 className="h-2.5 w-2.5 text-rose-300" />
+                  <Volume2 className="h-2.5 w-2.5 text-[#C83E2D] dark:text-rose-300" />
                   <span>日本語</span>
                 </button>
               </div>
             </div>
 
-            <p className="text-xs font-bold text-white/95 leading-relaxed">
+            <p className="text-[11px] sm:text-xs font-bold text-[#1A1A1A] dark:text-white/95 leading-snug">
               &ldquo;{cityTheme.cheerTh}&rdquo;
-              <span className="block text-[10px] font-normal text-indigo-200/80 mt-0.5">
+              <span className="block text-[10px] font-normal text-[#6E675F] dark:text-indigo-200/80 mt-0.5">
                 {cityTheme.cheerJa}
               </span>
             </p>
@@ -663,14 +663,14 @@ function LiveTripCard({
             {/* Bought Shopping Props Carried by Companion */}
             {shoppingProps.length > 0 && (
               <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                <span className="text-[10px] font-bold text-fuchsia-300 flex items-center gap-1">
+                <span className="text-[10px] font-bold text-[#A21CAF] dark:text-fuchsia-300 flex items-center gap-1">
                   <ShoppingBag className="h-3 w-3" />
                   <span>ถือของที่ช้อปแล้ว:</span>
                 </span>
                 {shoppingProps.map((prop) => (
                   <span
                     key={prop.category}
-                    className="px-2 py-0.5 rounded-full bg-fuchsia-500/20 border border-fuchsia-400/30 text-[10px] font-bold text-fuchsia-200"
+                    className="px-2 py-0.5 rounded-md bg-fuchsia-500/10 dark:bg-fuchsia-500/20 border border-fuchsia-400/30 text-[10px] font-bold text-[#86198F] dark:text-fuchsia-200"
                   >
                     {prop.emoji} {prop.propLabel}
                   </span>
@@ -679,21 +679,21 @@ function LiveTripCard({
             )}
 
             {/* Live GPS Tracking + Simulate Walk + Privacy Level Bar */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
               <button
                 type="button"
                 onClick={() => {
                   setSimulatingWalk(false);
                   setGpsActive((v) => !v);
                 }}
-                className={`px-2.5 py-1 rounded-xl text-[10px] font-black inline-flex items-center gap-1 border cursor-pointer transition-all ${
+                className={`px-2 py-1 rounded-lg text-[10px] font-black inline-flex items-center gap-1 border cursor-pointer transition-all ${
                   gpsActive
-                    ? 'bg-emerald-500 text-white border-emerald-400 shadow-sm'
-                    : 'bg-white/10 hover:bg-white/15 text-slate-200 border-white/15'
+                    ? 'bg-[#2E7D5B] text-white border-[#2E7D5B] shadow-2xs'
+                    : 'bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/15 text-[#2C2A26] dark:text-slate-200 border-[#D8D0C0] dark:border-white/15'
                 }`}
               >
                 <LocateFixed className="h-3 w-3" />
-                <span>{gpsActive ? 'กำลังจับพิกัดจริง (Auto Check-in 80m)' : 'จับพิกัด GPS จริง'}</span>
+                <span>{gpsActive ? 'กำลังจับพิกัดจริง' : 'จับพิกัด GPS'}</span>
               </button>
 
               <button
@@ -707,34 +707,34 @@ function LiveTripCard({
                     setSimulatingWalk(true);
                   }
                 }}
-                className={`px-2.5 py-1 rounded-xl text-[10px] font-black inline-flex items-center gap-1 border cursor-pointer transition-all ${
+                className={`px-2 py-1 rounded-lg text-[10px] font-black inline-flex items-center gap-1 border cursor-pointer transition-all ${
                   simulatingWalk
-                    ? 'bg-amber-500 text-white border-amber-400'
-                    : 'bg-white/10 hover:bg-white/15 text-slate-200 border-white/15'
+                    ? 'bg-[#D97706] text-white border-[#D97706]'
+                    : 'bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/15 text-[#2C2A26] dark:text-slate-200 border-[#D8D0C0] dark:border-white/15'
                 }`}
               >
                 {simulatingWalk ? <Pause className="h-3 w-3" /> : <Footprints className="h-3 w-3" />}
                 <span>{simulatingWalk ? `หยุดจำลอง (${simProgressPct}%)` : 'จำลองเดินเที่ยว'}</span>
               </button>
 
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl bg-black/30 border border-white/10 text-[10px] text-slate-300">
-                <Shield className="h-3 w-3 text-sky-400 shrink-0" />
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#EFECE4] dark:bg-black/30 border border-[#DFD7C7] dark:border-white/10 text-[10px] text-[#4A443B] dark:text-slate-300">
+                <Shield className="h-3 w-3 text-[#1C2630] dark:text-sky-400 shrink-0" />
                 <span>แชร์พิกัด:</span>
                 <select
                   value={privacyLevel}
                   onChange={(e) => handleChangePrivacy(e.target.value as PresencePrivacyLevel)}
-                  className="bg-transparent text-sky-300 font-bold outline-none cursor-pointer"
+                  className="bg-transparent text-[#C83E2D] dark:text-sky-300 font-bold outline-none cursor-pointer"
                 >
-                  <option value="off" className="bg-slate-900 text-white">
+                  <option value="off" className="bg-white dark:bg-slate-900 text-[#1A1A1A] dark:text-white">
                     ปิดแชร์
                   </option>
-                  <option value="progress" className="bg-slate-900 text-white">
+                  <option value="progress" className="bg-white dark:bg-slate-900 text-[#1A1A1A] dark:text-white">
                     เฉพาะ % เส้นทาง
                   </option>
-                  <option value="district" className="bg-slate-900 text-white">
+                  <option value="district" className="bg-white dark:bg-slate-900 text-[#1A1A1A] dark:text-white">
                     เฉพาะชื่อย่าน
                   </option>
-                  <option value="exact" className="bg-slate-900 text-white">
+                  <option value="exact" className="bg-white dark:bg-slate-900 text-[#1A1A1A] dark:text-white">
                     พิกัดจริงในกลุ่ม
                   </option>
                 </select>
@@ -745,32 +745,32 @@ function LiveTripCard({
 
         {/* Next Destination Spotlight Card */}
         {nextUpActivity ? (
-          <div className="relative z-10 p-3.5 sm:p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3">
+          <div className="relative z-10 p-3 sm:p-4 rounded-xl bg-white dark:bg-white/5 border border-[#DFD7C7] dark:border-white/10 shadow-[0_2px_8px_rgba(35,30,20,0.04)] space-y-2.5">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1 min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span
-                    className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md shadow-xs ${
-                      isCheckedIn ? 'bg-emerald-500 text-white' : 'bg-[#e79b71] text-white'
+                    className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md shadow-2xs ${
+                      isCheckedIn ? 'bg-[#2E7D5B] text-white' : 'bg-[#C83E2D] text-white'
                     }`}
                   >
                     {isCheckedIn ? 'ครบทุกจุดในวันนี้แล้ว ✓' : 'NEXT UP • จุดหมายถัดไป'}
                   </span>
                   {getActivityTime(nextUpActivity) && (
-                    <span className="text-[11px] font-mono font-bold text-amber-300 flex items-center gap-1">
+                    <span className="text-[11px] font-mono font-bold text-[#9A5B13] dark:text-amber-300 flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       <span>{getActivityTime(nextUpActivity)}</span>
                     </span>
                   )}
                 </div>
 
-                <h3 className="text-base sm:text-lg font-black text-white leading-snug break-words">
+                <h3 className="font-serif text-base sm:text-lg font-black text-[#1A1A1A] dark:text-white leading-snug break-words">
                   {getActivityTitle(nextUpActivity)}
                 </h3>
 
                 {getActivityCity(nextUpActivity) && (
-                  <p className="text-xs text-slate-300 flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-[#e79b71] shrink-0" />
+                  <p className="text-xs text-[#6E675F] dark:text-slate-300 flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 text-[#C83E2D] shrink-0" />
                     <span className="truncate">{getActivityCity(nextUpActivity)}</span>
                   </p>
                 )}
@@ -779,7 +779,7 @@ function LiveTripCard({
               {/* Japanese Eki Stamp Badge */}
               {isCheckedIn && (
                 <div className="relative shrink-0 flex items-center justify-center">
-                  <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full border-2 border-dashed border-rose-500/90 bg-rose-500/15 flex flex-col items-center justify-center text-rose-400 rotate-[-12deg] shadow-lg shadow-rose-900/30 animate-in zoom-in-75">
+                  <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full border-2 border-dashed border-[#C83E2D] bg-[#C83E2D]/10 flex flex-col items-center justify-center text-[#C83E2D] dark:text-rose-400 rotate-[-12deg] shadow-sm animate-in zoom-in-75">
                     <span className="text-[7px] font-black tracking-widest uppercase">STAMP</span>
                     <span className="text-sm font-black">済</span>
                     <span className="text-[7px] font-mono opacity-80">VISITED</span>
@@ -789,11 +789,11 @@ function LiveTripCard({
             </div>
 
             {/* Action Buttons: 1-Tap Google Maps + Show to Staff + Check-in Stamp */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-0.5">
               <button
                 type="button"
                 onClick={() => handleOpenGoogleMaps(nextUpActivity)}
-                className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/30 transition-all cursor-pointer active:scale-95"
+                className="py-2 px-3 rounded-lg bg-[#1C2630] hover:bg-[#2A3744] dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
               >
                 <Navigation className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">นำทาง Maps</span>
@@ -802,20 +802,20 @@ function LiveTripCard({
               <button
                 type="button"
                 onClick={() => setShowStaffModal(true)}
-                className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-black text-xs flex items-center justify-center gap-1.5 border border-white/15 transition-all cursor-pointer active:scale-95"
+                className="py-2 px-3 rounded-lg bg-[#F6F2E9] hover:bg-[#ECE5D5] dark:bg-white/10 dark:hover:bg-white/20 text-[#1A1A1A] dark:text-white font-black text-xs flex items-center justify-center gap-1.5 border border-[#D8D0C0] dark:border-white/15 transition-all cursor-pointer active:scale-95"
                 title="แสดงชื่อสถานที่ตัวใหญ่ให้คนขับแท็กซี่หรือนายสถานีดู"
               >
-                <Eye className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+                <Eye className="h-3.5 w-3.5 text-[#C83E2D] dark:text-amber-300 shrink-0" />
                 <span className="truncate">โชว์ถามทาง 🚕</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleCheckIn(nextUpActivity)}
-                className={`col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-95 ${
+                className={`col-span-2 sm:col-span-1 py-2 px-3 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-95 ${
                   isCheckedIn
-                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30'
-                    : 'bg-gradient-to-r from-[#e79b71] to-amber-600 hover:from-[#d98254] hover:to-amber-500 text-white border-[#e79b71]/60 shadow-md shadow-orange-950/30'
+                    ? 'bg-[#FDF3F1] dark:bg-rose-500/20 text-[#C83E2D] dark:text-rose-300 border-[#F2C6BE] dark:border-rose-500/40 hover:bg-[#F9E3DF]'
+                    : 'bg-[#C83E2D] hover:bg-[#B03222] text-white border-[#C83E2D] shadow-2xs'
                 }`}
               >
                 <Stamp className="h-3.5 w-3.5 shrink-0" />
@@ -826,7 +826,7 @@ function LiveTripCard({
             </div>
           </div>
         ) : (
-          <div className="relative z-10 p-4 text-center rounded-2xl bg-white/5 border border-white/10 text-xs text-slate-300">
+          <div className="relative z-10 p-4 text-center rounded-xl bg-white dark:bg-white/5 border border-[#DFD7C7] dark:border-white/10 text-xs text-[#6E675F] dark:text-slate-300">
             <span>วันนี้ยังไม่มีกิจกรรมในแพลน แตะปุ่ม &ldquo;+ เพิ่มกิจกรรม&rdquo; เพื่อเริ่มวางแผนได้เลยครับ</span>
           </div>
         )}

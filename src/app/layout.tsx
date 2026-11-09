@@ -47,9 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   if (saved === 'dark' || (!saved && prefersDark)) {
                     document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
                     document.documentElement.style.colorScheme = 'dark';
                   } else {
                     document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
                     document.documentElement.style.colorScheme = 'light';
                   }
                 } catch (e) {}
@@ -62,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
-      <body className="min-h-screen antialiased bg-[#faf8fd] text-[#1e293b] dark:bg-[#121316] dark:text-[#f1f5f9] selection:bg-blue-600 selection:text-white">
+      <body className="min-h-screen antialiased bg-[#F8F6F0] text-[#181a20] dark:bg-[#121316] dark:text-[#f1f5f9] selection:bg-[#C83E2D] selection:text-white">
         <ThemeProvider>
           <PWAHandler />
           <ErrorBoundary>
