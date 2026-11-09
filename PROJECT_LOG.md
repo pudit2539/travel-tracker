@@ -190,6 +190,8 @@
    - **แก้บั๊กพื้นหลังสีดำในโหมด Light บนมือถือที่ตั้งค่า OS Dark Mode**: เพิ่มการสลับคลาส `.light` / `.dark` บน `document.documentElement` ใน `ThemeProvider.tsx` และ `layout.tsx` พร้อมถอด `@media (prefers-color-scheme: dark) { :root:not(.light) ... }` ใน `globals.css` ออก ทำให้เมื่อสลับเป็นโหมดสว่าง พื้นหลังทั้งหน้าเปลี่ยนเป็นสีกระดาษญี่ปุ่น Washi (`#F8F6F0`) ทันทีโดยไม่ค้างสีดำ (`#121316`)
    - **ปรับโฉม `LiveTripCard.tsx` สำหรับโหมด Light และย่อขนาดบนหน้าจอมือถือ**: เปลี่ยนจากการ์ดสีมืดตายตัว เป็นโทนกระดาษ Washi (`#FDFBF7`) ขอบซ้ายสีแดงชาดเสาโทริอิ (`border-l-4 border-l-[#C83E2D]`) ในโหมดสว่าง และจัดวางตัวละคร Chibi Companion เป็นแนวนอนกะทัดรัด (`flex-row`) บนมือถือ ประหยัดพื้นที่แนวตั้งลงกว่า 110px
    - **ปรับขนาดปุ่มลอย `AI ผู้ช่วย` และ `CurrencyPillSwitcher` บนมือถือ**: ย่อขนาดปุ่มลอยด้านล่างให้กะทัดรัด (`bottom-[74px]`) และเข้าชุดโทนสี Editorial เพื่อไม่ให้บังข้อความในการ์ด
+16. **เพิ่มร้านข้าวแกงกะหรี่มิชลิน `Hakugintei (白銀亭)` และร้านเทมปุระทอดสด `Tempura Makino (天ぷらまきの)` ลงในแผนวันที่ 9 ธ.ค., 11 ธ.ค., 12 ธ.ค. และคลังร้านอร่อย**:
+   - เพิ่มตัวเลือกร้าน **Hakugintei (สาขาหลัก Honmachi & สาขาตึก Ito Building B2 เปิดรอบเย็น)** และ **Tempura Makino (สาขา Namba Sennichimae & สาขา Umeda Hankyu Sanbangai)** ควบคู่กับร้านเดิมในตารางฐานข้อมูล `itinerary_items` (วันที่ 9 ธ.ค., 11 ธ.ค., 12 ธ.ค.), `scripts/v4_parsed_items.json`, `TRIP_ITINERARY_SUMMARY.md`, `curatedExploreSpots.ts` และ `WishlistDrawer.tsx`
 
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน

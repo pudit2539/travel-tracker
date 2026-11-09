@@ -59,6 +59,28 @@ const FACET_FILTER_OPTIONS: Array<{ id: FacetTagId; label: string }> = [
 
 const CURATED_JAPAN_WISHLIST: WishlistItem[] = [
   {
+    id: 'w-hakugintei',
+    title: 'Hakugintei (ข้าวแกงกะหรี่หมูทอดมิชลิน บิบ กูร์มองด์)',
+    japaneseTitle: '白銀亭 本町本店 / イトゥビル店',
+    category: 'food',
+    district: 'Honmachi Osaka (1 สถานีจาก Shinsaibashi)',
+    costEstimate: '¥950 - ¥1,450',
+    highlight: 'ข้าวแกงกะหรี่โอซาก้ารสหวานนำเผ็ดลึก ท็อปหมูทอดทงคัตสึ ผักโขม ชีส และไข่ดิบ (สาขาหลักเปิดกลางวัน / สาขาตึก Ito B2 เปิดรอบเย็น จ.-ศ. 17:30-20:30 น. / ปิดวันอาทิตย์)',
+    isCurated: true,
+    facets: ['rainy-day', 'near-station'],
+  },
+  {
+    id: 'w-tempura-makino',
+    title: 'Tempura Makino (เซตเทมปุระทอดสดหน้าเคาน์เตอร์)',
+    japaneseTitle: '揚げたて天ぷら定食 まきの 難波千日前店・梅田店',
+    category: 'food',
+    district: 'Namba Sennichimae / Umeda Hankyu Sanbangai',
+    costEstimate: '¥1,300 - ¥2,200',
+    highlight: 'เชฟทอดเทมปุระสดใหม่ทีละชิ้นเสิร์ฟบนตะแกรงหน้าเคาน์เตอร์ พร้อมไข่เทมปุระเยิ้มคลุกข้าว และปลาหมึกดองเกลือเติมฟรีไม่อั้น',
+    isCurated: true,
+    facets: ['rainy-day', 'near-station', 'no-pork'],
+  },
+  {
     id: 'w-motomura',
     title: 'Gyukatsu Motomura (เนื้อชุบแป้งทอดเตาหิน)',
     japaneseTitle: '牛かつ もと村 難波店',

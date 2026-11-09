@@ -391,10 +391,16 @@
     "main_place_links": [
       "https://maps.google.com/?q=Quintessa+Hotel+Osaka+Shinsaibashi+Comic+%26+Books"
     ],
-    "food_recommendation": "-",
-    "food_links": [],
-    "backup_plan": "ที่เที่ยวสำรองใกล้ที่พัก: America-mura Osaka (หมู่บ้านอเมริกา แหล่งรวมแฟชั่นสตรีท เสื้อผ้ามือสอง และกราฟิตี)\nคาเฟ่สำรอง: LiLo Coffee Roasters (ร้านกาแฟ Specialty Coffee ชื่อดังแห่งย่านชินไซบาชิ)\nร้านขนมสำรอง: Rikuro Ojisan Namba (ชีสเค้กคุณลุงเด้งดึ๋ง อบสดใหม่ส่งกลิ่นหอมสั่นกระดิ่ง)",
+    "food_recommendation": "มื้อบ่าย (เลือกได้): ข้าวแกงกะหรี่หมูทอดมิชลิน Hakugintei Honmachi (白銀亭) หรือ เซตเทมปุระทอดสดหน้าเคาน์เตอร์ Tempura Makino Namba (天ぷらまきの)",
+    "food_links": [
+      "https://maps.google.com/?q=Hakugintei+Honmachi+Osaka",
+      "https://maps.google.com/?q=Hakugintei+Ito+Building+Honmachi+Osaka",
+      "https://maps.google.com/?q=Tempura+Makino+Namba+Osaka"
+    ],
+    "backup_plan": "ร้านข้าวแกงกะหรี่มิชลิน: Hakugintei Honmachi Honten (เปิด 11:45–16:00 น. ห่างโรงแรม 1 สถานี)\nร้านเทมปุระทอดสด: Tempura Makino Namba Sennichimae (เซตเทมปุระทอดสดทีละชิ้น + ไข่เทมปุระราดข้าว)\nที่เที่ยวสำรองใกล้ที่พัก: America-mura Osaka (หมู่บ้านอเมริกา แหล่งรวมแฟชั่นสตรีท เสื้อผ้ามือสอง และกราฟิตี)\nคาเฟ่สำรอง: LiLo Coffee Roasters (ร้านกาแฟ Specialty Coffee ชื่อดังแห่งย่านชินไซบาชิ)\nร้านขนมสำรอง: Rikuro Ojisan Namba (ชีสเค้กคุณลุงเด้งดึ๋ง อบสดใหม่ส่งกลิ่นหอมสั่นกระดิ่ง)",
     "backup_links": [
+      "https://maps.google.com/?q=Hakugintei+Honmachi+Osaka",
+      "https://maps.google.com/?q=Tempura+Makino+Namba+Osaka",
       "https://maps.google.com/?q=America-mura+Osaka",
       "https://maps.google.com/?q=LiLo+Coffee+Roasters",
       "https://maps.google.com/?q=Rikuro+Ojisan+Namba+Main+Branch"
@@ -432,12 +438,16 @@
       "https://maps.google.com/?q=Dotonbori+Glico+Sign",
       "https://maps.google.com/?q=Daimaru+Shinsaibashi"
     ],
-    "food_recommendation": "Chibo Okonomiyaki Dotonbori (โอโคโนมิยากิกระทะร้อนต้นตำรับ)",
+    "food_recommendation": "เลือกได้ตามชอบ: Chibo Okonomiyaki Dotonbori (โอโคโนมิยากิกระทะร้อน) หรือ Hakugintei Ito Building Honmachi (ข้าวแกงกะหรี่หมูทอดมิชลิน สาขาเปิดรอบเย็น 17:30-20:30 น.) หรือ Tempura Makino Namba (เซตเทมปุระทอดสดหน้าเคาน์เตอร์)",
     "food_links": [
-      "https://maps.google.com/?q=Chibo+Okonomiyaki+Dotonbori"
+      "https://maps.google.com/?q=Chibo+Okonomiyaki+Dotonbori",
+      "https://maps.google.com/?q=Hakugintei+Ito+Building+Honmachi+Osaka",
+      "https://maps.google.com/?q=Tempura+Makino+Namba+Osaka"
     ],
-    "backup_plan": "ร้านอาหารสำรอง 6: Mizuno Okonomiyaki (โอโคโนมิยากิมิชลินบิบกูร์มองด์)\nร้านอาหารสำรอง 7: Ichiran Ramen Dotonbori (ราเมนข้อสอบสาขาริมคลองโดทงโบริ)\nที่เที่ยวสำรอง: Hozenji Yokocho (ตรอกหินโบราณและรูปปั้นพระฟุโดเมียวโอะปกคลุมด้วยมอสเขียว)",
+    "backup_plan": "ร้านข้าวแกงกะหรี่สำรอง: Hakugintei Ito Building Honmachi B2 (ข้าวแกงกะหรี่หมูทอดมิชลิน สาขาเชื่อมสถานี Honmachi เปิดรอบเย็น 17:30–20:30 น.)\nร้านเทมปุระสำรอง: Tempura Makino Namba Sennichimae (เซตเทมปุระทอดสดหน้าเคาน์เตอร์ + ปลาหมึกดองเกลือเติมฟรี)\nร้านอาหารสำรอง 6: Mizuno Okonomiyaki (โอโคโนมิยากิมิชลินบิบกูร์มองด์)\nร้านอาหารสำรอง 7: Ichiran Ramen Dotonbori (ราเมนข้อสอบสาขาริมคลองโดทงโบริ)\nที่เที่ยวสำรอง: Hozenji Yokocho (ตรอกหินโบราณและรูปปั้นพระฟุโดเมียวโอะปกคลุมด้วยมอสเขียว)",
     "backup_links": [
+      "https://maps.google.com/?q=Hakugintei+Ito+Building+Honmachi+Osaka",
+      "https://maps.google.com/?q=Tempura+Makino+Namba+Osaka",
       "https://maps.google.com/?q=Mizuno+Okonomiyaki",
       "https://maps.google.com/?q=Ichiran+Dotonbori",
       "https://maps.google.com/?q=Hozenji+Yokocho+Osaka"
@@ -566,14 +576,18 @@
       "https://maps.google.com/?q=Dotonbori+Glico+Sign",
       "https://maps.google.com/?q=Quintessa+Hotel+Osaka+Shinsaibashi"
     ],
-    "food_recommendation": "ทานมื้อค่ำตามแผน: เทมปุระเจ้าดัง Tenmasa Osaka หรือราเมงข้อสอบ Ichiran Dotonbori หรือโอโคโนมิยากิกระทะร้อน Chibo",
+    "food_recommendation": "ทานมื้อค่ำตามแผน (เลือกได้): ข้าวแกงกะหรี่หมูทอดมิชลิน Hakugintei (สาขา Ito Building เปิดรอบเย็น 17:30-20:30 น.) หรือ เซตเทมปุระทอดสด Tempura Makino Namba หรือ เทมปุระเจ้าดัง Tenmasa Osaka หรือ ราเมงข้อสอบ Ichiran Dotonbori หรือ โอโคโนมิยากิกระทะร้อน Chibo",
     "food_links": [
+      "https://maps.google.com/?q=Hakugintei+Ito+Building+Honmachi+Osaka",
+      "https://maps.google.com/?q=Tempura+Makino+Namba+Osaka",
       "https://maps.google.com/?q=Tenmasa+Osaka",
       "https://maps.google.com/?q=Ichiran+Ramen+Dotonbori",
       "https://maps.google.com/?q=Chibo+Okonomiyaki+Dotonbori"
     ],
-    "backup_plan": "ที่เที่ยวสำรอง 1: เดินช้อปปิ้งถนนคนเดิน Shinsaibashi-Suji Shopping Street\nที่เที่ยวสำรอง 2: ตรอกหินโบราณและรูปปั้นพระฟุโดเมียวโอะมอสเขียว Hozenji Yokocho\nร้านอาหารสำรอง: Mizuno Okonomiyaki (โอโคโนมิยากิมิชลิน บิบ กูร์มองด์)\nร้านดองกี้สำรอง: Don Quijote Dotonbori (ช้อปปิ้งดองกี้ชิงช้าสวรรค์ริมคลอง เปิด 24 ชม.)",
+    "backup_plan": "ร้านข้าวแกงกะหรี่มิชลิน: Hakugintei Ito Building Honmachi B2 (ข้าวแกงกะหรี่หมูทอดทงคัตสึ+ไข่ดิบ เปิดรอบเย็นวันศุกร์ 17:30–20:30 น.)\nร้านเทมปุระทอดสด: Tempura Makino Namba Sennichimae (เซตเทมปุระทอดสดทีละชิ้นหน้าเคาน์เตอร์ ใกล้ Namba/Dotonbori)\nที่เที่ยวสำรอง 1: เดินช้อปปิ้งถนนคนเดิน Shinsaibashi-Suji Shopping Street\nที่เที่ยวสำรอง 2: ตรอกหินโบราณและรูปปั้นพระฟุโดเมียวโอะมอสเขียว Hozenji Yokocho\nร้านอาหารสำรอง: Mizuno Okonomiyaki (โอโคโนมิยากิมิชลิน บิบ กูร์มองด์)\nร้านดองกี้สำรอง: Don Quijote Dotonbori (ช้อปปิ้งดองกี้ชิงช้าสวรรค์ริมคลอง เปิด 24 ชม.)",
     "backup_links": [
+      "https://maps.google.com/?q=Hakugintei+Ito+Building+Honmachi+Osaka",
+      "https://maps.google.com/?q=Tempura+Makino+Namba+Osaka",
       "https://maps.google.com/?q=Shinsaibashi-Suji+Shopping+Street",
       "https://maps.google.com/?q=Hozenji+Yokocho",
       "https://maps.google.com/?q=Mizuno+Okonomiyaki",
@@ -634,10 +648,11 @@
     "main_place_links": [
       "https://maps.google.com/?q=Yodobashi+Camera+Multimedia+Umeda"
     ],
-    "food_recommendation": "Kiji Okonomiyaki (โอโคโนมิยากิมิชลิน บิบ กูร์มองด์ ชั้น B1 Umeda Sky Building) หรือ Gyukatsu Motomura Umeda (เนื้อวากิวทอดกระทะร้อน)",
+    "food_recommendation": "Kiji Okonomiyaki (โอโคโนมิยากิมิชลิน บิบ กูร์มองด์ ชั้น B1 Umeda Sky Building) หรือ Gyukatsu Motomura Umeda (เนื้อวากิวทอดกระทะร้อน) หรือ Tempura Makino Umeda (เซตเทมปุระทอดสดหน้าเคาน์เตอร์ ห้าง Hankyu Sanbangai ชั้น 2)",
     "food_links": [
       "https://maps.google.com/?q=Kiji+Okonomiyaki+Umeda",
-      "https://maps.google.com/?q=Gyukatsu+Motomura+Umeda"
+      "https://maps.google.com/?q=Gyukatsu+Motomura+Umeda",
+      "https://maps.google.com/?q=Tempura+Makino+Umeda+Hankyu+Sanbangai"
     ],
     "backup_plan": "ห้างไอทีสำรอง: Yodobashi Camera Multimedia Umeda & LINKS UMEDA (สวรรค์ 9 ชั้นรวมแก็ดเจ็ต กล้อง อนิเมะ ของเล่น)\nจุดชมวิวสำรอง: Umeda Sky Building (Kuchu Teien Observatory) จุดชมวิวตึกแฝดลอยฟ้า 360 องศา\nห้างแฟชั่นสำรอง: Grand Front Osaka & Lucua 1100 (ศูนย์รวมแฟชั่นและคาเฟ่ชิคติดสถานี JR Osaka)\nคาเฟ่ขนมหวานสำรอง: Harbs Hankyu Sanbangai Umeda (เค้กเครปผลไม้สด Mille-crepes ในตำนาน)\nช้อปปิ้งของเล่นสำรอง: Pokemon Center & Nintendo OSAKA (Daimaru Umeda ชั้น 13)",
     "backup_links": [
