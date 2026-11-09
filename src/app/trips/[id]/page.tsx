@@ -339,6 +339,34 @@ export default function TripDetailPage() {
 
   // State เปิดดู Plan B แบบ Accordion
   const [expandedPlanB, setExpandedPlanB] = useState<{ [key: string]: boolean }>({});
+  const [hideFloatingPills, setHideFloatingPills] = useState(false);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollY;
+      if (delta > 12 && currentY > 120) {
+        setHideFloatingPills(true);
+      } else if (delta < -8 || currentY < 80) {
+        setHideFloatingPills(false);
+      }
+      lastScrollY = currentY;
+
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        setHideFloatingPills(false);
+      }, 900);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (idleTimer) clearTimeout(idleTimer);
+    };
+  }, []);
 
   const fetchTripData = useCallback(async () => {
     if (!tripId) return;
@@ -2740,7 +2768,13 @@ export default function TripDetailPage() {
       </main>
 
       {/* ==================== FLOATING CAT AI ASSISTANT PILL (TRIP.COM STYLE) ==================== */}
-      <div className="fixed bottom-[74px] left-3 sm:bottom-6 sm:left-6 z-40">
+      <div
+        className={`fixed bottom-[74px] left-3 sm:bottom-6 sm:left-6 z-40 transition-all duration-300 ${
+          hideFloatingPills
+            ? 'translate-y-16 opacity-0 pointer-events-none sm:translate-y-0 sm:opacity-100 sm:pointer-events-auto'
+            : 'translate-y-0 opacity-100'
+        }`}
+      >
         <button
           type="button"
           onClick={() => setShowAIAssistantModal(true)}
@@ -4175,6 +4209,7 @@ export default function TripDetailPage() {
         }}
         fxRate={fxRate}
         onOpenCalculator={() => setShowCurrencyCalculator(true)}
+        hiddenOnScroll={hideFloatingPills}
       />
 
       {/* 14. Transfer Ownership Modal with Password Confirmation */}

@@ -435,22 +435,22 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
     <div className="space-y-4 sm:space-y-6 text-left">
 
       {/* ==================== 1. TOP HUD: CURRENCY SWITCHER & RATE ==================== */}
-      <div className="p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-3 text-left">
+      <div className="p-4 sm:p-5 rounded-2xl border border-[#DFD7C7] dark:border-[#262932] border-l-4 border-l-[#C83E2D] bg-[#FDFBF7] dark:bg-[#181a20]/95 shadow-[0_3px_14px_rgba(35,30,20,0.05)] space-y-3 text-left">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[#FDF3F1] dark:bg-blue-500/20 text-[#C83E2D] dark:text-blue-400 flex items-center justify-center shrink-0">
               <Coins className="h-4 w-4" />
             </div>
             <div className="text-left">
-              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white block">
+              <span className="font-serif text-xs sm:text-sm font-black text-[#1A1A1A] dark:text-white block">
                 แดชบอร์ดสถิติ & สกุลเงินแสดงผล (Currency Hub)
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+              <span className="text-[10px] text-[#6E675F] dark:text-slate-400 font-medium">
                 เลือกสกุลเงินเพื่อคำนวณและแปลงสถิติอัตโนมัติทั้งระบบ
               </span>
             </div>
           </div>
-          <span className="text-[11px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-3 py-1 rounded-xl border border-blue-200/80 dark:border-blue-900/60 font-mono shadow-2xs">
+          <span className="text-[11px] font-black text-[#C83E2D] dark:text-blue-400 bg-[#FDF3F1] dark:bg-blue-950/50 px-3 py-1 rounded-xl border border-[#F2C6BE] dark:border-blue-900/60 font-mono shadow-2xs">
             {formatExchangeRateDisplay(selectedCurrency, fxRate)}
           </span>
         </div>
@@ -466,8 +466,8 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
                 onClick={() => setSelectedCurrency(cur.code)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95 ${
                   isSelected
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-500/30'
-                    : 'bg-slate-50 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 hover:bg-white dark:hover:bg-[#262932]'
+                    ? 'bg-[#1C2630] dark:bg-blue-600 text-white shadow-sm'
+                    : 'bg-[#F6F2E9] dark:bg-[#1e2027] text-[#2C2A26] dark:text-slate-300 border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] hover:bg-white dark:hover:bg-[#262932]'
                 }`}
               >
                 <span className="text-sm">{cur.flag}</span>
@@ -482,20 +482,20 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
       </div>
 
       {/* ==================== 2. HERO DASHBOARD: TARGET VS ACTUAL SPENT ==================== */}
-      <div className="p-5 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-gradient-to-br from-blue-50/70 via-indigo-50/25 to-white dark:from-[#181a20] dark:via-[#1e2027] dark:to-[#181a20] card-elevation space-y-5 relative overflow-hidden text-left">
-        {/* Deep Navy/Blue Glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="p-5 sm:p-7 rounded-2xl border border-[#DFD7C7] dark:border-[#262932] border-l-4 border-l-[#C83E2D] bg-[#FDFBF7] dark:bg-gradient-to-br dark:from-[#181a20] dark:via-[#1e2027] dark:to-[#181a20] shadow-[0_3px_14px_rgba(35,30,20,0.05)] space-y-5 relative overflow-hidden text-left">
+        {/* Deep Navy/Blue Glow (Dark Mode only) */}
+        <div className="hidden dark:block absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden dark:block absolute -bottom-10 -left-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 text-left">
-            <span className="text-2xl p-2 rounded-2xl bg-white/80 dark:bg-[#1e2027] shadow-sm border border-slate-200/60 dark:border-[#262932] shrink-0">🎯</span>
+            <span className="text-2xl p-2 rounded-2xl bg-[#F6F2E9] dark:bg-[#1e2027] shadow-2xs border border-[#DFD7C7] dark:border-[#262932] shrink-0">🎯</span>
             <div className="text-left">
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+              <h2 className="font-serif text-sm sm:text-base font-black text-[#1A1A1A] dark:text-white flex items-center gap-1.5">
                 <span>ภาพรวมงบประมาณ & การใช้จ่ายรวม</span>
-                <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+                <Sparkles className="h-3.5 w-3.5 text-[#C83E2D] dark:text-blue-500" />
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-[11px] text-[#6E675F] dark:text-slate-400 font-medium">
                 เปรียบเทียบงบประมาณเป้าหมาย ยอดจ่ายจริง และสถานะคงเหลือ
               </p>
             </div>
@@ -504,7 +504,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
           <button
             type="button"
             onClick={() => handleOpenBudget('budget')}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/25 active:scale-95 transition-all"
+            className="px-4 py-2 rounded-xl bg-[#1C2630] hover:bg-[#2A3744] dark:bg-blue-600 dark:hover:bg-blue-700 text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 transition-all"
             title="กำหนดหรือแก้ไขงบประมาณรวมทริป"
           >
             <Sliders className="h-3.5 w-3.5" />

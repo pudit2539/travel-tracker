@@ -148,6 +148,14 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
   const [showScrollJump, setShowScrollJump] = useState(false);
+  const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({});
+
+  const toggleDayCollapse = React.useCallback((dayLabel: string) => {
+    setCollapsedDays((prev) => ({
+      ...prev,
+      [dayLabel]: !prev[dayLabel],
+    }));
+  }, []);
   const [planSearchQuery, setPlanSearchQuery] = useState('');
   const deferredPlanSearch = useDeferredValue(planSearchQuery);
 
@@ -1096,25 +1104,45 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               const stopMeta = stopMetaMap[stopKey] || stopMetaMap[(item.main_place || '').trim()];
               const computedSchedule = dayCascadeSchedule.byStopKey[stopKey];
               const stopShopping = stopShoppingByKey[stopKey] || EMPTY_SHOPPING_ITEMS;
+              const isDayCollapsed = selectedDayFilter === 'all' && Boolean(collapsedDays[item.date_label]);
               return (
                 <React.Fragment key={item.id || idx}>
                   {isNewDayGroup && item.date_label && (
                     <div className="pt-3 first:pt-0">
-                      <div className="px-4 py-3 rounded-xl bg-[#F8F6F0] dark:bg-[#181a20] border border-[#EBE4D8] dark:border-[#2C2A26] space-y-2">
+                      <div
+                        onClick={() => toggleDayCollapse(item.date_label)}
+                        className="px-4 py-3 rounded-xl bg-[#FDFBF7] dark:bg-[#181a20] border border-[#DFD7C7] dark:border-[#2C2A26] border-l-4 border-l-[#C83E2D] space-y-2 cursor-pointer hover:bg-[#FAF6EE] dark:hover:bg-[#1e2129] transition-colors select-none shadow-[0_2px_8px_rgba(35,30,20,0.04)]"
+                        title="แตะเพื่อพับ/กางกิจกรรมของวันนี้"
+                      >
                         <div className="flex items-center justify-between gap-2 text-[11px] font-semibold tracking-widest uppercase text-[#8C8275] dark:text-slate-400">
                           <span>
                             {dayNumber > 0 ? `DAY ${String(dayNumber).padStart(2, '0')}` : 'TRAVEL DAY'} //{' '}
                             {item.city || 'JAPAN'}
                           </span>
-                          <span>{dayStopsCount} STOPS</span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span>{dayStopsCount} STOPS</span>
+                            <span className="px-1.5 py-0.5 rounded bg-[#F1ECE1] dark:bg-white/10 text-[#1C2630] dark:text-slate-200 text-[10px] font-bold">
+                              {isDayCollapsed ? '▾ กางออก' : '▴ พับเก็บ'}
+                            </span>
+                          </span>
                         </div>
                         <div className="flex items-end justify-between gap-2">
-                          <h3 className="font-serif text-lg sm:text-xl font-bold text-[#151515] dark:text-white tracking-tight leading-tight">
-                            {item.date_label}
-                          </h3>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <h3 className="font-serif text-lg sm:text-xl font-bold text-[#151515] dark:text-white tracking-tight leading-tight">
+                              {item.date_label}
+                            </h3>
+                            {isDayCollapsed && (
+                              <span className="text-[11px] font-bold text-[#8C8275] dark:text-slate-400 truncate">
+                                (พับเก็บ {dayStopsCount} กิจกรรม)
+                              </span>
+                            )}
+                          </div>
                           <button
                             type="button"
-                            onClick={() => handleSelectDay(item.date_label)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectDay(item.date_label);
+                            }}
                             className="text-[11px] font-bold text-[#C83E2D] dark:text-amber-400 hover:underline inline-flex items-center gap-0.5 shrink-0 cursor-pointer"
                           >
                             <span>ดูเฉพาะวันนี้</span>
@@ -1129,35 +1157,39 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                       </div>
                     </div>
                   )}
-                  <ItineraryStopCard
-                    item={item}
-                    idx={idx}
-                    totalItems={itinerary.length}
-                    canEditPlan={canEditPlan}
-                    currentUser={currentUser}
-                    reordering={reordering}
-                    isPlanBOpen={expandedPlanB[item.id] || false}
-                    onTogglePlanB={handleTogglePlanB}
-                    onMoveActivity={handleMoveActivity}
-                    onOpenEditActivity={handleOpenEditActivity}
-                    onDeleteActivity={handleDeleteActivity}
-                    computedSchedule={computedSchedule}
-                    stopMeta={stopMeta}
-                    onUpdateStopMeta={handleUpdateStopMeta}
-                    availableDays={availableDays}
-                    onMoveStopToDay={onMoveStopToDay}
-                    stopShoppingItems={stopShopping}
-                    onToggleShoppingItemStatus={handleToggleShoppingItemStatus}
-                    memberNames={memberNames}
-                  />
-                  {nextItem && (
-                    <TransitConnector
-                      fromPlace={item.main_place}
-                      toPlace={nextItem.main_place}
-                      fromCity={item.city}
-                      toCity={nextItem.city}
-                      isSameDay={item.date_label === nextItem.date_label}
-                    />
+                  {!isDayCollapsed && (
+                    <>
+                      <ItineraryStopCard
+                        item={item}
+                        idx={idx}
+                        totalItems={itinerary.length}
+                        canEditPlan={canEditPlan}
+                        currentUser={currentUser}
+                        reordering={reordering}
+                        isPlanBOpen={expandedPlanB[item.id] || false}
+                        onTogglePlanB={handleTogglePlanB}
+                        onMoveActivity={handleMoveActivity}
+                        onOpenEditActivity={handleOpenEditActivity}
+                        onDeleteActivity={handleDeleteActivity}
+                        computedSchedule={computedSchedule}
+                        stopMeta={stopMeta}
+                        onUpdateStopMeta={handleUpdateStopMeta}
+                        availableDays={availableDays}
+                        onMoveStopToDay={onMoveStopToDay}
+                        stopShoppingItems={stopShopping}
+                        onToggleShoppingItemStatus={handleToggleShoppingItemStatus}
+                        memberNames={memberNames}
+                      />
+                      {nextItem && (
+                        <TransitConnector
+                          fromPlace={item.main_place}
+                          toPlace={nextItem.main_place}
+                          fromCity={item.city}
+                          toCity={nextItem.city}
+                          isSameDay={item.date_label === nextItem.date_label}
+                        />
+                      )}
+                    </>
                   )}
                 </React.Fragment>
               );
