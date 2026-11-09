@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, height=844, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>02 - Clean Flight & Transit HUD</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    background-color: #0A0E17;
+    color: #F1F5F9;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", "Prompt", sans-serif;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: #FFFFFF;
+  }
+  .status-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* Transit HUD Header */
+  .header {
+    padding: 10px 20px 16px;
+    background: #0A0E17;
+    border-bottom: 1px solid #1E293B;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .badge-flight {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #111E33;
+    border: 1px solid #1D3557;
+    color: #38BDF8;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-family: ui-monospace, "SF Mono", monospace;
+  }
+  .header-sync {
+    font-size: 11px;
+    color: #64748B;
+    font-family: ui-monospace, "SF Mono", monospace;
+  }
+  .header-main {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .header-title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #FFFFFF;
+    line-height: 1.15;
+  }
+  .header-weather {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: #94A3B8;
+  }
+  .header-temp {
+    font-size: 18px;
+    font-weight: 800;
+    color: #38BDF8;
+    font-family: ui-monospace, monospace;
+  }
+
+  /* Timeline Stream */
+  .timeline-stream {
+    padding: 16px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Compact Completed Stop */
+  .hud-collapsed-card {
+    background: #101623;
+    border: 1px solid #1E293B;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hud-collapsed-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hud-check-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #064E3B;
+    border: 1px solid #059669;
+    color: #34D399;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .hud-collapsed-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #E2E8F0;
+  }
+  .hud-collapsed-time {
+    font-size: 11px;
+    color: #64748B;
+    font-family: ui-monospace, monospace;
+  }
+
+  /* Flight/Transit Intercept Card */
+  .transit-intercept {
+    background: linear-gradient(90deg, #10192A 0%, #152238 100%);
+    border: 1px solid #1E3A5F;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .transit-route {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .transit-code {
+    background: #0284C7;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+  .transit-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #BAE6FD;
+  }
+  .transit-live-pill {
+    background: #0F2847;
+    border: 1px solid #0284C7;
+    color: #38BDF8;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: ui-monospace, monospace;
+  }
+
+  /* Active Hero Stop Card (HUD Flight Style) */
+  .card-hud {
+    background: #111827;
+    border: 1px solid #23354E;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Top HUD Banner */
+  .hud-card-banner {
+    background: linear-gradient(90deg, #16243A 0%, #1B2F4E 100%);
+    padding: 10px 16px;
+    border-bottom: 1px solid #223755;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hud-status-live {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: #38BDF8;
+    text-transform: uppercase;
+  }
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00F0FF;
+    box-shadow: 0 0 10px #00F0FF;
+  }
+  .hud-time-window {
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 800;
+    color: #F8FAFC;
+    letter-spacing: -0.2px;
+  }
+
+  .card-hud-main {
+    padding: 16px;
+  }
+
+  /* Title & Subtitle */
+  .hud-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .hud-title-text {
+    font-size: 20px;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+  .hud-japanese-sub {
+    font-size: 12px;
+    color: #94A3B8;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .hud-category-chip {
+    background: #1E293B;
+    border: 1px solid #334155;
+    color: #F1F5F9;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  /* Flight-like Data Matrix */
+  .hud-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin: 14px 0;
+    background: #0B111D;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #1E2C3F;
+  }
+  .hud-matrix-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hud-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: #64748B;
+    text-transform: uppercase;
+  }
+  .hud-val {
+    font-size: 13px;
+    font-weight: 800;
+    color: #F1F5F9;
+    font-family: ui-monospace, monospace;
+  }
+  .hud-val.accent {
+    color: #38BDF8;
+  }
+
+  /* Smart Badges */
+  .hud-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .hud-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #141E2F;
+    border: 1px solid #203550;
+    color: #CBD5E1;
+  }
+  .hud-pill.highlight {
+    background: #0C334D;
+    border-color: #0284C7;
+    color: #7DD3FC;
+  }
+
+  /* Mission Note Box */
+  .hud-note {
+    background: #0B1320;
+    border-left: 3px solid #38BDF8;
+    padding: 9px 12px;
+    border-radius: 0 8px 8px 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #94A3B8;
+    margin-bottom: 16px;
+  }
+  .hud-note strong {
+    color: #E2E8F0;
+  }
+
+  /* High Contrast Action Row */
+  .hud-actions {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 8px;
+  }
+  .btn-hud-primary {
+    background: #0284C7;
+    color: #FFFFFF;
+    border: none;
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+  }
+  .btn-hud-secondary {
+    background: #1E293B;
+    border: 1px solid #334155;
+    color: #E2E8F0;
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  /* Next Transit Step */
+  .hud-next-step {
+    background: #0E1524;
+    border: 1px dashed #26354A;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hud-next-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #94A3B8;
+  }
+  .hud-next-eta {
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #38BDF8;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="status-icons">
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="none"><path d="M1 9.5H2.5V1.5H1V9.5ZM4.5 9.5H6V3.5H4.5V9.5ZM8.5 9.5H10V5.5H8.5V9.5ZM12.5 9.5H14V7.5H12.5V9.5Z" fill="#FFFFFF"/></svg>
+      <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M7 2C9.5 2 11.7 3.1 13.2 4.8L7 11L0.8 4.8C2.3 3.1 4.5 2 7 2Z" fill="#FFFFFF"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="#FFFFFF"/><rect x="2" y="2" width="13" height="7" rx="1" fill="#FFFFFF"/><path d="M20 3.5V7.5" stroke="#FFFFFF" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
+  <!-- HUD Header -->
+  <header class="header">
+    <div class="header-top">
+      <div class="badge-flight">
+        <span>KYOTO EXP 03</span>
+        <span>• ACTIVE</span>
+      </div>
+      <div class="header-sync">GPS LIVE · 100%</div>
+    </div>
+    <div class="header-main">
+      <div>
+        <h1 class="header-title">Arashiyama Leg</h1>
+        <div style="font-size:12px; color:#64748B; margin-top:2px;">DAY 3 OF 7 · WED 25 NOV</div>
+      </div>
+      <div class="header-weather">
+        <div class="header-temp">16°C</div>
+        <div>Sunny 🍂</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Timeline Feed -->
+  <main class="timeline-stream">
+    
+    <!-- Collapsed Stop 1 -->
+    <div class="hud-collapsed-card">
+      <div class="hud-collapsed-left">
+        <div class="hud-check-icon">✓</div>
+        <div>
+          <div class="hud-collapsed-title">01. Kiyomizu-dera</div>
+          <div class="hud-collapsed-time">07:00 – 09:15 · COMPLETED</div>
+        </div>
+      </div>
+      <span style="font-size:11px; color:#059669; font-weight:700;">ON TIME</span>
+    </div>
+
+    <!-- Live Transit Intercept Bar -->
+    <div class="transit-intercept">
+      <div class="transit-route">
+        <span class="transit-code">JR SAN-IN</span>
+        <span class="transit-text">Kyoto Sta. → Saga-Arashiyama</span>
+      </div>
+      <div class="transit-live-pill">
+        <span>PLT 32 · ¥240</span>
+      </div>
+    </div>
+
+    <!-- Stop 2 (Active Focus Card) -->
+    <article class="card-hud">
+      <div class="hud-card-banner">
+        <div class="hud-status-live">
+          <div class="pulse-dot"></div>
+          <span>ACTIVE TARGET</span>
+        </div>
+        <div class="hud-time-window">10:15 → 11:30</div>
+      </div>
+
+      <div class="card-hud-main">
+        <div class="hud-title-row">
+          <div>
+            <h2 class="hud-title-text">% Arabica Arashiyama</h2>
+            <div class="hud-japanese-sub">アラビカ京都 嵐山 · ริมแม่น้ำ Katsura</div>
+          </div>
+          <span class="hud-category-chip">CAFE</span>
+        </div>
+
+        <!-- Telemetry Matrix -->
+        <div class="hud-matrix">
+          <div class="hud-matrix-cell">
+            <span class="hud-label">EST. DURATION</span>
+            <span class="hud-val accent">75 MIN</span>
+          </div>
+          <div class="hud-matrix-cell">
+            <span class="hud-label">QUEUE TIME</span>
+            <span class="hud-val">~18 MIN</span>
+          </div>
+          <div class="hud-matrix-cell">
+            <span class="hud-label">ELEVATOR</span>
+            <span class="hud-val" style="color:#34D399;">AVAILABLE</span>
+          </div>
+        </div>
+
+        <!-- Key Badges -->
+        <div class="hud-pills">
+          <span class="hud-pill highlight">☕ Kyoto Latte แนะนำ</span>
+          <span class="hud-pill">💳 แตะบัตร ICOCA / Suica</span>
+          <span class="hud-pill">🌊 จุดชมวิวแม่น้ำ & สะพาน</span>
+        </div>
+
+        <!-- Quick Mission Note -->
+        <div class="hud-note">
+          <strong>ภารกิจจุดนี้:</strong> แนะนำสั่ง Hot Kyoto Latte แล้วแวะเดินดื่มริมเขื่อนแม่น้ำ Katsura ถ่ายรูปวิวสะพาน Togetsukyo
+        </div>
+
+        <!-- Actions -->
+        <div class="hud-actions">
+          <button class="btn-hud-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            <span>START NAVIGATION</span>
+          </button>
+          <button class="btn-hud-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>SHOW JAPANESE</span>
+          </button>
+        </div>
+      </div>
+    </article>
+
+    <!-- Walk Link -->
+    <div style="padding: 0 10px; font-size:11px; color:#64748B; display:flex; align-items:center; gap:8px;">
+      <span>🚶 350m Walk along riverbank</span>
+      <span>• 4 min</span>
+    </div>
+
+    <!-- Stop 3 Preview -->
+    <div class="hud-next-step">
+      <div>
+        <div style="font-size:10px; color:#64748B; font-weight:700;">NEXT STOP 03</div>
+        <div class="hud-next-title">Togetsukyo Bridge</div>
+      </div>
+      <div class="hud-next-eta">ETA 11:45</div>
+    </div>
+
+  </main>
+
+</body>
+</html>

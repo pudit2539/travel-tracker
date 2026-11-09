@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, height=844, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>01 - Modern Japanese Editorial</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    background-color: #F8F6F0;
+    color: #1A1A1A;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Prompt", "Hiragino Sans", sans-serif;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  /* Status Bar */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: #1A1A1A;
+  }
+  .status-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* Editorial Header */
+  .header {
+    padding: 8px 22px 16px;
+    border-bottom: 1px solid #EBE4D8;
+    background: #F8F6F0;
+  }
+  .header-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #8C8275;
+    font-weight: 600;
+  }
+  .header-title-row {
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .header-title {
+    font-family: "Georgia", "Yu Mincho", "Hiragino Mincho ProN", serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #151515;
+    line-height: 1.1;
+  }
+  .header-kanji {
+    font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+    font-size: 18px;
+    color: #C83E2D;
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+
+  /* Day Progress Pill */
+  .day-track {
+    margin-top: 10px;
+    display: flex;
+    gap: 4px;
+  }
+  .day-bar {
+    height: 3px;
+    flex: 1;
+    background: #E5DED2;
+    border-radius: 2px;
+  }
+  .day-bar.active { background: #C83E2D; }
+
+  /* Feed Container */
+  .timeline-container {
+    padding: 18px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Previous Stop (Completed/Collapsed) */
+  .stop-collapsed {
+    background: #FFFFFF;
+    border: 1px solid #EAE3D6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  .stop-collapsed-time {
+    font-size: 11px;
+    font-weight: 600;
+    color: #7D7467;
+    letter-spacing: 0.5px;
+  }
+  .stop-collapsed-title {
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4A4640;
+    margin-left: 10px;
+  }
+  .visited-stamp {
+    border: 1px solid #C83E2D;
+    color: #C83E2D;
+    padding: 2px 7px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    transform: rotate(-3deg);
+  }
+
+  /* Transit Line */
+  .transit-segment {
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .transit-line-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #EFE9DE;
+    border: 1px solid #D8CFC0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #6A6052;
+  }
+  .transit-info-text {
+    font-size: 11px;
+    color: #7A7062;
+    display: flex;
+    gap: 8px;
+    font-weight: 500;
+  }
+  .transit-tag {
+    background: #EAE3D5;
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #38322A;
+    font-weight: 600;
+  }
+
+  /* Active Hero Stop Card (Editorial POPEYE Style) */
+  .card-editorial {
+    background: #FFFFFF;
+    border: 1px solid #DFD7C7;
+    border-radius: 12px;
+    box-shadow: 0 3px 14px rgba(35, 30, 20, 0.05);
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Red Edge Accent */
+  .card-editorial::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: #C83E2D;
+  }
+
+  .card-hero-img {
+    width: 100%;
+    height: 160px;
+    background: linear-gradient(135deg, #1C2630 0%, #35475A 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    padding: 14px 18px;
+  }
+
+  /* Decorative Stylized Landscape in Hero */
+  .hero-svg-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.25;
+  }
+
+  .hero-tag {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    background: rgba(255, 255, 255, 0.94);
+    color: #1A1A1A;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .hero-live-badge {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: #C83E2D;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .hero-place-overlay {
+    position: relative;
+    z-index: 2;
+    color: #FFFFFF;
+  }
+  .hero-place-en {
+    font-family: "Georgia", serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .hero-place-jp {
+    font-size: 12px;
+    opacity: 0.9;
+    letter-spacing: 1px;
+    margin-top: 2px;
+    font-family: "Yu Mincho", serif;
+  }
+
+  .card-body {
+    padding: 16px 18px 18px 22px;
+  }
+
+  /* Timing & Schedule Row */
+  .meta-schedule-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #F0ECE3;
+  }
+  .time-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+  .time-main {
+    font-family: "Georgia", serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #181818;
+  }
+  .time-duration {
+    font-size: 11px;
+    color: #8C8275;
+    font-weight: 600;
+  }
+  .countdown-pill {
+    background: #F4EFE6;
+    color: #685E50;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Tags & Highlights */
+  .pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+  }
+  .editorial-pill {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 9px;
+    border-radius: 3px;
+    background: #F6F3EB;
+    border: 1px solid #EAE2D3;
+    color: #403B33;
+  }
+  .editorial-pill.highlight {
+    background: #FFF5F2;
+    border-color: #F8D3CB;
+    color: #B52F1E;
+    font-weight: 600;
+  }
+
+  /* Note / Tip Section */
+  .tip-box {
+    background: #FAF7F2;
+    border-left: 2px solid #C83E2D;
+    padding: 10px 12px;
+    margin: 12px 0 16px;
+    border-radius: 0 6px 6px 0;
+  }
+  .tip-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #C83E2D;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .tip-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #443E36;
+  }
+
+  /* Action Buttons */
+  .action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .btn-editorial-primary {
+    background: #1C2630;
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .btn-editorial-secondary {
+    background: #FFFFFF;
+    color: #2D2820;
+    border: 1px solid #D8D0C2;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  /* Next Stop Preview */
+  .stop-next {
+    background: #FDFCF9;
+    border: 1px dashed #D6CEC0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .next-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #9E9588;
+    text-transform: uppercase;
+  }
+  .next-title {
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    color: #555047;
+    margin-top: 2px;
+    font-weight: 600;
+  }
+  .next-time {
+    font-size: 11px;
+    color: #8C8477;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="status-icons">
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="none"><path d="M1 9.5H2.5V1.5H1V9.5ZM4.5 9.5H6V3.5H4.5V9.5ZM8.5 9.5H10V5.5H8.5V9.5ZM12.5 9.5H14V7.5H12.5V9.5Z" fill="#1A1A1A"/></svg>
+      <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M7 2C9.5 2 11.7 3.1 13.2 4.8L7 11L0.8 4.8C2.3 3.1 4.5 2 7 2Z" fill="#1A1A1A"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="#1A1A1A"/><rect x="2" y="2" width="13" height="7" rx="1" fill="#1A1A1A"/><path d="M20 3.5V7.5" stroke="#1A1A1A" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
+  <!-- Editorial Magazine Header -->
+  <header class="header">
+    <div class="header-meta">
+      <span>DAY 03 // KYOTO</span>
+      <span>25 NOV 2026</span>
+    </div>
+    <div class="header-title-row">
+      <h1 class="header-title">Arashiyama &<br>Autumn River</h1>
+      <span class="header-kanji">嵐山秋色</span>
+    </div>
+    <div class="day-track">
+      <div class="day-bar active"></div>
+      <div class="day-bar active"></div>
+      <div class="day-bar"></div>
+      <div class="day-bar"></div>
+    </div>
+  </header>
+
+  <!-- Feed -->
+  <main class="timeline-container">
+    
+    <!-- Stop 1 (Completed) -->
+    <div class="stop-collapsed">
+      <div>
+        <div class="stop-collapsed-time">07:00 – 09:15 · 清水寺</div>
+        <div class="stop-collapsed-title">1. Kiyomizu-dera (วัดน้ำใส)</div>
+      </div>
+      <div class="visited-stamp">VISITED 08:45</div>
+    </div>
+
+    <!-- Transit Section -->
+    <div class="transit-segment">
+      <div class="transit-line-icon">🚆</div>
+      <div class="transit-info-text">
+        <span class="transit-tag">JR San-in Line</span>
+        <span>Kyoto Sta. → Saga-Arashiyama (17 นาที)</span>
+        <span>¥240</span>
+      </div>
+    </div>
+
+    <!-- Stop 2: Hero Card (Editorial Style) -->
+    <article class="card-editorial">
+      <div class="card-hero-img">
+        <!-- Abstract Japanese wave/river SVG graphic -->
+        <svg class="hero-svg-bg" viewBox="0 0 400 200" preserveAspectRatio="none">
+          <path d="M0,80 C120,40 220,120 400,60 L400,200 L0,200 Z" fill="#4B627A"/>
+          <path d="M0,130 C150,90 260,170 400,110 L400,200 L0,200 Z" fill="#243342"/>
+        </svg>
+
+        <span class="hero-tag">STOP 02 / CAFE</span>
+        <span class="hero-live-badge">NEXT STOP</span>
+
+        <div class="hero-place-overlay">
+          <h2 class="hero-place-en">% Arabica Kyoto Arashiyama</h2>
+          <div class="hero-place-jp">アラビカ京都 嵐山 · ริมแม่น้ำ Katsura</div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Schedule Row -->
+        <div class="meta-schedule-row">
+          <div class="time-badge">
+            <span class="time-main">10:15 — 11:30</span>
+            <span class="time-duration">(75 นาที)</span>
+          </div>
+          <div class="countdown-pill">
+            <span>⏱️ คิวรอ ~15-20 น.</span>
+          </div>
+        </div>
+
+        <!-- Amenities & Editorial Badges -->
+        <div class="pills-container">
+          <span class="editorial-pill highlight">☕ Kyoto Latte แนะนำ</span>
+          <span class="editorial-pill">🛗 ลิฟต์สถานี JR มี</span>
+          <span class="editorial-pill">💳 แตะ ICOCA / Suica ได้</span>
+          <span class="editorial-pill">🌊 วิวสะพาน Togetsukyo</span>
+        </div>
+
+        <!-- Tip Box -->
+        <div class="tip-box">
+          <div class="tip-title">Traveler’s Note</div>
+          <div class="tip-desc">
+            ร้านอยู่ชิดริมแม่น้ำ แนะนำสั่ง Hot Kyoto Latte (Blend) แล้วเดินไปนั่งจิบกาแฟริมตลิ่งชมสะพานโทเก็ตสึเคียวและทิวเขาใบไม้เปลี่ยนสี
+          </div>
+        </div>
+
+        <!-- Action Grid -->
+        <div class="action-grid">
+          <button class="btn-editorial-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            <span>นำทาง Google Maps</span>
+          </button>
+          <button class="btn-editorial-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>โชว์ชื่อภาษาญี่ปุ่น</span>
+          </button>
+        </div>
+      </div>
+    </article>
+
+    <!-- Transit to Next -->
+    <div class="transit-segment">
+      <div class="transit-line-icon">🚶</div>
+      <div class="transit-info-text">
+        <span>เดินเลียบแม่น้ำ 350 เมตร</span>
+        <span>• 4 นาที</span>
+      </div>
+    </div>
+
+    <!-- Stop 3 Preview -->
+    <div class="stop-next">
+      <div>
+        <div class="next-label">UP NEXT · STOP 03</div>
+        <div class="next-title">Togetsukyo Bridge (สะพานโทเก็ตสึเคียว)</div>
+      </div>
+      <div class="next-time">11:45 น.</div>
+    </div>
+
+  </main>
+
+</body>
+</html>

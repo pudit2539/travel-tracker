@@ -174,6 +174,13 @@
    - **ช่องค้นหาด่วนในหน้าแผนเที่ยว (`🔍 ค้นหาสถานที่, เมือง, ร้านอาหาร, แผนสำรอง...`) + ปุ่ม `🛡️ เปิด/ย่อแผนสำรองทั้งหมด`**: ค้นหาสถานที่หรือร้านสำรองจากทั้ง 42 จุดแวะได้ทันที พร้อมปุ่มเปิด/ย่อแผนสำรองทั้งหมดในคลิกเดียว
    - **แถบคั่นวันชัดเจน (`Day 1 • 4 ธ.ค.`, `Day 2 • 5 ธ.ค.`) เมื่อดูโหมด `📅 ทุกวัน` + `content-visibility: auto`**: แบ่งกลุ่มการ์ดตามวันพร้อมปุ่ม `ดูเฉพาะวันนี้ ➔` และใช้ CSS `content-visibility: auto` ช่วยให้ไถหน้าจอยาวๆ ลื่นระดับ 60 FPS
 
+13. **UI/UX Exploration via `/oil-ui` (Itinerary Stop Card & Timeline Redesign Candidates)**:
+   - ออกแบบและสร้างไฟล์ตัวอย่างจำลองหน้าจอมือถือ (Native Viewport: 390×844) ครบทั้ง 3 ทิศทางใน `.oil-ui/itinerary-cards/`:
+     - **Option A: Modern Japanese Editorial** (`option-a.html`): คอนเซปต์นิตยสาร BRUTUS/POPEYE, โทนกระดาษ Washi (`#F8F6F0`), สีแดงชาด Vermilion (`#C83E2D`), สัดส่วนภาพ 16:9 สไตล์ญี่ปุ่นพรีเมียม
+     - **Option B: Clean Flight & Transit HUD** (`option-b.html`): คอนเซปต์ Apple Maps Guides & Flighty, โหมด Dark Slate (`#0A0E17`, `#111827`), ข้อมูล Telemetry Matrix 3 ช่อง (เวลา, คิว, ลิฟต์), คมชัดอ่านง่ายกลางแดด
+     - **Option C: Warm Minimalist Scrapbook** (`option-c.html`): คอนเซปต์ Kinfolk & Muji Travel Journal, ตั๋วรถไฟมีรอยปรุ Ticket Notch, ตราประทับ Eki Stamp / Inkan Seal, โทนสีเขียวมัทฉะและน้ำตาลคั่ว
+   - คอมไพล์หน้าต่างเปรียบเทียบ Interactive Explorer ผ่าน `build_explorer.py` (`.oil-ui/itinerary-cards/style-explorer.html`) และถ่ายภาพสกรีนช็อตความละเอียดสูงครบทุกมุมมอง (`sheet.png`, `editorial.png`, `transit-hud.png`, `scrapbook.png`) ผ่าน `shoot.mjs` พร้อม Artifact `ui-style-comparison.md` เพื่อให้ผู้ใช้เลือกทิศทางที่ต้องการก่อนนำไปประยุกต์ใช้ในโค้ดหลัก
+
 ### [2026-10-12] เพิ่มระบบสิทธิ์ Granular Roles, Realtime Sync, และ Super Admin Console
 - เพิ่มบทบาท `plan_only` ซ่อนแท็บงบประมาณ/การเงิน
 - เพิ่ม `AddMemberModal` ให้เลือกสมาชิกจากระบบได้โดยตรง

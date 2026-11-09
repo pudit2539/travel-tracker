@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "round": "01",
+  "nativeViewport": "390x844",
+  "candidates": [
+    {
+      "id": "editorial",
+      "source": "option-a.html",
+      "name": "Modern Japanese Editorial",
+      "concept": "นิตยสารท่องเที่ยว BRUTUS/POPEYE — มินิมอลแบบญี่ปุ่น สัดส่วนภาพ 16:9 คมชัด สีกระดาษ Washi และสีแดง Vermilion",
+      "typography": "Editorial Serif + Grotesque (Georgia / Yu Mincho / Prompt)",
+      "palette": ["#F8F6F0", "#1A1A1A", "#C83E2D", "#1C2630", "#DFD7C7"],
+      "traits": [
+        "Magazine grid & editorial layout",
+        "Washi paper warm background (#F8F6F0)",
+        "Red Vermilion Torii accent (#C83E2D)",
+        "Refined 16:9 hero image header"
+      ]
+    },
+    {
+      "id": "transit-hud",
+      "source": "option-b.html",
+      "name": "Clean Flight & Transit HUD",
+      "concept": "Apple Maps & Flighty — Dark Slate Head-Up Display คมชัด อ่านง่ายกลางแดดจัด ข้อมูลสถานะและเวลาแบบ Monospace",
+      "typography": "SF Pro / Inter + JetBrains Mono (เวลาและชานชาลา Monospace)",
+      "palette": ["#0A0E17", "#111827", "#00F0FF", "#0284C7", "#94A3B8"],
+      "traits": [
+        "Dark slate high-contrast card (#111827)",
+        "Live status pulse dot & countdown",
+        "Telemetry data matrix (Queue, Duration, Elevator)",
+        "Outdoor daylight readability"
+      ]
+    },
+    {
+      "id": "scrapbook",
+      "source": "option-c.html",
+      "name": "Warm Minimalist Scrapbook",
+      "concept": "Kinfolk & Muji Travel Journal — อบอุ่น ผ่อนคลาย รอยปรุตั๋วรถไฟ (Ticket Notch) ตราประทับ Inkan และสัมผัสงานคราฟต์",
+      "typography": "Literary Serif + Humanist Rounded (Georgia / Quicksand / Prompt)",
+      "palette": ["#F4EFE6", "#FFFDF9", "#4A6B53", "#8C6A53", "#B85340"],
+      "traits": [
+        "Ticket notch side cutouts",
+        "Japanese Inkan / Eki stamp watermark",
+        "Matcha green (#4A6B53) and Terracotta notes",
+        "Tactile paper & washi tape aesthetic"
+      ]
+    }
+  ]
+}

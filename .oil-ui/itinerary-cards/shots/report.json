@@ -1,0 +1,168 @@
+[
+  {
+    "file": "editorial.png",
+    "target": "C:\\Users\\pudit.ye\\travel-tracker\\.oil-ui\\itinerary-cards\\option-a.html",
+    "name": "Modern Japanese Editorial",
+    "state": null,
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 2,
+        "examples": [
+          "article.card-editorial「STOP 02 / CAFE NEXT STOP」（::before）",
+          "div.tip-box「TRAVELER’S NOTE ร้านอยู่」（2px）"
+        ]
+      },
+      {
+        "rule": "emojiIcon",
+        "label": "表情符号当图标",
+        "count": 2,
+        "examples": [
+          "div.transit-line-icon「🚆」",
+          "div.transit-line-icon「🚶」"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 9,
+        "examples": [
+          "span「DAY 03 // KYOTO」（3.49:1）",
+          "span「25 NOV 2026」（3.49:1）",
+          "span「Kyoto Sta. → Saga-Arashi」（4.50:1）"
+        ]
+      },
+      {
+        "rule": "smallText",
+        "label": "正文小于 13px",
+        "count": 1,
+        "examples": [
+          "div.tip-desc「ร้านอยู่ชิดริมแม่น้ำ แนะ」（12px）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "transit-hud.png",
+    "target": "C:\\Users\\pudit.ye\\travel-tracker\\.oil-ui\\itinerary-cards\\option-b.html",
+    "name": "Clean Flight & Transit HUD",
+    "state": null,
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 1,
+        "examples": [
+          "div.hud-note「ภารกิจจุดนี้: แนะนำสั่ง 」（3px）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 11,
+        "examples": [
+          "div.header-sync「GPS LIVE · 100%」（4.06:1）",
+          "div「DAY 3 OF 7 · WED 25 NOV」（4.06:1）",
+          "div.hud-collapsed-time「07:00 – 09:15 · COMPLETE」（3.80:1）"
+        ]
+      },
+      {
+        "rule": "smallText",
+        "label": "正文小于 13px",
+        "count": 1,
+        "examples": [
+          "div.hud-note「ภารกิจจุดนี้: แนะนำสั่ง 」（12px）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "scrapbook.png",
+    "target": "C:\\Users\\pudit.ye\\travel-tracker\\.oil-ui\\itinerary-cards\\option-c.html",
+    "name": "Warm Minimalist Scrapbook",
+    "state": null,
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 1,
+        "examples": [
+          "div.scrap-note「✏️ TRAVEL JOURNAL NOTE ร」（外层 article.ticket-card）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 6,
+        "examples": [
+          "span.header-date「KYOTO TRAVEL LOG · DAY 3」（4.26:1）",
+          "div.ticket-collapsed-time「07:00 – 09:15 · ไหว้พระเ」（3.72:1）",
+          "span「嵐山」（2.75:1）"
+        ]
+      },
+      {
+        "rule": "smallText",
+        "label": "正文小于 13px",
+        "count": 1,
+        "examples": [
+          "div.scrap-note「✏️ TRAVEL JOURNAL NOTE ร」（12px）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "sheet.png",
+    "width": 1250,
+    "height": 924,
+    "columns": 3,
+    "items": [
+      {
+        "naturalWidth": 390,
+        "naturalHeight": 844,
+        "width": 390,
+        "height": 844,
+        "labelHeight": 32,
+        "x": 24,
+        "y": 24,
+        "label": "Modern Japanese Editorial",
+        "labelY": 876
+      },
+      {
+        "naturalWidth": 390,
+        "naturalHeight": 844,
+        "width": 390,
+        "height": 844,
+        "labelHeight": 32,
+        "x": 430,
+        "y": 24,
+        "label": "Clean Flight & Transit HUD",
+        "labelY": 876
+      },
+      {
+        "naturalWidth": 390,
+        "naturalHeight": 844,
+        "width": 390,
+        "height": 844,
+        "labelHeight": 32,
+        "x": 836,
+        "y": 24,
+        "label": "Warm Minimalist Scrapbook",
+        "labelY": 876
+      }
+    ],
+    "issues": []
+  }
+]

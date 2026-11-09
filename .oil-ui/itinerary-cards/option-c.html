@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, height=844, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>03 - Warm Minimalist Scrapbook</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    background-color: #F4EFE6;
+    color: #2D2A26;
+    font-family: -apple-system, BlinkMacSystemFont, "Prompt", "Quicksand", "Segoe UI", sans-serif;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: #3C3833;
+  }
+  .status-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* Scrapbook Journal Header */
+  .header {
+    padding: 10px 22px 14px;
+    background: #F4EFE6;
+  }
+  .header-tape {
+    width: 90px;
+    height: 14px;
+    background: rgba(220, 210, 190, 0.7);
+    margin: 0 auto 10px;
+    border-left: 2px dashed rgba(180, 170, 150, 0.5);
+    border-right: 2px dashed rgba(180, 170, 150, 0.5);
+    transform: rotate(-1.5deg);
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .header-date {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #8C6A53;
+    text-transform: uppercase;
+  }
+  .header-stamp {
+    font-size: 11px;
+    color: #4A6B53;
+    font-weight: 700;
+    border: 1px dashed #4A6B53;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .header-title {
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #2A2521;
+    margin-top: 4px;
+  }
+  .header-desc {
+    font-size: 12px;
+    color: #726A5F;
+    margin-top: 2px;
+  }
+
+  /* Stream */
+  .journal-stream {
+    padding: 12px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Stop 1 (Completed Journal Ticket) */
+  .ticket-collapsed {
+    background: #FFFDF9;
+    border: 1px solid #E5DEC9;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(60, 50, 40, 0.04);
+  }
+  .ticket-collapsed-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #4A4237;
+  }
+  .ticket-collapsed-time {
+    font-size: 11px;
+    color: #8C8273;
+    margin-top: 2px;
+  }
+  .stamp-circle {
+    width: 38px;
+    height: 38px;
+    border: 2px dashed #B85340;
+    color: #B85340;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1.1;
+    transform: rotate(8deg);
+  }
+
+  /* Transit Ribbon */
+  .transit-ribbon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+  }
+  .ribbon-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #4A6B53;
+  }
+  .ribbon-line {
+    flex: 1;
+    border-top: 2px dotted #C8BFAD;
+  }
+  .ribbon-label {
+    font-size: 11px;
+    color: #6C6355;
+    background: #EBE4D5;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  /* Active Hero Ticket Card (Notched Scrapbook Style) */
+  .ticket-card {
+    background: #FFFDF9;
+    border: 1px solid #E2D9C5;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(60, 50, 40, 0.07);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Ticket Notches (Cutout Effect) */
+  .notch-left, .notch-right {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #F4EFE6;
+    border-radius: 50%;
+    top: 98px;
+    z-index: 10;
+  }
+  .notch-left {
+    left: -9px;
+    box-shadow: inset -2px 0 3px rgba(60, 50, 40, 0.08);
+    border-right: 1px solid #E2D9C5;
+  }
+  .notch-right {
+    right: -9px;
+    box-shadow: inset 2px 0 3px rgba(60, 50, 40, 0.08);
+    border-left: 1px solid #E2D9C5;
+  }
+
+  /* Ticket Top Stub */
+  .ticket-stub {
+    padding: 16px 18px 12px;
+    background: #FAF6ED;
+    border-bottom: 2px dashed #E2D9C5;
+    position: relative;
+  }
+  .stub-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .badge-scrapbook {
+    background: #4A6B53;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .stub-time {
+    font-size: 14px;
+    font-weight: 800;
+    color: #2D2822;
+  }
+  .ticket-name-jp {
+    font-size: 12px;
+    color: #8C6A53;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+  .ticket-name-en {
+    font-family: "Georgia", serif;
+    font-size: 21px;
+    font-weight: 700;
+    color: #24201B;
+    margin-top: 2px;
+    letter-spacing: -0.2px;
+  }
+
+  /* Inkan Stamp Watermark */
+  .inkan-watermark {
+    position: absolute;
+    right: 18px;
+    top: 36px;
+    width: 52px;
+    height: 52px;
+    border: 2px solid rgba(184, 83, 64, 0.45);
+    border-radius: 50%;
+    color: rgba(184, 83, 64, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    transform: rotate(-12deg);
+    pointer-events: none;
+  }
+
+  /* Ticket Main Body */
+  .ticket-body {
+    padding: 16px 18px 18px;
+  }
+
+  /* Journal Badges */
+  .scrap-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .scrap-chip {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: #F4EFE6;
+    color: #554D40;
+    border: 1px solid #E6DDC8;
+  }
+  .scrap-chip.matcha {
+    background: #EAF0EC;
+    color: #2D5237;
+    border-color: #C3D5C7;
+  }
+
+  /* Handwritten Style Travel Note */
+  .scrap-note {
+    background: #FCFBF7;
+    border: 1px solid #EFE8D8;
+    padding: 11px 13px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #4A4339;
+    margin-bottom: 16px;
+  }
+  .scrap-note-header {
+    font-size: 10px;
+    font-weight: 800;
+    color: #8C6A53;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Action Buttons */
+  .scrap-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .btn-scrap-primary {
+    background: #4A6B53;
+    color: #FFFFFF;
+    border: none;
+    padding: 11px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .btn-scrap-secondary {
+    background: #FFFDF9;
+    border: 1px solid #D5CBB5;
+    color: #4A4237;
+    padding: 11px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  /* Next Stop Preview */
+  .ticket-next {
+    background: #FFFDF9;
+    border: 1px dashed #DDD4C0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ticket-next-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #554D40;
+  }
+  .ticket-next-time {
+    font-size: 11px;
+    color: #8C8273;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="status-icons">
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="none"><path d="M1 9.5H2.5V1.5H1V9.5ZM4.5 9.5H6V3.5H4.5V9.5ZM8.5 9.5H10V5.5H8.5V9.5ZM12.5 9.5H14V7.5H12.5V9.5Z" fill="#3C3833"/></svg>
+      <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M7 2C9.5 2 11.7 3.1 13.2 4.8L7 11L0.8 4.8C2.3 3.1 4.5 2 7 2Z" fill="#3C3833"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="#3C3833"/><rect x="2" y="2" width="13" height="7" rx="1" fill="#3C3833"/><path d="M20 3.5V7.5" stroke="#3C3833" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-tape"></div>
+    <div class="header-top">
+      <span class="header-date">KYOTO TRAVEL LOG · DAY 3</span>
+      <span class="header-stamp">AUTUMN 2026</span>
+    </div>
+    <h1 class="header-title">Arashiyama Stroll</h1>
+    <div class="header-desc">วันพุธที่ 25 พ.ย. · เที่ยวแถบอาราชิยามะ & ริมแม่น้ำคัตสึระ</div>
+  </header>
+
+  <!-- Feed -->
+  <main class="journal-stream">
+    
+    <!-- Stop 1 (Stamped Completed) -->
+    <div class="ticket-collapsed">
+      <div>
+        <div class="ticket-collapsed-title">01. Kiyomizu-dera (วัดน้ำใส)</div>
+        <div class="ticket-collapsed-time">07:00 – 09:15 · ไหว้พระเช้าตรู่</div>
+      </div>
+      <div class="stamp-circle">
+        <span>嵐山</span>
+        <span>済</span>
+      </div>
+    </div>
+
+    <!-- Transit Ribbon -->
+    <div class="transit-ribbon">
+      <div class="ribbon-dot"></div>
+      <div class="ribbon-line"></div>
+      <div class="ribbon-label">🚆 JR San-in Line (17 นาที · ¥240)</div>
+      <div class="ribbon-line"></div>
+      <div class="ribbon-dot"></div>
+    </div>
+
+    <!-- Stop 2: Notched Scrapbook Card -->
+    <article class="ticket-card">
+      <div class="notch-left"></div>
+      <div class="notch-right"></div>
+
+      <!-- Ticket Stub Top -->
+      <div class="ticket-stub">
+        <div class="stub-meta">
+          <span class="badge-scrapbook">STOP 02 · CAFE</span>
+          <span class="stub-time">10:15 — 11:30</span>
+        </div>
+        <div class="ticket-name-jp">アラビカ京都 嵐山 (ริมน้ำ Katsura)</div>
+        <h2 class="ticket-name-en">% Arabica Arashiyama</h2>
+
+        <!-- Inkan stamp -->
+        <div class="inkan-watermark">
+          <span>嵐山</span>
+          <span>CAFÉ</span>
+        </div>
+      </div>
+
+      <!-- Ticket Body -->
+      <div class="ticket-body">
+        
+        <!-- Chips -->
+        <div class="scrap-chips">
+          <span class="scrap-chip matcha">☕ Hot Kyoto Latte</span>
+          <span class="scrap-chip">⏱️ รอคิว ~18 นาที</span>
+          <span class="scrap-chip">🛗 ลิฟต์สถานี JR มี</span>
+          <span class="scrap-chip">🍂 วิวแม่น้ำ & ภูเขา</span>
+        </div>
+
+        <!-- Note -->
+        <div class="scrap-note">
+          <div class="scrap-note-header">
+            <span>✏️ Travel Journal Note</span>
+          </div>
+          ร้านเล็กริมน้ำวิวสะพานโทเก็ตสึเคียว สั่ง Hot Latte Blend นั่งชิลล์ดูแม่น้ำและภูเขาใบไม้เปลี่ยนสี แตะ ICOCA จ่ายได้สะดวก
+        </div>
+
+        <!-- Actions -->
+        <div class="scrap-actions">
+          <button class="btn-scrap-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            <span>นำทางแผนที่</span>
+          </button>
+          <button class="btn-scrap-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>โชว์ชื่อร้าน</span>
+          </button>
+        </div>
+
+      </div>
+    </article>
+
+    <!-- Walking connection -->
+    <div style="text-align: center; font-size:11px; color:#8C8273;">
+      <span>🚶 เดินเลียบแม่น้ำ 350 เมตร (4 นาที)</span>
+    </div>
+
+    <!-- Stop 3 Preview -->
+    <div class="ticket-next">
+      <div>
+        <div style="font-size:10px; color:#8C6A53; font-weight:700;">NEXT STOP 03</div>
+        <div class="ticket-next-title">Togetsukyo Bridge (สะพานโทเก็ตสึเคียว)</div>
+      </div>
+      <div class="ticket-next-time">11:45 น.</div>
+    </div>
+
+  </main>
+
+</body>
+</html>
