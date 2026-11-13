@@ -123,14 +123,16 @@ export function TripHeroCover({
   return (
     <div className="relative rounded-3xl overflow-hidden shadow-md border border-[#DFD7C7] dark:border-[#262932] group bg-[#FDFBF7] dark:bg-[#181a20] text-[#1A1A1A] dark:text-white">
       {/* Clean Photographic Destination Header Banner */}
-      <div className="h-32 sm:h-44 md:h-48 w-full relative overflow-hidden flex flex-col justify-between p-3.5 sm:p-5 bg-slate-950">
-        <img
-          src={coverImage}
-          alt={trip?.name || 'Trip Destination Cover'}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-85"
-        />
-        {/* Soft Vignette for Top Badges */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-black/40 pointer-events-none" />
+      <div className="min-h-[128px] sm:min-h-[172px] md:min-h-[192px] w-full relative overflow-hidden flex flex-col justify-between p-3.5 sm:p-5 bg-slate-950">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <img
+            src={coverImage}
+            alt={trip?.name || 'Trip Destination Cover'}
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-85"
+          />
+          {/* Soft Vignette for Top Badges */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-black/40" />
+        </div>
 
         {/* Top Boarding Pass Header Tags */}
         <div className="relative z-10 flex items-start justify-between gap-2">

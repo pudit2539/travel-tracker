@@ -199,7 +199,7 @@ function detectCityTheme(cityOrPlace: string): {
   }
   return {
     cityKey: 'osaka',
-    badgeText: '🎀 โหมดโอซาก้า Куいだおれ',
+    badgeText: '🎀 โหมดโอซาก้า くいだおれ',
     accessoryLabel: 'โบว์ทาโกะยากิทอง & ฮู้ดนักชิม',
     cheerTh: 'โอซาก้าเมืองของอร่อย! เตรียมท้องไว้ลุยทาโกะยากิและช้อปปิ้งกัน!',
     cheerJa: '大阪くいだおれの旅！たこ焼きもお買い物も全力で楽しもう！',
