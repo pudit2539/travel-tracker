@@ -212,7 +212,9 @@
 
 #### 📍 [13:30 – 16:00 น.] เที่ยวชมปราสาทโอซาก้า Osaka Castle & Park (ชมหอคอยปราสาทและสวนประวัติศาสตร์ช่วงบ่าย) (Osaka (Osaka Castle))
 - 🚆 **การเดินทาง**: Osaka Metro จาก Shinsaibashi -> Morinomiya / Osakajokoen | แตะ ICOCA (240 เยน)
+- 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: แวะจิบกาแฟริมแม่น้ำโทซาโบริที่ Brooklyn Roasting Company Kitahama (ร้านกาแฟชื่อดังวิวสวน Nakanoshima นั่งสาย Sakaisuji ลงสถานี Kitahama ทางออก 29/30 แล้วต่อสาย Keihan ไปปราสาทโอซาก้าได้สะดวกมาก)
 - 🛡️ **แผนสำรอง & ร้านอาหาร/คาเฟ่สำรอง**:
+  - คาเฟ่แนะนำริมน้ำ (ทางผ่านไปปราสาท): Brooklyn Roasting Company Kitahama (เปิด 08:00–20:00 น. / ส.-อา. ปิด 19:00 น. บรรยากาศริมแม่น้ำสวยมาก)
   - ที่เที่ยวสำรองในสวนปราสาท: Miraiza Osaka-jo (อาคารประวัติศาสตร์สไตล์ยุโรปหน้าปราสาท รวมคาเฟ่และร้านขนม)
   - จุดชมวิวสำรอง: จุดล่องเรือชมคูเมืองปราสาท Osaka Castle Gozabune Boat
   - คาเฟ่สำรอง: R Baker Osaka Castle Park (เบเกอรี่และกาแฟในสวนร่มรื่น)
@@ -323,6 +325,7 @@
   - จุดชมวิวสำรอง: Umeda Sky Building (Kuchu Teien Observatory) จุดชมวิวตึกแฝดลอยฟ้า 360 องศา
   - ห้างแฟชั่นสำรอง: Grand Front Osaka & Lucua 1100 (ศูนย์รวมแฟชั่นและคาเฟ่ชิคติดสถานี JR Osaka)
   - คาเฟ่ขนมหวานสำรอง: Harbs Hankyu Sanbangai Umeda (เค้กเครปผลไม้สด Mille-crepes ในตำนาน)
+  - คาเฟ่ริมน้ำสำรอง: Brooklyn Roasting Company Kitahama (นั่งรถไฟจาก Umeda/Yodoyabashi มาลง Kitahama 1 สถานี จิบกาแฟรับลมริมแม่น้ำโทซาโบริ)
   - ช้อปปิ้งของเล่นสำรอง: Pokemon Center & Nintendo OSAKA (Daimaru Umeda ชั้น 13)
 
 ---

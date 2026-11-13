@@ -103,6 +103,17 @@ const CURATED_JAPAN_WISHLIST: WishlistItem[] = [
     facets: ['rainy-day', 'near-station', 'no-pork'],
   },
   {
+    id: 'w-brooklyn-kitahama',
+    title: 'Brooklyn Roasting Company Kitahama (คาเฟ่ริมแม่น้ำ)',
+    japaneseTitle: 'ブルックリン ロースティング カンパニー 北浜店',
+    category: 'cafe',
+    district: 'Kitahama / Nakanoshima Osaka (ติดสถานี Kitahama)',
+    costEstimate: '¥550 - ¥1,200',
+    highlight: 'คาเฟ่ Specialty Coffee ชื่อดังริมแม่น้ำโทซาโบริ มีโซนระเบียงไม้ชมวิวสวน Nakanoshima เปิด 08:00–20:00 น. (ส.-อา. 19:00 น.) ทางผ่านไปปราสาทโอซาก้า',
+    isCurated: true,
+    facets: ['near-station', 'no-pork'],
+  },
+  {
     id: 'w-motomura',
     title: 'Gyukatsu Motomura (เนื้อชุบแป้งทอดเตาหิน)',
     japaneseTitle: '牛かつ もと村 難波店',
