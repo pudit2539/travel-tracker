@@ -941,14 +941,28 @@ function loadCachedPhotoRecord(cacheKey: string): ResolvedPhotoRecord | null {
   return null;
 }
 
+const MAX_LOCAL_PHOTO_CACHE_ENTRIES = 200;
+
 function saveCachedPhotoRecord(cacheKey: string, record: ResolvedPhotoRecord): void {
   memoryPhotoCache.set(cacheKey, record);
   if (typeof window === 'undefined') return;
   try {
-    const parsed = { ...readPhotoCacheStorageMap(), [cacheKey]: record };
-    const serialized = JSON.stringify(parsed);
+    const current = { ...readPhotoCacheStorageMap() };
+    delete current[cacheKey];
+    current[cacheKey] = record;
+
+    // LRU cap so localStorage stays compact and never hits QuotaExceededError
+    const keys = Object.keys(current);
+    if (keys.length > MAX_LOCAL_PHOTO_CACHE_ENTRIES) {
+      const excess = keys.length - MAX_LOCAL_PHOTO_CACHE_ENTRIES;
+      for (let i = 0; i < excess; i++) {
+        delete current[keys[i]];
+      }
+    }
+
+    const serialized = JSON.stringify(current);
     lastPhotoCacheRaw = serialized;
-    lastPhotoCacheParsed = parsed;
+    lastPhotoCacheParsed = current;
     localStorage.setItem(PHOTO_CACHE_STORAGE_KEY, serialized);
   } catch {}
 }
@@ -1129,59 +1143,83 @@ export function usePlaceVisualMeta(
   tripId?: string
 ): PlaceVisualMeta {
   const baseMeta = getPlaceVisualMeta(placeName, city, index);
+  const extractedQuery = extractAttractionSearchQuery(placeName, city).trim();
+  const baseQuery = (extractedQuery || baseMeta.wikiQuery || '').trim();
+  const currentCacheKey = baseQuery
+    ? `${baseQuery.toLowerCase()}|${(baseMeta.wikiQuery || '').toLowerCase()}|${(city || '').toLowerCase()}`
+    : '';
 
-  const [customPhoto, setCustomPhotoState] = useState<string | null>(() =>
-    getCustomPlacePhoto(placeName, itemId)
-  );
-
-  const [resolvedRecord, setResolvedRecord] = useState<ResolvedPhotoRecord | null>(() => {
-    const extracted = extractAttractionSearchQuery(placeName, city).trim();
-    const baseQuery = (extracted || baseMeta.wikiQuery || '').trim();
-    if (!baseQuery) return null;
-    const cacheKey = `${baseQuery.toLowerCase()}|${(baseMeta.wikiQuery || '').toLowerCase()}|${(city || '').toLowerCase()}`;
-    return loadCachedPhotoRecord(cacheKey);
-  });
+  // Keep initial SSR & Client hydration identical to avoid React hydration errors
+  // when cached Wikimedia/custom photos already exist in client storage.
+  const [customPhoto, setCustomPhotoState] = useState<string | null>(null);
+  const [resolvedState, setResolvedState] = useState<{
+    cacheKey: string;
+    record: ResolvedPhotoRecord;
+  } | null>(null);
 
   // Listen to custom photo changes (upload PNG / paste screenshot / reset / Supabase cloud sync)
   useEffect(() => {
+    let cancelled = false;
     const syncCustom = () => {
-      setCustomPhotoState(getCustomPlacePhoto(placeName, itemId));
+      const next = getCustomPlacePhoto(placeName, itemId);
+      setCustomPhotoState((prev) => (prev === next ? prev : next));
     };
-    syncCustom();
+    queueMicrotask(() => {
+      if (!cancelled) syncCustom();
+    });
     if (tripId) {
       loadCustomPlacePhotosFromSupabase(tripId).catch(() => {});
     }
     if (typeof window !== 'undefined') {
       window.addEventListener(CUSTOM_PHOTO_CHANGED_EVENT, syncCustom);
-      return () => window.removeEventListener(CUSTOM_PHOTO_CHANGED_EVENT, syncCustom);
+      return () => {
+        cancelled = true;
+        window.removeEventListener(CUSTOM_PHOTO_CHANGED_EVENT, syncCustom);
+      };
     }
+    return () => {
+      cancelled = true;
+    };
   }, [placeName, itemId, tripId]);
 
   // Fetch real place photo from Google Maps Places API (New) -> Wikimedia HD
   useEffect(() => {
-    if (customPhoto) return;
+    if (customPhoto || !currentCacheKey) return;
     let cancelled = false;
-    const extracted = extractAttractionSearchQuery(placeName, city).trim();
-    const baseQuery = (extracted || baseMeta.wikiQuery || '').trim();
-    if (!baseQuery) return;
-    const cacheKey = `${baseQuery.toLowerCase()}|${(baseMeta.wikiQuery || '').toLowerCase()}|${(city || '').toLowerCase()}`;
-    const cached = loadCachedPhotoRecord(cacheKey);
+    const cached = loadCachedPhotoRecord(currentCacheKey);
     if (cached) {
-      setResolvedRecord((prev) => (prev?.url === cached.url ? prev : cached));
-      return;
+      queueMicrotask(() => {
+        if (!cancelled) {
+          setResolvedState((prev) =>
+            prev?.cacheKey === currentCacheKey && prev.record.url === cached.url
+              ? prev
+              : { cacheKey: currentCacheKey, record: cached }
+          );
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
     }
-    if (negativePhotoCache.has(cacheKey)) return;
+    if (negativePhotoCache.has(currentCacheKey)) return;
 
     fetchRealPlacePhotoRecord(placeName, city, baseMeta.wikiQuery).then((rec) => {
       if (!cancelled && rec) {
-        setResolvedRecord((prev) => (prev?.url === rec.url ? prev : rec));
+        setResolvedState((prev) =>
+          prev?.cacheKey === currentCacheKey && prev.record.url === rec.url
+            ? prev
+            : { cacheKey: currentCacheKey, record: rec }
+        );
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [placeName, city, baseMeta.wikiQuery, customPhoto]);
+  }, [placeName, city, baseMeta.wikiQuery, currentCacheKey, customPhoto]);
+
+  const resolvedRecord =
+    resolvedState && resolvedState.cacheKey === currentCacheKey ? resolvedState.record : null;
 
   if (customPhoto) {
     return {

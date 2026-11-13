@@ -487,30 +487,39 @@ export default function TripDetailPage() {
             } else if (parsed.flight && typeof window !== 'undefined') {
               localStorage.setItem(`flight_pass_${tripId}`, JSON.stringify(parsed.flight));
             }
+            const writeStorageIfChanged = (storageKey: string, value: unknown) => {
+              try {
+                const serialized = JSON.stringify(value);
+                if (localStorage.getItem(storageKey) !== serialized) {
+                  localStorage.setItem(storageKey, serialized);
+                }
+              } catch {}
+            };
+
             if (parsed.splits && typeof window !== 'undefined') {
               const localSplits = getTripExpenseSplits(tripId);
               const mergedSplits = { ...parsed.splits, ...localSplits };
-              localStorage.setItem(`travel_tracker_expense_splits_${tripId}`, JSON.stringify(mergedSplits));
+              writeStorageIfChanged(`travel_tracker_expense_splits_${tripId}`, mergedSplits);
             }
             if (parsed.paymentMethods && typeof window !== 'undefined') {
               const localMethods = getTripPaymentMethods(tripId);
               const mergedMethods = { ...parsed.paymentMethods, ...localMethods };
-              localStorage.setItem(`travel_tracker_expense_payment_methods_${tripId}`, JSON.stringify(mergedMethods));
+              writeStorageIfChanged(`travel_tracker_expense_payment_methods_${tripId}`, mergedMethods);
             }
             if (parsed.customCategories && Array.isArray(parsed.customCategories) && typeof window !== 'undefined') {
-              localStorage.setItem(`travel_tracker_custom_categories_${tripId}`, JSON.stringify(parsed.customCategories));
+              writeStorageIfChanged(`travel_tracker_custom_categories_${tripId}`, parsed.customCategories);
               setCategories(getTripCategories(tripId));
             }
             if (parsed.categoryBudgets && typeof window !== 'undefined') {
-              localStorage.setItem(`travel_tracker_cat_budgets_${tripId}`, JSON.stringify(parsed.categoryBudgets));
+              writeStorageIfChanged(`travel_tracker_cat_budgets_${tripId}`, parsed.categoryBudgets);
               setCategoryBudgets(parsed.categoryBudgets);
             }
             if (parsed.memberBudgets && typeof window !== 'undefined') {
-              localStorage.setItem(`travel_tracker_member_budgets_${tripId}`, JSON.stringify(parsed.memberBudgets));
+              writeStorageIfChanged(`travel_tracker_member_budgets_${tripId}`, parsed.memberBudgets);
               setMemberBudgets(parsed.memberBudgets);
             }
             if (parsed.photos && Array.isArray(parsed.photos) && typeof window !== 'undefined') {
-              localStorage.setItem(`travel_tracker_photos_${tripId}`, JSON.stringify(parsed.photos));
+              writeStorageIfChanged(`travel_tracker_photos_${tripId}`, parsed.photos);
               setPhotosCount(parsed.photos.length);
             }
             if (parsed.settledTransfers && typeof window !== 'undefined') {
@@ -521,14 +530,14 @@ export default function TripDetailPage() {
                 } catch { return {}; }
               })();
               const mergedSettled = { ...parsed.settledTransfers, ...localSettled };
-              localStorage.setItem(`travel_tracker_settled_transfers_${tripId}`, JSON.stringify(mergedSettled));
+              writeStorageIfChanged(`travel_tracker_settled_transfers_${tripId}`, mergedSettled);
             }
             if (parsed.fxRate && typeof window !== 'undefined') {
               setFxRate(parsed.fxRate);
               setCustomJpyToThbRate(parsed.fxRate);
             }
             if (parsed.ticketsVault && Array.isArray(parsed.ticketsVault) && typeof window !== 'undefined') {
-              localStorage.setItem(`ticket_vault_${tripId}`, JSON.stringify(parsed.ticketsVault));
+              writeStorageIfChanged(`ticket_vault_${tripId}`, parsed.ticketsVault);
             }
             if (parsed.customPlacePhotos && typeof parsed.customPlacePhotos === 'object' && typeof window !== 'undefined') {
               hydrateCustomPlacePhotosFromMap(parsed.customPlacePhotos, tripId);
@@ -543,17 +552,17 @@ export default function TripDetailPage() {
               hydrateShoppingBagFromSupabase(tripId, parsed.shoppingBag);
             }
             if (parsed.trainBookings && Array.isArray(parsed.trainBookings) && typeof window !== 'undefined') {
-              localStorage.setItem(`travel_train_bookings_${tripId}`, JSON.stringify(parsed.trainBookings));
+              writeStorageIfChanged(`travel_train_bookings_${tripId}`, parsed.trainBookings);
             }
             if (parsed.sharedFunds && Array.isArray(parsed.sharedFunds) && typeof window !== 'undefined') {
-              localStorage.setItem(`travel_shared_funds_${tripId}`, JSON.stringify(parsed.sharedFunds));
+              writeStorageIfChanged(`travel_shared_funds_${tripId}`, parsed.sharedFunds);
             }
             if (parsed.guardianMap && typeof parsed.guardianMap === 'object' && typeof window !== 'undefined') {
-              localStorage.setItem(`travel_guardian_map_${tripId}`, JSON.stringify(parsed.guardianMap));
+              writeStorageIfChanged(`travel_guardian_map_${tripId}`, parsed.guardianMap);
             }
             if (parsed.sharePrivacy && typeof parsed.sharePrivacy === 'object' && typeof window !== 'undefined') {
               setSharePrivacy(parsed.sharePrivacy);
-              localStorage.setItem(`travel_share_privacy_${tripId}`, JSON.stringify(parsed.sharePrivacy));
+              writeStorageIfChanged(`travel_share_privacy_${tripId}`, parsed.sharePrivacy);
             }
           } catch (e) {
             console.warn('Trip meta parse error:', e);
@@ -623,11 +632,11 @@ export default function TripDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [tripId]);
+  }, [tripId, cacheTripOffline, getOfflineTripCache]);
 
   useEffect(() => {
     fetchTripData();
-  }, [tripId]);
+  }, [fetchTripData]);
 
   // 100% Offline-First Expense Queue Auto-Flush when internet reconnects
   useEffect(() => {
@@ -678,9 +687,18 @@ export default function TripDetailPage() {
     };
   }, [isOnline, tripId, fetchTripData, markLocalAction]);
 
-  // Supabase Realtime Subscription: ฟังการเปลี่ยนแปลงแบบ Real-time (เมื่อสมาชิกใหม่เข้าร่วม, มีการปรับสิทธิ์, หรืออัปเดตข้อมูลทริป)
+  // Supabase Realtime Subscription: ฟังการเปลี่ยนแปลงแบบ Real-time (พร้อม debounce เพื่อลด query ซ้ำซ้อนเมื่อมี batch edits)
   useEffect(() => {
     if (!tripId) return;
+
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleFetchTripData = () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        refreshTimer = null;
+        fetchTripData();
+      }, 320);
+    };
 
     const channel = supabase
       .channel(`trip-realtime-${tripId}`)
@@ -717,7 +735,7 @@ export default function TripDetailPage() {
               toast.info('มีสมาชิกออกจากทริป');
             }
           }
-          fetchTripData();
+          scheduleFetchTripData();
         }
       )
       .on(
@@ -734,7 +752,7 @@ export default function TripDetailPage() {
           if (payload.eventType === 'UPDATE' && !isSelf) {
             toast.info('มีการอัปเดตข้อมูลทริป');
           }
-          fetchTripData();
+          scheduleFetchTripData();
         }
       )
       .on(
@@ -760,7 +778,7 @@ export default function TripDetailPage() {
               toast.info('🗑️ เพื่อนร่วมทริปลบรายการใช้จ่าย');
             }
           }
-          fetchTripData();
+          scheduleFetchTripData();
         }
       )
       .on(
@@ -781,7 +799,7 @@ export default function TripDetailPage() {
               toast.info('🗓️ เพื่อนร่วมทริปอัปเดตแผนการเดินทาง');
             }
           }
-          fetchTripData();
+          scheduleFetchTripData();
         }
       )
       .subscribe((status) => {
@@ -789,6 +807,7 @@ export default function TripDetailPage() {
       });
 
     return () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
       supabase.removeChannel(channel);
     };
   }, [tripId, currentUser?.id, fetchTripData]);
@@ -883,6 +902,7 @@ export default function TripDetailPage() {
         sort_order: itinerary.length + idx,
       }));
 
+      markLocalAction();
       const { error } = await supabase.from('itinerary_items').insert(formatted);
       if (!error) {
         triggerConfetti();
@@ -909,6 +929,7 @@ export default function TripDetailPage() {
     updated[targetIndex] = temp;
 
     setItinerary(updated);
+    markLocalAction();
 
     try {
       await Promise.all([
@@ -1894,6 +1915,7 @@ export default function TripDetailPage() {
       'สมาชิก';
 
     try {
+      markLocalAction();
       // 2. อัปเดต trips: เปลี่ยน created_by เป็นสมาชิกคนใหม่
       const { error: tripUpdateErr } = await supabase
         .from('trips')

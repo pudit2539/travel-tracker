@@ -16,6 +16,7 @@ import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export interface TrainBookingItem {
   id: string;
@@ -261,12 +262,16 @@ export default function TravelHubModal({
     setCalcInput((current + amount).toString());
   };
 
-  const handleCopyCalcSummary = () => {
+  const handleCopyCalcSummary = async () => {
     if (typeof window !== 'undefined') {
       const summary = `🛍️ ช้อปปิ้ง Tax-Free:\nยอดปลอดภาษี: ¥${taxFreePrice.toLocaleString()} (≈ ฿${priceInThb.toLocaleString()})\nประหยัดภาษี ${taxRateType}% ไปได้: ¥${taxSavedYen.toLocaleString()} (฿${taxSavedThb.toLocaleString()})\nเรท: 1 JPY = ${fxRate} THB`;
-      navigator.clipboard.writeText(summary);
-      setCopiedCalc(true);
-      setTimeout(() => setCopiedCalc(false), 2000);
+      const ok = await copyToClipboard(summary);
+      if (ok) {
+        setCopiedCalc(true);
+        setTimeout(() => setCopiedCalc(false), 2000);
+      } else {
+        toast.error('ไม่สามารถคัดลอกสรุปยอดได้');
+      }
     }
   };
 
@@ -473,11 +478,15 @@ export default function TravelHubModal({
     window.speechSynthesis.speak(utterance);
   };
 
-  const copyPhraseText = (phrase: PhraseItem) => {
+  const copyPhraseText = async (phrase: PhraseItem) => {
     if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(`${phrase.japanese}\n(${phrase.romaji})\nแปลว่า: ${phrase.thai}`);
-      setCopiedPhraseId(phrase.id);
-      setTimeout(() => setCopiedPhraseId(null), 2000);
+      const ok = await copyToClipboard(`${phrase.japanese}\n(${phrase.romaji})\nแปลว่า: ${phrase.thai}`);
+      if (ok) {
+        setCopiedPhraseId(phrase.id);
+        setTimeout(() => setCopiedPhraseId(null), 2000);
+      } else {
+        toast.error('ไม่สามารถคัดลอกประโยคได้');
+      }
     }
   };
 
@@ -513,11 +522,15 @@ export default function TravelHubModal({
   }, [itinerary]);
 
   const [copiedHotel, setCopiedHotel] = useState(false);
-  const handleCopyHotel = () => {
+  const handleCopyHotel = async () => {
     if (hotelInfo && typeof window !== 'undefined') {
-      navigator.clipboard.writeText(`${hotelInfo.name} - ${hotelInfo.address}`);
-      setCopiedHotel(true);
-      setTimeout(() => setCopiedHotel(false), 2000);
+      const ok = await copyToClipboard(`${hotelInfo.name} - ${hotelInfo.address}`);
+      if (ok) {
+        setCopiedHotel(true);
+        setTimeout(() => setCopiedHotel(false), 2000);
+      } else {
+        toast.error('ไม่สามารถคัดลอกที่อยู่โรงแรมได้');
+      }
     }
   };
 

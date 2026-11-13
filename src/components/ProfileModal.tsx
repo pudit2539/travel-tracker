@@ -11,6 +11,7 @@ import {
   Laptop, Smartphone, Tablet, Monitor, RefreshCw
 } from 'lucide-react';
 import { fetchUserDevices, removeUserDevice, signOutOtherDevices, DeviceSession } from '@/lib/sessionManager';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -254,9 +255,10 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     }
   };
 
-  const copyUserId = () => {
-    if (user?.id) {
-      navigator.clipboard.writeText(user.id);
+  const copyUserId = async () => {
+    if (!user?.id) return;
+    const ok = await copyToClipboard(user.id);
+    if (ok) {
       setCopiedId(true);
       setTimeout(() => setCopiedId(false), 2000);
     }

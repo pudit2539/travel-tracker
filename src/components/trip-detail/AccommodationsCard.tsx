@@ -28,6 +28,7 @@ import {
 import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
 import HotelVoucherPreviewModal from './HotelVoucherPreviewModal';
 import { convertToThb, convertCurrency } from '@/lib/currency';
+import { copyToClipboard } from '@/lib/clipboard';
 import { supabase } from '@/lib/supabase';
 import { triggerConfetti } from '@/lib/confetti';
 import { usePlaceVisualMeta } from '@/lib/placeThumbnails';
@@ -652,12 +653,16 @@ export function AccommodationsCard({
   };
 
   // Copy booking ref to clipboard
-  const handleCopyRef = (id: string, ref: string) => {
+  const handleCopyRef = async (id: string, ref: string) => {
     if (typeof window !== 'undefined' && ref) {
-      navigator.clipboard.writeText(ref);
-      setCopiedId(id);
-      onShowToast?.('คัดลอกรหัสการจองเรียบร้อยแล้ว! 📋', 'success');
-      setTimeout(() => setCopiedId(null), 2000);
+      const ok = await copyToClipboard(ref);
+      if (ok) {
+        setCopiedId(id);
+        onShowToast?.('คัดลอกรหัสการจองเรียบร้อยแล้ว! 📋', 'success');
+        setTimeout(() => setCopiedId(null), 2000);
+      } else {
+        onShowToast?.('ไม่สามารถคัดลอกรหัสการจองได้', 'error');
+      }
     }
   };
 

@@ -49,7 +49,7 @@ function LoginForm() {
       const hash = window.location.hash || '';
       const search = window.location.search || '';
       if (hash.includes('type=recovery') || search.includes('type=recovery')) {
-        setShowResetPasswordModal(true);
+        queueMicrotask(() => setShowResetPasswordModal(true));
 
         // ดึง access_token และ refresh_token จาก hash เพื่อเซ็ต session ให้พร้อมทันที
         try {

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export interface VaultPassItem {
   id: string;
@@ -271,12 +272,16 @@ export default function TicketPassLockerModal({
     }
   };
 
-  const handleCopy = (refText: string, id: string) => {
+  const handleCopy = async (refText: string, id: string) => {
     if (!refText) return;
-    navigator.clipboard.writeText(refText);
-    setCopiedId(id);
-    toast.success('คัดลอกรหัสอ้างอิงแล้ว ✨');
-    setTimeout(() => setCopiedId(null), 2500);
+    const ok = await copyToClipboard(refText);
+    if (ok) {
+      setCopiedId(id);
+      toast.success('คัดลอกรหัสอ้างอิงแล้ว ✨');
+      setTimeout(() => setCopiedId(null), 2500);
+    } else {
+      toast.error('ไม่สามารถคัดลอกรหัสอ้างอิงได้');
+    }
   };
 
   const handleNewPassImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -17,7 +17,32 @@ const CITY_COORDINATES: { [key: string]: { lat: number; lon: number; nameTh: str
   osaka: { lat: 34.6937, lon: 135.5023, nameTh: 'โอซาก้า (Osaka)' },
   kyoto: { lat: 35.0116, lon: 135.7681, nameTh: 'เกียวโต (Kyoto)' },
   tokyo: { lat: 35.6762, lon: 139.6503, nameTh: 'โตเกียว (Tokyo)' },
+  nara: { lat: 34.6851, lon: 135.8048, nameTh: 'นารา (Nara)' },
+  kobe: { lat: 34.6901, lon: 135.1956, nameTh: 'โกเบ (Kobe)' },
+  fukuoka: { lat: 33.5902, lon: 130.4017, nameTh: 'ฟุกุโอกะ (Fukuoka)' },
+  sapporo: { lat: 43.0618, lon: 141.3545, nameTh: 'ซัปโปโร (Sapporo)' },
+  nagoya: { lat: 35.1815, lon: 136.9066, nameTh: 'นาโกย่า (Nagoya)' },
+  kanazawa: { lat: 36.5613, lon: 136.6562, nameTh: 'คานาซาวะ (Kanazawa)' },
+  hiroshima: { lat: 34.3853, lon: 132.4553, nameTh: 'ฮิโรชิมา (Hiroshima)' },
+  kawaguchiko: { lat: 35.4981, lon: 138.7686, nameTh: 'คาวากุจิโกะ (Kawaguchiko)' },
+  kamakura: { lat: 35.3192, lon: 139.5467, nameTh: 'คามาคุระ (Kamakura)' },
 };
+
+function resolveCityKey(rawCity: string): string {
+  const lower = (rawCity || '').toLowerCase();
+  if (lower.includes('kyo') || lower.includes('เกียวโต')) return 'kyoto';
+  if (lower.includes('tok') || lower.includes('โตเกียว')) return 'tokyo';
+  if (lower.includes('nara') || lower.includes('นารา')) return 'nara';
+  if (lower.includes('kobe') || lower.includes('โกเบ')) return 'kobe';
+  if (lower.includes('fuk') || lower.includes('ฟุกุโอกะ')) return 'fukuoka';
+  if (lower.includes('sap') || lower.includes('hok') || lower.includes('ซัปโปโร')) return 'sapporo';
+  if (lower.includes('nagoya') || lower.includes('นาโกย่า')) return 'nagoya';
+  if (lower.includes('kana') || lower.includes('คานาซาวะ')) return 'kanazawa';
+  if (lower.includes('hiro') || lower.includes('ฮิโรชิมา')) return 'hiroshima';
+  if (lower.includes('kawa') || lower.includes('fuji') || lower.includes('คาวากุจิโกะ') || lower.includes('ฟูจิ')) return 'kawaguchiko';
+  if (lower.includes('kama') || lower.includes('คามาคุระ')) return 'kamakura';
+  return 'osaka';
+}
 
 function getWeatherInfoFromCode(code: number): { text: string; emoji: string } {
   if (code === 0) return { text: 'ท้องฟ้าแจ่มใส แดดออก', emoji: '☀️' };
@@ -33,13 +58,16 @@ function getWeatherInfoFromCode(code: number): { text: string; emoji: string } {
 }
 
 export async function fetchDestinationWeather(cityKey: string = 'osaka'): Promise<WeatherData> {
-  const normalizedKey = cityKey.toLowerCase().includes('kyo') ? 'kyoto' : 'osaka';
+  const normalizedKey = resolveCityKey(cityKey);
   const target = CITY_COORDINATES[normalizedKey] || CITY_COORDINATES.osaka;
 
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${target.lat}&longitude=${target.lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo`;
     
-    const res = await fetch(url, { next: { revalidate: 1800 } });
+    const res = await fetch(url, {
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(6000),
+    });
     if (!res.ok) throw new Error('Weather API error');
     const data = await res.json();
 

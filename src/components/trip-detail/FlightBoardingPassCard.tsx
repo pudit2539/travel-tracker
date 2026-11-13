@@ -20,6 +20,7 @@ import {
 import { convertToThb, convertCurrency } from '@/lib/currency';
 import { supabase } from '@/lib/supabase';
 import { triggerConfetti } from '@/lib/confetti';
+import { copyToClipboard } from '@/lib/clipboard';
 import { sanitizeSpentAtDate } from './AccommodationsCard';
 
 interface FlightBoardingPassCardProps {
@@ -262,12 +263,16 @@ export function FlightBoardingPassCard({
   };
 
   // Copy booking ref to clipboard
-  const handleCopyRef = (id: string, ref: string) => {
+  const handleCopyRef = async (id: string, ref: string) => {
     if (typeof window !== 'undefined' && ref) {
-      navigator.clipboard.writeText(ref);
-      setCopiedId(id);
-      onShowToast?.('คัดลอกรหัสการจองตั๋วบินเรียบร้อยแล้ว! 📋', 'success');
-      setTimeout(() => setCopiedId(null), 2000);
+      const ok = await copyToClipboard(ref);
+      if (ok) {
+        setCopiedId(id);
+        onShowToast?.('คัดลอกรหัสการจองตั๋วบินเรียบร้อยแล้ว! 📋', 'success');
+        setTimeout(() => setCopiedId(null), 2000);
+      } else {
+        onShowToast?.('ไม่สามารถคัดลอกรหัสการจองได้', 'error');
+      }
     }
   };
 

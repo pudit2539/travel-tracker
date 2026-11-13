@@ -192,27 +192,39 @@ function ItineraryStopCardComponent({
   const tripId = item?.trip_id || '';
 
   const [localStopMeta, setLocalStopMeta] = React.useState<StopSmartMeta>(() =>
-    propStopMeta !== undefined ? propStopMeta : getStopMeta(tripId, stopKey, item?.main_place)
+    propStopMeta !== undefined ? propStopMeta : {}
   );
   const [localShoppingItems, setLocalShoppingItems] = React.useState<ShoppingBagItem[]>(() =>
-    propShoppingItems !== undefined
-      ? propShoppingItems
-      : getShoppingItemsForStop(getShoppingBag(tripId), item)
+    propShoppingItems !== undefined ? propShoppingItems : []
   );
 
   React.useEffect(() => {
     if (!tripId || propStopMeta !== undefined) return;
+    let cancelled = false;
     const syncMeta = () => setLocalStopMeta(getStopMeta(tripId, stopKey, item?.main_place));
-    syncMeta();
-    return subscribeStopMeta(syncMeta);
+    queueMicrotask(() => {
+      if (!cancelled) syncMeta();
+    });
+    const unsub = subscribeStopMeta(syncMeta);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [tripId, stopKey, item?.main_place, propStopMeta]);
 
   React.useEffect(() => {
     if (!tripId || propShoppingItems !== undefined) return;
+    let cancelled = false;
     const syncShop = () =>
       setLocalShoppingItems(getShoppingItemsForStop(getShoppingBag(tripId), item));
-    syncShop();
-    return subscribeShoppingBag(syncShop);
+    queueMicrotask(() => {
+      if (!cancelled) syncShop();
+    });
+    const unsub = subscribeShoppingBag(syncShop);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [tripId, item, propShoppingItems]);
 
   const activeStopMeta = propStopMeta || localStopMeta;

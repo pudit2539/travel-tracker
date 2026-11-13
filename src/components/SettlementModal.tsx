@@ -10,6 +10,7 @@ import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatEx
 import { getTripExpenseSplits, saveTripExpenseSplits } from '@/lib/expenseSplits';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { exportExpensesToExcel } from '@/lib/exportExpensesExcel';
+import { copyToClipboard } from '@/lib/clipboard';
 import { toast } from 'sonner';
 import { 
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
@@ -394,15 +395,19 @@ export default function SettlementModal({
     setEditingPromptPay(false);
   };
 
-  const copyPromptPayText = () => {
+  const copyPromptPayText = async () => {
     if (!promptPayNumber) return;
-    navigator.clipboard.writeText(promptPayNumber);
-    setCopiedPromptPay(true);
-    setTimeout(() => setCopiedPromptPay(false), 2000);
+    const ok = await copyToClipboard(promptPayNumber);
+    if (ok) {
+      setCopiedPromptPay(true);
+      setTimeout(() => setCopiedPromptPay(false), 2000);
+    } else {
+      toast.error('ไม่สามารถคัดลอกเบอร์ PromptPay ได้ กรุณาลองใหม่อีกครั้ง');
+    }
   };
 
   // Generate shareable Line message
-  const copySettlementSummary = () => {
+  const copySettlementSummary = async () => {
     let msg = `สรุปเคลียร์บิลค่าใช้จ่ายทริป\n`;
     msg += `ยอดรวมทั้งหมด: ${settlement.totalSpent.toLocaleString()} ${currency}\n`;
     msg += `จำนวนสมาชิก: ${settlement.memberCount} คน (หารเฉลี่ยคนละ ${Math.round(settlement.averagePerPerson).toLocaleString()} ${currency})\n\n`;
@@ -419,9 +424,13 @@ export default function SettlementModal({
       });
     }
 
-    navigator.clipboard.writeText(msg);
-    setCopiedText(true);
-    setTimeout(() => setCopiedText(false), 2500);
+    const ok = await copyToClipboard(msg);
+    if (ok) {
+      setCopiedText(true);
+      setTimeout(() => setCopiedText(false), 2500);
+    } else {
+      toast.error('ไม่สามารถคัดลอกข้อความสรุปได้');
+    }
   };
 
   if (!isOpen || !mounted) return null;

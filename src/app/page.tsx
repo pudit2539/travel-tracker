@@ -45,6 +45,7 @@ function TripCoverMedia({
   showBottomTag = false,
   isOwner = false,
   userRole = 'viewer',
+  priority = false,
 }: {
   tripId?: string;
   tripName: string;
@@ -55,15 +56,14 @@ function TripCoverMedia({
   showBottomTag?: boolean;
   isOwner?: boolean;
   userRole?: string;
+  priority?: boolean;
 }) {
   const targetPlace = highlightPlace || tripName;
   const visual = usePlaceVisualMeta(targetPlace, highlightCity, idx, undefined, tripId);
-  const [imgErr, setImgErr] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const [showCustomModal, setShowCustomModal] = useState(false);
 
-  useEffect(() => {
-    setImgErr(false);
-  }, [visual.imageUrl]);
+  const imgErr = failedUrl === visual.imageUrl;
 
   return (
     <>
@@ -72,8 +72,10 @@ function TripCoverMedia({
         <img
           src={visual.imageUrl}
           alt={targetPlace}
-          loading="lazy"
-          onError={() => setImgErr(true)}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : undefined}
+          decoding="async"
+          onError={() => setFailedUrl(visual.imageUrl)}
           className={className}
         />
       )}
@@ -378,6 +380,7 @@ export default function HomePage() {
               .from('itinerary_items')
               .select('trip_id, date_label, main_place, city, sort_order')
               .in('trip_id', tripIds)
+              .neq('date_label', '__meta_trip_data__')
               .order('sort_order', { ascending: true });
 
             if (Array.isArray(itinRows)) {
@@ -608,9 +611,16 @@ export default function HomePage() {
     setActionLoading(true);
 
     try {
-      await supabase.from('itinerary_items').delete().eq('trip_id', selectedTrip.id);
-      await supabase.from('expenses').delete().eq('trip_id', selectedTrip.id);
-      await supabase.from('trip_members').delete().eq('trip_id', selectedTrip.id);
+      const [itinDel, expDel, memDel] = await Promise.all([
+        supabase.from('itinerary_items').delete().eq('trip_id', selectedTrip.id),
+        supabase.from('expenses').delete().eq('trip_id', selectedTrip.id),
+        supabase.from('trip_members').delete().eq('trip_id', selectedTrip.id),
+      ]);
+      const childErr = itinDel.error || expDel.error || memDel.error;
+      if (childErr) {
+        toast.error('ไม่สามารถลบข้อมูลย่อยของทริปได้: ' + childErr.message);
+        return;
+      }
       const { error } = await supabase.from('trips').delete().eq('id', selectedTrip.id);
 
       if (!error) {
@@ -1014,6 +1024,7 @@ export default function HomePage() {
                   highlightPlace={upcomingTrip.highlightPlace}
                   highlightCity={upcomingTrip.highlightCity}
                   idx={0}
+                  priority
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
               </div>

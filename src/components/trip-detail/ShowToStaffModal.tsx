@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Copy, Check, Navigation, ExternalLink, MapPin, Volume2, Sparkles } from 'lucide-react';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export interface ShowToStaffModalProps {
   isOpen: boolean;
@@ -68,11 +69,11 @@ export function ShowToStaffModal({
   const currentPhrase = phrases[phraseMode];
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(`${placeName}${city ? ` (${city})` : ''}`);
+    const ok = await copyToClipboard(`${placeName}${city ? ` (${city})` : ''}`);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    }
   };
 
   const handleSpeak = () => {

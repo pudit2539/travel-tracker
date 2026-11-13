@@ -145,13 +145,27 @@ export function checkAndTouchSession(): { isExpired: boolean; remainingDays: num
   }
 }
 
+const DEVICE_PING_COOLDOWN_MS = 5 * 60 * 1000;
+
 /**
  * Register or update the current device in Supabase `user_devices`
  */
-export async function trackCurrentDevice(userId: string): Promise<void> {
+export async function trackCurrentDevice(userId: string, force: boolean = false): Promise<void> {
   if (typeof window === 'undefined' || !userId) return;
 
   const deviceId = getDeviceId();
+  const pingKey = `travel_tracker_device_ping_${userId}_${deviceId}`;
+
+  if (!force) {
+    try {
+      const lastPingRaw = sessionStorage.getItem(pingKey);
+      const lastPingTs = lastPingRaw ? Number(lastPingRaw) : 0;
+      if (lastPingTs && Date.now() - lastPingTs < DEVICE_PING_COOLDOWN_MS) {
+        return;
+      }
+    } catch {}
+  }
+
   const info = getDeviceInfo();
 
   try {
@@ -168,7 +182,11 @@ export async function trackCurrentDevice(userId: string): Promise<void> {
       { onConflict: 'user_id,device_id' }
     );
 
-    if (error && error.code !== '42P01') { // 42P01 = table doesn't exist yet
+    if (!error) {
+      try {
+        sessionStorage.setItem(pingKey, String(Date.now()));
+      } catch {}
+    } else if (error.code !== '42P01') { // 42P01 = table doesn't exist yet
       console.warn('Device tracking notice:', error.message);
     }
   } catch (err) {

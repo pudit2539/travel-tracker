@@ -456,7 +456,7 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
       expect(aspectBox).not.toBeNull();
 
       const staffBtn = Array.from(container.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('โชว์ถามทาง')
+        b.textContent?.includes('โชว์ชื่อญี่ปุ่น') || b.textContent?.includes('โชว์ถามทาง')
       );
       expect(staffBtn).toBeDefined();
       await act(async () => {
@@ -498,6 +498,7 @@ describe('UI Upgrades & Mobile/iPad Responsive Suite', () => {
       expect(container.textContent).toContain('Osaka Castle Park');
       // Open the decluttered ⋯ menu on ItineraryStopCard
       const moreBtn = Array.from(container.querySelectorAll('button')).find((b) =>
+        b.getAttribute('title')?.includes('จัดการจุดแวะ') ||
         b.getAttribute('title')?.includes('จัดการกิจกรรม')
       );
       expect(moreBtn).toBeDefined();

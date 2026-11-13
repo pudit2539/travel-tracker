@@ -58,8 +58,14 @@ export async function POST(req: Request) {
     }
 
     const { imageBase64, mimeType, tripCurrency } = await req.json();
-    if (!imageBase64) {
+    if (!imageBase64 || typeof imageBase64 !== 'string') {
       return NextResponse.json({ success: false, error: 'กรุณาแนบรูปภาพใบเสร็จ' }, { status: 400 });
+    }
+    if (imageBase64.length > 8_000_000) {
+      return NextResponse.json(
+        { success: false, error: 'ไฟล์ภาพใหญ่เกินไป (กรุณาย่อรูปให้ไม่เกิน ~6MB แล้วลองใหม่)' },
+        { status: 413 }
+      );
     }
 
     const contextCurrency = String(tripCurrency || 'THB').toUpperCase().trim().substring(0, 3) || 'THB';
@@ -109,6 +115,7 @@ export async function POST(req: Request) {
                 temperature: 0.1,
               },
             }),
+            signal: AbortSignal.timeout(20000),
           });
 
           if (res.ok) {
@@ -133,7 +140,7 @@ export async function POST(req: Request) {
     if (!parsedData && anthropicKey) {
       const claudeModels = ['claude-sonnet-4-6', 'claude-sonnet-4-5-20250929', 'claude-haiku-4-5-20251001', 'claude-3-5-sonnet-20241022'];
       const Anthropic = (await import('@anthropic-ai/sdk')).default;
-      const anthropic = new Anthropic({ apiKey: anthropicKey });
+      const anthropic = new Anthropic({ apiKey: anthropicKey, timeout: 20000 });
 
       for (const cModel of claudeModels) {
         try {

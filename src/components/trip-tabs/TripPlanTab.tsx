@@ -160,23 +160,35 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const deferredPlanSearch = useDeferredValue(planSearchQuery);
 
   const tripId = trip?.id || '';
-  const [stopMetaMap, setStopMetaMap] = useState<Record<string, StopSmartMeta>>(() =>
-    getTripStopMetaMap(tripId)
-  );
-  const [shoppingBag, setShoppingBag] = useState<ShoppingBagItem[]>(() => getShoppingBag(tripId));
+  const [stopMetaMap, setStopMetaMap] = useState<Record<string, StopSmartMeta>>({});
+  const [shoppingBag, setShoppingBag] = useState<ShoppingBagItem[]>([]);
 
   React.useEffect(() => {
     if (!tripId) return;
+    let cancelled = false;
     const syncMeta = () => setStopMetaMap(getTripStopMetaMap(tripId));
-    syncMeta();
-    return subscribeStopMeta(syncMeta);
+    queueMicrotask(() => {
+      if (!cancelled) syncMeta();
+    });
+    const unsub = subscribeStopMeta(syncMeta);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [tripId]);
 
   React.useEffect(() => {
     if (!tripId) return;
+    let cancelled = false;
     const syncShop = () => setShoppingBag(getShoppingBag(tripId));
-    syncShop();
-    return subscribeShoppingBag(syncShop);
+    queueMicrotask(() => {
+      if (!cancelled) syncShop();
+    });
+    const unsub = subscribeShoppingBag(syncShop);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [tripId]);
 
   React.useEffect(() => {
@@ -320,11 +332,11 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
   // Sync when parent itineraryViewMode changes
   React.useEffect(() => {
-    if (itineraryViewMode === 'map' && displayLayout !== 'map') {
-      setDisplayLayout('map');
-    } else if (itineraryViewMode === 'list' && displayLayout === 'map') {
-      setDisplayLayout('card');
-    }
+    setDisplayLayout((prev) => {
+      if (itineraryViewMode === 'map' && prev !== 'map') return 'map';
+      if (itineraryViewMode === 'list' && prev === 'map') return 'card';
+      return prev;
+    });
   }, [itineraryViewMode]);
 
   const handleSelectDisplayLayout = (nextLayout: ItineraryDisplayLayout) => {
@@ -347,8 +359,18 @@ export const TripPlanTab = React.memo(function TripPlanTab({
     setOpenLogisticsPanel((prev) => (prev === panel ? 'none' : panel));
   };
 
-  // Check if any accommodation is for this day
-  const stays = useMemo(() => (tripId ? getAccommodations(tripId) : []), [tripId]);
+  // Check if any accommodation is for this day (hydrated cleanly after mount for SSR parity)
+  const [stays, setStays] = useState<ReturnType<typeof getAccommodations>>([]);
+  React.useEffect(() => {
+    if (!tripId) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setStays(getAccommodations(tripId));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tripId]);
   const activeStayForSelectedDay = useMemo(() => {
     if (selectedDayFilter === 'all' || stays.length === 0) return null;
     const filterLower = selectedDayFilter.toLowerCase();
@@ -1116,7 +1138,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                       >
                         <div className="flex items-center justify-between gap-2 text-[11px] font-semibold tracking-widest uppercase text-[#8C8275] dark:text-slate-400">
                           <span>
-                            {dayNumber > 0 ? `DAY ${String(dayNumber).padStart(2, '0')}` : 'TRAVEL DAY'} //{' '}
+                            {dayNumber > 0 ? `DAY ${String(dayNumber).padStart(2, '0')}` : 'TRAVEL DAY'}{' '}
+                            {'//'}{' '}
                             {item.city || 'JAPAN'}
                           </span>
                           <span className="inline-flex items-center gap-1.5">

@@ -116,7 +116,7 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
       totalDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
     } else {
       // Fallback: estimate from unique dates in expenses or default to 10 days
-      const uniqueExpenseDates = new Set(expenses.map(e => (e.date || '').split('T')[0]).filter(Boolean));
+      const uniqueExpenseDates = new Set(expenses.map(e => ((e.spent_at || e.date || '').split('T')[0])).filter(Boolean));
       totalDays = Math.max(1, uniqueExpenseDates.size || 10);
     }
 
@@ -195,7 +195,8 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
     const dayMap: Record<string, { total: number; count: number; items: any[] }> = {};
 
     expenses.forEach((e) => {
-      let rawDate = e.date ? e.date.split('T')[0] : 'ไม่ระบุวัน';
+      const rawDateSource = e.spent_at || e.date || '';
+      let rawDate = rawDateSource ? rawDateSource.split('T')[0] : 'ไม่ระบุวัน';
       if (!rawDate || rawDate === 'null') rawDate = 'ไม่ระบุวัน';
 
       // Friendly display label

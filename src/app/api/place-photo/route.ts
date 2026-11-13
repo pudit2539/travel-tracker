@@ -15,7 +15,30 @@ interface CachedPlacePhoto {
   source: 'google_places';
 }
 
+const MAX_SERVER_PHOTO_CACHE = 250;
 const serverPhotoCache = new Map<string, CachedPlacePhoto>();
+
+function getServerCachedPhoto(key: string): CachedPlacePhoto | undefined {
+  const val = serverPhotoCache.get(key);
+  if (val) {
+    // Refresh insertion order for basic LRU behavior
+    serverPhotoCache.delete(key);
+    serverPhotoCache.set(key, val);
+  }
+  return val;
+}
+
+function setServerCachedPhoto(key: string, val: CachedPlacePhoto): void {
+  if (serverPhotoCache.has(key)) {
+    serverPhotoCache.delete(key);
+  } else if (serverPhotoCache.size >= MAX_SERVER_PHOTO_CACHE) {
+    const oldestKey = serverPhotoCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      serverPhotoCache.delete(oldestKey);
+    }
+  }
+  serverPhotoCache.set(key, val);
+}
 
 async function resolvePhotoMediaUri(photoName: string, apiKey: string): Promise<string | null> {
   try {
@@ -28,6 +51,7 @@ async function resolvePhotoMediaUri(photoName: string, apiKey: string): Promise<
       headers: {
         'X-Goog-Maps-Solution-ID': 'gmp_git_agentskills_v1',
       },
+      signal: AbortSignal.timeout(6000),
     });
     if (!mediaRes.ok) return null;
     const mediaData = await mediaRes.json();
@@ -48,8 +72,8 @@ async function resolvePhotoMediaUri(photoName: string, apiKey: string): Promise<
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const query = (searchParams.get('q') || '').trim();
-  const city = (searchParams.get('city') || '').trim();
+  const query = (searchParams.get('q') || '').trim().slice(0, 120);
+  const city = (searchParams.get('city') || '').trim().slice(0, 80);
   const wantCandidates = searchParams.get('candidates') === '1';
 
   if (!query) {
@@ -71,8 +95,9 @@ export async function GET(request: NextRequest) {
       : `${query} Japan`;
 
   const cacheKey = `${fullQuery.toLowerCase()}|candidates:${wantCandidates ? '1' : '0'}`;
-  if (serverPhotoCache.has(cacheKey)) {
-    return NextResponse.json(serverPhotoCache.get(cacheKey), {
+  const cachedPayload = getServerCachedPhoto(cacheKey);
+  if (cachedPayload) {
+    return NextResponse.json(cachedPayload, {
       headers: {
         'Cache-Control': 'public, max-age=86400, s-maxage=604800',
       },
@@ -92,6 +117,7 @@ export async function GET(request: NextRequest) {
         textQuery: fullQuery,
         maxResultCount: 3,
       }),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!searchRes.ok) {
@@ -151,7 +177,7 @@ export async function GET(request: NextRequest) {
         source: 'google_places',
       };
 
-      serverPhotoCache.set(cacheKey, payload);
+      setServerCachedPhoto(cacheKey, payload);
       return NextResponse.json(payload, {
         headers: {
           'Cache-Control': 'public, max-age=86400, s-maxage=604800',
@@ -181,7 +207,7 @@ export async function GET(request: NextRequest) {
       source: 'google_places',
     };
 
-    serverPhotoCache.set(cacheKey, payload);
+    setServerCachedPhoto(cacheKey, payload);
 
     return NextResponse.json(payload, {
       headers: {

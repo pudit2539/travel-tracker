@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized: Authentication required' }, { status: 401 });
     }
 
-    const { city, requestType, query } = await req.json();
+    const body = await req.json();
+    const city = String(body?.city || 'Osaka').trim().slice(0, 80);
+    const requestType = String(body?.requestType || '').trim().slice(0, 60);
+    const query = String(body?.query || '').trim().slice(0, 240);
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
@@ -64,46 +67,52 @@ Respond ONLY with a valid JSON array of max 3 items matching this schema:
 ]
 No other text, markdown blocks only if standard JSON.`;
 
-    // Ultra-fast, highly cost-efficient Haiku model (costs < 0.01 THB per call)
-    let anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 350,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
+    // Ultra-fast, cost-efficient Haiku model cascade with strict timeout
+    const haikuModels = [
+      'claude-haiku-4-5-20251001',
+      'claude-3-5-haiku-20241022',
+      'claude-3-haiku-20240307',
+    ];
+    let anthropicData: any = null;
 
-    // Fallback to claude-3-haiku if 3.5 is not available on key tier
-    if (!anthropicRes.ok) {
-      anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 350,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      });
+    for (const model of haikuModels) {
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model,
+            max_tokens: 350,
+            messages: [{ role: 'user', content: prompt }],
+          }),
+          signal: AbortSignal.timeout(12000),
+        });
+        if (res.ok) {
+          anthropicData = await res.json();
+          break;
+        }
+      } catch {
+        // try next fallback model tier
+      }
     }
 
-    const anthropicData = await anthropicRes.json();
     const rawText = anthropicData?.content?.[0]?.text || '';
     
-    // Extract JSON array
+    // Extract JSON array safely
     const jsonMatch = rawText.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      const items = JSON.parse(jsonMatch[0]);
-      return NextResponse.json({ success: true, data: { recommendations: items } });
+      try {
+        const items = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(items) && items.length > 0) {
+          return NextResponse.json({ success: true, data: { recommendations: items } });
+        }
+      } catch {
+        // fall through to curated offline fallback
+      }
     }
 
     return NextResponse.json({
