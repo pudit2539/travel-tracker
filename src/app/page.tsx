@@ -120,6 +120,81 @@ function TripCoverMedia({
   );
 }
 
+const NEXT_TRIP_IDEAS = [
+  {
+    title: 'Tokyo - Kawaguchiko & Your Name',
+    placeQuery: 'Chureito Pagoda',
+    city: 'Kawaguchiko',
+    badge: '6–7 วัน • อนิเมะ & วินเทจ',
+    highlight: 'ตามรอย Your Name (Suga Shrine), ช้อปวินเทจ Shimokitazawa และชมวิวฟูจิ',
+    currency: 'JPY',
+  },
+  {
+    title: 'Nagoya - Ghibli Park & Shirakawa-go',
+    placeQuery: 'Shirakawa-go',
+    city: 'Gifu',
+    badge: '6–7 วัน • Ghibli & หุบเขา',
+    highlight: 'เที่ยว Ghibli Park นาโกย่า หมู่บ้านมรดกโลกชิราคาวาโกะ และเดินป่าคามิโคจิ',
+    currency: 'JPY',
+  },
+  {
+    title: 'Fukuoka - Yufuin & North Kyushu',
+    placeQuery: 'Lake Kinrin Yufuin',
+    city: 'Oita',
+    badge: '5–6 วัน • รถไฟธรรมชาติ & ออนเซน',
+    highlight: 'นั่งรถไฟสายป่า Yufuin no Mori เดินหมู่บ้านริมลำธาร และชิมราเมงฮากาตะ',
+    currency: 'JPY',
+  },
+  {
+    title: 'Kamakura - Enoshima & Yokohama',
+    placeQuery: 'Kamakura',
+    city: 'Kanagawa',
+    badge: '4–5 วัน • อนิเมะริมทะเล & คาเฟ่',
+    highlight: 'ตามรอย Slam Dunk รถไฟสาย Enoden เลียบทะเล เดินถนนโบราณ Komachi และเกาะ Enoshima',
+    currency: 'JPY',
+  },
+  {
+    title: 'Kanazawa - Takayama & Kamikochi',
+    placeQuery: 'Kenroku-en',
+    city: 'Kanazawa',
+    badge: '6–7 วัน • เมืองเก่า & หุบเขา',
+    highlight: 'เดินตลาดปลา Omicho หมู่บ้านซามูไร Nagamachi ถนนเก่า Sanmachi และหุบเขา Kamikochi',
+    currency: 'JPY',
+  },
+  {
+    title: 'Hiroshima - Miyajima & Onomichi',
+    placeQuery: 'Itsukushima Shrine',
+    city: 'Hiroshima',
+    badge: '5–6 วัน • เมืองเนิบช้า & โลคอล',
+    highlight: 'ชมเสาโทริอิกลางน้ำเกาะ Miyajima เดินเมืองแมวบนเนิน Onomichi และร้านค้าโลคอลริมทะเล',
+    currency: 'JPY',
+  },
+  {
+    title: 'Sapporo - Otaru & Biei',
+    placeQuery: 'Otaru Canal',
+    city: 'Hokkaido',
+    badge: '6–7 วัน • ธรรมชาติ & ขนม',
+    highlight: 'เดินคลอง Otaru เนินเขา Biei ช้อปปิ้งสาย Tanukikoji และแช่ออนเซนที่ Noboribetsu',
+    currency: 'JPY',
+  },
+  {
+    title: 'Sendai - Yamadera & Ginzan Onsen',
+    placeQuery: 'Ginzan Onsen',
+    city: 'Yamagata',
+    badge: '5–6 วัน • วิวอนิเมะ & ป่าเขา',
+    highlight: 'เดินเมืองออนเซนไม้โบราณฟีล Spirited Away วัดบนหน้าผา Yamadera และย่าน Clis Road',
+    currency: 'JPY',
+  },
+  {
+    title: 'Matsumoto - Narai-juku & Hakuba',
+    placeQuery: 'Narai-juku',
+    city: 'Nagano',
+    badge: '5–6 วัน • หมู่บ้านเก่า & ภูเขา',
+    highlight: 'เดินหมู่บ้านไปรษณีย์ยุคเอโดะ Narai-juku ชมปราสาทอีกาดำและวิวเทือกเขาแอลป์ญี่ปุ่น',
+    currency: 'JPY',
+  },
+];
+
 export default function HomePage() {
   const router = useRouter();
   const { theme, setTheme, mounted } = useTheme();
@@ -132,6 +207,7 @@ export default function HomePage() {
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [fxRate, setFxRate] = useState<number>(0.235);
   const [homeTripViewMode, setHomeTripViewMode] = useState<'thumbnail' | 'list'>('thumbnail');
+  const [ideaPage, setIdeaPage] = useState(0);
 
   const handleSwitchHomeTripView = (mode: 'thumbnail' | 'list') => {
     triggerViewTransition(() => {
@@ -1561,90 +1637,85 @@ export default function HomePage() {
         </div>
 
         {/* ==================== 5. NEXT TRIP IDEAS (CURATED, UNCLUTTERED EDITORIAL SHELF) ==================== */}
-        <section aria-labelledby="next-trip-ideas-heading" className="pt-2 space-y-3">
-          <div className="flex items-center justify-between gap-2 px-1">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-4 rounded-full bg-[#C83E2D]" aria-hidden="true" />
-              <h2
-                id="next-trip-ideas-heading"
-                className="text-sm font-serif font-black text-[#1C2630] dark:text-white tracking-tight"
-              >
-                ไอเดียทริปถัดไปที่แนะนำ
-              </h2>
-              <span className="text-[11px] text-[#7A7061] dark:text-slate-400 font-medium hidden sm:inline">
-                • เส้นทางสายธรรมชาติ ช้อปปิ้ง และอนิเมะที่เหมาะกับทริปหน้า
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-            {[
-              {
-                title: 'Tokyo - Kawaguchiko & Your Name',
-                placeQuery: 'Chureito Pagoda',
-                city: 'Kawaguchiko',
-                badge: '6–7 วัน • อนิเมะ & วินเทจ',
-                highlight: 'ตามรอย Your Name (Suga Shrine), ช้อปวินเทจ Shimokitazawa และชมวิวฟูจิ',
-                currency: 'JPY',
-              },
-              {
-                title: 'Nagoya - Ghibli Park & Shirakawa-go',
-                placeQuery: 'Shirakawa-go',
-                city: 'Gifu',
-                badge: '6–7 วัน • Ghibli & หุบเขา',
-                highlight: 'เที่ยว Ghibli Park นาโกย่า หมู่บ้านมรดกโลกชิราคาวาโกะ และเดินป่าคามิโคจิ',
-                currency: 'JPY',
-              },
-              {
-                title: 'Fukuoka - Yufuin & North Kyushu',
-                placeQuery: 'Lake Kinrin Yufuin',
-                city: 'Oita',
-                badge: '5–6 วัน • รถไฟธรรมชาติ & ออนเซน',
-                highlight: 'นั่งรถไฟสายป่า Yufuin no Mori เดินหมู่บ้านริมลำธาร และชิมราเมงฮากาตะ',
-                currency: 'JPY',
-              },
-            ].map((idea, idx) => (
-              <div
-                key={idea.title}
-                className="group rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] overflow-hidden flex flex-col justify-between transition-all hover:border-[#C83E2D] dark:hover:border-blue-500/60 shadow-[0_6px_18px_-12px_rgba(35,28,20,0.12)]"
-              >
-                <div className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-[#2C4A3E] via-[#4A3B2C] to-[#1C2630]">
-                  <TripCoverMedia
-                    tripName={idea.title}
-                    highlightPlace={idea.placeQuery}
-                    highlightCity={idea.city}
-                    idx={idx}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <span className="absolute bottom-2 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/55 text-white backdrop-blur-xs border border-white/15">
-                    {idea.badge}
+        {(() => {
+          const totalIdeaPages = Math.ceil(NEXT_TRIP_IDEAS.length / 3);
+          const safeIdeaPage = ideaPage % totalIdeaPages;
+          const visibleIdeas = NEXT_TRIP_IDEAS.slice(safeIdeaPage * 3, safeIdeaPage * 3 + 3);
+          return (
+            <section aria-labelledby="next-trip-ideas-heading" className="pt-2 space-y-3">
+              <div className="flex items-center justify-between gap-2 px-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-1.5 h-4 rounded-full bg-[#C83E2D] shrink-0" aria-hidden="true" />
+                  <h2
+                    id="next-trip-ideas-heading"
+                    className="text-sm font-serif font-black text-[#1C2630] dark:text-white tracking-tight truncate"
+                  >
+                    ไอเดียทริปถัดไปที่แนะนำ
+                  </h2>
+                  <span className="text-[11px] text-[#7A7061] dark:text-slate-400 font-medium hidden sm:inline truncate">
+                    • เส้นทางสายธรรมชาติ ช้อปปิ้ง และอนิเมะที่เหมาะกับทริปหน้า
                   </span>
                 </div>
 
-                <div className="p-3.5 flex-1 flex flex-col justify-between gap-2.5">
-                  <div className="space-y-1 text-left">
-                    <h3 className="text-xs font-serif font-black text-[#1C2630] dark:text-white leading-snug">
-                      {idea.title}
-                    </h3>
-                    <p className="text-[11px] text-[#6B6254] dark:text-slate-400 leading-relaxed line-clamp-2">
-                      {idea.highlight}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => openCreateModalWithIdea(idea.title, idea.currency)}
-                    className="w-full py-1.5 px-3 rounded-xl text-[11px] font-bold bg-[#F6F1E7] hover:bg-[#1C2630] text-[#1C2630] hover:text-white border border-[#DFD7C7] dark:bg-[#121316] dark:hover:bg-blue-600 dark:text-slate-200 dark:border-[#262932] transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>เริ่มวางแผนทริปนี้</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIdeaPage((prev) => (prev + 1) % totalIdeaPages)}
+                  className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-[#FDFBF7] hover:bg-[#F6F1E7] text-[#1C2630] border border-[#DFD7C7] hover:border-[#C83E2D] dark:bg-[#181a20] dark:hover:bg-[#22252e] dark:text-slate-200 dark:border-[#262932] transition-colors cursor-pointer"
+                  title="สลับดูเส้นทางแนะนำชุดถัดไป"
+                >
+                  <Shuffle className="h-3 w-3 text-[#C83E2D] dark:text-blue-400" />
+                  <span>สลับไอเดีย</span>
+                  <span className="text-[10px] font-mono text-[#7A7061] dark:text-slate-400">
+                    {safeIdeaPage + 1}/{totalIdeaPages}
+                  </span>
+                </button>
               </div>
-            ))}
-          </div>
-        </section>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                {visibleIdeas.map((idea, idx) => (
+                  <div
+                    key={idea.title}
+                    className="group rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] overflow-hidden flex flex-col justify-between transition-all hover:border-[#C83E2D] dark:hover:border-blue-500/60 shadow-[0_6px_18px_-12px_rgba(35,28,20,0.12)]"
+                  >
+                    <div className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-[#2C4A3E] via-[#4A3B2C] to-[#1C2630]">
+                      <TripCoverMedia
+                        tripName={idea.title}
+                        highlightPlace={idea.placeQuery}
+                        highlightCity={idea.city}
+                        idx={safeIdeaPage * 3 + idx}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <span className="absolute bottom-2 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/55 text-white backdrop-blur-xs border border-white/15">
+                        {idea.badge}
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 flex-1 flex flex-col justify-between gap-2.5">
+                      <div className="space-y-1 text-left">
+                        <h3 className="text-xs font-serif font-black text-[#1C2630] dark:text-white leading-snug">
+                          {idea.title}
+                        </h3>
+                        <p className="text-[11px] text-[#6B6254] dark:text-slate-400 leading-relaxed line-clamp-2">
+                          {idea.highlight}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => openCreateModalWithIdea(idea.title, idea.currency)}
+                        className="w-full py-1.5 px-3 rounded-xl text-[11px] font-bold bg-[#F6F1E7] hover:bg-[#1C2630] text-[#1C2630] hover:text-white border border-[#DFD7C7] dark:bg-[#121316] dark:hover:bg-blue-600 dark:text-slate-200 dark:border-[#262932] transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="h-3 w-3" />
+                        <span>เริ่มวางแผนทริปนี้</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
       </main>
 
