@@ -3,12 +3,15 @@
 import React from 'react';
 import { 
   Users, AlertCircle, CheckCircle2, Camera, Calculator, 
-  Search, Download, Edit3, Calendar, LayoutGrid, AlignJustify 
+  Search, Download, Edit3, Calendar, LayoutGrid, AlignJustify, Copy, Check 
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ExpenseCard, ExpenseThumbnailCard, ExpenseCompactRow } from '@/components/trip-detail/ExpenseCard';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { CategoryItem } from '@/lib/categories';
 import { convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
+import { calculateSettlement, formatSettlementSummaryText } from '@/lib/settlement';
+import { copyToClipboard } from '@/lib/clipboard';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getTripExpenseSplits } from '@/lib/expenseSplits';
@@ -98,6 +101,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
 }: TripExpensesTabProps) {
   const [splitsVersion, setSplitsVersion] = React.useState(0);
   const [expenseViewMode, setExpenseViewMode] = React.useState<'grouped' | 'thumbnail' | 'compact'>('grouped');
+  const [copiedSettlement, setCopiedSettlement] = React.useState(false);
 
   const handleSwitchExpenseView = (mode: 'grouped' | 'thumbnail' | 'compact') => {
     triggerViewTransition(() => {
@@ -172,6 +176,39 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
       });
     }).length;
   }, [expenses, splitsMap, currentUser, userDisplayName]);
+
+  const handleCopySettlementSummary = async () => {
+    const seenNames = new Set(allMembersList.map((m) => m.name.toLowerCase().trim()));
+    const membersForSettle = allMembersList.map((m) => ({
+      id: m.id,
+      name: m.name,
+      avatar: m.avatar || 'calico',
+    }));
+    expenses.forEach((e) => {
+      const pName = (e.payer_name || '').trim();
+      if (pName && !seenNames.has(pName.toLowerCase())) {
+        seenNames.add(pName.toLowerCase());
+        membersForSettle.push({ id: e.payer_id, name: pName, avatar: 'calico' });
+      }
+    });
+
+    const settleCurrency = currencyView === 'thb' ? 'THB' : tripBaseCurrency;
+    const summary = calculateSettlement(expenses, membersForSettle, settleCurrency, fxRate, splitsMap);
+    const msg = formatSettlementSummaryText(
+      summary,
+      settleCurrency,
+      fxRate,
+      trip?.name || trip?.title
+    );
+    const ok = await copyToClipboard(msg);
+    if (ok) {
+      setCopiedSettlement(true);
+      toast.success('คัดลอกสรุปเคลียร์บิลสำหรับส่งเข้า LINE แล้ว 💸');
+      setTimeout(() => setCopiedSettlement(false), 2500);
+    } else {
+      toast.error('ไม่สามารถคัดลอกข้อความสรุปบิลได้');
+    }
+  };
 
   const otherPayersWithCounts = React.useMemo(() => {
     return otherPayers.map((p) => {
@@ -409,8 +446,8 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                   </div>
                 )}
 
-                {/* Action Buttons: AI OCR + Settlement + 1-Click Excel Export */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                {/* Action Buttons: AI OCR + Settlement + Share LINE + 1-Click Excel Export */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
                   <button
                     onClick={() => {
                       setOcrSuccessToast(null);
@@ -432,8 +469,24 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                   </button>
 
                   <button
+                    type="button"
+                    onClick={handleCopySettlementSummary}
+                    className="py-3 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/60 font-black text-xs sm:text-sm text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all"
+                    title="คัดลอกสรุปยอดใครต้องโอนให้ใคร ส่งเข้ากลุ่ม LINE ได้ทันที"
+                  >
+                    {copiedSettlement ? (
+                      <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Copy className="h-4 w-4 shrink-0" />
+                    )}
+                    <span className="truncate">
+                      {copiedSettlement ? 'คัดลอกแล้ว!' : 'ส่งสรุปบิล LINE'}
+                    </span>
+                  </button>
+
+                  <button
                     onClick={exportExpensesToExcel}
-                    className="col-span-2 sm:col-span-1 py-3 px-3 rounded-xl bg-[#1C2630] hover:bg-[#2A3744] dark:bg-emerald-600 dark:hover:bg-emerald-700 font-black text-xs sm:text-sm text-white flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-all"
+                    className="py-3 px-3 rounded-xl bg-[#1C2630] hover:bg-[#2A3744] dark:bg-emerald-600 dark:hover:bg-emerald-700 font-black text-xs sm:text-sm text-white flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-all"
                     title="ส่งออกรายการค่าใช้จ่ายทั้งหมดเป็นไฟล์ Excel (.xlsx)"
                   >
                     <Download className="h-4 w-4 shrink-0" />

@@ -22,6 +22,7 @@ export interface TripMetadataPayload {
   sharedFunds?: any[];
   guardianMap?: Record<string, string>;
   livePresence?: Record<string, any>;
+  packingChecklist?: any[];
   sharePrivacy?: {
     hideDates?: boolean;
     hideLodging?: boolean;

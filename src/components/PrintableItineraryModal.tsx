@@ -13,6 +13,7 @@ import {
   Palette,
 } from 'lucide-react';
 import { CategoryItem } from '@/lib/categories';
+import { convertCurrency } from '@/lib/currency';
 
 interface PrintableItineraryModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface PrintableItineraryModalProps {
   itinerary: any[];
   expenses: any[];
   categories: CategoryItem[];
+  fxRate?: number;
 }
 
 export default function PrintableItineraryModal({
@@ -29,6 +31,7 @@ export default function PrintableItineraryModal({
   trip,
   itinerary = [],
   expenses = [],
+  fxRate,
 }: PrintableItineraryModalProps) {
   const [layoutMode, setLayoutMode] = useState<'poster' | 'booklet'>('poster');
   const [printZoom, setPrintZoom] = useState<number>(90);
@@ -64,7 +67,14 @@ export default function PrintableItineraryModal({
   });
 
   const dayEntries = Object.entries(groupedByDay);
-  const totalSpent = expenses.reduce((a, b) => a + Number(b.amount || 0), 0);
+  const tripCurrency = (trip?.currency || 'JPY').toUpperCase();
+  const totalSpent = Math.round(
+    expenses.reduce(
+      (sum, e) =>
+        sum + convertCurrency(Number(e.amount || 0), e.currency || tripCurrency, tripCurrency, fxRate),
+      0
+    )
+  );
 
   return (
     <div

@@ -8,41 +8,14 @@ import {
   ShieldCheck, Smartphone, Pill, Shirt, PlusCircle
 } from 'lucide-react';
 import { triggerConfetti } from '@/lib/confetti';
+import {
+  ChecklistItem,
+  getPackingChecklist,
+  savePackingChecklist,
+  subscribePackingChecklist,
+} from '@/lib/packingChecklist';
 
-export interface ChecklistItem {
-  id: string;
-  category: 'docs' | 'tech' | 'health' | 'cloth' | 'custom';
-  title: string;
-  checked: boolean;
-  isAiSuggested?: boolean;
-  weatherTag?: string;
-  assignee?: string;
-}
-
-const DEFAULT_PACKING_ITEMS: Omit<ChecklistItem, 'id'>[] = [
-  // 1. Documents
-  { category: 'docs', title: 'หนังสือเดินทาง (Passport) อายุเหลือเกิน 6 เดือน', checked: false },
-  { category: 'docs', title: 'ลงทะเบียน Visit Japan Web (QR Code เข้าเมือง/ศุลกากร)', checked: false },
-  { category: 'docs', title: 'กรมธรรม์ประกันการเดินทางต่างประเทศ (Travel Insurance)', checked: false },
-  { category: 'docs', title: 'ตั๋วเครื่องบิน E-Ticket & ใบจองโรงแรมทุกคืน', checked: false },
-  { category: 'docs', title: 'บัตรเครดิต / Travel Card (YouTrip, Boarding Card, KBank)', checked: false },
-
-  // 2. Tech
-  { category: 'tech', title: 'eSIM หรือ ซิมเน็ตโรมมิ่ง / Pocket WiFi', checked: false },
-  { category: 'tech', title: 'Power Bank (แบตสำรอง พกขึ้นเครื่อง ห้ามโหลดใต้เครื่อง)', checked: false },
-  { category: 'tech', title: 'หัวแปลงปลั๊กไฟ (Adapter สำหรับประเทศปลายทาง)', checked: false },
-  { category: 'tech', title: 'สายชาร์จมือถือ & กล้องถ่ายรูป', checked: false },
-
-  // 3. Health & Personal Care
-  { category: 'health', title: 'ยาประจำตัว + ยาแก้หวัด/แก้แพ้/ยาแก้ปวดพารา', checked: false },
-  { category: 'health', title: 'แผ่นแปะแก้ปวดเมื่อยขา/เท้า (สำหรับการเดินชมเมือง)', checked: false },
-  { category: 'health', title: 'ลิปมัน & ครีมทาผิวบำรุงความชุ่มชื้น', checked: false },
-
-  // 4. Clothes
-  { category: 'cloth', title: 'เสื้อโค้ท / เสื้อแจ็คเก็ตกันลม', checked: false },
-  { category: 'cloth', title: 'รองเท้าผ้าใบเดินสบาย (เดินวันละ 15,000-20,000 ก้าว)', checked: false },
-  { category: 'cloth', title: 'ร่มพับน้ำหนักเบา หรือ เสื้อกันฝน', checked: false },
-];
+export type { ChecklistItem };
 
 type WeatherProfile = 'cold' | 'cool' | 'warm' | 'rain';
 
@@ -132,8 +105,6 @@ export default function PackingChecklistModal({
   tripStartDate = '',
   destinationCity = '',
 }: PackingChecklistModalProps) {
-  const storageKey = `travel_tracker_packing_${tripId}`;
-  
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -184,34 +155,20 @@ export default function PackingChecklistModal({
   useEffect(() => {
     if (!tripId) return;
     let active = true;
-    queueMicrotask(() => {
-      if (!active) return;
-      try {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-          setItems(JSON.parse(saved));
-        } else {
-          const initial = DEFAULT_PACKING_ITEMS.map((it, idx) => ({
-            ...it,
-            id: `default_${idx}_${Date.now()}`,
-          }));
-          setItems(initial);
-          localStorage.setItem(storageKey, JSON.stringify(initial));
-        }
-      } catch {
-        setItems([]);
-      }
-    });
+    const syncLocal = () => {
+      if (active) setItems(getPackingChecklist(tripId));
+    };
+    queueMicrotask(syncLocal);
+    const unsub = subscribePackingChecklist(syncLocal);
     return () => {
       active = false;
+      unsub();
     };
-  }, [tripId, storageKey]);
+  }, [tripId]);
 
   const saveItems = (updated: ChecklistItem[]) => {
     setItems(updated);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch {}
+    savePackingChecklist(tripId, updated);
   };
 
   const toggleCheck = (id: string) => {

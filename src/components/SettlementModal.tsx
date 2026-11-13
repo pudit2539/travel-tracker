@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { calculateSettlement, TransferPlan } from '@/lib/settlement';
+import { calculateSettlement, formatSettlementSummaryText, TransferPlan } from '@/lib/settlement';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatExchangeRateDisplay } from '@/lib/currency';
@@ -411,22 +411,7 @@ export default function SettlementModal({
 
   // Generate shareable Line message
   const copySettlementSummary = async () => {
-    let msg = `สรุปเคลียร์บิลค่าใช้จ่ายทริป\n`;
-    msg += `ยอดรวมทั้งหมด: ${settlement.totalSpent.toLocaleString()} ${currency}\n`;
-    msg += `จำนวนสมาชิก: ${settlement.memberCount} คน (หารเฉลี่ยคนละ ${Math.round(settlement.averagePerPerson).toLocaleString()} ${currency})\n\n`;
-    msg += `แผนการโอนเงินเคลียร์บิล:\n`;
-
-    if (settlement.transfers.length === 0) {
-      msg += `สมาชิกทุกคนจ่ายเท่ากันเรียบร้อยแล้ว ไม่มียอดค้างโอน!\n`;
-    } else {
-      settlement.transfers.forEach((t, i) => {
-        const altText = currency === 'THB'
-          ? ` (≈ ¥${Math.round(fxRate > 0 ? t.amount / fxRate : 0).toLocaleString()} JPY)`
-          : ` (≈ ฿${t.amountTHB.toLocaleString()})`;
-        msg += `${i + 1}. ${t.from} โอนให้ ${t.to}: ${t.amount.toLocaleString()} ${currency}${altText}\n`;
-      });
-    }
-
+    const msg = formatSettlementSummaryText(settlement, currency, fxRate);
     const ok = await copyToClipboard(msg);
     if (ok) {
       setCopiedText(true);

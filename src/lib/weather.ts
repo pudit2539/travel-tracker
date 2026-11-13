@@ -13,7 +13,7 @@ export interface WeatherData {
   lastUpdated: string;
 }
 
-const CITY_COORDINATES: { [key: string]: { lat: number; lon: number; nameTh: string } } = {
+export const CITY_COORDINATES: { [key: string]: { lat: number; lon: number; nameTh: string } } = {
   osaka: { lat: 34.6937, lon: 135.5023, nameTh: 'โอซาก้า (Osaka)' },
   kyoto: { lat: 35.0116, lon: 135.7681, nameTh: 'เกียวโต (Kyoto)' },
   tokyo: { lat: 35.6762, lon: 139.6503, nameTh: 'โตเกียว (Tokyo)' },
@@ -28,7 +28,7 @@ const CITY_COORDINATES: { [key: string]: { lat: number; lon: number; nameTh: str
   kamakura: { lat: 35.3192, lon: 139.5467, nameTh: 'คามาคุระ (Kamakura)' },
 };
 
-function resolveCityKey(rawCity: string): string {
+export function resolveCityKey(rawCity: string): string {
   const lower = (rawCity || '').toLowerCase();
   if (lower.includes('kyo') || lower.includes('เกียวโต')) return 'kyoto';
   if (lower.includes('tok') || lower.includes('โตเกียว')) return 'tokyo';

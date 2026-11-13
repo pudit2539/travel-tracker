@@ -66,6 +66,8 @@ import { hydrateCustomPlacePhotosFromMap } from '@/lib/placeThumbnails';
 import { hydrateVisitedStampsFromSupabase } from '@/lib/visitedStamps';
 import { hydrateStopMetaFromSupabase, KANSAI_TRANSIT_SUGGESTIONS } from '@/lib/smartTimeline';
 import { hydrateShoppingBagFromSupabase, updateShoppingBagItem, ShoppingBagItem, ShoppingItemStatus } from '@/lib/shoppingBag';
+import { hydrateTicketsVaultFromSupabase } from '@/lib/ticketsVault';
+import { hydratePackingChecklistFromSupabase } from '@/lib/packingChecklist';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { useTripModals } from '@/hooks/useTripModals';
 import type { 
@@ -535,7 +537,10 @@ export default function TripDetailPage() {
               setCustomJpyToThbRate(parsed.fxRate);
             }
             if (parsed.ticketsVault && Array.isArray(parsed.ticketsVault) && typeof window !== 'undefined') {
-              writeStorageIfChanged(`ticket_vault_${tripId}`, parsed.ticketsVault);
+              hydrateTicketsVaultFromSupabase(tripId, parsed.ticketsVault);
+            }
+            if (parsed.packingChecklist && Array.isArray(parsed.packingChecklist) && typeof window !== 'undefined') {
+              hydratePackingChecklistFromSupabase(tripId, parsed.packingChecklist);
             }
             if (parsed.customPlacePhotos && typeof parsed.customPlacePhotos === 'object' && typeof window !== 'undefined') {
               hydrateCustomPlacePhotosFromMap(parsed.customPlacePhotos, tripId);
@@ -1031,13 +1036,47 @@ export default function TripDetailPage() {
     }
   };
 
-  const handleOpenAddActivity = (afterOrder: number | null = null, defaultDateLabel?: string) => {
+  const handleOpenAddActivity = (
+    afterOrderOrPrefill:
+      | number
+      | null
+      | {
+          title?: string;
+          main_place?: string;
+          location?: string;
+          city?: string;
+          category?: string;
+          mapsQuery?: string;
+          main_place_links?: string[];
+          transport_info?: string;
+          food_recommend?: string;
+          date_label?: string;
+          afterOrder?: number | null;
+        } = null,
+    defaultDateLabel?: string
+  ) => {
     resetActivityForm();
     setEditingActivity(null);
+    const isPrefillObj = afterOrderOrPrefill !== null && typeof afterOrderOrPrefill === 'object';
+    const prefill = isPrefillObj ? afterOrderOrPrefill : null;
+    const afterOrder = isPrefillObj ? (prefill?.afterOrder ?? null) : afterOrderOrPrefill;
+    const mapsUrl =
+      prefill?.main_place_links?.[0] ||
+      (prefill?.mapsQuery
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(prefill.mapsQuery)}`
+        : '');
+
     setActivityForm((prev) => ({
       ...prev,
-      insert_after_order: afterOrder,
-      date_label: defaultDateLabel || prev.date_label,
+      insert_after_order: typeof afterOrder === 'number' ? afterOrder : null,
+      date_label: defaultDateLabel || prefill?.date_label || prev.date_label,
+      city: prefill?.city || prefill?.location || prev.city,
+      main_place: prefill?.main_place || prefill?.title || prev.main_place,
+      main_place_links: mapsUrl ? [mapsUrl] : prev.main_place_links,
+      food_recommendations: prefill?.food_recommend
+        ? [{ name: prefill.food_recommend, link: '' }]
+        : prev.food_recommendations,
+      transport_info: prefill?.transport_info || prev.transport_info,
     }));
     setShowActivityModal(true);
   };
@@ -2399,7 +2438,7 @@ export default function TripDetailPage() {
   }
 
   return (
-    <div className="relative min-h-screen pb-28 md:pb-20 bg-[#F8F6F0] dark:bg-[#121316] text-[#181a20] dark:text-[#f4f5f7] bg-grid-pattern transition-colors duration-300">
+    <div className="relative min-h-screen pb-40 sm:pb-24 bg-[#F8F6F0] dark:bg-[#121316] text-[#181a20] dark:text-[#f4f5f7] bg-grid-pattern transition-colors duration-300">
       
       {/* iOS/iPad Touch Pull-to-Refresh Indicator */}
       <PullToRefreshIndicator
@@ -2427,7 +2466,7 @@ export default function TripDetailPage() {
               
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white truncate max-w-[170px] xs:max-w-[220px] sm:max-w-xs md:max-w-sm lg:max-w-md">
+                  <h1 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white truncate max-w-[170px] min-[400px]:max-w-[220px] sm:max-w-xs md:max-w-sm lg:max-w-md">
                     {(trip?.name || trip?.title) || 'รายละเอียดทริป'}
                   </h1>
                   
@@ -2462,7 +2501,17 @@ export default function TripDetailPage() {
             </div>
 
             {/* Right: Action Icons */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowAIAssistantModal(true)}
+                className="sm:hidden w-8 h-8 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-[#C83E2D] dark:text-blue-400 hover:border-[#C83E2D] active:scale-95 shadow-2xs transition-all cursor-pointer flex items-center justify-center shrink-0"
+                title="ถาม AI ผู้ช่วยวางแผนทริป"
+                aria-label="ถาม AI ผู้ช่วย"
+              >
+                <Bot className="h-4 w-4" />
+              </button>
+
               <NotificationBell 
                 expenses={expenses} 
                 itinerary={itinerary} 
@@ -2486,7 +2535,7 @@ export default function TripDetailPage() {
               {isOwner && (
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer min-w-8 min-h-8 justify-center"
                   title="แชร์ทริป / ชวนเพื่อนเข้าทริป (เฉพาะเจ้าของทริป)"
                 >
                   <Share2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
@@ -2717,6 +2766,9 @@ export default function TripDetailPage() {
                   setShowDiningDecisionModal(true);
                 }}
                 onOpenTicketLocker={() => setShowTicketPassLockerModal(true)}
+                onOpenPacking={() => setShowPackingModal(true)}
+                onOpenScrapbook={() => setShowScrapbookModal(true)}
+                onOpenAIAssistant={() => setShowAIAssistantModal(true)}
                 onMoveStopToDay={handleMoveStopToDay}
                 onSyncShoppingExpense={handleSyncShoppingExpense}
               />
@@ -2809,26 +2861,20 @@ export default function TripDetailPage() {
 
       </main>
 
-      {/* ==================== FLOATING CAT AI ASSISTANT PILL (TRIP.COM STYLE) ==================== */}
-      <div
-        className={`fixed bottom-[74px] left-3 sm:bottom-6 sm:left-6 z-40 transition-all duration-300 ${
-          hideFloatingPills
-            ? 'translate-y-16 opacity-0 pointer-events-none sm:translate-y-0 sm:opacity-100 sm:pointer-events-auto'
-            : 'translate-y-0 opacity-100'
-        }`}
-      >
+      {/* ==================== FLOATING CAT AI ASSISTANT PILL (Desktop/Tablet only so mobile bottom cards stay unobstructed) ==================== */}
+      <div className="hidden sm:block fixed bottom-6 left-6 z-40 transition-all duration-300">
         <button
           type="button"
           onClick={() => setShowAIAssistantModal(true)}
-          className="group flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-full bg-[#FDFBF7]/95 dark:bg-[#181a20]/95 border border-[#DFD7C7] dark:border-[#262932] shadow-lg shadow-black/10 text-[#1A1A1A] dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
+          className="group flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#FDFBF7]/95 dark:bg-[#181a20]/95 border border-[#DFD7C7] dark:border-[#262932] shadow-lg shadow-black/10 text-[#1A1A1A] dark:text-white backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
           title="ถาม AI ผู้ช่วยวางแผนทริป"
         >
-          <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#C83E2D]/15 dark:bg-blue-500/25 text-[#C83E2D] dark:text-blue-400 flex items-center justify-center shadow-2xs">
-            <Bot className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <span className="w-6 h-6 rounded-full bg-[#C83E2D]/15 dark:bg-blue-500/25 text-[#C83E2D] dark:text-blue-400 flex items-center justify-center shadow-2xs">
+            <Bot className="h-3.5 w-3.5" />
           </span>
-          <span className="text-[11px] sm:text-xs font-black text-[#1A1A1A] dark:text-slate-100 flex items-center gap-1">
-            <span className="hidden sm:inline">ถาม</span> <span className="text-[#C83E2D] dark:text-blue-400">AI ผู้ช่วย</span>
-            <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-500 animate-pulse" />
+          <span className="text-xs font-black text-[#1A1A1A] dark:text-slate-100 flex items-center gap-1">
+            <span>ถาม</span> <span className="text-[#C83E2D] dark:text-blue-400">AI ผู้ช่วย</span>
+            <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" />
           </span>
         </button>
       </div>
@@ -2965,6 +3011,20 @@ export default function TripDetailPage() {
           itinerary={itinerary}
           tripId={tripId}
           fxRate={fxRate}
+          availableDays={availableDays}
+          defaultDay={selectedDayFilter !== 'all' ? selectedDayFilter : availableDays[0]}
+          onAddToItinerary={(item) =>
+            handleOpenAddActivity(
+              {
+                title: item.title,
+                city: item.city,
+                food_recommend: item.food_recommend,
+                mapsQuery: item.mapsQuery,
+                date_label: item.date_label,
+              },
+              item.date_label
+            )
+          }
           onOpenDecisionPicker={(city) => {
             setDiningPickerDefaultCity(city);
             setShowDiningDecisionModal(true);
@@ -3057,6 +3117,7 @@ export default function TripDetailPage() {
           fxRate={fxRate}
           onOpenScrapbook={() => setShowScrapbookModal(true)}
           onOpenPacking={() => setShowPackingModal(true)}
+          onOpenTicketLocker={() => setShowTicketPassLockerModal(true)}
         />
       )}
 
@@ -3081,6 +3142,22 @@ export default function TripDetailPage() {
           isOpen={showAIAssistantModal}
           onClose={() => setShowAIAssistantModal(false)}
           currentCity={itinerary[0]?.city || 'Osaka'}
+          availableDays={availableDays}
+          defaultDay={selectedDayFilter !== 'all' ? selectedDayFilter : availableDays[0]}
+          onAddToItinerary={(item) =>
+            handleOpenAddActivity(
+              {
+                title: item.title,
+                city: item.city,
+                mapsQuery: item.mapsQuery,
+                transport_info: item.transport_info,
+                food_recommend: item.food_recommend,
+                date_label: item.date_label,
+              },
+              item.date_label
+            )
+          }
+          onOpenAiKeyModal={() => setShowAiKeyModal(true)}
         />
       )}
 
@@ -3111,6 +3188,7 @@ export default function TripDetailPage() {
           itinerary={itinerary}
           expenses={expenses}
           categories={categories}
+          fxRate={fxRate}
         />
       )}
 
@@ -3321,42 +3399,75 @@ export default function TripDetailPage() {
                 </div>
 
                 {/* Amount & Currency */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                      <span>ยอดเงินรวม *</span>
-                      {scannedData.items && scannedData.items.length > 0 && (
-                        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
-                          (คำนวณจากรายการ)
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      placeholder="0.00"
-                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black transition-all"
-                      value={scannedData.amount}
-                      onChange={(e) => setScannedData({ ...scannedData, amount: e.target.value })}
-                    />
+                <div className="space-y-2.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                        <span>ยอดเงินรวม *</span>
+                        {scannedData.items && scannedData.items.length > 0 && (
+                          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
+                            (คำนวณจากรายการ)
+                          </span>
+                        )}
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        placeholder="0.00"
+                        className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black transition-all"
+                        value={scannedData.amount}
+                        onChange={(e) => setScannedData({ ...scannedData, amount: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">สกุลเงิน</label>
+                        <div className="flex items-center gap-1">
+                          {(['JPY', 'THB'] as const).map((quickCurr) => {
+                            const active = scannedData.currency === quickCurr;
+                            return (
+                              <button
+                                key={quickCurr}
+                                type="button"
+                                onClick={() => setScannedData({ ...scannedData, currency: quickCurr })}
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-black transition-all cursor-pointer border ${
+                                  active
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                                    : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-blue-400'
+                                }`}
+                              >
+                                {quickCurr === 'JPY' ? '🇯🇵 JPY' : '🇹🇭 THB'}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      <select
+                        className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
+                        value={scannedData.currency}
+                        onChange={(e) => setScannedData({ ...scannedData, currency: e.target.value })}
+                      >
+                        <option value="THB">THB (฿)</option>
+                        <option value="JPY">JPY (¥)</option>
+                        <option value="CNY">CNY (元)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="KRW">KRW (₩)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="SGD">SGD (S$)</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">สกุลเงิน</label>
-                    <select
-                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
-                      value={scannedData.currency}
-                      onChange={(e) => setScannedData({ ...scannedData, currency: e.target.value })}
-                    >
-                      <option value="THB">THB (฿)</option>
-                      <option value="JPY">JPY (¥)</option>
-                      <option value="CNY">CNY (元)</option>
-                      <option value="USD">USD ($)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="KRW">KRW (₩)</option>
-                      <option value="GBP">GBP (£)</option>
-                      <option value="SGD">SGD (S$)</option>
-                    </select>
-                  </div>
+                  {Number(scannedData.amount) > 0 && (
+                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1e2027]/70 border border-slate-200/70 dark:border-[#262932] text-[11px]">
+                      <span className="text-slate-500 dark:text-slate-400 font-bold">ยอดแปลงประมาณการ</span>
+                      <span className="font-black text-blue-600 dark:text-blue-400">
+                        {scannedData.currency === 'THB'
+                          ? `≈ ¥${Math.round(convertCurrency(Number(scannedData.amount), 'THB', 'JPY', fxRate)).toLocaleString()} JPY`
+                          : `≈ ฿${convertCurrency(Number(scannedData.amount), scannedData.currency, 'THB', fxRate).toLocaleString(undefined, { maximumFractionDigits: 2 })} THB`}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Category & Date */}
@@ -4207,7 +4318,7 @@ export default function TripDetailPage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.94 }}
             transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-            className="fixed bottom-26 sm:bottom-8 inset-x-4 sm:inset-x-auto sm:right-6 sm:left-auto sm:max-w-sm z-50 pointer-events-none"
+            className="fixed bottom-[calc(4.75rem+max(env(safe-area-inset-bottom,0px),1.25rem))] sm:bottom-8 inset-x-4 sm:inset-x-auto sm:right-6 sm:left-auto sm:max-w-sm z-50 pointer-events-none"
           >
             <div className={`p-3.5 sm:p-4 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-center gap-3 pointer-events-auto ${
               globalToast.type === 'error'

@@ -364,7 +364,9 @@ function ItineraryStopCardComponent({
             ? { contentVisibility: 'auto', containIntrinsicSize: '0 320px' }
             : undefined
         }
-        className={`group rounded-xl border transition-all duration-300 relative overflow-hidden ${
+        className={`group rounded-xl border transition-all duration-300 relative ${
+          showAdminMenu ? 'overflow-visible z-30' : 'overflow-hidden'
+        } ${
           isSkipped
             ? 'border-dashed border-[#D6CEC0] dark:border-slate-700 bg-[#FDFCF9]/70 dark:bg-[#14161b]/70 opacity-65'
             : visited
@@ -372,10 +374,10 @@ function ItineraryStopCardComponent({
             : 'border-[#DFD7C7] dark:border-[#2C2A26] border-l-4 border-l-[#C83E2D] bg-white dark:bg-[#181a20] shadow-[0_3px_14px_rgba(35,30,20,0.05)] hover:shadow-[0_6px_20px_rgba(35,30,20,0.09)]'
         }`}
       >
-        <div className="relative z-10 bg-white dark:bg-[#181a20]">
+        <div className="relative z-10 bg-white dark:bg-[#181a20] rounded-xl">
           {/* Skipped Stop Banner */}
           {isSkipped && (
-            <div className="px-4 py-2 bg-[#F4EFE6] dark:bg-slate-800/80 border-b border-[#E5DEC9] dark:border-slate-700 flex items-center justify-between gap-2 text-xs">
+            <div className="px-4 py-2 bg-[#F4EFE6] dark:bg-slate-800/80 border-b border-[#E5DEC9] dark:border-slate-700 rounded-t-xl flex items-center justify-between gap-2 text-xs">
               <span className="font-bold text-[#4A4640] dark:text-slate-300 flex items-center gap-1.5">
                 <SkipForward className="h-3.5 w-3.5 text-[#C83E2D]" />
                 <span>ข้ามจุดแวะนี้ชั่วคราว (ไม่นับรวมในเวลาและเส้นทางนำทาง)</span>
@@ -391,41 +393,46 @@ function ItineraryStopCardComponent({
             </div>
           )}
 
-          {/* Editorial 16:9 Hero Header (Option A - POPEYE/BRUTUS Style) */}
+          {/* Clean Editorial 16:9 Media Strip (Photography stays clean; title moves to solid card surface below) */}
           <div
             onClick={() => setShowLightbox(true)}
-            className="relative w-full h-36 sm:h-44 overflow-hidden bg-gradient-to-br from-[#1C2630] to-[#35475A] flex items-end p-3.5 sm:p-4 cursor-zoom-in"
+            className={`relative w-full h-32 sm:h-40 bg-gradient-to-br from-[#1C2630] to-[#35475A] flex flex-col justify-between p-3 sm:p-3.5 cursor-zoom-in ${
+              isSkipped ? '' : 'rounded-t-xl'
+            }`}
             title="แตะเพื่อขยายดูรูปสถานที่จริง / ดูหน้าร้าน Street View"
           >
-            {/* Decorative Japanese wave fallback background */}
-            <svg
-              className="absolute inset-0 w-full h-full opacity-25 pointer-events-none"
-              viewBox="0 0 400 200"
-              preserveAspectRatio="none"
-            >
-              <path d="M0,80 C120,40 220,120 400,60 L400,200 L0,200 Z" fill="#4B627A" />
-              <path d="M0,130 C150,90 260,170 400,110 L400,200 L0,200 Z" fill="#243342" />
-            </svg>
+            {/* Background Media Layer (clipped cleanly while dropdowns remain unclipped) */}
+            <div className={`absolute inset-0 overflow-hidden pointer-events-none ${isSkipped ? '' : 'rounded-t-xl'}`}>
+              {/* Decorative Japanese wave fallback background */}
+              <svg
+                className="absolute inset-0 w-full h-full opacity-25 pointer-events-none"
+                viewBox="0 0 400 200"
+                preserveAspectRatio="none"
+              >
+                <path d="M0,80 C120,40 220,120 400,60 L400,200 L0,200 Z" fill="#4B627A" />
+                <path d="M0,130 C150,90 260,170 400,110 L400,200 L0,200 Z" fill="#243342" />
+              </svg>
 
-            {!imgError && (
-              <img
-                src={visual.imageUrl}
-                alt={item.main_place || 'Destination'}
-                loading="lazy"
-                onError={() => setFailedImgUrl(visual.imageUrl)}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            )}
+              {!imgError && (
+                <img
+                  src={visual.imageUrl}
+                  alt={item.main_place || 'Destination'}
+                  loading="lazy"
+                  onError={() => setFailedImgUrl(visual.imageUrl)}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              )}
 
-            {/* Editorial Dark Gradient Scrim for Typography Legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#141C24]/90 via-[#141C24]/35 to-black/25 pointer-events-none" />
+              {/* Light Editorial Vignette for corner badge legibility without muddy contrast */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#141C24]/75 via-transparent to-black/35 pointer-events-none" />
+            </div>
 
             {/* Top Row Overlay: Editorial Tag (Left) + Stamp Check-in & Menu (Right) */}
             <div
-              className="absolute top-3 inset-x-3.5 sm:inset-x-4 flex items-center justify-between gap-2 z-20"
+              className="relative z-20 flex items-start justify-between gap-2 w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
                 <span className="px-2 py-0.5 rounded-[3px] bg-white/95 text-[#1A1A1A] text-[10px] font-bold tracking-wider uppercase shadow-2xs">
                   STOP {String(idx + 1).padStart(2, '0')} / {visual.tagLabel}
                 </span>
@@ -636,33 +643,42 @@ function ItineraryStopCardComponent({
               </div>
             </div>
 
-            {/* Bottom Place Title & Subtitle Overlay inside Hero */}
-            <div className="relative z-10 w-full text-left" onClick={(e) => e.stopPropagation()}>
-              <a
-                href={mainPlaceMapsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="font-serif text-lg sm:text-xl font-bold text-white hover:text-[#FFD8CE] inline-flex items-center gap-1.5 transition-colors cursor-pointer leading-snug drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] break-words"
-              >
-                <span>{item.main_place}</span>
-                <ExternalLink className="h-3.5 w-3.5 text-white/75 shrink-0" />
-              </a>
-              <div className="flex items-center gap-2 flex-wrap mt-0.5 text-[11px] text-white/90 font-medium tracking-wide">
-                <span>
-                  {visual.emoji} {item.city || 'Japan'}
-                </span>
-                {item.date_label && <span>· {item.date_label}</span>}
-                {visited && meta?.by && (
-                  <span className="text-emerald-300 font-semibold">
-                    · ✓ เช็กอินโดย {meta.by}
-                  </span>
-                )}
-              </div>
+            {/* Bottom Minimal City Pill inside Hero Media */}
+            <div className="relative z-10 flex items-center justify-between gap-2 w-full pointer-events-none">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/55 backdrop-blur-xs text-[11px] font-semibold text-white/95 border border-white/15 max-w-full truncate">
+                <span>{visual.emoji}</span>
+                <span className="truncate">{item.city || 'Japan'}</span>
+                {item.date_label && <span className="text-white/75 shrink-0">· {item.date_label}</span>}
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/45 backdrop-blur-xs text-[10px] font-medium text-white/80 shrink-0">
+                <ZoomIn className="h-3 w-3" />
+                <span>แตะดูรูป</span>
+              </span>
             </div>
           </div>
 
           {/* Editorial Main Card Body */}
           <div className="p-4 sm:p-5 space-y-3.5">
+            {/* Clean Solid Editorial Place Title Header (High-contrast & 100% overlap-proof on all screens) */}
+            <div className="space-y-1.5 text-left" onClick={(e) => e.stopPropagation()}>
+              <a
+                href={mainPlaceMapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-serif text-base sm:text-xl font-bold text-[#1A1A1A] dark:text-white hover:text-[#C83E2D] dark:hover:text-[#FF8575] inline-flex items-baseline gap-1.5 transition-colors cursor-pointer leading-snug break-words max-w-full"
+              >
+                <span className="min-w-0 break-words">{item.main_place}</span>
+                <ExternalLink className="h-3.5 w-3.5 text-[#8C8275] dark:text-slate-400 shrink-0 self-center" />
+              </a>
+              {visited && meta?.by && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 font-semibold text-[10px]">
+                    ✓ เช็กอินโดย {meta.by}
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Editorial Timing & Schedule Row */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#F0ECE3] dark:border-[#262932]">
               <div className="flex items-center gap-2 flex-wrap">
@@ -1216,6 +1232,8 @@ function ItineraryStopCardComponent({
           city={item.city}
           timeSlot={item.time_slot}
           transportInfo={item.transport_info}
+          platformInfo={transitGuide.platform}
+          transportNote={transitGuide.bestTip}
           mapsUrl={mainPlaceMapsUrl}
           directionsUrl={mainPlaceDirectionsUrl}
         />
@@ -1284,31 +1302,33 @@ function ItineraryThumbnailCardComponent({
       <div
         className={`group rounded-xl border border-[#DFD7C7] dark:border-[#2C2A26] border-l-4 border-l-[#C83E2D] overflow-hidden flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#181a20] shadow-[0_3px_14px_rgba(35,30,20,0.05)] hover:-translate-y-0.5`}
       >
-        {/* Top Visual Thumbnail with aspect-ratio to prevent CLS */}
+        {/* Top Visual Thumbnail (Clean media strip — title lives cleanly below image) */}
         <div>
           <div
-            style={{ aspectRatio: '16 / 10' }}
             onClick={() => setShowLightbox(true)}
-            className="relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br from-[#1C2630] to-[#35475A] cursor-zoom-in"
+            style={{ aspectRatio: '16 / 10' }}
+            className="relative w-full aspect-[16/10] flex flex-col justify-between p-2.5 sm:p-3 bg-gradient-to-br from-[#1C2630] to-[#35475A] cursor-zoom-in overflow-hidden"
             title="แตะที่รูปเพื่อขยายเต็มจอ / ดูหน้าร้าน Street View"
           >
-            {!imgError && (
-              <img
-                src={visual.imageUrl}
-                alt={item.main_place || 'Destination'}
-                loading="lazy"
-                onError={() => setFailedImgUrl(visual.imageUrl)}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#141C24]/90 via-[#141C24]/25 to-black/15" />
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {!imgError && (
+                <img
+                  src={visual.imageUrl}
+                  alt={item.main_place || 'Destination'}
+                  loading="lazy"
+                  onError={() => setFailedImgUrl(visual.imageUrl)}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#141C24]/70 via-transparent to-black/30" />
+            </div>
 
-            {/* Top Overlay Badges */}
+            {/* Top Badges */}
             <div
-              className="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-1.5"
+              className="relative z-10 flex items-start justify-between gap-1.5"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-1 flex-wrap">
+              <div className="flex items-center gap-1 flex-wrap min-w-0 flex-1">
                 <span className="px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase bg-white/95 text-[#1A1A1A]">
                   STOP {String(idx + 1).padStart(2, '0')}
                 </span>
@@ -1322,7 +1342,7 @@ function ItineraryThumbnailCardComponent({
               <button
                 type="button"
                 onClick={toggleVisited}
-                className={`px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-95 ${
+                className={`px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-95 shrink-0 ${
                   visited
                     ? 'bg-[#FFF5F2]/95 text-[#C83E2D] border border-[#C83E2D] -rotate-2'
                     : 'bg-[#C83E2D] text-white hover:bg-[#B23222]'
@@ -1332,22 +1352,17 @@ function ItineraryThumbnailCardComponent({
               </button>
             </div>
 
-            {/* Bottom Overlay Landmark Tag & City */}
-            <div className="absolute bottom-2.5 inset-x-3 flex items-end justify-between gap-2">
-              <div className="min-w-0">
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/85 tracking-wide flex-wrap">
-                  <span>{visual.emoji}</span>
-                  <span>
-                    {visual.tagLabel}
-                    {item.city && !visual.tagLabel.toLowerCase().includes(item.city.toLowerCase())
-                      ? ` · ${item.city}`
-                      : ''}
-                  </span>
+            {/* Bottom Landmark Tag & Quick Photo Controls */}
+            <div className="relative z-10 flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/55 backdrop-blur-xs text-[10px] font-semibold text-white/95 tracking-wide truncate min-w-0">
+                <span>{visual.emoji}</span>
+                <span className="truncate">
+                  {visual.tagLabel}
+                  {item.city && !visual.tagLabel.toLowerCase().includes(item.city.toLowerCase())
+                    ? ` · ${item.city}`
+                    : ''}
                 </span>
-                <h3 className="font-serif text-sm sm:text-base font-bold text-white leading-snug line-clamp-2 drop-shadow-sm">
-                  {item.main_place}
-                </h3>
-              </div>
+              </span>
 
               <div
                 className="flex items-center gap-1 shrink-0"
@@ -1383,8 +1398,17 @@ function ItineraryThumbnailCardComponent({
             </div>
           </div>
 
-          {/* Compact Snippet Body */}
+          {/* Solid Editorial Title & Snippet Body */}
           <div className="p-3 sm:p-3.5 space-y-1.5 text-left">
+            <a
+              href={mainPlaceMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="block font-serif text-sm sm:text-base font-bold text-[#1A1A1A] dark:text-white hover:text-[#C83E2D] dark:hover:text-[#FF8575] leading-snug break-words transition-colors"
+            >
+              {item.main_place}
+            </a>
+
             {transitGuide.details ? (
               <p className="text-[11px] text-[#443E36] dark:text-slate-300 line-clamp-1 flex items-center gap-1.5 font-medium">
                 <Bus className="h-3 w-3 text-[#C83E2D] shrink-0" />
@@ -1437,6 +1461,8 @@ function ItineraryThumbnailCardComponent({
           city={item.city}
           timeSlot={item.time_slot}
           transportInfo={item.transport_info}
+          platformInfo={transitGuide.platform}
+          transportNote={transitGuide.bestTip}
           mapsUrl={mainPlaceMapsUrl}
           directionsUrl={mainPlaceDirectionsUrl}
         />
@@ -1495,19 +1521,20 @@ function ItineraryCompactRowComponent({
   const [failedImgUrl, setFailedImgUrl] = React.useState<string | null>(null);
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
   const imgError = failedImgUrl === visual.imageUrl;
+  const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
 
   return (
     <>
       <div
-        className={`group flex items-center justify-between gap-2.5 p-3 rounded-lg border transition-all ${
+        className={`group flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-lg border transition-all ${
           visited
             ? 'border-[#EAE3D6] dark:border-emerald-800/60 bg-white dark:bg-[#181a20] shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
             : 'border-[#EAE3D6] dark:border-[#262932] border-l-3 border-l-[#C83E2D] bg-white dark:bg-[#181a20] hover:border-[#C83E2D]/60 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
         }`}
       >
         {/* Left: Mini Thumbnail + Editorial Time & Serif Title */}
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
           <button
             type="button"
             onClick={() => setShowLightbox(true)}
@@ -1532,12 +1559,12 @@ function ItineraryCompactRowComponent({
               {item.city && <span>· {item.city}</span>}
             </div>
 
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
               <a
                 href={mainPlaceMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className={`font-serif text-sm font-semibold truncate hover:text-[#C83E2D] transition-colors ${
+                className={`font-serif text-sm font-semibold line-clamp-2 sm:truncate break-words hover:text-[#C83E2D] transition-colors ${
                   visited ? 'text-[#4A4640] dark:text-slate-400' : 'text-[#1A1A1A] dark:text-white'
                 }`}
               >
@@ -1548,7 +1575,7 @@ function ItineraryCompactRowComponent({
         </div>
 
         {/* Right: Editorial Visited Stamp + Quick Action Icons */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center justify-end gap-1.5 shrink-0 flex-wrap">
           <button
             type="button"
             onClick={toggleVisited}
@@ -1602,6 +1629,8 @@ function ItineraryCompactRowComponent({
           city={item.city}
           timeSlot={item.time_slot}
           transportInfo={item.transport_info}
+          platformInfo={transitGuide.platform}
+          transportNote={transitGuide.bestTip}
           mapsUrl={mainPlaceMapsUrl}
           directionsUrl={mainPlaceDirectionsUrl}
         />

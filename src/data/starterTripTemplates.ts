@@ -1,0 +1,450 @@
+export interface StarterStopTemplate {
+  dayOffset: number;
+  time_slot: string;
+  city: string;
+  main_place: string;
+  food_recommendation: string;
+  transport_info: string;
+  backup_plan: string;
+  lat: number;
+  lng: number;
+}
+
+function mapsSearchUrl(query: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+function formatDayLabel(dayIndex: number, startDate?: string): string {
+  const num = dayIndex + 1;
+  if (!startDate) return `Day ${num}`;
+  const d = new Date(startDate);
+  if (isNaN(d.getTime())) return `Day ${num}`;
+  d.setDate(d.getDate() + dayIndex);
+  const formatted = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  return `Day ${num} (${formatted})`;
+}
+
+export const STARTER_TRIP_TEMPLATES: Record<string, StarterStopTemplate[]> = {
+  'Tokyo - Kawaguchiko & Your Name': [
+    {
+      dayOffset: 0,
+      time_slot: '09:30 - 12:30',
+      city: 'Tokyo (Shinjuku)',
+      main_place: 'Suga Shrine Staircase (บันไดแดง Your Name)',
+      food_recommendation: 'Shinjuku Ramen & Yotsuya Bakery',
+      transport_info: 'JR Chuo Line / Tokyo Metro Marunouchi ➔ สถานี Yotsuya-sanchome เดิน 7 นาที',
+      backup_plan: 'Isetan Shinjuku Food Hall (ช้อปขนม/อาหารในร่ม)',
+      lat: 35.6852,
+      lng: 139.7224,
+    },
+    {
+      dayOffset: 0,
+      time_slot: '14:30 - 18:30',
+      city: 'Tokyo (Shimokitazawa)',
+      main_place: 'Shimokitazawa Vintage District & Bonus Track',
+      food_recommendation: 'Soup Curry Rojiura Curry Samurai / Ogawa Coffee Lab',
+      transport_info: 'Odakyu Line จาก Shinjuku ➔ สถานี Shimo-kitazawa (10 นาที)',
+      backup_plan: 'Mikan Shimokita (โซนร้านค้าใต้รางรถไฟในร่ม)',
+      lat: 35.6616,
+      lng: 139.6682,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '08:30 - 12:00',
+      city: 'Kawaguchiko',
+      main_place: 'Chureito Pagoda (Arakurayama Sengen Park)',
+      food_recommendation: 'Hoto Fudo (อุด้งหม้อเหล็กฟูจิเส้นสด)',
+      transport_info: 'รถไฟ Fuji Excursion จาก Shinjuku ➔ สถานี Shimoyoshida เดินขึ้นเนิน ~15 นาที',
+      backup_plan: 'สถานี Kawaguchiko Gift Shop & คาเฟ่วิวภูเขา',
+      lat: 35.5013,
+      lng: 138.8013,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '13:30 - 17:00',
+      city: 'Kawaguchiko',
+      main_place: 'Oishi Park & Lake Kawaguchiko North Shore',
+      food_recommendation: 'Fujisan Cookie & Lavender Soft Cream',
+      transport_info: 'Kawaguchiko Sightseeing Bus (Red Line) ลงป้ายสุดสาย #20 Oishi Park',
+      backup_plan: 'Kawaguchiko Music Forest Museum (ในร่ม)',
+      lat: 35.5227,
+      lng: 138.7453,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '10:00 - 13:30',
+      city: 'Tokyo (Asakusa)',
+      main_place: 'Senso-ji Temple & Nakamise Street',
+      food_recommendation: 'Suzukien Asakusa Matcha Gelato 7 ระดับ',
+      transport_info: 'Tokyo Metro Ginza Line ➔ สถานี Asakusa ทางออก 1',
+      backup_plan: 'Tokyo Solamachi / Skytree Town (ห้างในร่มติดสถานี)',
+      lat: 35.7148,
+      lng: 139.7967,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '16:30 - 20:00',
+      city: 'Tokyo (Shibuya)',
+      main_place: 'Shibuya Sky Observation Deck & Scramble Crossing',
+      food_recommendation: 'Uobei Shibuya / Hambagu Kiwamiya',
+      transport_info: 'JR Yamanote Line / Ginza Line ➔ สถานี Shibuya ทางออก B6',
+      backup_plan: 'Shibuya Scramble Square / Nintendo TOKYO & Pokemon Center Shibuya',
+      lat: 35.6585,
+      lng: 139.7022,
+    },
+  ],
+  'Nagoya - Ghibli Park & Shirakawa-go': [
+    {
+      dayOffset: 0,
+      time_slot: '10:00 - 16:00',
+      city: 'Nagoya',
+      main_place: "Ghibli Park (Ghibli's Grand Warehouse & Valley of Witches)",
+      food_recommendation: 'คาเฟ่ในโซน Grand Warehouse & ข้าวหน้าหมูทอด Yabaton (ขากลับ)',
+      transport_info: 'Higashiyama Line ➔ Fujigaoka ต่อ Linimo ➔ Ai-Chikyuhaku Kinen Koen',
+      backup_plan: 'Osu Shopping Arcade (ถนนคนเดินมีหลังคาคลุม)',
+      lat: 35.1763,
+      lng: 137.0888,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '09:30 - 13:30',
+      city: 'Gifu (Shirakawa-go)',
+      main_place: 'Shirakawa-go Historic Gassho-zukuri Village',
+      food_recommendation: 'เนื้อฮิดะเสียบไม้ย่าง & โซบะหมู่บ้านมรดกโลก',
+      transport_info: 'รถบัส Nohi Bus จาก Meitetsu Bus Center Nagoya ➔ Shirakawa-go (~2.5 ชม.)',
+      backup_plan: 'Wada House Museum & คาเฟ่บ้านโบราณริมลำธาร',
+      lat: 36.2578,
+      lng: 136.9062,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '09:00 - 14:00',
+      city: 'Takayama',
+      main_place: 'Takayama Sanmachi Old Town & Miyagawa Morning Market',
+      food_recommendation: 'Hida Beef Sushi (Kotteushi) & ราเมงทาคายาม่า',
+      transport_info: 'Nohi Bus จาก Shirakawa-go ➔ สถานี Takayama (50 นาที)',
+      backup_plan: 'Takayama Jinya & โรงกลั่นสาเกโบราณ',
+      lat: 36.1408,
+      lng: 137.2602,
+    },
+    {
+      dayOffset: 3,
+      time_slot: '09:30 - 15:00',
+      city: 'Kamikochi',
+      main_place: 'Kamikochi Valley & Kappa Bridge (สะพานกัปปะ)',
+      food_recommendation: 'ทาร์ตแอปเปิ้ล Kamikochi & เบนโตะริมแม่น้ำ Azusa',
+      transport_info: 'Nohi Bus จาก Takayama ➔ Hirayu Onsen เปลี่ยนรถบัสเข้า Kamikochi',
+      backup_plan: 'JR Gate Tower / Sakae Underground Shopping Mall ในตัวเมืองนาโกย่า',
+      lat: 36.2485,
+      lng: 137.6384,
+    },
+  ],
+  'Fukuoka - Yufuin & North Kyushu': [
+    {
+      dayOffset: 0,
+      time_slot: '10:00 - 14:30',
+      city: 'Oita (Yufuin)',
+      main_place: 'Yufuin Floral Village & Yunotsubo Kaido',
+      food_recommendation: 'B-Speak Roll Cake & Yunotsubo Milk Ice Cream',
+      transport_info: 'รถไฟขบวนพิเศษ JR Yufuin no Mori จากสถานี Hakata ➔ สถานี Yufuin',
+      backup_plan: 'คาเฟ่ Snoopy Tea House & ร้านของฝาก Donguri-no-Mori Yufuin',
+      lat: 33.2654,
+      lng: 131.3606,
+    },
+    {
+      dayOffset: 0,
+      time_slot: '15:00 - 17:30',
+      city: 'Oita (Yufuin)',
+      main_place: 'Lake Kinrin (ทะเลสาบคินริน)',
+      food_recommendation: 'Yufumabushi Shin (ข้าวหม้อดินเนื้อบุนโกะ)',
+      transport_info: 'เดินชมวิวต่อจากปลายถนน Yunotsubo ประมาณ 10 นาที',
+      backup_plan: 'แช่ออนเซนเรียวกังริมทะเลสาบ',
+      lat: 33.2665,
+      lng: 131.3698,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '10:00 - 13:30',
+      city: 'Fukuoka (Dazaifu)',
+      main_place: 'Dazaifu Tenmangu Shrine & Starbucks Kengo Kuma',
+      food_recommendation: 'ขนม Umegae-mochi ย่างร้อนหน้าศาลเจ้า & Ichiran ถ้วยห้าเหลี่ยม',
+      transport_info: 'รถไฟ Nishitetsu จาก Tenjin ➔ Futsukaichi ➔ Dazaifu (~30 นาที)',
+      backup_plan: 'Kyushu National Museum (ในร่ม ทางเดินเลื่อนติดศาลเจ้า)',
+      lat: 33.5214,
+      lng: 130.5349,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '12:00 - 19:00',
+      city: 'Fukuoka (Hakata)',
+      main_place: 'Canal City Hakata & Nakasu Yatai Food Stalls',
+      food_recommendation: 'Hakata ShinShin Ramen & มตสึนาเบะ / ยาไตเลียบคลองนากาสุ',
+      transport_info: 'Fukuoka Subway สถานี Kushida Shrine / Hakata เดิน 8 นาที',
+      backup_plan: 'JR Hakata City (AMU Plaza & Hankyu) ภายในสถานี Hakata',
+      lat: 33.5898,
+      lng: 130.4108,
+    },
+  ],
+  'Kamakura - Enoshima & Yokohama': [
+    {
+      dayOffset: 0,
+      time_slot: '09:30 - 12:30',
+      city: 'Kamakura',
+      main_place: 'Tsurugaoka Hachimangu & Komachi-dori Street',
+      food_recommendation: 'ข้าวหน้าปลาชิราสุ (Shirasu Don) & เครปคามาคุระ',
+      transport_info: 'JR Yokosuka Line ตรงจาก Tokyo/Shinjuku ➔ สถานี Kamakura ทางออก East',
+      backup_plan: 'ช้อปขนมและของฝากบนถนน Komachi-dori',
+      lat: 35.3257,
+      lng: 139.5564,
+    },
+    {
+      dayOffset: 0,
+      time_slot: '13:30 - 16:00',
+      city: 'Kamakura',
+      main_place: 'Kamakura Kotoku-in (พระใหญ่) & Kamakurakoko-mae Crossing (จุดตัดรถไฟ Slam Dunk)',
+      food_recommendation: 'มัทฉะเจลาโต้แถว Hase & Bill Kamakura',
+      transport_info: 'รถไฟ Enoden Line ลงสถานี Hase และต่อลงสถานี Kamakurakoko-mae',
+      backup_plan: 'แวะชมพิพิธภัณฑ์วรรณกรรมหรือนั่ง Enoden ชมทะเล',
+      lat: 35.3067,
+      lng: 139.5023,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '10:00 - 14:30',
+      city: 'Enoshima',
+      main_place: 'Enoshima Island & Sea Candle Observatory',
+      food_recommendation: 'ข้าวเกรียบปลาหมึกแผ่นยักษ์ (Tako Senbei Asahi Honten)',
+      transport_info: 'Enoden Line ลงสถานี Enoshima เดินข้ามสะพานเข้าเกาะ ~12 นาที',
+      backup_plan: 'Enoshima Aquarium (พิพิธภัณฑ์สัตว์น้ำริมหาดในร่ม)',
+      lat: 35.2997,
+      lng: 139.4801,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '11:00 - 18:00',
+      city: 'Yokohama',
+      main_place: 'Yokohama Red Brick Warehouse & Minato Mirai / Chinatown',
+      food_recommendation: 'เสี่ยวหลงเปาทอด Wangfujing & คาเฟ่ Bills Red Brick',
+      transport_info: 'Minatomirai Line ลงสถานี Bashamichi หรือ Motomachi-Chukagai',
+      backup_plan: 'Cup Noodles Museum & Queen Square Yokohama (ในร่มติดกัน)',
+      lat: 35.4526,
+      lng: 139.6429,
+    },
+  ],
+  'Kanazawa - Takayama & Kamikochi': [
+    {
+      dayOffset: 0,
+      time_slot: '09:00 - 12:30',
+      city: 'Kanazawa',
+      main_place: 'Omicho Market (ตลาดปลาโอมิโช) & Higashi Chaya District',
+      food_recommendation: 'ข้าวหน้าปลาดิบ Kaisen-don ท็อปแผ่นทองคำแท้ & ไอศกรีมทองคำ Hakuichi',
+      transport_info: 'Kanazawa Loop Bus จากสถานี Kanazawa (10 นาที)',
+      backup_plan: 'ร้านค้ามีหลังคาภายในตลาด Omicho Market',
+      lat: 36.5718,
+      lng: 136.6562,
+    },
+    {
+      dayOffset: 0,
+      time_slot: '13:30 - 17:00',
+      city: 'Kanazawa',
+      main_place: 'Kenroku-en Garden & 21st Century Museum of Contemporary Art',
+      food_recommendation: 'ชุดน้ำชาชมสวนใน Kenroku-en',
+      transport_info: 'Kanazawa Loop Bus ลงป้าย Kenrokuen-shita',
+      backup_plan: '21st Century Museum (สระว่ายน้ำศิลปะในร่ม)',
+      lat: 36.5621,
+      lng: 136.6626,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '10:00 - 15:30',
+      city: 'Takayama',
+      main_place: 'Sanmachi-suji Old Street & Nagamachi Samurai District',
+      food_recommendation: 'ซูชิเนื้อฮิดะ (Hida Kotteushi) & ขนมโกเฮโมจิ',
+      transport_info: 'Nohi Bus จาก Kanazawa ➔ Shirakawa-go ➔ Takayama',
+      backup_plan: 'Takayama Matsuri Yatai Kaikan (พิพิธภัณฑ์รถแห่ในร่ม)',
+      lat: 36.1419,
+      lng: 137.2597,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '09:00 - 15:00',
+      city: 'Kamikochi',
+      main_place: 'Kamikochi Taisho Pond ➔ Kappa Bridge Nature Trail',
+      food_recommendation: 'อาหารกลางวันใน Kamikochi Imperial Hotel / Konashi-daira',
+      transport_info: 'รถบัส Alpico/Nohi จากสถานี Takayama ต่อรถเข้า Kamikochi',
+      backup_plan: 'แช่ออนเซนที่ Hirayu Onsen ระหว่างทางกลับ',
+      lat: 36.2485,
+      lng: 137.6384,
+    },
+  ],
+  'Hiroshima - Miyajima & Onomichi': [
+    {
+      dayOffset: 0,
+      time_slot: '09:30 - 15:00',
+      city: 'Hiroshima (Miyajima)',
+      main_place: 'Itsukushima Shrine (เสาโทริอิกลางน้ำ) & Mount Misen Ropeway',
+      food_recommendation: 'หอยนางรมย่างฮิโรชิมา & ขนมใบเมเปิ้ล Momiji Manju',
+      transport_info: 'JR Sanyo Line ➔ Miyajimaguchi แล้วนั่ง JR Ferry ข้ามเกาะ (10 นาที)',
+      backup_plan: 'Miyajima Public Aquarium (ในร่ม)',
+      lat: 34.296,
+      lng: 132.3198,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '10:00 - 15:00',
+      city: 'Hiroshima',
+      main_place: 'Hiroshima Peace Memorial Park, Atomic Bomb Dome & Hondori Arcade',
+      food_recommendation: 'โอโคโนมิยากิสไตล์ฮิโรชิมา (Okonomimura / Nagataya)',
+      transport_info: 'Hiroden Streetcar สาย 2 หรือ 6 ลงป้าย Genbaku-Domu Mae',
+      backup_plan: 'Peace Memorial Museum & ถนนช้อปปิ้งหลังคาคลุม Hondori',
+      lat: 34.3955,
+      lng: 132.4536,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '10:00 - 16:00',
+      city: 'Hiroshima (Onomichi)',
+      main_place: 'Onomichi Cat Alley (Neko no Hosomichi) & Senkoji Park Ropeway',
+      food_recommendation: 'Onomichi Ramen (ร้าน Shukaen / Tsutafuji) & คาเฟ่ร้านค้าโลคอล',
+      transport_info: 'Shinkansen Kodama หรือ JR Sanyo Line ➔ สถานี Onomichi',
+      backup_plan: 'Onomichi U2 Warehouse (คาเฟ่และร้านไลฟ์สไตล์ริมท่าเรือในร่ม)',
+      lat: 34.4106,
+      lng: 133.1977,
+    },
+  ],
+  'Sapporo - Otaru & Biei': [
+    {
+      dayOffset: 0,
+      time_slot: '10:00 - 15:00',
+      city: 'Sapporo',
+      main_place: 'Odori Park, Sapporo Clock Tower & Tanukikoji Shopping Arcade',
+      food_recommendation: 'ซุปแกงกะหรี่ Garaku & ราเมงมิโสะเนยข้าวโพด Susukino Ramen Alley',
+      transport_info: 'Sapporo Subway สถานี Odori / Susukino เดินถึงกันได้',
+      backup_plan: 'ถนนคนเดิน Tanukikoji Arcade มีหลังคาตลอด 7 บล็อก + JR Tower',
+      lat: 43.0598,
+      lng: 141.351,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '09:30 - 16:00',
+      city: 'Otaru',
+      main_place: 'Otaru Canal (คลองโอตารุ) & Sakaimachi Music Box Museum',
+      food_recommendation: 'ชีสเค้ก LeTAO Honten & ตลาดปลา Sankaku Rice Bowl',
+      transport_info: 'JR Rapid Airport จากสถานี Sapporo ➔ สถานี Otaru (~35 นาที)',
+      backup_plan: 'Kitaichi Glass Workshop & Music Box Museum Hall (ในร่ม)',
+      lat: 43.1995,
+      lng: 141.0017,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '09:30 - 16:30',
+      city: 'Hokkaido (Biei)',
+      main_place: 'Biei Patchwork Road, Shirogane Blue Pond & Farm Tomita',
+      food_recommendation: 'เมล่อนฮอกไกโด & ซอฟต์ครีมนมสดฮอกไกโด',
+      transport_info: 'รถไฟ JR Limited Express Lavender / Furano Biei Bus Tour จาก Sapporo',
+      backup_plan: 'Shiroi Koibito Park (โรงงานช็อกโกแลตในร่มใน Sapporo)',
+      lat: 43.4935,
+      lng: 142.614,
+    },
+  ],
+  'Sendai - Yamadera & Ginzan Onsen': [
+    {
+      dayOffset: 0,
+      time_slot: '09:30 - 13:30',
+      city: 'Yamagata (Yamadera)',
+      main_place: 'Yamadera Temple (Risshaku-ji วัดบนหน้าผา)',
+      food_recommendation: 'ลูกชิ้นบุกต้มซีอิ๊ว (Tamakonnyaku) & โซบะตีนเขา',
+      transport_info: 'JR Senzan Line จาก Sendai ➔ สถานี Yamadera (60 นาที)',
+      backup_plan: 'แวะชมพิพิธภัณฑ์ศิลปะหน้าสถานี Yamadera & Clis Road ใน Sendai',
+      lat: 38.3125,
+      lng: 140.4375,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '11:00 - 18:00',
+      city: 'Yamagata (Ginzan Onsen)',
+      main_place: 'Ginzan Onsen Historic Town (บรรยากาศ Spirited Away)',
+      food_recommendation: 'ขนมปังแกงกะหรี่ Haikarasan & แช่ออนเซนเท้าริมธาร',
+      transport_info: 'JR Yamagata Shinkansen ➔ สถานี Oishida ต่อรถบัส 35 นาที ➔ Ginzan Onsen',
+      backup_plan: 'ร้านคาเฟ่เรียวกังริมคลองไม้โบราณ',
+      lat: 38.5706,
+      lng: 140.5303,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '10:30 - 16:00',
+      city: 'Sendai',
+      main_place: 'Sendai Morning Market, Zuihoden Mausoleum & Clis Road Arcade',
+      food_recommendation: 'ลิ้นวัวย่างเซ็นได (Gyutan Rikyu / Zenjirou) & ซุนดะเชค (ถั่วแระปั่น)',
+      transport_info: 'Loople Sendai Sightseeing Bus รอบเมืองจากหน้าสถานี Sendai',
+      backup_plan: 'S-PAL Sendai & Clis Road Arcade (ถนนช้อปปิ้งมีหลังคาคลุม)',
+      lat: 38.2601,
+      lng: 140.8824,
+    },
+  ],
+  'Matsumoto - Narai-juku & Hakuba': [
+    {
+      dayOffset: 0,
+      time_slot: '09:30 - 13:30',
+      city: 'Matsumoto',
+      main_place: 'Matsumoto Castle (ปราสาทอีกาดำ) & Nawate Frog Street',
+      food_recommendation: 'Shinshu Soba & ซอฟต์ครีมวาซาบิสด',
+      transport_info: 'เดิน 15 นาที หรือ Town Sneaker Bus จากสถานี Matsumoto',
+      backup_plan: 'Matsumoto City Museum of Art (นิทรรศการ Yayoi Kusama)',
+      lat: 36.2387,
+      lng: 137.9689,
+    },
+    {
+      dayOffset: 1,
+      time_slot: '10:00 - 14:30',
+      city: 'Nagano (Narai-juku)',
+      main_place: 'Narai-juku Post Town (หมู่บ้านไปรษณีย์ยุคเอโดะ)',
+      food_recommendation: 'ขนม Oyaki & โกเฮโมจิปิ้งซอสมิโสะวอลนัท',
+      transport_info: 'JR Chuo Main Line จาก Matsumoto ➔ สถานี Narai (45 นาที)',
+      backup_plan: 'คาเฟ่เรือนไม้โบราณ Matsuya 茶房',
+      lat: 35.9665,
+      lng: 137.8133,
+    },
+    {
+      dayOffset: 2,
+      time_slot: '09:30 - 15:30',
+      city: 'Nagano (Hakuba)',
+      main_place: 'Hakuba Mountain Harbor & Iwatake Gondola Lift',
+      food_recommendation: 'เบเกอรี่ The City Bakery ชมวิวเจแปนแอลป์',
+      transport_info: 'JR Oito Line จาก Matsumoto ➔ สถานี Hakuba ต่อ Shuttle Bus ฟรี',
+      backup_plan: 'MIDORI Matsumoto Shopping Mall ติดสถานีรถไฟ',
+      lat: 36.7126,
+      lng: 137.8482,
+    },
+  ],
+};
+
+export function findStarterTemplate(tripTitle: string): StarterStopTemplate[] | null {
+  const clean = (tripTitle || '').trim();
+  if (!clean) return null;
+  if (STARTER_TRIP_TEMPLATES[clean]) return STARTER_TRIP_TEMPLATES[clean];
+  const matchedKey = Object.keys(STARTER_TRIP_TEMPLATES).find((key) =>
+    clean.toLowerCase().includes(key.toLowerCase())
+  );
+  return matchedKey ? STARTER_TRIP_TEMPLATES[matchedKey] : null;
+}
+
+export function buildStarterItineraryRows(tripId: string, tripTitle: string, startDate?: string) {
+  const template = findStarterTemplate(tripTitle);
+  if (!template) return [];
+
+  return template.map((stop, idx) => ({
+    trip_id: tripId,
+    date_label: formatDayLabel(stop.dayOffset, startDate),
+    time_slot: stop.time_slot,
+    city: stop.city,
+    main_place: stop.main_place,
+    main_place_links: [mapsSearchUrl(`${stop.main_place} ${stop.city}`)],
+    food_recommendation: stop.food_recommendation,
+    food_links: [mapsSearchUrl(`${stop.food_recommendation} ${stop.city}`)],
+    transport_info: stop.transport_info,
+    backup_plan: stop.backup_plan,
+    backup_links: [mapsSearchUrl(`${stop.backup_plan} ${stop.city}`)],
+    sort_order: idx,
+  }));
+}

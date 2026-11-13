@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-const emptySubscribe = () => () => {};
+const emptySubscribe = () => () => { };
 
 /**
  * Hydration-safe hook that returns `false` on SSR / initial hydration pass

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, BellOff, CheckCheck, Trash2, X, 
-  Receipt, Users, Clock, ShieldCheck 
+  Receipt, Users, Clock, ShieldCheck, CalendarClock 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ROLE_INFO, TripRole } from '@/lib/permissions';
@@ -25,6 +25,7 @@ interface NotificationBellProps {
   expenses?: any[];
   itinerary?: any[];
   members?: any[];
+  trips?: any[];
   tripTitle?: string;
   currentUser?: any;
   userDisplayName?: string;
@@ -58,13 +59,15 @@ function saveStoredIds(key: string, set: Set<string>) {
 
 export default function NotificationBell({ 
   expenses = EMPTY_ARRAY, 
+  itinerary = EMPTY_ARRAY,
   members = EMPTY_ARRAY, 
+  trips = EMPTY_ARRAY,
   tripTitle,
   currentUser,
   userDisplayName,
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'member' | 'expense'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'expense' | 'member' | 'system'>('all');
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
   const [clearedIds, setClearedIds] = useState<Set<string>>(() => new Set());
   const [isMuted, setIsMuted] = useState(false);
@@ -162,10 +165,115 @@ export default function NotificationBell({
       });
     }
 
+    // 3. Trip & Schedule System Alerts (Home trips + In-trip itinerary checks)
+    const todayStart = new Date(baseTimestamp);
+    todayStart.setHours(0, 0, 0, 0);
+
+    if (trips && trips.length > 0) {
+      trips.forEach((t, idx) => {
+        const name = t.name || t.title || 'ทริปของคุณ';
+        const budget = Number(t.total_budget ?? t.budget ?? 0);
+
+        if (t.start_date) {
+          const start = new Date(t.start_date);
+          start.setHours(0, 0, 0, 0);
+          const end = t.end_date ? new Date(t.end_date) : start;
+          end.setHours(23, 59, 59, 999);
+          const diffDays = Math.ceil((start.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (todayStart >= start && todayStart <= end) {
+            const id = `notif-sys-ongoing-${t.id || idx}`;
+            if (!clearedIds.has(id)) {
+              list.push({
+                id,
+                title: `✈️ กำลังเดินทาง: ${name}`,
+                message: 'ทริปกำลังดำเนินอยู่ เปิดดูเช็คลิสต์ ตั๋ว QR หรือบันทึกรายจ่ายระหว่างวันได้เลย',
+                time: 'วันนี้',
+                timestamp: baseTimestamp - idx * 500,
+                type: 'system',
+                read: readIds.has(id),
+              });
+            }
+          } else if (diffDays >= 0 && diffDays <= 30) {
+            const id = `notif-sys-countdown-${t.id || idx}-${diffDays}`;
+            if (!clearedIds.has(id)) {
+              list.push({
+                id,
+                title: diffDays === 0 ? `🎉 วันเดินทางมาถึงแล้ว: ${name}` : `⏳ อีก ${diffDays} วันออกเดินทาง: ${name}`,
+                message: diffDays <= 7
+                  ? 'เช็กพาสปอร์ต Visit Japan Web และประกันเดินทางไว้ในตู้เซฟตั๋วให้พร้อม!'
+                  : `กำหนดออกเดินทาง ${start.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}`,
+                time: diffDays === 0 ? 'วันนี้' : `อีก ${diffDays} วัน`,
+                timestamp: baseTimestamp - 1000 - idx * 500,
+                type: 'system',
+                read: readIds.has(id),
+              });
+            }
+          }
+        } else {
+          const id = `notif-sys-nodate-${t.id || idx}`;
+          if (!clearedIds.has(id)) {
+            list.push({
+              id,
+              title: `📅 ยังไม่ระบุวันเดินทาง: ${name}`,
+              message: 'ตั้งวันไป–กลับในทริปเพื่อให้นับถอยหลังและเรียงลำดับทริปอัตโนมัติ',
+              time: 'แนะนำ',
+              timestamp: baseTimestamp - 60000 - idx * 500,
+              type: 'system',
+              read: readIds.has(id),
+            });
+          }
+        }
+
+        if (budget <= 0) {
+          const id = `notif-sys-nobudget-${t.id || idx}`;
+          if (!clearedIds.has(id)) {
+            list.push({
+              id,
+              title: `💰 ยังไม่ได้ตั้งงบประมาณ: ${name}`,
+              message: 'กำหนดงบทริปเพื่อดูแถบคงเหลือและสรุปสัดส่วนรายจ่ายแบบเรียลไทม์',
+              time: 'แนะนำ',
+              timestamp: baseTimestamp - 90000 - idx * 500,
+              type: 'system',
+              read: readIds.has(id),
+            });
+          }
+        }
+      });
+    }
+
+    if (itinerary && itinerary.length > 0) {
+      const realStops = itinerary.filter((item) => item.date_label !== '__meta_trip_data__');
+      const missingMapsCount = realStops.filter(
+        (item) => !Array.isArray(item.main_place_links) || item.main_place_links.length === 0
+      ).length;
+      const missingTransitCount = realStops.filter(
+        (item) => !item.transport_info || String(item.transport_info).trim() === ''
+      ).length;
+
+      if (missingMapsCount > 0 || missingTransitCount > 0) {
+        const id = `notif-sys-itinerary-gap-${realStops.length}-${missingMapsCount}-${missingTransitCount}`;
+        if (!clearedIds.has(id)) {
+          const parts: string[] = [];
+          if (missingMapsCount > 0) parts.push(`${missingMapsCount} จุดยังไม่มีลิงก์ Maps`);
+          if (missingTransitCount > 0) parts.push(`${missingTransitCount} จุดยังไม่มีโน้ตการเดินทาง`);
+          list.push({
+            id,
+            title: `🗺️ เช็กความพร้อมแผนเที่ยว (${realStops.length} จุด)`,
+            message: parts.join(' • ') + ' — แตะแก้ไขที่การ์ดสถานที่เพื่อเติมให้ครบก่อนเดินทาง',
+            time: 'แผนเที่ยว',
+            timestamp: baseTimestamp - 120000,
+            type: 'system',
+            read: readIds.has(id),
+          });
+        }
+      }
+    }
+
     // Sort strictly by timestamp descending
     list.sort((a, b) => b.timestamp - a.timestamp);
     return list;
-  }, [expenses, members, readIds, clearedIds, baseTimestamp, myId, myName]);
+  }, [expenses, itinerary, members, trips, readIds, clearedIds, baseTimestamp, myId, myName]);
 
   // Unread badge count (0 if muted)
   const unreadCount = useMemo(() => {
@@ -202,11 +310,7 @@ export default function NotificationBell({
 
   const filteredNotifications = useMemo(() => {
     if (activeFilter === 'all') return notifications;
-    return notifications.filter((n) => {
-      if (activeFilter === 'member') return n.type === 'member';
-      if (activeFilter === 'expense') return n.type === 'expense';
-      return true;
-    });
+    return notifications.filter((n) => n.type === activeFilter);
   }, [notifications, activeFilter]);
 
   const markAllAsRead = useCallback(() => {
@@ -240,6 +344,8 @@ export default function NotificationBell({
     switch (type) {
       case 'member':
         return <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
+      case 'system':
+        return <CalendarClock className="h-4 w-4 text-amber-600 dark:text-amber-400" />;
       case 'expense':
       default:
         return <Receipt className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
@@ -357,7 +463,7 @@ export default function NotificationBell({
             </div>
 
             {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 px-4 py-2 bg-slate-50/70 dark:bg-[#121316]/60 border-b border-slate-100 dark:border-[#262932]">
+            <div className="flex items-center gap-1.5 px-4 py-2 bg-slate-50/70 dark:bg-[#121316]/60 border-b border-slate-100 dark:border-[#262932] overflow-x-auto custom-scrollbar">
               <button
                 type="button"
                 onClick={() => setActiveFilter('all')}
@@ -371,6 +477,17 @@ export default function NotificationBell({
               </button>
               <button
                 type="button"
+                onClick={() => setActiveFilter('system')}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
+                  activeFilter === 'system'
+                    ? 'bg-blue-600 text-white shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
+                }`}
+              >
+                📅 แจ้งเตือนทริป
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveFilter('expense')}
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                   activeFilter === 'expense'
@@ -378,7 +495,7 @@ export default function NotificationBell({
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
                 }`}
               >
-                🧾 เพื่อนบันทึกรายจ่าย
+                🧾 รายจ่ายเพื่อน
               </button>
               <button
                 type="button"
@@ -389,7 +506,7 @@ export default function NotificationBell({
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
                 }`}
               >
-                👥 สมาชิกใหม่
+                👥 สมาชิก
               </button>
             </div>
 

@@ -47,31 +47,65 @@ type PresencePrivacyLevel = 'off' | 'progress' | 'district' | 'exact';
 interface Coord {
   lat: number;
   lng: number;
+  isExact: boolean;
 }
 
-// Fallback landmark coordinates for Kansai stops when lat/lng are not explicitly set on the row
+// Pan-Japan landmark & city coordinates fallback when lat/lng are not explicitly set on the row
 function resolveStopCoordinate(item: any): Coord {
   if (typeof item?.lat === 'number' && typeof item?.lng === 'number') {
-    return { lat: item.lat, lng: item.lng };
+    return { lat: item.lat, lng: item.lng, isExact: true };
   }
   const text = `${item?.main_place || ''} ${item?.city || ''}`.toLowerCase();
-  if (/kix|kansai airport|คันไซ/.test(text)) return { lat: 34.432, lng: 135.2304 };
-  if (/rinku|ริงกุ/.test(text)) return { lat: 34.4069, lng: 135.2934 };
-  if (/uji|อุจิ|byodoin|เบียวโดอิน/.test(text)) return { lat: 34.8893, lng: 135.8077 };
-  if (/fushimi|ฟุชิมิ/.test(text)) return { lat: 34.9671, lng: 135.7727 };
-  if (/kiyomizu|คิโยมิสึ|วัดน้ำใส/.test(text)) return { lat: 34.9949, lng: 135.785 };
-  if (/gion|กิออน|yasaka|ยาสะกะ/.test(text)) return { lat: 35.0037, lng: 135.7785 };
-  if (/arashiyama|อาราชิยามะ/.test(text)) return { lat: 35.0094, lng: 135.667 };
-  if (/kyoto|เกียวโต/.test(text)) return { lat: 34.9858, lng: 135.7588 };
-  if (/nara|นารา|todai|โทไดจิ/.test(text)) return { lat: 34.6851, lng: 135.8398 };
-  if (/kobe|โกเบ|nunobiki|นุโนะบิกิ/.test(text)) return { lat: 34.6901, lng: 135.1955 };
-  if (/kaiyukan|ไคยูคัง|osakako/.test(text)) return { lat: 34.6545, lng: 135.429 };
-  if (/osaka castle|ปราสาทโอซาก้า/.test(text)) return { lat: 34.6873, lng: 135.5262 };
-  if (/umeda|อุเมดะ/.test(text)) return { lat: 34.7025, lng: 135.4959 };
-  if (/tennoji|เท็นโนจิ|shinsekai|ชินเซไก|tsutenkaku/.test(text)) return { lat: 34.6525, lng: 135.5063 };
-  if (/den den|เด็นเด็น|nipponbashi|kuromon|คุโรมง/.test(text)) return { lat: 34.6628, lng: 135.506 };
-  // Default Dotonbori / Namba Osaka
-  return { lat: 34.6687, lng: 135.5013 };
+  // Kansai
+  if (/kix|kansai airport|คันไซ/.test(text)) return { lat: 34.432, lng: 135.2304, isExact: true };
+  if (/rinku|ริงกุ/.test(text)) return { lat: 34.4069, lng: 135.2934, isExact: true };
+  if (/uji|อุจิ|byodoin|เบียวโดอิน/.test(text)) return { lat: 34.8893, lng: 135.8077, isExact: true };
+  if (/fushimi|ฟุชิมิ/.test(text)) return { lat: 34.9671, lng: 135.7727, isExact: true };
+  if (/kiyomizu|คิโยมิสึ|วัดน้ำใส/.test(text)) return { lat: 34.9949, lng: 135.785, isExact: true };
+  if (/gion|กิออน|yasaka|ยาสะกะ/.test(text)) return { lat: 35.0037, lng: 135.7785, isExact: true };
+  if (/arashiyama|อาราชิยามะ/.test(text)) return { lat: 35.0094, lng: 135.667, isExact: true };
+  if (/kyoto|เกียวโต/.test(text)) return { lat: 34.9858, lng: 135.7588, isExact: true };
+  if (/nara|นารา|todai|โทไดจิ/.test(text)) return { lat: 34.6851, lng: 135.8398, isExact: true };
+  if (/kobe|โกเบ|nunobiki|นุโนะบิกิ/.test(text)) return { lat: 34.6901, lng: 135.1955, isExact: true };
+  if (/kaiyukan|ไคยูคัง|osakako/.test(text)) return { lat: 34.6545, lng: 135.429, isExact: true };
+  if (/usj|universal studios/.test(text)) return { lat: 34.6654, lng: 135.4323, isExact: true };
+  if (/osaka castle|ปราสาทโอซาก้า/.test(text)) return { lat: 34.6873, lng: 135.5262, isExact: true };
+  if (/umeda|อุเมดะ/.test(text)) return { lat: 34.7025, lng: 135.4959, isExact: true };
+  if (/tennoji|เท็นโนจิ|shinsekai|ชินเซไก|tsutenkaku/.test(text)) return { lat: 34.6525, lng: 135.5063, isExact: true };
+  if (/den den|เด็นเด็น|nipponbashi|kuromon|คุโรมง/.test(text)) return { lat: 34.6628, lng: 135.506, isExact: true };
+  if (/osaka|โอซาก้า|dotonbori|โดทงโบริ|namba|นัมบะ|shinsaibashi|ชินไซบาชิ/.test(text)) {
+    return { lat: 34.6687, lng: 135.5013, isExact: true };
+  }
+  // Kanto / Tokyo / Fuji
+  if (/narita|นาริตะ/.test(text)) return { lat: 35.772, lng: 140.3929, isExact: true };
+  if (/haneda|ฮาเนดะ/.test(text)) return { lat: 35.5494, lng: 139.7798, isExact: true };
+  if (/asakusa|อาซากุสะ|sensoji|เซ็นโซจิ/.test(text)) return { lat: 35.7148, lng: 139.7967, isExact: true };
+  if (/shibuya|ชิบูย่า|harajuku|ฮาราจูกุ|meiji/.test(text)) return { lat: 35.6595, lng: 139.7004, isExact: true };
+  if (/shinjuku|ชินจูกุ/.test(text)) return { lat: 35.6896, lng: 139.7006, isExact: true };
+  if (/ueno|อุเอโนะ|akihabara|อากิฮาบาระ/.test(text)) return { lat: 35.7141, lng: 139.7741, isExact: true };
+  if (/ginza|กินซ่า|tsukiji|ซึกิจิ|toyosu/.test(text)) return { lat: 35.6717, lng: 139.7649, isExact: true };
+  if (/odaiba|โอไดบะ/.test(text)) return { lat: 35.6272, lng: 139.7711, isExact: true };
+  if (/disney|ดิสนีย์/.test(text)) return { lat: 35.6329, lng: 139.8804, isExact: true };
+  if (/tokyo|โตเกียว/.test(text)) return { lat: 35.6812, lng: 139.7671, isExact: true };
+  if (/kamakura|คามาคุระ|enoshima|เอโนชิมะ/.test(text)) return { lat: 35.3192, lng: 139.5467, isExact: true };
+  if (/yokohama|โยโกฮาม่า/.test(text)) return { lat: 35.4437, lng: 139.638, isExact: true };
+  if (/nikko|นิกโก้/.test(text)) return { lat: 36.758, lng: 139.5987, isExact: true };
+  if (/kawaguchiko|คาวากุจิโกะ|fuji|ฟูจิ|chureito/.test(text)) return { lat: 35.4998, lng: 138.7689, isExact: true };
+  if (/hakone|ฮาโกเน่/.test(text)) return { lat: 35.2324, lng: 139.1069, isExact: true };
+  // Kyushu / Hokkaido / Chubu / Chugoku
+  if (/yufuin|ยุฟุอิน/.test(text)) return { lat: 33.2659, lng: 131.3563, isExact: true };
+  if (/beppu|เบปปุ/.test(text)) return { lat: 33.2846, lng: 131.491, isExact: true };
+  if (/fukuoka|ฟุกุโอกะ|hakata|ฮากาตะ|tenjin/.test(text)) return { lat: 33.5902, lng: 130.4017, isExact: true };
+  if (/otaru|โอตารุ/.test(text)) return { lat: 43.1907, lng: 140.9947, isExact: true };
+  if (/sapporo|ซัปโปโร|susukino|hokkaido|ฮอกไกโด/.test(text)) return { lat: 43.0618, lng: 141.3545, isExact: true };
+  if (/nagoya|นาโกย่า/.test(text)) return { lat: 35.1815, lng: 136.9066, isExact: true };
+  if (/kanazawa|คานาซาวะ/.test(text)) return { lat: 36.5613, lng: 136.6562, isExact: true };
+  if (/shirakawa|ชิราคาวาโกะ|takayama|ทาคายาม่า/.test(text)) return { lat: 36.2562, lng: 136.9067, isExact: true };
+  if (/hiroshima|ฮิโรชิม่า|miyajima|มิยาจิมะ/.test(text)) return { lat: 34.3853, lng: 132.4553, isExact: true };
+  if (/okinawa|โอกินาวา|naha|นาฮะ/.test(text)) return { lat: 26.2124, lng: 127.6809, isExact: true };
+
+  // Unknown stop without lat/lng or matching Japanese city keyword
+  return { lat: 35.6812, lng: 139.7671, isExact: false };
 }
 
 function haversineMeters(a: Coord, b: Coord): number {
@@ -193,6 +227,7 @@ function LiveTripCard({
     pct: number;
     distToEndMeters: number;
     deviationMeters: number;
+    isExactStop: boolean;
   } | null>(null);
   const [simulatingWalk, setSimulatingWalk] = useState(false);
   const [simProgressPct, setSimProgressPct] = useState(0);
@@ -347,12 +382,12 @@ function LiveTripCard({
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        const userCoord = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const userCoord: Coord = { lat: pos.coords.latitude, lng: pos.coords.longitude, isExact: true };
         const proj = projectPointOntoSegment(userCoord, startCoord, endCoord);
-        setGpsMetrics(proj);
+        setGpsMetrics({ ...proj, isExactStop: endCoord.isExact });
 
-        // Auto Check-in within 80 meters if not checked in yet
-        if (proj.distToEndMeters <= 80 && !visitedMap[getActivityKey(nextUpActivity)]) {
+        // Auto Check-in within 80 meters only when destination has known coordinates
+        if (endCoord.isExact && proj.distToEndMeters <= 80 && !visitedMap[getActivityKey(nextUpActivity)]) {
           handleCheckIn(nextUpActivity, 'เข้าใกล้รัศมี 80 ม.');
         }
 
@@ -366,7 +401,10 @@ function LiveTripCard({
                 privacyLevel === 'district' || privacyLevel === 'exact'
                   ? getActivityCity(nextUpActivity)
                   : undefined,
-              coords: privacyLevel === 'exact' ? userCoord : undefined,
+              coords:
+                privacyLevel === 'exact'
+                  ? { lat: userCoord.lat, lng: userCoord.lng }
+                  : undefined,
               updatedAt: new Date().toISOString(),
             },
           });
@@ -519,9 +557,11 @@ function LiveTripCard({
                 <span>
                   {simulatingWalk
                     ? `🚶 กำลังจำลองเดินไป "${getActivityTitle(nextUpActivity)}" (${simProgressPct}%)`
-                    : `📍 พิกัดจริง: คืบหน้า ${gpsMetrics?.pct}% (ห่างจุดหมาย ${gpsMetrics?.distToEndMeters} ม.)`}
+                    : gpsMetrics?.isExactStop
+                      ? `📍 พิกัดจริง: คืบหน้า ${gpsMetrics.pct}% (ห่างจุดหมาย ${gpsMetrics.distToEndMeters} ม.)`
+                      : `📍 เปิด GPS แล้ว (จุดแวะนี้ยังไม่มีพิกัดระบุ — เช็กอินด้วยปุ่มด้านล่างได้)`}
                 </span>
-                {gpsActive && gpsMetrics && gpsMetrics.deviationMeters > 120 && (
+                {gpsActive && gpsMetrics && gpsMetrics.isExactStop && gpsMetrics.deviationMeters > 120 && (
                   <span className="text-[#C83E2D] dark:text-rose-300 font-black animate-pulse">
                     ⚠️ ออกนอกเส้นทาง {gpsMetrics.deviationMeters} ม.
                   </span>
@@ -623,10 +663,15 @@ function LiveTripCard({
                   </g>
                 )}
               </svg>
-              <span className="absolute -bottom-1.5 px-1.5 py-0.2 rounded-full bg-[#1C2630] dark:bg-indigo-600 text-[8px] sm:text-[9px] font-black text-white border border-white/25 shadow-xs whitespace-nowrap">
-                {companionStyle === 'feminine' ? '👧 สาวคาวาอี้' : '👦 หนุ่มนักสำรวจ'}
-              </span>
             </div>
+            <button
+              type="button"
+              onClick={handleToggleCompanionStyle}
+              className="-mt-2 relative z-10 px-2 py-0.5 rounded-full bg-[#1C2630] dark:bg-indigo-600 text-[9px] font-black text-white border border-white/25 shadow-xs whitespace-nowrap cursor-pointer"
+              title="แตะเพื่อสลับตัวละคร"
+            >
+              {companionStyle === 'feminine' ? '👧 สาวคาวาอี้' : '👦 หนุ่มนักสำรวจ'}
+            </button>
           </div>
 
           {/* Companion Speech & Controls */}

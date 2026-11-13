@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { CategoryItem, getCategoryMeta } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
-import { convertToThb } from '@/lib/currency';
+import { convertCurrency, convertToThb } from '@/lib/currency';
 import { getLocalReceiptPhoto } from '@/lib/localReceipts';
 import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
 import { useIsMounted } from '@/lib/useIsMounted';
@@ -467,41 +467,76 @@ export function ExpenseDetailModal({
                 />
               </div>
 
-              {/* Amount & Currency */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
-                    ยอดเงิน *
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    placeholder="0.00"
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-black transition-all touch-manipulation min-h-[44px]"
-                    value={form.amount}
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  />
+              {/* Amount & Currency + Quick Currency Switch & Live Preview */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
+                      ยอดเงิน *
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      required
+                      placeholder="0.00"
+                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-black transition-all touch-manipulation min-h-[44px]"
+                      value={form.amount}
+                      onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        สกุลเงิน
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, currency: 'JPY' })}
+                          className={`px-1.5 py-0.5 rounded-md text-[10px] font-black border cursor-pointer transition-all ${
+                            form.currency === 'JPY'
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
+                          }`}
+                        >
+                          🇯🇵 JPY
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, currency: 'THB' })}
+                          className={`px-1.5 py-0.5 rounded-md text-[10px] font-black border cursor-pointer transition-all ${
+                            form.currency === 'THB'
+                              ? 'bg-emerald-600 text-white border-emerald-600'
+                              : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
+                          }`}
+                        >
+                          🇹🇭 THB
+                        </button>
+                      </div>
+                    </div>
+                    <select
+                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
+                      value={form.currency}
+                      onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                    >
+                      <option value="THB">THB (฿ บาท)</option>
+                      <option value="JPY">JPY (¥ เยน)</option>
+                      <option value="CNY">CNY (元 หยวน)</option>
+                      <option value="USD">USD ($ ดอลลาร์)</option>
+                      <option value="EUR">EUR (€ ยูโร)</option>
+                      <option value="KRW">KRW (₩ วอน)</option>
+                      <option value="GBP">GBP (£ ปอนด์)</option>
+                      <option value="SGD">SGD (S$ ดอลลาร์สิงคโปร์)</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
-                    สกุลเงิน
-                  </label>
-                  <select
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
-                    value={form.currency}
-                    onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                  >
-                    <option value="THB">THB (฿ บาท)</option>
-                    <option value="JPY">JPY (¥ เยน)</option>
-                    <option value="CNY">CNY (元 หยวน)</option>
-                    <option value="USD">USD ($ ดอลลาร์)</option>
-                    <option value="EUR">EUR (€ ยูโร)</option>
-                    <option value="KRW">KRW (₩ วอน)</option>
-                    <option value="GBP">GBP (£ ปอนด์)</option>
-                    <option value="SGD">SGD (S$ ดอลลาร์สิงคโปร์)</option>
-                  </select>
-                </div>
+                {Number(form.amount) > 0 && (
+                  <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                    {form.currency === 'THB'
+                      ? `≈ ¥${Math.round(convertCurrency(Number(form.amount), 'THB', 'JPY', fxRate)).toLocaleString()} JPY`
+                      : `≈ ฿${Math.round(convertToThb(Number(form.amount), form.currency, fxRate)).toLocaleString()} THB`}
+                  </p>
+                )}
               </div>
 
               {/* Category & Date */}

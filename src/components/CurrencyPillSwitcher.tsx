@@ -25,13 +25,13 @@ export default function CurrencyPillSwitcher({
 
   return (
     <div
-      className={`fixed bottom-[74px] sm:bottom-6 right-3 sm:right-6 z-40 transition-all duration-300 ${
+      className={`fixed bottom-[calc(4.15rem+max(env(safe-area-inset-bottom,0px),1.25rem))] sm:bottom-6 right-3 sm:right-6 z-40 transition-all duration-300 ${
         hiddenOnScroll
           ? 'translate-y-16 opacity-0 pointer-events-none sm:translate-y-0 sm:opacity-100 sm:pointer-events-auto'
           : 'translate-y-0 opacity-100'
       }`}
     >
-      <div className="p-1 rounded-2xl bg-[#FDFBF7]/95 dark:bg-[#181a20]/95 backdrop-blur-xl border border-[#DFD7C7] dark:border-[#262932] shadow-lg shadow-black/10 flex items-center gap-1">
+      <div className="p-0.5 sm:p-1 rounded-xl sm:rounded-2xl bg-[#FDFBF7]/95 dark:bg-[#181a20]/95 backdrop-blur-xl border border-[#DFD7C7] dark:border-[#262932] shadow-lg shadow-black/10 flex items-center gap-0.5 sm:gap-1">
         {!isThbBase && (
           <>
             <button
@@ -74,7 +74,7 @@ export default function CurrencyPillSwitcher({
             title={`เปิดเครื่องคิดเลขแปลงค่าเงินด่วน (เรท ≈ ${fxRate})`}
           >
             <Calculator className="h-3.5 w-3.5 shrink-0" />
-            <span className="hidden xs:inline">คิดเงิน</span>
+            <span className="hidden sm:inline">คิดเงิน</span>
           </button>
         )}
       </div>

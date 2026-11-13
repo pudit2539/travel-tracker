@@ -7,8 +7,10 @@ import {
   List, Building2, Utensils, Dices, QrCode,
   LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles, ExternalLink,
   Clock, ArrowUpToLine, ArrowDownToLine, ShoppingBag,
-  Search, X, Shield, Calendar
+  Search, X, Shield, Calendar, Luggage, Camera, Bot, Copy, Users
 } from 'lucide-react';
+import { copyToClipboard } from '@/lib/clipboard';
+import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import LiveTripCard from '@/components/LiveTripCard';
 import { getAccommodations, getGoogleMapsUrl } from '@/lib/accommodations';
@@ -96,6 +98,9 @@ interface TripPlanTabProps {
   onOpenGourmetRadar?: () => void;
   onOpenDiningDecision?: (city?: string) => void;
   onOpenTicketLocker?: () => void;
+  onOpenPacking?: () => void;
+  onOpenScrapbook?: () => void;
+  onOpenAIAssistant?: () => void;
   onMoveStopToDay?: (item: any, targetDayLabel: string) => void;
   onSyncShoppingExpense?: (
     item: ShoppingBagItem,
@@ -140,13 +145,16 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   onOpenGourmetRadar,
   onOpenDiningDecision,
   onOpenTicketLocker,
+  onOpenPacking,
+  onOpenScrapbook,
+  onOpenAIAssistant,
   onMoveStopToDay,
   onSyncShoppingExpense,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
   const [wishlistInitialTab, setWishlistInitialTab] = useState<'wishlist' | 'shopping'>('wishlist');
   const [showFileMenu, setShowFileMenu] = useState(false);
-  const [groupViewFilter] = useState<'all' | 'mine'>('all');
+  const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
   const [showScrollJump, setShowScrollJump] = useState(false);
   const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({});
 
@@ -256,6 +264,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
   // Filter stops by Split Group View + Quick Search Query
   const displayedItinerary = useMemo(() => {
+    const myNameLower = currentUserName.toLowerCase().trim();
+    const myIdLower = (currentUser?.id || '').toLowerCase().trim();
     const base =
       groupViewFilter === 'all'
         ? filteredItinerary
@@ -263,7 +273,15 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             const key = getStopKey(item);
             const meta = stopMetaMap[key] || stopMetaMap[(item.main_place || '').trim()];
             if (!meta?.goers || meta.goers.length === 0) return true;
-            return meta.goers.includes(currentUserName);
+            return meta.goers.some((g) => {
+              const gl = (g || '').toLowerCase().trim();
+              return (
+                gl === myNameLower ||
+                gl === 'ฉัน' ||
+                (myIdLower && gl === myIdLower) ||
+                (myNameLower && gl.includes(myNameLower))
+              );
+            });
           });
 
     const q = deferredPlanSearch.trim().toLowerCase();
@@ -282,7 +300,50 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [filteredItinerary, groupViewFilter, stopMetaMap, currentUserName, deferredPlanSearch]);
+  }, [filteredItinerary, groupViewFilter, stopMetaMap, currentUserName, currentUser, deferredPlanSearch]);
+
+  const tripCities = useMemo(
+    () => Array.from(new Set(itinerary.map((it) => it.city).filter(Boolean))) as string[],
+    [itinerary]
+  );
+
+  const activeWeatherCity = useMemo(() => {
+    if (selectedDayFilter !== 'all' && displayedItinerary[0]?.city) {
+      return displayedItinerary[0].city;
+    }
+    return itinerary[0]?.city || 'Osaka';
+  }, [selectedDayFilter, displayedItinerary, itinerary]);
+
+  const handleCopyDaySummary = React.useCallback(
+    async (dayLabel: string, stopsForDay: any[]) => {
+      if (!stopsForDay || stopsForDay.length === 0) return;
+      const lines: string[] = [
+        `📅 แผนเที่ยว ${dayLabel}${trip?.name || trip?.title ? ` — ${trip?.name || trip?.title}` : ''}`,
+      ];
+      stopsForDay.forEach((s, i) => {
+        const time = s.time_slot ? `${s.time_slot} • ` : '';
+        const city = s.city ? ` (${s.city})` : '';
+        lines.push(`${i + 1}. ${time}${s.main_place || 'จุดแวะ'}${city}`);
+        if (s.transport_info && s.transport_info !== '-') {
+          lines.push(`   🚆 ${s.transport_info}`);
+        }
+        if (s.food_recommendation && s.food_recommendation !== '-') {
+          lines.push(`   🍽️ ${s.food_recommendation}`);
+        }
+      });
+      const ok = await copyToClipboard(lines.join('\n'));
+      if (ok) {
+        if (onShowToast) {
+          onShowToast(`คัดลอกแผน ${dayLabel} (${stopsForDay.length} จุด) ส่งเข้า LINE ได้เลย`, 'success');
+        } else {
+          toast.success(`คัดลอกแผน ${dayLabel} แล้ว 📋`);
+        }
+      } else {
+        toast.error('ไม่สามารถคัดลอกแผนวันได้');
+      }
+    },
+    [trip, onShowToast]
+  );
 
   const stopsWithPlanB = useMemo(
     () => displayedItinerary.filter((it) => it.backup_plan && it.backup_plan !== '-'),
@@ -538,6 +599,42 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 กระเป๋าช้อป ({shoppingSummary.boughtCount}/{shoppingSummary.totalCount})
               </span>
             </button>
+
+            {onOpenPacking && (
+              <button
+                type="button"
+                onClick={onOpenPacking}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+                title="เช็คลิสต์จัดกระเป๋า (Sync ออนไลน์)"
+              >
+                <Luggage className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                <span>จัดกระเป๋า</span>
+              </button>
+            )}
+
+            {onOpenScrapbook && (
+              <button
+                type="button"
+                onClick={onOpenScrapbook}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+                title="อัลบั้มความทรงจำ Photo Scrapbook"
+              >
+                <Camera className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                <span>อัลบั้มภาพ</span>
+              </button>
+            )}
+
+            {onOpenAIAssistant && (
+              <button
+                type="button"
+                onClick={onOpenAIAssistant}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+                title="ถาม AI แนะนำร้านและที่เที่ยวเพิ่มลงแผน"
+              >
+                <Bot className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>AI แนะนำ</span>
+              </button>
+            )}
           </div>
 
           <button
@@ -604,7 +701,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
 
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <div className="rounded-2xl p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
+            <div className="min-w-0 rounded-2xl p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
               <div className="text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400">
                 ใช้ไปแล้ว ({spentDisp.primaryCurrency})
               </div>
@@ -618,7 +715,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               </div>
             </div>
 
-            <div className="rounded-2xl p-2.5 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
+            <div className="min-w-0 rounded-2xl p-2.5 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
               <div className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300">
                 ตั้งเป้าไว้ ({targetDisp.primaryCurrency})
               </div>
@@ -636,7 +733,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               </div>
             </div>
 
-            <div className={`rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
+            <div className={`min-w-0 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
               heroDisplayData.isOver 
                 ? 'bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40' 
                 : 'bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40'
@@ -665,7 +762,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
       {showWeatherSection && (
         <div className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation p-3.5 sm:p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-          <WeatherWidget defaultCity={itinerary[0]?.city || 'Osaka'} />
+          <WeatherWidget defaultCity={activeWeatherCity} tripCities={tripCities} />
           <RouteVisualizer dayLabel="ทริปทั้งหมด" items={itinerary} />
         </div>
       )}
@@ -838,9 +935,9 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
         </div>
 
-        {/* Quick Search Input + Expand/Collapse All Backup Plans */}
-        <div className="flex items-center gap-2 pt-0.5">
-          <div className="relative flex-1 min-w-0">
+        {/* Quick Search Input + Group View + Expand/Collapse All Backup Plans */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 pt-0.5">
+          <div className="relative w-full sm:w-auto sm:flex-1 min-w-0">
             <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
@@ -859,6 +956,39 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
+          </div>
+
+          {/* Group View Toggle: Both / Mine */}
+          <div
+            className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] shrink-0"
+            role="group"
+            aria-label="กรองตามผู้ร่วมเดินทาง"
+          >
+            <button
+              type="button"
+              onClick={() => setGroupViewFilter('all')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                groupViewFilter === 'all'
+                  ? 'bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="แสดงกิจกรรมทั้งหมดของทริป"
+            >
+              <Users className="h-3 w-3 shrink-0" />
+              <span>ทั้งทริป</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setGroupViewFilter('mine')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                groupViewFilter === 'mine'
+                  ? 'bg-white dark:bg-[#181a20] text-[#C83E2D] dark:text-rose-300 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="เฉพาะจุดที่คุณระบุไว้ในรายชื่อผู้ไป (Goers) และกิจกรรมกลุ่ม"
+            >
+              <span>ของฉัน</span>
+            </button>
           </div>
 
           {stopsWithPlanB.length > 0 && displayLayout === 'card' && (
@@ -979,18 +1109,29 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 )}
               </div>
 
-              {multiStopRouteUrl && (
-                <a
-                  href={multiStopRouteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-2xs hover:scale-102 active:scale-95 transition-all shrink-0 cursor-pointer"
+              <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => void handleCopyDaySummary(selectedDayFilter, displayedItinerary)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold shadow-2xs active:scale-95 transition-all cursor-pointer"
+                  title="คัดลอกสรุปแผนทั้งวันสำหรับวางใน LINE"
                 >
-                  <Navigation className="h-3 w-3" />
-                  <span>เปิดเส้นทางใน Google Maps</span>
-                  <ExternalLink className="h-2.5 w-2.5" />
-                </a>
-              )}
+                  <Copy className="h-3 w-3" />
+                  <span>คัดลอกสรุปวัน</span>
+                </button>
+                {multiStopRouteUrl && (
+                  <a
+                    href={multiStopRouteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-2xs hover:scale-102 active:scale-95 transition-all shrink-0 cursor-pointer"
+                  >
+                    <Navigation className="h-3 w-3" />
+                    <span>เปิดเส้นทางใน Google Maps</span>
+                    <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
+                )}
+              </div>
             </div>
 
             {/* Sequential Route Trail Pills */}
@@ -1160,17 +1301,34 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                               </span>
                             )}
                           </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelectDay(item.date_label);
-                            }}
-                            className="text-[11px] font-bold text-[#C83E2D] dark:text-amber-400 hover:underline inline-flex items-center gap-0.5 shrink-0 cursor-pointer"
-                          >
-                            <span>ดูเฉพาะวันนี้</span>
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const dayStops = displayedItinerary.filter(
+                                  (stop) => stop.date_label === item.date_label
+                                );
+                                void handleCopyDaySummary(item.date_label, dayStops);
+                              }}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-bold cursor-pointer"
+                              title="คัดลอกสรุปวันนี้ส่งเข้า LINE"
+                            >
+                              <Copy className="h-2.5 w-2.5" />
+                              <span>สรุปวัน LINE</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectDay(item.date_label);
+                              }}
+                              className="text-[11px] font-bold text-[#C83E2D] dark:text-amber-400 hover:underline inline-flex items-center gap-0.5 shrink-0 cursor-pointer"
+                            >
+                              <span>ดูเฉพาะวันนี้</span>
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                         <div className="flex gap-1 pt-0.5">
                           <div className="h-0.5 flex-1 rounded-full bg-[#C83E2D]" />
@@ -1221,9 +1379,9 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         )}
       </div>
 
-      {/* TabiPlan Floating Scroll Jump Buttons (เลือกวัน / บนสุด / ล่างสุด) */}
+      {/* TabiPlan Floating Scroll Jump (Mobile: compact Back-to-Top only; Desktop: Day/Top/Bottom) */}
       {showScrollJump && (
-        <div className="fixed right-3 sm:right-5 bottom-24 z-30 flex flex-col gap-1.5">
+        <div className="fixed right-3 sm:right-5 bottom-[calc(6.95rem+max(env(safe-area-inset-bottom,0px),1.25rem))] sm:bottom-24 z-30 flex flex-col gap-1.5 opacity-90">
           <button
             type="button"
             onClick={() => {
@@ -1231,7 +1389,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
               else window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="w-9 h-9 rounded-full bg-blue-600 text-white shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all cursor-pointer"
+            className="hidden sm:flex w-9 h-9 rounded-full bg-blue-600 text-white shadow-lg items-center justify-center hover:bg-blue-700 transition-all cursor-pointer"
             title="เลื่อนไปแถบเลือกวัน & ค้นหา"
           >
             <Calendar className="h-4 w-4" />
@@ -1239,17 +1397,17 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="w-9 h-9 rounded-full bg-white/90 dark:bg-[#1e2027]/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all cursor-pointer"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 dark:bg-[#1e2027]/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all cursor-pointer"
             title="เลื่อนกลับขึ้นบนสุด"
           >
-            <ArrowUpToLine className="h-4 w-4" />
+            <ArrowUpToLine className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
           <button
             type="button"
             onClick={() =>
               window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
             }
-            className="w-9 h-9 rounded-full bg-white/90 dark:bg-[#1e2027]/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all cursor-pointer"
+            className="hidden sm:flex w-9 h-9 rounded-full bg-white/90 dark:bg-[#1e2027]/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white transition-all cursor-pointer"
             title="เลื่อนลงล่างสุด"
           >
             <ArrowDownToLine className="h-4 w-4" />

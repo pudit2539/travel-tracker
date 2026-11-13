@@ -1,20 +1,39 @@
 // src/components/WeatherWidget.tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { fetchDestinationWeather, WeatherData } from '@/lib/weather';
-import { Droplets, RefreshCw, Sparkles } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { CITY_COORDINATES, fetchDestinationWeather, resolveCityKey, WeatherData } from '@/lib/weather';
+import { Droplets, RefreshCw, Sparkles, MapPin } from 'lucide-react';
 
 interface WeatherWidgetProps {
   defaultCity?: string;
+  tripCities?: string[];
 }
 
-export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetProps) {
-  const [city, setCity] = useState<'osaka' | 'kyoto'>(
-    defaultCity.toLowerCase().includes('kyo') ? 'kyoto' : 'osaka'
-  );
+const ALL_CITY_KEYS = Object.keys(CITY_COORDINATES);
+
+export default function WeatherWidget({ defaultCity = 'osaka', tripCities = [] }: WeatherWidgetProps) {
+  const [manualCity, setManualCity] = useState<string | null>(null);
+  const city = manualCity ?? resolveCityKey(defaultCity);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Surface up to 3 relevant city pills from trip itinerary, falling back to Osaka/Kyoto/Tokyo
+  const quickCityKeys = useMemo(() => {
+    const resolvedFromTrip = [defaultCity, ...tripCities]
+      .filter(Boolean)
+      .map((c) => resolveCityKey(c));
+    const unique = Array.from(new Set(resolvedFromTrip));
+    for (const fallback of ['osaka', 'kyoto', 'tokyo']) {
+      if (unique.length >= 3) break;
+      if (!unique.includes(fallback)) unique.push(fallback);
+    }
+    return unique.slice(0, 4);
+  }, [defaultCity, tripCities]);
+
+  const handleSelectCity = (nextCity: string) => {
+    setManualCity(resolveCityKey(nextCity));
+  };
 
   const loadWeather = useCallback(async (targetCity: string) => {
     setLoading(true);
@@ -44,28 +63,42 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
       <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-700" />
       
       {/* Top row: City selector & Refresh */}
-      <div className="relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] shadow-2xs">
-          <button
-            onClick={() => setCity('osaka')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
-              city === 'osaka'
-                ? 'bg-blue-600 text-white shadow-xs scale-[1.02]'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            🍡 โอซาก้า (Osaka)
-          </button>
-          <button
-            onClick={() => setCity('kyoto')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
-              city === 'kyoto'
-                ? 'bg-blue-600 text-white shadow-xs scale-[1.02]'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            ⛩️ เกียวโต (Kyoto)
-          </button>
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] shadow-2xs">
+          {quickCityKeys.map((key) => {
+            const meta = CITY_COORDINATES[key];
+            if (!meta) return null;
+            const active = city === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleSelectCity(key)}
+                className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  active
+                    ? 'bg-blue-600 text-white shadow-xs scale-[1.02]'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {meta.nameTh}
+              </button>
+            );
+          })}
+          <div className="relative flex items-center pl-1 border-l border-slate-200 dark:border-[#262932]">
+            <MapPin className="h-3 w-3 text-slate-400 ml-1 shrink-0" />
+            <select
+              value={city}
+              onChange={(e) => handleSelectCity(e.target.value)}
+              aria-label="เลือกเมืองญี่ปุ่นอื่นๆ"
+              className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 px-1.5 py-1 outline-none cursor-pointer"
+            >
+              {ALL_CITY_KEYS.map((key) => (
+                <option key={key} value={key} className="bg-white dark:bg-[#181a20] text-slate-900 dark:text-white">
+                  {CITY_COORDINATES[key].nameTh}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <button

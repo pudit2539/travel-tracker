@@ -33,6 +33,7 @@ import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { getTripStatusBadge } from '@/lib/tripStatus';
 import { getPlaceVisualMeta, usePlaceVisualMeta, triggerViewTransition } from '@/lib/placeThumbnails';
 import { CustomPlacePhotoModal } from '@/components/trip-detail/CustomPlacePhotoModal';
+import { findStarterTemplate, buildStarterItineraryRows } from '@/data/starterTripTemplates';
 
 function TripCoverMedia({
   tripId,
@@ -235,6 +236,8 @@ export default function HomePage() {
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState('');
+  const [starterTemplateTitle, setStarterTemplateTitle] = useState<string | null>(null);
+  const [seedStarterPlan, setSeedStarterPlan] = useState(true);
 
   // Form states for Create & Edit
   const [formData, setFormData] = useState({
@@ -519,6 +522,25 @@ export default function HomePage() {
           console.warn('Trip members auto add warn:', memErr);
         }
 
+        // เติมแผนเที่ยวตั้งต้นจากไอเดียแนะนำ (Part 3 #7)
+        const activeTemplateTitle =
+          starterTemplateTitle || (findStarterTemplate(formData.title) ? formData.title : null);
+        if (seedStarterPlan && activeTemplateTitle) {
+          try {
+            const starterRows = buildStarterItineraryRows(
+              data.id,
+              activeTemplateTitle,
+              formData.startDate || undefined
+            );
+            if (starterRows.length > 0) {
+              const { error: seedErr } = await supabase.from('itinerary_items').insert(starterRows);
+              if (seedErr) console.warn('Starter itinerary seed warn:', seedErr);
+            }
+          } catch (seedEx) {
+            console.warn('Starter itinerary seed exception:', seedEx);
+          }
+        }
+
         // อัปเดต State และ Local Cache ทันที
         const enrichedTrip = {
           ...data,
@@ -741,6 +763,8 @@ export default function HomePage() {
       startDate: '',
       endDate: '',
     });
+    setStarterTemplateTitle(null);
+    setSeedStarterPlan(true);
   };
 
   const [tripFilterStatus, setTripFilterStatus] = useState<'all' | 'upcoming' | 'past'>('all');
@@ -839,6 +863,9 @@ export default function HomePage() {
 
   const openCreateModalWithIdea = (ideaTitle: string, curr: string = 'JPY') => {
     resetForm();
+    const hasTemplate = Boolean(findStarterTemplate(ideaTitle));
+    setStarterTemplateTitle(hasTemplate ? ideaTitle : null);
+    setSeedStarterPlan(hasTemplate);
     setFormData((prev) => ({
       ...prev,
       title: ideaTitle,
@@ -916,7 +943,7 @@ export default function HomePage() {
             )}
 
             {/* Notification Bell */}
-            <NotificationBell tripTitle="Travel Hub" currentUser={user} userDisplayName={userDisplayName} />
+            <NotificationBell tripTitle="Travel Hub" currentUser={user} userDisplayName={userDisplayName} trips={trips} />
 
             {/* Profile Avatar Button */}
             <button
@@ -1118,7 +1145,7 @@ export default function HomePage() {
               >
                 <Coins className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                 <span className="font-mono">1 JPY = {Number(fxRate).toFixed(3)} THB</span>
-                <span className="text-[11px] opacity-75 hidden xs:inline">คำนวณแปลงเงิน</span>
+                <span className="text-[11px] opacity-75 hidden sm:inline">คำนวณแปลงเงิน</span>
                 {showFxCalculator ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
               </button>
 
@@ -1550,7 +1577,7 @@ export default function HomePage() {
                 >
                   {/* Top Destination Cover Photo Banner (Polarsteps / Trip.com style) */}
                   <div
-                    className={`relative w-full aspect-[16/9] overflow-hidden bg-gradient-to-br ${coverMeta.gradient}`}
+                    className={`relative w-full min-h-[168px] aspect-[16/9] overflow-hidden bg-gradient-to-br ${coverMeta.gradient}`}
                     style={{ aspectRatio: '16 / 9' }}
                   >
                     <TripCoverMedia
@@ -1706,7 +1733,7 @@ export default function HomePage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      <span className="absolute bottom-2 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/55 text-white backdrop-blur-xs border border-white/15">
+                      <span className="absolute bottom-2 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/55 text-white backdrop-blur-xs border border-white/15 max-w-[calc(100%-1.25rem)] truncate">
                         {idea.badge}
                       </span>
                     </div>
@@ -1886,6 +1913,32 @@ export default function HomePage() {
                   />
                 </div>
               </div>
+
+              {(() => {
+                const matchedTitle =
+                  starterTemplateTitle || (findStarterTemplate(formData.title) ? formData.title.trim() : null);
+                const templateStops = matchedTitle ? findStarterTemplate(matchedTitle) : null;
+                if (!matchedTitle || !templateStops) return null;
+                return (
+                  <label className="flex items-start gap-2.5 p-3 rounded-2xl border border-[#DFD7C7] dark:border-[#2d3240] bg-[#FDFBF7] dark:bg-[#1e2027]/80 cursor-pointer hover:border-[#C83E2D]/50 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={seedStarterPlan}
+                      onChange={(e) => setSeedStarterPlan(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#C83E2D] focus:ring-[#C83E2D] cursor-pointer"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-[#C83E2D]" />
+                        <span>เติมแผนเที่ยวแนะนำตั้งต้น ({templateStops.length} จุดไฮไลท์)</span>
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
+                        สร้างไทม์ไลน์ สถานที่ ร้านอาหาร และ Plan B ให้พร้อมทันที (สามารถแก้ไขหรือลบทีหลังได้)
+                      </p>
+                    </div>
+                  </label>
+                );
+              })()}
             </form>
 
             {/* Sticky Action Footer */}

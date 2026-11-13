@@ -1,7 +1,7 @@
 // src/components/TravelHubModal.tsx
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useDeferredValue, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useDeferredValue } from 'react';
 import { 
   X, Languages, QrCode, Share2, 
   Volume2, Copy, Check, ExternalLink, 
@@ -14,10 +14,17 @@ import {
 } from 'lucide-react';
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
-import { getLocalReceiptPhoto } from '@/lib/localReceipts';
 import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { copyToClipboard } from '@/lib/clipboard';
+import { convertCurrency } from '@/lib/currency';
+import {
+  VaultPassItem,
+  getTicketsVault,
+  saveTicketsVault,
+  migrateLegacyHubTickets,
+  subscribeTicketsVault,
+} from '@/lib/ticketsVault';
 
 export interface TrainBookingItem {
   id: string;
@@ -60,6 +67,7 @@ interface TravelHubModalProps {
   fxRate?: number;
   onOpenScrapbook?: () => void;
   onOpenPacking?: () => void;
+  onOpenTicketLocker?: () => void;
 }
 
 // 1. Japanese Survival Phrases Data
@@ -179,16 +187,6 @@ const EMERGENCY_CONTACTS: EmergencyContact[] = [
   { id: 'thai-consulate-osaka', title: 'สถานกงสุลใหญ่ ณ นครโอซาก้า', tel: '090-1895-0987', detail: 'สายด่วนฉุกเฉินสำหรับผู้พำนัก/ท่องเที่ยวแถบคันไซ', icon: '🏯', badge: 'สายด่วนคันไซ' },
 ];
 
-interface TicketPass {
-  id: string;
-  title: string;
-  category: 'vjw' | 'flight' | 'train' | 'hotel' | 'attraction' | 'other';
-  imageStorageKey: string;
-  imageUrl?: string;
-  note?: string;
-  createdAt: number;
-}
-
 export default function TravelHubModal({
   isOpen,
   onClose,
@@ -197,7 +195,9 @@ export default function TravelHubModal({
   itinerary = [],
   members = [],
   fxRate = 0.235,
+  onOpenScrapbook,
   onOpenPacking,
+  onOpenTicketLocker,
 }: TravelHubModalProps) {
   // Navigation Tabs: 'calculator' | 'tickets' | 'phrases' | 'rules' | 'radar' | 'story'
   const [activeTab, setActiveTab] = useState<'calculator' | 'tickets' | 'phrases' | 'rules' | 'radar' | 'story'>('calculator');
@@ -275,9 +275,9 @@ export default function TravelHubModal({
   };
 
   // ==================== 2. TICKETS & QR VAULT + TRAIN SEAT RESERVATIONS STATE ====================
-  const [tickets, setTickets] = useState<TicketPass[]>([]);
+  const [tickets, setTickets] = useState<VaultPassItem[]>([]);
   const [ticketTitle, setTicketTitle] = useState('');
-  const [ticketCategory, setTicketCategory] = useState<TicketPass['category']>('vjw');
+  const [ticketCategory, setTicketCategory] = useState<VaultPassItem['category']>('vjw');
   const [uploadingTicket, setUploadingTicket] = useState(false);
   const [previewPassImage, setPreviewPassImage] = useState<string | null>(null);
 
@@ -362,40 +362,22 @@ export default function TravelHubModal({
     }
   };
 
-  const loadTickets = useCallback(async () => {
-    if (!tripId) return;
-    try {
-      const raw = localStorage.getItem(`travel_hub_tickets_${tripId}`);
-      if (raw) {
-        const parsed: TicketPass[] = JSON.parse(raw);
-        const hydrated = await Promise.all(
-          parsed.map(async (t) => {
-            if (t.imageUrl) return t;
-            if (t.imageStorageKey) {
-              const dataUrl = await getLocalReceiptPhoto(t.imageStorageKey);
-              return { ...t, imageUrl: dataUrl || undefined };
-            }
-            return t;
-          })
-        );
-        setTickets(hydrated);
-      }
-    } catch (e) {
-      console.warn('Failed to load tickets', e);
-    }
-  }, [tripId]);
-
-  // Load Saved Passes from LocalStorage & LocalReceipt DB
+  // Unified Tickets Vault sync (shared with TicketPassLockerModal & Supabase metadata)
   useEffect(() => {
     if (!isOpen || !tripId) return;
     let active = true;
-    queueMicrotask(() => {
-      if (active) void loadTickets();
+    const syncLocal = () => {
+      if (active) setTickets(getTicketsVault(tripId));
+    };
+    void migrateLegacyHubTickets(tripId).then((merged) => {
+      if (active) setTickets(merged);
     });
+    const unsub = subscribeTicketsVault(syncLocal);
     return () => {
       active = false;
+      unsub();
     };
-  }, [isOpen, tripId, loadTickets]);
+  }, [isOpen, tripId]);
 
   const handleUploadPass = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -414,41 +396,30 @@ export default function TravelHubModal({
 
       const defaultTitles: Record<string, string> = {
         vjw: 'Visit Japan Web QR (ตม. & ศุลกากร)',
+        keta: 'K-ETA Approval QR',
         flight: 'Boarding Pass ตั๋วเครื่องบิน',
         train: 'Shinkansen / JR Pass Ticket',
         hotel: 'Hotel Voucher ใบจองที่พัก',
         attraction: 'บัตรเข้าสวนสนุก / กิจกรรม',
+        insurance: 'ประกันการเดินทาง (Insurance)',
         other: 'เอกสารสำคัญประจำทริป',
       };
 
-      const newTicket: TicketPass = {
-        id: uploaded.storageKey,
+      const newTicket: VaultPassItem = {
+        id: uploaded.storageKey || `pass_${Date.now()}`,
         title: ticketTitle.trim() || defaultTitles[ticketCategory] || 'ตั๋วเดินทาง',
         category: ticketCategory,
-        imageStorageKey: uploaded.storageKey,
-        imageUrl: uploaded.url,
+        qrCodeUrl: uploaded.url,
         createdAt: Date.now(),
       };
 
       const updated = [newTicket, ...tickets];
       setTickets(updated);
-      localStorage.setItem(
-        `travel_hub_tickets_${trip.id}`,
-        JSON.stringify(
-          updated.map((t) => {
-            if (t.imageUrl?.startsWith('data:')) {
-              const copy = { ...t };
-              delete copy.imageUrl;
-              return copy;
-            }
-            return t;
-          })
-        )
-      );
+      saveTicketsVault(trip.id, updated);
 
       triggerConfetti();
       setTicketTitle('');
-      toast.success('บันทึกตั๋ว / QR Code เรียบร้อยแล้ว 🎟️');
+      toast.success('บันทึกตั๋ว / QR Code เข้าตู้เซฟร่วมกันเรียบร้อยแล้ว 🎟️');
     } catch (err) {
       console.error('Save pass err', err);
       toast.error('ไม่สามารถบันทึกตั๋วได้');
@@ -458,26 +429,16 @@ export default function TravelHubModal({
     }
   };
 
-  const handleDeletePass = async (id: string, storageKey: string) => {
+  const handleDeletePass = async (id: string) => {
     if (!confirm('คุณต้องการลบตั๋ว/QR นี้ใช่หรือไม่?')) return;
     try {
       const target = tickets.find((t) => t.id === id);
-      await deleteTripMedia({ urlOrPath: target?.imageUrl, storageKey });
+      if (target?.qrCodeUrl) {
+        await deleteTripMedia({ urlOrPath: target.qrCodeUrl, storageKey: id });
+      }
       const updated = tickets.filter((t) => t.id !== id);
       setTickets(updated);
-      localStorage.setItem(
-        `travel_hub_tickets_${trip?.id}`,
-        JSON.stringify(
-          updated.map((t) => {
-            if (t.imageUrl?.startsWith('data:')) {
-              const copy = { ...t };
-              delete copy.imageUrl;
-              return copy;
-            }
-            return t;
-          })
-        )
-      );
+      saveTicketsVault(trip?.id, updated);
       toast.success('ลบตั๋วเรียบร้อยแล้ว');
     } catch (e) {
       console.error('Delete pass err', e);
@@ -571,9 +532,22 @@ export default function TravelHubModal({
   const [storyBgColor, setStoryBgColor] = useState<'midnight' | 'sakura' | 'sunset' | 'fuji'>('midnight');
   const storyCanvasRef = useRef<HTMLDivElement>(null);
 
+  const baseCurrency = (trip?.currency || 'JPY').toUpperCase();
   const totalSpent = useMemo(() => {
-    return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-  }, [expenses]);
+    return Math.round(
+      expenses.reduce(
+        (acc, curr) =>
+          acc +
+          convertCurrency(
+            Number(curr.amount || 0),
+            curr.currency || baseCurrency,
+            baseCurrency,
+            fxRate
+          ),
+        0
+      )
+    );
+  }, [expenses, baseCurrency, fxRate]);
 
   // Body scroll lock and ESC key listener
   useEffect(() => {
@@ -949,9 +923,23 @@ export default function TravelHubModal({
                     <QrCode className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <span>เพิ่มตั๋ว / QR Code ประจำทริป</span>
                   </span>
-                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
-                    🔒 เก็บในเครื่อง ปลอดภัย ดูได้แม้ออฟไลน์
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                      ☁️ ซิงก์ตู้เซฟเดียวกับทีมทั้งทริป
+                    </span>
+                    {onOpenTicketLocker && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenTicketLocker();
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-slate-900 dark:bg-blue-600 text-white text-[10px] font-bold hover:opacity-90 cursor-pointer"
+                      >
+                        เปิดตู้เซฟเต็ม (แยกตามผู้ถือ)
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -972,6 +960,8 @@ export default function TravelHubModal({
                     <option value="train">Shinkansen / JR Pass</option>
                     <option value="hotel">ใบจองที่พัก / Voucher</option>
                     <option value="attraction">บัตรสวนสนุก / กิจกรรม</option>
+                    <option value="insurance">ประกันเดินทาง (Insurance)</option>
+                    <option value="keta">ตม. / K-ETA / e-Visa</option>
                     <option value="other">เอกสารสำคัญอื่นๆ</option>
                   </select>
                 </div>
@@ -1000,12 +990,19 @@ export default function TravelHubModal({
                       className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] flex items-center justify-between gap-3 shadow-2xs hover:border-blue-500 transition-all group"
                     >
                       <div
-                        onClick={() => t.imageUrl && setPreviewPassImage(t.imageUrl)}
+                        onClick={() => {
+                          if (t.qrCodeUrl) {
+                            setPreviewPassImage(t.qrCodeUrl);
+                          } else if (onOpenTicketLocker) {
+                            onClose();
+                            onOpenTicketLocker();
+                          }
+                        }}
                         className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
                       >
                         <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#181a20] flex items-center justify-center overflow-hidden border border-slate-200 dark:border-[#2b2f3d] shrink-0 group-hover:scale-105 transition-transform">
-                          {t.imageUrl ? (
-                            <img src={t.imageUrl} alt={t.title} className="w-full h-full object-cover" />
+                          {t.qrCodeUrl ? (
+                            <img src={t.qrCodeUrl} alt={t.title} className="w-full h-full object-cover" />
                           ) : (
                             <QrCode className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                           )}
@@ -1015,25 +1012,39 @@ export default function TravelHubModal({
                           <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
                             {t.title}
                           </h4>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
-                            <Maximize2 className="h-3 w-3" />
-                            <span>แตะเพื่อขยายสแกนเต็มจอ</span>
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                            {t.holderName && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#2b2f3d] text-slate-600 dark:text-slate-300">
+                                👤 {t.holderName}
+                              </span>
+                            )}
+                            {t.bookingRef && (
+                              <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
+                                #{t.bookingRef}
+                              </span>
+                            )}
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                              <Maximize2 className="h-3 w-3" />
+                              <span>{t.qrCodeUrl ? 'แตะเพื่อขยายสแกนเต็มจอ' : 'ยังไม่มีรูป (แตะเพิ่มรูปในตู้เซฟ)'}</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0">
+                        {t.qrCodeUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewPassImage(t.qrCodeUrl!)}
+                            className="p-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-[#2b2f3d] rounded-xl transition-colors cursor-pointer"
+                            title="ดูแบบเต็มจอ"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           type="button"
-                          onClick={() => t.imageUrl && setPreviewPassImage(t.imageUrl)}
-                          className="p-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-[#2b2f3d] rounded-xl transition-colors cursor-pointer"
-                          title="ดูแบบเต็มจอ"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePass(t.id, t.imageStorageKey)}
+                          onClick={() => handleDeletePass(t.id)}
                           className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors cursor-pointer"
                           title="ลบตั๋ว"
                         >
@@ -1673,19 +1684,36 @@ export default function TravelHubModal({
                 <span>แชร์ลง Instagram Story / Line</span>
               </button>
 
-              {/* Packing Shortcut Link */}
-              {onOpenPacking && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onOpenPacking();
-                  }}
-                  className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1f222e] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 hover:border-blue-500 transition-all cursor-pointer"
-                >
-                  <Luggage className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span>เปิดเช็คลิสต์จัดกระเป๋าอัจฉริยะ (AI Packing List)</span>
-                </button>
+              {/* Scrapbook & Packing Shortcut Links */}
+              {(onOpenScrapbook || onOpenPacking) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {onOpenScrapbook && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenScrapbook();
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/70 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-2 hover:border-rose-400 transition-all cursor-pointer"
+                    >
+                      <Camera className="h-4 w-4 text-rose-500 shrink-0" />
+                      <span>เปิดอัลบั้มภาพทริป (Scrapbook)</span>
+                    </button>
+                  )}
+                  {onOpenPacking && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenPacking();
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1f222e] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 hover:border-blue-500 transition-all cursor-pointer"
+                    >
+                      <Luggage className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span>เปิดเช็คลิสต์จัดกระเป๋า (Packing)</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )}

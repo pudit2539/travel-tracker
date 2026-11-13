@@ -87,7 +87,7 @@ export async function POST(req: Request) {
 
     // 1. Try Google Gemini Flash Vision if configured
     if (geminiKey) {
-      const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+      const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
       for (const model of modelsToTry) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;

@@ -26,6 +26,8 @@ export function ShowToStaffModal({
   city,
   timeSlot,
   transportInfo,
+  platformInfo,
+  transportNote,
   mapsUrl,
   directionsUrl,
 }: ShowToStaffModalProps) {
@@ -199,6 +201,18 @@ export function ShowToStaffModal({
             {transportInfo && transportInfo !== '-' && (
               <div className="p-2.5 rounded-xl bg-white/10 border border-white/10 text-xs font-semibold text-slate-200">
                 🚉 {transportInfo}
+              </div>
+            )}
+
+            {platformInfo && platformInfo !== '-' && (
+              <div className="p-2 rounded-xl bg-blue-500/20 border border-blue-400/30 text-xs font-bold text-blue-100">
+                🚝 ชานชาลา / ทางออก: {platformInfo}
+              </div>
+            )}
+
+            {transportNote && transportNote !== '-' && (
+              <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-400/25 text-[11px] font-medium text-amber-100 leading-relaxed">
+                💡 {transportNote}
               </div>
             )}
 

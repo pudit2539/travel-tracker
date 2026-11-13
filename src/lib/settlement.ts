@@ -197,3 +197,30 @@ export function calculateSettlement(
     transfers,
   };
 }
+
+export function formatSettlementSummaryText(
+  settlement: SettlementSummary,
+  currency: string = 'THB',
+  fxRate: number = 0.21,
+  tripName?: string
+): string {
+  const cur = (currency || 'THB').toUpperCase();
+  let msg = tripName ? `🧾 สรุปเคลียร์บิลค่าใช้จ่ายทริป: ${tripName}\n` : `🧾 สรุปเคลียร์บิลค่าใช้จ่ายทริป\n`;
+  msg += `ยอดรวมทั้งหมด: ${settlement.totalSpent.toLocaleString()} ${cur}\n`;
+  msg += `จำนวนสมาชิก: ${settlement.memberCount} คน (หารเฉลี่ยคนละ ${Math.round(settlement.averagePerPerson).toLocaleString()} ${cur})\n\n`;
+  msg += `💸 แผนการโอนเงินเคลียร์บิล:\n`;
+
+  if (settlement.transfers.length === 0) {
+    msg += `✅ สมาชิกทุกคนจ่ายเท่ากันเรียบร้อยแล้ว ไม่มียอดค้างโอน!\n`;
+  } else {
+    settlement.transfers.forEach((t, i) => {
+      const altText =
+        cur === 'THB'
+          ? ` (≈ ¥${Math.round(fxRate > 0 ? t.amount / fxRate : 0).toLocaleString()} JPY)`
+          : ` (≈ ฿${t.amountTHB.toLocaleString()})`;
+      msg += `${i + 1}. ${t.from} โอนให้ ${t.to}: ${t.amount.toLocaleString()} ${cur}${altText}\n`;
+    });
+  }
+
+  return msg.trim();
+}

@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
   X, Search, MapPin, ExternalLink, Star, 
-  Utensils, Award, Dices
+  Utensils, Award, Dices, Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
@@ -19,6 +19,16 @@ interface GourmetRadarModalProps {
   initialCheckedSpots?: Record<string, boolean>;
   onToggleCheckIn?: (spotId: string, checked: boolean) => void;
   onOpenDecisionPicker?: (filterCity?: string) => void;
+  availableDays?: string[];
+  defaultDay?: string;
+  onAddToItinerary?: (item: {
+    title: string;
+    category: string;
+    city?: string;
+    food_recommend?: string;
+    mapsQuery?: string;
+    date_label?: string;
+  }) => void;
 }
 
 export interface DiningSpot {
@@ -163,11 +173,16 @@ export default function GourmetRadarModal({
   initialCheckedSpots = {},
   onToggleCheckIn,
   onOpenDecisionPicker,
+  availableDays = [],
+  defaultDay,
+  onAddToItinerary,
 }: GourmetRadarModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCity, setSelectedCity] = useState<'all' | 'Osaka' | 'Kyoto' | 'Nara'>('all');
+  const [selectedCity, setSelectedCity] = useState<'all' | 'Osaka' | 'Kyoto' | 'Nara' | 'Other'>('all');
   const [selectedCategory, setSelectedCategory] = useState<'all' | DiningSpot['category']>('all');
   const [filterType, setFilterType] = useState<'all' | 'plan' | 'curated' | 'checked'>('all');
+  const [customTargetDay, setTargetDay] = useState<string | null>(null);
+  const targetDay = customTargetDay ?? defaultDay ?? availableDays[0] ?? '';
 
   // Checked-in / Visited spots tracking
   const [localCheckedOverrides, setLocalCheckedOverrides] = useState<Record<string, boolean>>(() => {
@@ -345,28 +360,49 @@ export default function GourmetRadarModal({
             )}
           </div>
 
-          {/* City Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">เมือง:</span>
-            {[
-              { id: 'all', label: 'ทั้งหมด' },
-              { id: 'Osaka', label: '🐙 โอซาก้า (Osaka)' },
-              { id: 'Kyoto', label: '⛩️ เกียวโต (Kyoto)' },
-              { id: 'Nara', label: '🦌 นารา (Nara)' },
-            ].map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setSelectedCity(c.id as any)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
-                  selectedCity === c.id
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
+          {/* City Filter Pills + Day Selector */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-0.5">
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">เมือง:</span>
+              {[
+                { id: 'all', label: 'ทั้งหมด' },
+                { id: 'Osaka', label: '🐙 โอซาก้า (Osaka)' },
+                { id: 'Kyoto', label: '⛩️ เกียวโต (Kyoto)' },
+                { id: 'Nara', label: '🦌 นารา (Nara)' },
+                { id: 'Other', label: '🗾 เมืองอื่น (โตเกียว/ฟุกุโอกะ/อื่น ๆ)' },
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCity(c.id as any)}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
+                    selectedCity === c.id
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                      : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            {onAddToItinerary && availableDays.length > 0 && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] font-bold text-slate-400">เพิ่มลง:</span>
+                <select
+                  value={targetDay}
+                  onChange={(e) => setTargetDay(e.target.value)}
+                  className="px-2 py-1 rounded-lg border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-[11px] font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
+                  aria-label="เลือกวันที่จะเพิ่มร้านอาหารลงแผน"
+                >
+                  {availableDays.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Category Filter Pills */}
@@ -550,22 +586,45 @@ export default function GourmetRadarModal({
                   </div>
 
                   {/* Action Bar */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#262932]/80">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#262932]/80">
                     <span className="text-[10px] text-slate-400 font-medium">
-                      {spot.type === 'main' ? 'เมนูแนะนำประจำมื้อ' : 'ร้านสำรองคุณภาพสูงเมื่อคิวยาว'}
+                      {spot.type === 'main' ? 'เมนูแนะนำประจำมื้อ' : spot.type === 'curated' ? 'ร้านแนะนำคัดสรร (เพิ่มเข้าแผนได้)' : 'ร้านสำรองคุณภาพสูงเมื่อคิวยาว'}
                     </span>
 
-                    {spot.mapLink && (
-                      <a
-                        href={spot.mapLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all border border-blue-200 dark:border-blue-900/60 cursor-pointer shadow-2xs"
-                      >
-                        <span>เปิด Google Maps</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {onAddToItinerary && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onAddToItinerary({
+                              title: spot.name,
+                              category: spot.categoryLabel,
+                              city: spot.cityGroup !== 'Other' ? spot.cityGroup : spot.city,
+                              food_recommend: `${spot.name}${spot.highlight ? ` — ${spot.highlight}` : ''}`,
+                              mapsQuery: `${spot.name} ${spot.city}`,
+                              date_label: targetDay || availableDays[0] || undefined,
+                            });
+                            onClose();
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>เพิ่มลงแผน{targetDay ? ` (${targetDay})` : ''}</span>
+                        </button>
+                      )}
+
+                      {spot.mapLink && (
+                        <a
+                          href={spot.mapLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all border border-blue-200 dark:border-blue-900/60 cursor-pointer shadow-2xs"
+                        >
+                          <span>เปิด Google Maps</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

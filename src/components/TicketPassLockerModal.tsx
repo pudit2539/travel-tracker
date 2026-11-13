@@ -10,22 +10,17 @@ import {
   User, Users, UserPlus, Pencil, PlusCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
 import { copyToClipboard } from '@/lib/clipboard';
+import {
+  VaultPassItem,
+  getTicketsVault,
+  saveTicketsVault,
+  migrateLegacyHubTickets,
+  subscribeTicketsVault,
+} from '@/lib/ticketsVault';
 
-export interface VaultPassItem {
-  id: string;
-  title: string;
-  category: 'vjw' | 'keta' | 'train' | 'flight' | 'attraction' | 'hotel' | 'insurance' | 'other';
-  bookingRef?: string;
-  qrCodeUrl?: string;
-  barcodeData?: string;
-  note?: string;
-  validDate?: string;
-  holderName?: string; // ชื่อผู้ถือตั๋ว / ผู้เดินทาง เช่น "ปูดิท (ฉัน)", "คุณแม่", "แฟน", "น้อง"
-  createdAt: number;
-}
+export type { VaultPassItem };
 
 interface TicketPassLockerModalProps {
   isOpen: boolean;
@@ -39,49 +34,6 @@ interface TicketPassLockerModalProps {
   userDisplayName?: string;
 }
 
-const DEFAULT_PRESET_PASSES: VaultPassItem[] = [
-  {
-    id: 'preset_vjw_customs',
-    title: 'Visit Japan Web (Immigration & Customs QR)',
-    category: 'vjw',
-    bookingRef: 'VJW-ENTRY-JP',
-    note: 'เปิดสแกนที่ด่านตรวจคนเข้าเมืองและศุลกากรสนามบินคันไซ (KIX) สแกนติดเร็วแม้ออฟไลน์',
-    validDate: '5 ธ.ค. 2026',
-    holderName: 'ปูดิท (ฉัน)',
-    createdAt: Date.now() - 120000,
-  },
-  {
-    id: 'preset_keta_approval',
-    title: 'K-ETA (Korea Electronic Travel Authorization)',
-    category: 'keta',
-    bookingRef: 'K-ETA-APPROVED',
-    note: 'เอกสารอนุมัติเข้าเกาหลีใต้ พร้อม QR Code สำหรับสแกนที่สนามบินอินชอน/เชจู',
-    validDate: 'ใช้ได้ตลอดอายุอนุมัติ',
-    holderName: 'ปูดิท (ฉัน)',
-    createdAt: Date.now() - 100000,
-  },
-  {
-    id: 'preset_limousine_bus_kix_kyoto',
-    title: 'Airport Limousine Bus ชานชาลาที่ 8 (KIX ➔ Kyoto)',
-    category: 'train',
-    bookingRef: 'KIX-BUS8-KYOTO',
-    note: 'รถบัสลีมูซีนจากสนามบินคันไซ (Terminal 1 ชั้น 1 ชานชาลาที่ 8) ตรงไปลงสถานีเกียวโตฝั่ง Hachijo-guchi',
-    validDate: '5 ธ.ค. 2026',
-    holderName: 'ผู้เดินทางทุกคน',
-    createdAt: Date.now() - 80000,
-  },
-  {
-    id: 'preset_usj_pass',
-    title: 'Universal Studios Japan (USJ 1-Day Studio Pass)',
-    category: 'attraction',
-    bookingRef: 'USJ-EXP-2026',
-    note: 'บัตรเข้า USJ + Super Nintendo World Area Timed Entry Pass',
-    validDate: '12 ธ.ค. 2026',
-    holderName: 'ปูดิท (ฉัน)',
-    createdAt: Date.now() - 60000,
-  },
-];
-
 export default function TicketPassLockerModal({
   isOpen,
   onClose,
@@ -92,18 +44,7 @@ export default function TicketPassLockerModal({
   currentUser,
   userDisplayName,
 }: TicketPassLockerModalProps) {
-  const [passes, setPasses] = useState<VaultPassItem[]>(() => {
-    if (typeof window !== 'undefined' && tripId) {
-      try {
-        const cached = localStorage.getItem(`ticket_vault_${tripId}`);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch {}
-    }
-    return initialPasses && initialPasses.length > 0 ? initialPasses : DEFAULT_PRESET_PASSES;
-  });
+  const [passes, setPasses] = useState<VaultPassItem[]>(() => getTicketsVault(tripId, initialPasses));
 
   const [selectedCategory, setSelectedCategory] = useState<'all' | VaultPassItem['category']>('all');
   const [selectedTravelerFilter, setSelectedTravelerFilter] = useState<'all' | string>('all');
@@ -170,15 +111,20 @@ export default function TicketPassLockerModal({
   const [activeCardAttachId, setActiveCardAttachId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!initialPasses || initialPasses.length === 0) return;
+    if (!tripId) return;
     let active = true;
-    queueMicrotask(() => {
-      if (active) setPasses(initialPasses);
+    const syncLocal = () => {
+      if (active) setPasses(getTicketsVault(tripId, initialPasses));
+    };
+    void migrateLegacyHubTickets(tripId).then((migrated) => {
+      if (active && migrated.length > 0) setPasses(migrated);
     });
+    const unsub = subscribeTicketsVault(syncLocal);
     return () => {
       active = false;
+      unsub();
     };
-  }, [initialPasses]);
+  }, [tripId, initialPasses]);
 
   // Reset zoom whenever viewing pass changes
   useEffect(() => {
@@ -217,12 +163,7 @@ export default function TicketPassLockerModal({
 
   const savePassesList = (updated: VaultPassItem[]) => {
     setPasses(updated);
-    if (tripId) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`ticket_vault_${tripId}`, JSON.stringify(updated));
-      }
-      syncTripMetadataToSupabase(tripId, { ticketsVault: updated });
-    }
+    saveTicketsVault(tripId, updated);
     if (onPassesUpdated) {
       onPassesUpdated(updated);
     }

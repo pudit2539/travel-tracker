@@ -246,33 +246,29 @@ export const ExpenseThumbnailCard = React.memo(function ExpenseThumbnailCard({
       onClick={() => onSelectExpense?.(expense)}
       className="group relative rounded-3xl overflow-hidden border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl flex flex-col justify-between cursor-pointer"
     >
-      {/* Top Visual Thumbnail Banner (Receipt Image or Stylized Category Cover) */}
-      <div
-        className="relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br from-blue-600/90 via-indigo-600/85 to-slate-900"
-        style={{ aspectRatio: '16 / 10' }}
-      >
-        {expense.receipt_url ? (
-          <img
-            src={expense.receipt_url}
-            alt={expense.title || 'ใบเสร็จ'}
-            loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-white/90 select-none relative">
-            <div className="text-4xl sm:text-5xl drop-shadow-md transition-transform duration-300 group-hover:scale-110">
-              {catMeta.icon}
+      {/* Top Visual Thumbnail Banner (Clean media strip — title sits on solid surface below) */}
+      <div className="relative w-full aspect-[16/10] overflow-hidden flex flex-col justify-between p-2.5 sm:p-3 bg-gradient-to-br from-blue-600/90 via-indigo-600/85 to-slate-900">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {expense.receipt_url ? (
+            <img
+              src={expense.receipt_url}
+              alt={expense.title || 'ใบเสร็จ'}
+              loading="lazy"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-white/90 select-none relative">
+              <div className="text-4xl sm:text-5xl drop-shadow-md transition-transform duration-300 group-hover:scale-110">
+                {catMeta.icon}
+              </div>
             </div>
-            <span className="mt-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-xs">
-              {catMeta.label}
-            </span>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-black/25" />
+        </div>
 
         {/* Top Badges */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
-          <span className="px-2 py-0.5 rounded-full bg-slate-900/75 backdrop-blur-md text-white text-[10px] font-bold">
+        <div className="relative z-10 flex items-center justify-between gap-1.5">
+          <span className="px-2 py-0.5 rounded-full bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold">
             {new Date(expense.spent_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
           </span>
           {expense.receipt_url && (
@@ -289,26 +285,26 @@ export const ExpenseThumbnailCard = React.memo(function ExpenseThumbnailCard({
           )}
         </div>
 
-        {/* Bottom Price Overlay */}
-        <div className="absolute bottom-2.5 left-3 right-3 flex items-end justify-between gap-2">
-          <div className="min-w-0">
-            <h4 className="font-black text-white text-sm sm:text-base truncate drop-shadow-xs">
-              {expense.title}
-            </h4>
-            <p className="text-[10px] text-white/80 font-medium truncate">
-              {catMeta.icon} {catMeta.label}
-            </p>
-          </div>
-          <div className="text-right shrink-0">
-            <div className="text-sm sm:text-base font-black font-mono text-white bg-slate-900/75 backdrop-blur-md px-2.5 py-0.5 rounded-xl border border-white/15">
-              {mainDisplay.primarySymbol}{mainDisplay.primaryAmount.toLocaleString()}
-            </div>
+        {/* Bottom-right Amount Tag Only */}
+        <div className="relative z-10 flex items-end justify-end">
+          <div className="text-sm sm:text-base font-black font-mono text-white bg-slate-900/85 backdrop-blur-md px-2.5 py-0.5 rounded-xl border border-white/15 shadow-xs">
+            {mainDisplay.primarySymbol}{mainDisplay.primaryAmount.toLocaleString()}
           </div>
         </div>
       </div>
 
+      {/* Card Body: High-Contrast Title & Category */}
+      <div className="p-3 sm:p-3.5 pb-2 space-y-1 bg-white dark:bg-[#181a20] text-left">
+        <h4 className="font-bold text-[#1A1A1A] dark:text-white text-sm sm:text-base leading-snug break-words">
+          {expense.title}
+        </h4>
+        <p className="text-[11px] text-[#6E675F] dark:text-slate-400 font-semibold truncate">
+          {catMeta.icon} {catMeta.label}
+        </p>
+      </div>
+
       {/* Card Footer */}
-      <div className="p-3 flex items-center justify-between gap-2 text-xs bg-white dark:bg-[#181a20]">
+      <div className="px-3 pb-3 pt-2 border-t border-slate-100 dark:border-[#262932] flex items-center justify-between gap-2 text-xs bg-white dark:bg-[#181a20]">
         <div className="flex items-center gap-1.5 min-w-0">
           <CatAvatarBadge cat={payerCat} size="xs" />
           <span className="font-bold text-slate-700 dark:text-slate-200 truncate text-[11px]">
