@@ -19,6 +19,7 @@ import {
   migrateLegacyHubTickets,
   subscribeTicketsVault,
 } from '@/lib/ticketsVault';
+import { ModalPortal } from '@/components/ModalPortal';
 
 export type { VaultPassItem };
 
@@ -455,30 +456,24 @@ export default function TicketPassLockerModal({
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-5 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" 
-      style={{
-        paddingTop: 'max(env(safe-area-inset-top, 0px) + 14px, 54px)',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 14px, 24px)',
-      }}
-      role="dialog" 
-      aria-modal="true"
-    >
-      {/* Hidden file input for updating card images */}
-      <input
-        type="file"
-        ref={cardFileInputRef}
-        accept="image/*"
-        onChange={handleCardImageUpload}
-        className="hidden"
-      />
-
+    <ModalPortal>
       <div 
-        className="w-full sm:max-w-2xl rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
-        style={{
-          maxHeight: 'calc(100dvh - max(env(safe-area-inset-top, 0px) + 14px, 54px) - max(env(safe-area-inset-bottom, 0px) + 14px, 24px))',
-        }}
+        className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-5 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" 
+        role="dialog" 
+        aria-modal="true"
       >
+        {/* Hidden file input for updating card images */}
+        <input
+          type="file"
+          ref={cardFileInputRef}
+          accept="image/*"
+          onChange={handleCardImageUpload}
+          className="hidden"
+        />
+
+        <div 
+          className="my-auto w-full sm:max-w-2xl rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card"
+        >
         
         {/* Header - safe area protected from iOS status bar & notch */}
         <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-[#262932] flex items-center justify-between shrink-0 bg-white/70 dark:bg-[#181a20]/70 backdrop-blur-md">
@@ -1296,7 +1291,7 @@ export default function TicketPassLockerModal({
               <button
                 type="button"
                 onClick={() => setActiveViewingPass(null)}
-                className="px-4 py-2 rounded-xl bg-black text-white text-xs font-black cursor-pointer shadow-md"
+                className="min-h-[44px] px-4 py-2 rounded-xl bg-black text-white text-xs font-black cursor-pointer shadow-md"
               >
                 เสร็จสิ้น
               </button>
@@ -1307,5 +1302,6 @@ export default function TicketPassLockerModal({
       )}
 
     </div>
+    </ModalPortal>
   );
 }

@@ -17,6 +17,7 @@ import {
   exportFullBackupJSON, 
   parseBackupJSON 
 } from '@/lib/versionSnapshot';
+import { ModalPortal } from '@/components/ModalPortal';
 
 interface VersionRollbackModalProps {
   isOpen: boolean;
@@ -186,8 +187,9 @@ export default function VersionRollbackModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <ModalPortal>
+      <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
+        <div className="my-auto w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
         <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-3">
@@ -354,11 +356,11 @@ export default function VersionRollbackModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 pt-3 border-t border-slate-100 dark:border-[#262932] flex justify-end">
+        <div className="p-6 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-slate-100 dark:border-[#262932] flex justify-end shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-slate-300 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+            className="min-h-[44px] px-5 py-2 rounded-xl border border-slate-300 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
           >
             ปิดหน้าต่าง
           </button>
@@ -366,5 +368,6 @@ export default function VersionRollbackModal({
 
       </div>
     </div>
+    </ModalPortal>
   );
 }

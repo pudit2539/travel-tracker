@@ -605,7 +605,7 @@ export function FlightBoardingPassCard({
                         <div className="flex items-center justify-between gap-1 p-2 rounded-xl bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 text-[11px]">
                           <div className="min-w-0 flex items-center gap-1 text-slate-700 dark:text-slate-300 font-mono truncate">
                             <BookmarkCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                            <span className="truncate">Ref: {flight.bookingRef}</span>
+                            <span className="truncate selectable-text">Ref: {flight.bookingRef}</span>
                           </div>
                           <button
                             type="button"

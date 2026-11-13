@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { triggerConfetti } from '@/lib/confetti';
+import { ModalPortal } from '@/components/ModalPortal';
 import {
   ShoppingBagItem,
   ShoppingItemCategory,
@@ -595,12 +596,13 @@ export default function WishlistDrawer({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="relative w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <ModalPortal>
+      <div
+        className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="my-auto relative w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
         <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] bg-white/80 dark:bg-[#181a20]/80 backdrop-blur-md">
           <div className="flex items-center gap-3">
@@ -1219,7 +1221,7 @@ export default function WishlistDrawer({
                     placeholder="เช่น Namba, Kyoto"
                     value={newDistrict}
                     onChange={(e) => setNewDistrict(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold outline-none focus:border-blue-500 text-slate-900 dark:text-white"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-base sm:text-xs font-bold outline-none focus:border-blue-500 text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -1233,7 +1235,7 @@ export default function WishlistDrawer({
                   placeholder="เช่น ¥1,500 - ¥2,000"
                   value={newCost}
                   onChange={(e) => setNewCost(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-bold outline-none focus:border-blue-500 text-slate-900 dark:text-white"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-base sm:text-xs font-bold outline-none focus:border-blue-500 text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -1246,13 +1248,13 @@ export default function WishlistDrawer({
                   placeholder="เช่น เมนูแนะนำคือข้าวหน้าเนื้อ, ต้องจองก่อน 1 วัน..."
                   value={newHighlight}
                   onChange={(e) => setNewHighlight(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-xs font-medium outline-none focus:border-blue-500 text-slate-900 dark:text-white"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-base sm:text-xs font-medium outline-none focus:border-blue-500 text-slate-900 dark:text-white"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95"
+                className="min-h-[44px] w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95"
               >
                 บันทึกลงคลังพิกัดสำรอง
               </button>
@@ -1261,5 +1263,6 @@ export default function WishlistDrawer({
         </div>
       )}
     </div>
+    </ModalPortal>
   );
 }

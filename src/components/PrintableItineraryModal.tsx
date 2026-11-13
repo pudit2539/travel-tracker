@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { CategoryItem } from '@/lib/categories';
 import { convertCurrency } from '@/lib/currency';
+import { ModalPortal } from '@/components/ModalPortal';
 
 interface PrintableItineraryModalProps {
   isOpen: boolean;
@@ -77,23 +78,24 @@ export default function PrintableItineraryModal({
   );
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none print:p-0 print:static print:bg-white"
-      role="dialog"
-      aria-modal="true"
-    >
-      {/* Dynamic @page orientation for Poster vs Booklet */}
-      <style>{`
-        @media print {
-          @page {
-            size: ${layoutMode === 'poster' ? 'A4 landscape' : 'A4 portrait'};
-            margin: 8mm;
+    <ModalPortal>
+      <div
+        className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay print:p-0 print:static print:bg-white"
+        role="dialog"
+        aria-modal="true"
+      >
+        {/* Dynamic @page orientation for Poster vs Booklet */}
+        <style>{`
+          @media print {
+            @page {
+              size: ${layoutMode === 'poster' ? 'A4 landscape' : 'A4 portrait'};
+              margin: 8mm;
+            }
           }
-        }
-      `}</style>
+        `}</style>
 
-      {/* Modal Container */}
-      <div className="w-full max-w-6xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200 dark:border-[#262932] max-h-[92dvh] flex flex-col overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in zoom-in-95 duration-200">
+        {/* Modal Container */}
+        <div className="my-auto w-full max-w-6xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200 dark:border-[#262932] max-h-[92dvh] flex flex-col overflow-hidden modal-safe-card print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in zoom-in-95 duration-200">
         {/* Screen Header & TabiPlan Print Controls (Hidden on print) */}
         <div className="p-4 sm:p-5 flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 dark:border-[#262932] bg-slate-50 dark:bg-[#181a20] print:hidden">
           <div className="flex items-center gap-2.5">
@@ -400,5 +402,6 @@ export default function PrintableItineraryModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

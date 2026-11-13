@@ -828,7 +828,7 @@ function ItineraryStopCardComponent({
                     <div className="text-[10px] font-bold tracking-widest text-[#C83E2D] dark:text-[#E05A47] uppercase mb-0.5">
                       Transit & Route Note
                     </div>
-                    <p className="text-xs text-[#443E36] dark:text-slate-200 leading-relaxed">
+                    <p className="text-xs text-[#443E36] dark:text-slate-200 leading-relaxed selectable-text">
                       {transitGuide.details}
                     </p>
                   </div>
@@ -852,7 +852,7 @@ function ItineraryStopCardComponent({
                         </a>
                       )}
                     </div>
-                    <p className="text-xs text-[#443E36] dark:text-slate-200 leading-relaxed">
+                    <p className="text-xs text-[#443E36] dark:text-slate-200 leading-relaxed selectable-text">
                       {item.food_recommendation}
                     </p>
                   </div>

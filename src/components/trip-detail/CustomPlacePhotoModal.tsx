@@ -199,7 +199,7 @@ export function CustomPlacePhotoModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto overscroll-contain modal-safe-overlay animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
@@ -207,7 +207,7 @@ export function CustomPlacePhotoModal({
         aria-modal="true"
         aria-label="เปลี่ยนรูปภาพสถานที่"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] shadow-2xl p-4 sm:p-6 space-y-4 text-left"
+        className="my-auto w-full max-w-xl max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] shadow-2xl p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 text-left modal-safe-card"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
@@ -490,7 +490,7 @@ export function PlacePhotoLightboxModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto overscroll-contain modal-safe-overlay animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
@@ -498,7 +498,7 @@ export function PlacePhotoLightboxModal({
         aria-modal="true"
         aria-label={placeName}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl max-h-[92dvh] overflow-y-auto overscroll-contain rounded-3xl bg-slate-950/95 border border-white/15 shadow-2xl overflow-hidden flex flex-col"
+        className="my-auto w-full max-w-3xl max-h-[92dvh] overflow-y-auto overscroll-contain rounded-3xl bg-slate-950/95 border border-white/15 shadow-2xl overflow-hidden flex flex-col modal-safe-card"
       >
         {/* Top Bar */}
         <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3 border-b border-white/10">

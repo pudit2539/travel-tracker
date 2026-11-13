@@ -14,6 +14,7 @@ import {
   savePackingChecklist,
   subscribePackingChecklist,
 } from '@/lib/packingChecklist';
+import { ModalPortal } from '@/components/ModalPortal';
 
 export type { ChecklistItem };
 
@@ -261,8 +262,9 @@ export default function PackingChecklistModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-4 modal-safe-card">
+    <ModalPortal>
+      <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
+        <div className="my-auto w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-4 modal-safe-card">
         
         {/* Header */}
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#262932] shrink-0">
@@ -516,18 +518,18 @@ export default function PackingChecklistModal({
         </div>
 
         {/* Add Custom Item Input */}
-        <form onSubmit={handleAddItem} className="flex gap-2 pt-2 border-t border-slate-100 dark:border-[#262932] shrink-0">
+        <form onSubmit={handleAddItem} className="flex gap-2 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] border-t border-slate-100 dark:border-[#262932] shrink-0">
           <input
             type="text"
             placeholder="เพิ่มของที่ต้องเตรียม เช่น แว่นกันแดด, บัตร Suica..."
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
+            className="flex-1 min-w-0 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-base sm:text-xs outline-none focus:border-blue-500 font-medium"
           />
           <button
             type="submit"
             disabled={!newTitle.trim()}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shrink-0"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shrink-0"
           >
             <Plus className="h-4 w-4" />
             <span>เพิ่ม</span>
@@ -536,5 +538,6 @@ export default function PackingChecklistModal({
 
       </div>
     </div>
+    </ModalPortal>
   );
 }

@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import {
   Sparkles, X, ExternalLink, Loader2, Bot, Plus, KeyRound, Info
 } from 'lucide-react';
+import { ModalPortal } from '@/components/ModalPortal';
 
 interface AIAssistantModalProps {
   isOpen: boolean;
@@ -128,8 +129,9 @@ export default function AIAssistantModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-      <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200 dark:border-[#262932] card-elevation max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
+    <ModalPortal>
+      <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
+        <div className="my-auto w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200 dark:border-[#262932] card-elevation max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
         <div className="p-4 sm:p-5 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-3">
@@ -160,24 +162,24 @@ export default function AIAssistantModal({
         <div className="p-5 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain custom-scrollbar flex-1 min-h-0 space-y-4">
           
           {/* City / Area input */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="sm:col-span-1">
               <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">เมือง / ย่าน</label>
               <input
                 type="text"
                 placeholder="เช่น Namba, Kyoto"
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold"
+                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-base sm:text-xs outline-none focus:border-blue-500 font-bold"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
               />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">ต้องการหาอะไร</label>
               <div className="flex gap-1.5">
                 <input
                   type="text"
                   placeholder="เช่น ราเมงเปิดดึก, คาเฟ่แมว, ตลาดปลา"
-                  className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
+                  className="flex-1 min-w-0 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-base sm:text-xs outline-none focus:border-blue-500 font-medium"
                   value={customQuery}
                   onChange={(e) => setCustomQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
@@ -186,7 +188,7 @@ export default function AIAssistantModal({
                   type="button"
                   onClick={() => handleAskAI()}
                   disabled={loading}
-                  className="px-3.5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 disabled:opacity-50 cursor-pointer shrink-0 transition-all"
+                  className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 disabled:opacity-50 cursor-pointer shrink-0 transition-all"
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'ค้นหา'}
                 </button>
@@ -356,11 +358,11 @@ export default function AIAssistantModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-[#262932] flex justify-end">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-100 dark:border-[#262932] flex justify-end shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+            className="min-h-[44px] px-5 py-2 rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
           >
             ปิดหน้าต่าง
           </button>
@@ -368,5 +370,6 @@ export default function AIAssistantModal({
 
       </div>
     </div>
+    </ModalPortal>
   );
 }

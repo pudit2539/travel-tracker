@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { fetchUserDevices, removeUserDevice, signOutOtherDevices, DeviceSession } from '@/lib/sessionManager';
 import { copyToClipboard } from '@/lib/clipboard';
+import { ModalPortal } from '@/components/ModalPortal';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -272,8 +273,9 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
+    <ModalPortal>
+      <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
+        <div className="my-auto w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
         <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-3">
@@ -365,7 +367,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                       type="text"
                       required
                       placeholder="เช่น Alex, น้องน้ำ, พุด"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-base sm:text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                     />
@@ -428,7 +430,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                           type={showNewPassword ? 'text' : 'password'}
                           required
                           placeholder="••••••••"
-                          className="w-full p-2.5 pr-9 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
+                          className="w-full p-2.5 pr-9 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-base sm:text-xs outline-none focus:border-blue-500"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                         />
@@ -450,7 +452,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
                         type="password"
                         required
                         placeholder="••••••••"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-base sm:text-xs outline-none focus:border-blue-500"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                       />
@@ -626,5 +628,6 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
 
       </div>
     </div>
+    </ModalPortal>
   );
 }

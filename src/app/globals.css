@@ -65,28 +65,71 @@ body {
   user-select: none;
 }
 
-input, textarea, [contenteditable="true"], .selectable-text {
+/* Allow natural long-press copy / translate on readable text while keeping buttons/nav non-selectable */
+input,
+textarea,
+[contenteditable="true"],
+.selectable-text,
+p,
+h1,
+h2,
+h3,
+h4,
+li,
+td,
+th,
+dd,
+dt,
+blockquote,
+pre,
+code {
   user-select: text;
   -webkit-user-select: text;
+  -webkit-touch-callout: default;
   touch-action: auto;
 }
 
-/* Mobile & Tablet Safe Area Inset Support (Notch, iPad Status Bar) */
-.safe-top-nav {
-  /* Generous top clearance so system status bar (iPad ~24-32px, iPhone portrait 59px) NEVER collides */
-  padding-top: max(calc(env(safe-area-inset-top, 0px) + 1.25rem), 4.75rem);
+button,
+button *,
+[role="button"],
+[role="button"] *,
+summary,
+nav a,
+[draggable="true"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
-@media (min-width: 768px) {
-  .safe-top-nav {
-    padding-top: max(calc(env(safe-area-inset-top, 0px) + 1.25rem), 4.75rem);
+/* Prevent iOS Safari auto-zoom & improve readability on <640px form controls */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not(.compact-input):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl),
+  select:not(.compact-input):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl),
+  textarea:not(.compact-input):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl) {
+    font-size: 16px;
+    line-height: 1.45;
+  }
+}
+
+/* Mobile & Tablet Safe Area Inset Support (Notch, Dynamic Island, iPad Status Bar) */
+.safe-top-nav {
+  /* Flush to env(safe-area-inset-top) on normal browsers & Android so non-notch screens have zero wasted top gap */
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Installed iOS PWA standalone mode where translucent status bar overlays the viewport */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    .safe-top-nav {
+      padding-top: max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1.5rem);
+    }
   }
 }
 
 /* Landscape on phones (compact height: max-height 520px) */
 @media (orientation: landscape) and (max-height: 520px) {
   .safe-top-nav {
-    padding-top: max(calc(env(safe-area-inset-top, 0px) + 0.35rem), 1.25rem);
+    padding-top: env(safe-area-inset-top, 0px);
   }
 }
 
@@ -409,12 +452,12 @@ input::-ms-clear {
 }
 
 .modal-safe-overlay {
-  padding-top: max(env(safe-area-inset-top, 0px) + 12px, 52px) !important;
-  padding-bottom: max(env(safe-area-inset-bottom, 0px) + 14px, 24px) !important;
+  padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 16px) !important;
+  padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) + 14px), 20px) !important;
 }
 
 .modal-safe-card {
-  max-height: calc(100dvh - max(env(safe-area-inset-top, 0px) + 12px, 52px) - max(env(safe-area-inset-bottom, 0px) + 14px, 24px)) !important;
+  max-height: calc(100dvh - max(calc(env(safe-area-inset-top, 0px) + 12px), 16px) - max(calc(env(safe-area-inset-bottom, 0px) + 14px), 20px)) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

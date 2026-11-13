@@ -11,6 +11,7 @@ import { PhotoMemory, getTripPhotos, saveTripPhoto, deleteTripPhoto } from '@/li
 import { uploadTripMedia } from '@/lib/mediaStorage';
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
+import { ModalPortal } from '@/components/ModalPortal';
 
 interface PhotoScrapbookModalProps {
   isOpen: boolean;
@@ -129,8 +130,9 @@ export default function PhotoScrapbookModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-      <div className="w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <ModalPortal>
+      <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
+        <div className="my-auto w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
         <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3">
@@ -201,19 +203,19 @@ export default function PhotoScrapbookModal({
                       type="text"
                       required
                       placeholder="เช่น ถ่ายรูปคู่ป้ายกูลิโกะ, ราเมงข้อสอบสุดฟิน..."
-                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs outline-none focus:border-blue-500 font-bold text-slate-900 dark:text-white"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-base sm:text-xs outline-none focus:border-blue-500 font-bold text-slate-900 dark:text-white"
                       value={caption}
                       onChange={(e) => setCaption(e.target.value)}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-300 mb-1">สถานที่ / เมือง</label>
                       <input
                         type="text"
                         placeholder="เช่น Dotonbori, Osaka"
-                        className="w-full p-2 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium"
+                        className="w-full p-2 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                       />
@@ -223,7 +225,7 @@ export default function PhotoScrapbookModal({
                       <input
                         type="text"
                         placeholder="เช่น 5 ธ.ค., Day 2"
-                        className="w-full p-2 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium"
+                        className="w-full p-2 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium"
                         value={dateLabel}
                         onChange={(e) => setDateLabel(e.target.value)}
                       />
@@ -322,11 +324,11 @@ export default function PhotoScrapbookModal({
         {/* Lightbox Photo Preview Modal */}
         {selectedPhoto && (
           <div 
-            className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4 animate-in fade-in"
+            className="fixed inset-0 z-60 flex items-start sm:items-center justify-center bg-black/90 p-3 sm:p-4 overflow-y-auto overscroll-contain modal-safe-overlay animate-in fade-in"
             onClick={() => setSelectedPhoto(null)}
           >
             <div 
-              className="relative max-w-2xl w-full bg-white dark:bg-[#181a20] p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl space-y-3 animate-in zoom-in-95"
+              className="my-auto relative max-w-2xl w-full max-h-[90dvh] overflow-y-auto bg-white dark:bg-[#181a20] p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl space-y-3 animate-in zoom-in-95 modal-safe-card"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
@@ -384,5 +386,6 @@ export default function PhotoScrapbookModal({
 
       </div>
     </div>
+    </ModalPortal>
   );
 }

@@ -18,6 +18,9 @@ import PocketMoneyWidget from '@/components/PocketMoneyWidget';
 import { CustomPlacePhotoModal } from '@/components/trip-detail/CustomPlacePhotoModal';
 import SuperAdminModal from '@/components/SuperAdminModal';
 import { FlightBoardingPassCard } from '@/components/trip-detail/FlightBoardingPassCard';
+import AIAssistantModal from '@/components/AIAssistantModal';
+import PackingChecklistModal from '@/components/PackingChecklistModal';
+import VersionRollbackModal from '@/components/VersionRollbackModal';
 import { DEFAULT_CATEGORIES } from '@/lib/categories';
 import { SUPER_ADMIN_EMAILS } from '@/lib/permissions';
 
@@ -498,20 +501,121 @@ describe('Comprehensive Mobile UI & Responsive Regression Suite', () => {
         d.className.includes('grid-cols-1') && d.className.includes('sm:grid-cols-3')
       );
       expect(terminalGrid).toBeDefined();
+
+      // Booking reference spans must allow mobile long-press selection
+      const refSpan = Array.from(container.querySelectorAll('span')).find((s) =>
+        s.textContent?.includes('ABC123')
+      );
+      expect(refSpan?.className).toContain('selectable-text');
+    });
+
+    it('secondary modals (AIAssistantModal, PackingChecklistModal, VersionRollbackModal) portal to document.body with safe-area footers and >=16px inputs', async () => {
+      // 1. AIAssistantModal
+      await act(async () => {
+        root.render(<AIAssistantModal isOpen={true} onClose={vi.fn()} currentCity="Kyoto" />);
+      });
+      expect(container.querySelector('[role="dialog"]')).toBeNull();
+      let dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+      expect(dialog).not.toBeNull();
+      expect(dialog.className).toContain('overflow-y-auto');
+      expect(dialog.className).toContain('modal-safe-overlay');
+      expect(dialog.innerHTML).toContain('env(safe-area-inset-bottom)');
+      const aiInputs = Array.from(dialog.querySelectorAll('input[type="text"]')) as HTMLInputElement[];
+      expect(aiInputs.length).toBeGreaterThanOrEqual(2);
+      aiInputs.forEach((inp) => expect(inp.className).toContain('text-base'));
+
+      // 2. PackingChecklistModal
+      await act(async () => {
+        root.render(
+          <PackingChecklistModal
+            isOpen={true}
+            onClose={vi.fn()}
+            tripId="trip-pack-1"
+            tripName="Osaka Winter"
+            destinationCity="Osaka"
+          />
+        );
+      });
+      expect(container.querySelector('[role="dialog"]')).toBeNull();
+      dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+      expect(dialog).not.toBeNull();
+      expect(dialog.className).toContain('overflow-y-auto');
+      expect(dialog.innerHTML).toContain('env(safe-area-inset-bottom)');
+      const packInput = dialog.querySelector('input[type="text"]') as HTMLInputElement;
+      expect(packInput.className).toContain('text-base');
+      expect(packInput.className).toContain('min-w-0');
+
+      // 3. VersionRollbackModal
+      await act(async () => {
+        root.render(
+          <VersionRollbackModal
+            isOpen={true}
+            onClose={vi.fn()}
+            tripId="trip-ver-1"
+            trip={{ id: 'trip-ver-1', name: 'Kyoto' }}
+            itinerary={[]}
+            expenses={[]}
+            categories={DEFAULT_CATEGORIES}
+            categoryBudgets={{}}
+            onRestored={vi.fn()}
+          />
+        );
+      });
+      expect(container.querySelector('[role="dialog"]')).toBeNull();
+      dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+      expect(dialog).not.toBeNull();
+      expect(dialog.className).toContain('overflow-y-auto');
+      expect(dialog.className).toContain('modal-safe-overlay');
+      expect(dialog.firstElementChild?.className).toContain('modal-safe-card');
+      expect(dialog.innerHTML).toContain('env(safe-area-inset-bottom)');
     });
   });
 
   describe('4. Codebase-Wide Mobile CSS & Viewport Hygiene Invariants', () => {
     const readSrc = (relPath: string) => fs.readFileSync(path.join(process.cwd(), relPath), 'utf8');
 
-    it('globals.css enforces horizontal overflow lock, safe-area helpers, and dynamic viewport ios-safe-modal', () => {
+    it('globals.css enforces horizontal overflow lock, Android/notch-adaptive .safe-top-nav, selectable text, and <640px 16px input floor', () => {
       const css = readSrc('src/app/globals.css');
       expect(css).toContain('overflow-x: hidden');
       expect(css).toContain('.safe-top-nav');
+      expect(css).toContain('@media (display-mode: standalone)');
+      expect(css).not.toContain('4.75rem');
       expect(css).toContain('.safe-bottom-nav');
       expect(css).toContain('.ios-safe-modal');
       expect(css).toContain('100dvh');
       expect(css).toContain('env(safe-area-inset-bottom');
+      expect(css).toContain('.selectable-text');
+      expect(css).toContain('user-select: text');
+      expect(css).toContain('@media (max-width: 639px)');
+      expect(css).toContain('font-size: 16px');
+    });
+
+    it('all secondary full-viewport modals use ModalPortal and mobile-safe scrollable overlays', () => {
+      const secondaryModals = [
+        'src/components/AIAssistantModal.tsx',
+        'src/components/DiningDecisionPickerModal.tsx',
+        'src/components/GourmetRadarModal.tsx',
+        'src/components/PackingChecklistModal.tsx',
+        'src/components/PhotoScrapbookModal.tsx',
+        'src/components/PrintableItineraryModal.tsx',
+        'src/components/ProfileModal.tsx',
+        'src/components/QuickCurrencyCalculator.tsx',
+        'src/components/TicketPassLockerModal.tsx',
+        'src/components/TravelHubModal.tsx',
+        'src/components/VersionRollbackModal.tsx',
+        'src/components/WishlistDrawer.tsx',
+      ];
+      for (const file of secondaryModals) {
+        const content = readSrc(file);
+        expect(content, `${file} should mount through ModalPortal`).toContain('<ModalPortal>');
+        expect(content, `${file} should allow vertical backdrop scroll`).toContain('overflow-y-auto');
+        expect(content, `${file} should apply modal-safe-overlay`).toContain('modal-safe-overlay');
+      }
+    });
+
+    it('ItineraryStopCard marks transit & traveler notes with selectable-text for mobile copy/translate', () => {
+      const stopCard = readSrc('src/components/trip-detail/ItineraryStopCard.tsx');
+      expect(stopCard).toContain('selectable-text');
     });
 
     it('modals and sheets use dvh instead of legacy vh heights for iOS keyboard & Safari bar safety', () => {
