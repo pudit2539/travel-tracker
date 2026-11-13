@@ -787,7 +787,7 @@ export default function HomePage() {
       />
 
       {/* ==================== TOP NAVIGATION ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
+      <nav className="sticky top-0 z-40 border-b border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7]/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
         <div className="max-w-5xl mx-auto safe-nav-container px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5 group">
@@ -868,108 +868,123 @@ export default function HomePage() {
       <main className="relative z-10 max-w-5xl mx-auto px-4 safe-area-x pt-6 space-y-6">
 
         {/* ==================== 1. EDITORIAL WELCOME BAR & TABULAR STATS ==================== */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] shadow-[0_8px_24px_-14px_rgba(35,28,20,0.1)]">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-600" />
-              <span className="text-[10px] font-bold tracking-widest uppercase text-blue-600 dark:text-blue-400">
+              <span className="w-2 h-2 rounded-full bg-[#C83E2D]" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#C83E2D] dark:text-amber-400">
                 TRAVEL JOURNAL & CO-PILOT
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-serif font-black text-[#1C2630] dark:text-white tracking-tight">
               สวัสดี, {userDisplayName}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-xs text-[#6B6254] dark:text-slate-400 font-medium">
               บันทึกเรื่องราวการเดินทาง จัดการงบประมาณ และเตรียมความพร้อมสำหรับทุกจุดหมาย
             </p>
           </div>
 
           {/* Travo Tabular Stats Deck */}
-          <div className="flex items-center gap-4 sm:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-[#262932] sm:pl-6 shrink-0">
+          <div className="flex items-center gap-4 sm:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 sm:border-l border-[#DFD7C7] dark:border-[#262932] sm:pl-6 shrink-0">
             <div>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 block mb-0.5">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-[#7A7061] dark:text-slate-500 block mb-0.5">
                 TRIPS
               </span>
-              <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+              <span className="text-lg sm:text-xl font-black text-[#1C2630] dark:text-white">
                 {loading && trips.length === 0 ? <span className="inline-block w-5 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : trips.length}
               </span>
             </div>
-            <div className="h-8 w-px bg-slate-200 dark:bg-[#262932]" />
+            <div className="h-8 w-px bg-[#DFD7C7] dark:bg-[#262932]" />
             <div>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 block mb-0.5">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-[#C83E2D] dark:text-blue-400 block mb-0.5">
                 UPCOMING
               </span>
-              <span className="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400">
+              <span className="text-lg sm:text-xl font-black text-[#C83E2D] dark:text-blue-400">
                 {loading && trips.length === 0 ? <span className="inline-block w-5 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : tripStats.upcomingCount}
               </span>
             </div>
-            <div className="h-8 w-px bg-slate-200 dark:bg-[#262932]" />
+            <div className="h-8 w-px bg-[#DFD7C7] dark:bg-[#262932]" />
             <div>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 block mb-0.5">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-[#7A7061] dark:text-slate-500 block mb-0.5">
                 TOTAL BUDGET
               </span>
-              <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+              <span className="text-lg sm:text-xl font-black text-[#1C2630] dark:text-white">
                 {loading && trips.length === 0 ? <span className="inline-block w-12 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : `฿${Math.round(totalCombinedBudgetInThb).toLocaleString()}`}
               </span>
             </div>
           </div>
         </div>
 
-        {/* ==================== 2. SINGLE PROTAGONIST HERO (FEATURED UPCOMING TRIP SPOTLIGHT) ==================== */}
+        {/* ==================== 2. SINGLE PROTAGONIST HERO (MODERN JAPANESE EDITORIAL SPOTLIGHT) ==================== */}
         {upcomingTrip && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-slate-900 text-white overflow-hidden shadow-lg group"
+            className="relative rounded-3xl border border-[#DFD7C7] border-l-4 border-l-[#C83E2D] dark:border-[#262932] dark:border-l-[#C83E2D] bg-[#FDFBF7] dark:bg-[#181a20] text-[#1C2630] dark:text-white overflow-hidden shadow-[0_12px_30px_-16px_rgba(35,28,20,0.14)] group"
           >
-            {/* Ambient Subtle Hero Background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/95 to-slate-900 pointer-events-none" />
+            {/* Subtle Warm Paper Wash Accent */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#F6F1E7]/75 via-transparent to-[#F6F1E7]/40 dark:from-[#121316]/60 dark:via-transparent dark:to-transparent pointer-events-none" />
 
-            <div className="relative z-10 p-6 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 text-left">
-              <div className="space-y-2.5 text-left flex-1 min-w-0">
+            <div className="relative z-10 p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 text-left">
+              {/* Architectural Destination Thumbnail Preview (Desktop / Tablet) */}
+              <div
+                className="hidden sm:block w-36 md:w-44 aspect-[16/10] rounded-2xl overflow-hidden border border-[#DFD7C7] dark:border-[#262932] shrink-0 shadow-xs relative"
+                style={{ aspectRatio: '16 / 10' }}
+              >
+                <TripCoverMedia
+                  tripId={upcomingTrip.id}
+                  tripName={upcomingTrip.name || upcomingTrip.title || 'ทริปท่องเที่ยว'}
+                  highlightPlace={upcomingTrip.highlightPlace}
+                  highlightCity={upcomingTrip.highlightCity}
+                  idx={0}
+                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+
+              <div className="space-y-2 text-left flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/10 text-white border border-white/20 backdrop-blur-md flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    <span>ทริปไฮไลต์ที่จะถึงนี้</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#C83E2D]/10 text-[#C83E2D] border border-[#C83E2D]/25 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#C83E2D] animate-pulse" />
+                    <span>ทริปถัดไปที่กำลังจะถึง</span>
                   </span>
 
                   {daysUntilTrip !== null && (
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 ${
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 border ${
                       daysUntilTrip <= 0
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                        : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                        ? 'bg-emerald-600/10 text-emerald-800 border-emerald-600/25 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30'
+                        : 'bg-[#EFE9DC] text-[#1C2630] border-[#DFD7C7] dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30'
                     }`}>
                       <Clock className="h-3 w-3" />
                       {daysUntilTrip > 0
-                        ? `อีก ${daysUntilTrip} วันจะออกเดินทาง`
+                        ? `อีก ${daysUntilTrip} วันออกเดินทาง`
                         : daysUntilTrip === 0
                         ? 'ออกเดินทางวันนี้'
                         : 'กำลังเดินทาง'}
                     </span>
                   )}
 
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-white/10 text-white/90 border border-white/15">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F6F1E7] dark:bg-white/10 text-[#5C5346] dark:text-white/90 border border-[#DFD7C7] dark:border-white/15">
                     {upcomingTrip.currency || 'JPY'}
                   </span>
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug break-words">
+                <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1C2630] dark:text-white tracking-tight leading-snug break-words">
                   {upcomingTrip.name || upcomingTrip.title}
                 </h2>
 
-                <div className="flex flex-wrap items-center gap-3.5 text-xs text-slate-300 font-medium">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-[#5C5346] dark:text-slate-300 font-medium">
                   {upcomingTrip.start_date && (
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-blue-400" />
+                      <Calendar className="h-3.5 w-3.5 text-[#C83E2D] dark:text-blue-400" />
                       <span>
                         {new Date(upcomingTrip.start_date).toLocaleDateString('th-TH')} - {upcomingTrip.end_date ? new Date(upcomingTrip.end_date).toLocaleDateString('th-TH') : 'ไม่ระบุวันกลับ'}
                       </span>
                     </span>
                   )}
-                  <span className="text-slate-600">•</span>
+                  <span className="text-[#CFC6B4] dark:text-slate-600">•</span>
                   <span className="flex items-center gap-1.5">
-                    <Compass className="h-3.5 w-3.5 text-blue-400" />
+                    <Compass className="h-3.5 w-3.5 text-[#1C2630] dark:text-blue-400" />
                     <span>
                       งบ {Number(upcomingTrip.total_budget ?? upcomingTrip.budget ?? 0).toLocaleString()} {upcomingTrip.currency || 'JPY'}
                     </span>
@@ -980,7 +995,7 @@ export default function HomePage() {
               <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
                 <Link
                   href={`/trips/${upcomingTrip.id}`}
-                  className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-[#1C2630] hover:bg-[#C83E2D] dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>เข้าสู่ทริป</span>
                   <ArrowUpRight className="h-4 w-4" />
@@ -991,7 +1006,7 @@ export default function HomePage() {
         )}
 
         {/* ==================== 3. UTILITIES DOCK: LIVE FX QUICK BAR & TRAVEL NOTE ==================== */}
-        <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] shadow-2xs space-y-3">
+        <div className="p-3.5 sm:p-4 rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] shadow-2xs space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             
             {/* Left: Quick FX Pill & Join Trip Button */}
@@ -1435,7 +1450,7 @@ export default function HomePage() {
                   onClick={() => {
                     window.location.href = `/trips/${t.id}`;
                   }}
-                  className="group relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-lg"
+                  className="group relative rounded-3xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] hover:border-[#C83E2D] dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-[0_8px_22px_-12px_rgba(35,28,20,0.12)] hover:shadow-lg"
                 >
                   {/* Top Destination Cover Photo Banner (Polarsteps / Trip.com style) */}
                   <div
@@ -1545,6 +1560,88 @@ export default function HomePage() {
         )}
         </div>
 
+        {/* ==================== 5. NEXT TRIP IDEAS (CURATED, UNCLUTTERED EDITORIAL SHELF) ==================== */}
+        <section aria-labelledby="next-trip-ideas-heading" className="pt-2 space-y-3">
+          <div className="flex items-center justify-between gap-2 px-1">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-4 rounded-full bg-[#C83E2D]" aria-hidden="true" />
+              <h2
+                id="next-trip-ideas-heading"
+                className="text-sm font-serif font-black text-[#1C2630] dark:text-white tracking-tight"
+              >
+                ไอเดียทริปถัดไปที่แนะนำ
+              </h2>
+              <span className="text-[11px] text-[#7A7061] dark:text-slate-400 font-medium hidden sm:inline">
+                • เส้นทางสายธรรมชาติ ช้อปปิ้ง และอนิเมะที่เหมาะกับทริปหน้า
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {[
+              {
+                title: 'Tokyo - Kawaguchiko & Your Name',
+                badge: '6–7 วัน • อนิเมะ & วินเทจ',
+                highlight: 'ตามรอย Your Name (Suga Shrine), ช้อปวินเทจ Shimokitazawa และชมวิวฟูจิ',
+                currency: 'JPY',
+                image: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=900&q=80',
+              },
+              {
+                title: 'Nagoya - Ghibli Park & Shirakawa-go',
+                badge: '6–7 วัน • Ghibli & หุบเขา',
+                highlight: 'เที่ยว Ghibli Park นาโกย่า หมู่บ้านมรดกโลกชิราคาวาโกะ และเดินป่าคามิโคจิ',
+                currency: 'JPY',
+                image: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&w=900&q=80',
+              },
+              {
+                title: 'Fukuoka - Yufuin & North Kyushu',
+                badge: '5–6 วัน • รถไฟธรรมชาติ & ออนเซน',
+                highlight: 'นั่งรถไฟสายป่า Yufuin no Mori เดินหมู่บ้านริมลำธาร และชิมราเมงฮากาตะ',
+                currency: 'JPY',
+                image: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=900&q=80',
+              },
+            ].map((idea) => (
+              <div
+                key={idea.title}
+                className="group rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] overflow-hidden flex flex-col justify-between transition-all hover:border-[#C83E2D] dark:hover:border-blue-500/60 shadow-[0_6px_18px_-12px_rgba(35,28,20,0.12)]"
+              >
+                <div className="relative h-24 w-full overflow-hidden bg-[#EFE9DC] dark:bg-[#121316]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={idea.image}
+                    alt={idea.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <span className="absolute bottom-2 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/55 text-white backdrop-blur-xs border border-white/15">
+                    {idea.badge}
+                  </span>
+                </div>
+
+                <div className="p-3.5 flex-1 flex flex-col justify-between gap-2.5">
+                  <div className="space-y-1 text-left">
+                    <h3 className="text-xs font-serif font-black text-[#1C2630] dark:text-white leading-snug">
+                      {idea.title}
+                    </h3>
+                    <p className="text-[11px] text-[#6B6254] dark:text-slate-400 leading-relaxed line-clamp-2">
+                      {idea.highlight}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => openCreateModalWithIdea(idea.title, idea.currency)}
+                    className="w-full py-1.5 px-3 rounded-xl text-[11px] font-bold bg-[#F6F1E7] hover:bg-[#1C2630] text-[#1C2630] hover:text-white border border-[#DFD7C7] dark:bg-[#121316] dark:hover:bg-blue-600 dark:text-slate-200 dark:border-[#262932] transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>เริ่มวางแผนทริปนี้</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
       </main>
 
