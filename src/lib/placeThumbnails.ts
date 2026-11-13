@@ -149,7 +149,34 @@ const SPECIFIC_ATTRACTION_THUMBNAILS: LandmarkRule[] = [
     tagLabel: 'Shrine & Temple',
     wikiQuery: 'Fushimi Inari-taisha',
   },
-  // 8. Arashiyama / Bamboo Grove / Togetsukyo / Sagano / Tenryu-ji
+  // 7.5 Saga Toriimoto & Otagi Nenbutsu-ji (before Arashiyama)
+  {
+    keywords: ['saga toriimoto', 'otagi', 'nenbutsu'],
+    imageUrl: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-emerald-700 via-teal-700 to-stone-800',
+    emoji: '🗿',
+    tagLabel: 'Saga Toriimoto',
+    wikiQuery: 'Otagi Nenbutsu-ji',
+  },
+  // 7.6 Demachiyanagi & Masugata Shotengai
+  {
+    keywords: ['demachiyanagi', 'masugata', 'kamo river delta'],
+    imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-sky-600 via-teal-600 to-emerald-700',
+    emoji: '🌊',
+    tagLabel: 'Demachiyanagi',
+    wikiQuery: 'Demachiyanagi Station',
+  },
+  // 7.7 Kifune Shrine (Kibune)
+  {
+    keywords: ['kifune', 'kibune', 'คิบุเนะ'],
+    imageUrl: 'https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-red-700 via-rose-700 to-emerald-900',
+    emoji: '🏮',
+    tagLabel: 'Kifune Shrine',
+    wikiQuery: 'Kifune Shrine',
+  },
+  // 8. Arashiyama / Togetsukyo / Sagano / Tenryu-ji
   {
     keywords: ['arashiyama', 'bamboo', 'togetsukyo', 'sagano', 'tenryuji', 'tenryu-ji', 'อาราชิยามะ', 'ป่าไผ่', 'สะพานโทเง็ตสึเคียว', 'รถไฟสายโรแมนติก', 'เทนริวจิ'],
     imageUrl: 'https://images.unsplash.com/photo-1576675466969-38eeae4b41f6?auto=format&fit=crop&w=1200&q=85',
@@ -220,6 +247,23 @@ const SPECIFIC_ATTRACTION_THUMBNAILS: LandmarkRule[] = [
     emoji: '🗼',
     tagLabel: 'Shinsekai & Tsutenkaku',
     wikiQuery: 'Tsūtenkaku',
+  },
+  // 15.5 Tenjinbashisuji & LUCUA / Whity Umeda (before Umeda Sky)
+  {
+    keywords: ['tenjinbashisuji', 'tenjimbashisuji'],
+    imageUrl: 'https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-orange-600 via-amber-600 to-rose-700',
+    emoji: '🏮',
+    tagLabel: 'Tenjinbashisuji',
+    wikiQuery: 'Tenjinbashisuji Shopping Street',
+  },
+  {
+    keywords: ['lucua', 'whity umeda', 'hankyu umeda', 'tsutaya books'],
+    imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-pink-600 via-indigo-600 to-slate-800',
+    emoji: '🛍️',
+    tagLabel: 'Umeda Shopping',
+    wikiQuery: 'Osaka Station City',
   },
   // 16. Umeda Sky Building & Hep Five
   {
