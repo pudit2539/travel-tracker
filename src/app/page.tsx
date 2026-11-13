@@ -1581,36 +1581,39 @@ export default function HomePage() {
             {[
               {
                 title: 'Tokyo - Kawaguchiko & Your Name',
+                placeQuery: 'Chureito Pagoda',
+                city: 'Kawaguchiko',
                 badge: '6–7 วัน • อนิเมะ & วินเทจ',
                 highlight: 'ตามรอย Your Name (Suga Shrine), ช้อปวินเทจ Shimokitazawa และชมวิวฟูจิ',
                 currency: 'JPY',
-                image: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=900&q=80',
               },
               {
                 title: 'Nagoya - Ghibli Park & Shirakawa-go',
+                placeQuery: 'Shirakawa-go',
+                city: 'Gifu',
                 badge: '6–7 วัน • Ghibli & หุบเขา',
                 highlight: 'เที่ยว Ghibli Park นาโกย่า หมู่บ้านมรดกโลกชิราคาวาโกะ และเดินป่าคามิโคจิ',
                 currency: 'JPY',
-                image: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&w=900&q=80',
               },
               {
                 title: 'Fukuoka - Yufuin & North Kyushu',
+                placeQuery: 'Lake Kinrin Yufuin',
+                city: 'Oita',
                 badge: '5–6 วัน • รถไฟธรรมชาติ & ออนเซน',
                 highlight: 'นั่งรถไฟสายป่า Yufuin no Mori เดินหมู่บ้านริมลำธาร และชิมราเมงฮากาตะ',
                 currency: 'JPY',
-                image: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=900&q=80',
               },
-            ].map((idea) => (
+            ].map((idea, idx) => (
               <div
                 key={idea.title}
                 className="group rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] overflow-hidden flex flex-col justify-between transition-all hover:border-[#C83E2D] dark:hover:border-blue-500/60 shadow-[0_6px_18px_-12px_rgba(35,28,20,0.12)]"
               >
-                <div className="relative h-24 w-full overflow-hidden bg-[#EFE9DC] dark:bg-[#121316]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={idea.image}
-                    alt={idea.title}
-                    loading="lazy"
+                <div className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-[#2C4A3E] via-[#4A3B2C] to-[#1C2630]">
+                  <TripCoverMedia
+                    tripName={idea.title}
+                    highlightPlace={idea.placeQuery}
+                    highlightCity={idea.city}
+                    idx={idx}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
