@@ -36,6 +36,7 @@ import { getPlaceVisualMeta, usePlaceVisualMeta, triggerViewTransition } from '@
 import { CustomPlacePhotoModal } from '@/components/trip-detail/CustomPlacePhotoModal';
 
 function TripCoverMedia({
+  tripId,
   tripName,
   highlightPlace,
   highlightCity,
@@ -45,6 +46,7 @@ function TripCoverMedia({
   isOwner = false,
   userRole = 'viewer',
 }: {
+  tripId?: string;
   tripName: string;
   highlightPlace?: string;
   highlightCity?: string;
@@ -55,7 +57,7 @@ function TripCoverMedia({
   userRole?: string;
 }) {
   const targetPlace = highlightPlace || tripName;
-  const visual = usePlaceVisualMeta(targetPlace, highlightCity, idx);
+  const visual = usePlaceVisualMeta(targetPlace, highlightCity, idx, undefined, tripId);
   const [imgErr, setImgErr] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
 
@@ -112,6 +114,7 @@ function TripCoverMedia({
         placeName={targetPlace}
         city={highlightCity}
         currentAutoImageUrl={visual.imageUrl}
+        tripId={tripId}
       />
     </>
   );
@@ -297,14 +300,22 @@ export default function HomePage() {
           try {
             const { data: itinRows } = await supabase
               .from('itinerary_items')
-              .select('trip_id, main_place, city, sort_order')
+              .select('trip_id, date_label, main_place, city, sort_order')
               .in('trip_id', tripIds)
               .order('sort_order', { ascending: true });
 
             if (Array.isArray(itinRows)) {
+              const highlightScoreMap = new Map<string, number>();
               for (const row of itinRows) {
                 if (!row?.trip_id || !row?.main_place) continue;
-                if (row.main_place === '__TRIP_METADATA__' || row.city === '__METADATA__') continue;
+                if (
+                  row.date_label === '__meta_trip_data__' ||
+                  row.main_place === '__TRIP_METADATA__' ||
+                  row.main_place === 'SYSTEM_TRIP_METADATA' ||
+                  row.city === '__METADATA__'
+                ) {
+                  continue;
+                }
                 const lower = String(row.main_place).toLowerCase();
                 const isTransitOrHotel =
                   lower.includes('สุวรรณภูมิ') ||
@@ -312,12 +323,28 @@ export default function HomePage() {
                   lower.includes('airport') ||
                   lower.includes('เช็คอิน') ||
                   lower.includes('เช็กอิน') ||
-                  lower.includes('ฝากกระเป๋า');
+                  lower.includes('เช็กเอาต์') ||
+                  lower.includes('เช็คเอาท์') ||
+                  lower.includes('ฝากกระเป๋า') ||
+                  lower.includes('shopping mall');
 
-                if (!highlightMap.has(row.trip_id) || (!isTransitOrHotel && highlightMap.get(row.trip_id)?.place.includes('สนามบิน'))) {
-                  if (!isTransitOrHotel || !highlightMap.has(row.trip_id)) {
-                    highlightMap.set(row.trip_id, { place: row.main_place, city: row.city });
-                  }
+                const isIconicLandmark =
+                  lower.includes('kiyomizu') ||
+                  lower.includes('dotonbori') ||
+                  lower.includes('osaka castle') ||
+                  lower.includes('fushimi') ||
+                  lower.includes('kinkaku') ||
+                  lower.includes('arashiyama') ||
+                  lower.includes('วัดน้ำใส') ||
+                  lower.includes('ปราสาทโอซาก้า') ||
+                  lower.includes('โดทงโบริ') ||
+                  lower.includes('กูลิโกะ');
+
+                const score = isIconicLandmark ? 3 : isTransitOrHotel ? 1 : 2;
+                const prevScore = highlightScoreMap.get(row.trip_id) ?? 0;
+                if (score > prevScore) {
+                  highlightScoreMap.set(row.trip_id, score);
+                  highlightMap.set(row.trip_id, { place: row.main_place, city: row.city });
                 }
               }
             }
@@ -1292,6 +1319,7 @@ export default function HomePage() {
                       style={{ aspectRatio: '4 / 3' }}
                     >
                       <TripCoverMedia
+                        tripId={t.id}
                         tripName={tripName}
                         highlightPlace={t.highlightPlace}
                         highlightCity={t.highlightCity}
@@ -1415,6 +1443,7 @@ export default function HomePage() {
                     style={{ aspectRatio: '16 / 9' }}
                   >
                     <TripCoverMedia
+                      tripId={t.id}
                       tripName={tripName}
                       highlightPlace={t.highlightPlace}
                       highlightCity={t.highlightCity}

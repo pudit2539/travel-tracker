@@ -210,17 +210,23 @@
   - คาเฟ่สำรอง: LiLo Coffee Roasters (ร้านกาแฟ Specialty Coffee ชื่อดังแห่งย่านชินไซบาชิ)
   - ร้านขนมสำรอง: Rikuro Ojisan Namba (ชีสเค้กคุณลุงเด้งดึ๋ง อบสดใหม่ส่งกลิ่นหอมสั่นกระดิ่ง)
 
-#### 📍 [13:30 – 16:00 น.] เที่ยวชมปราสาทโอซาก้า Osaka Castle & Park (ชมหอคอยปราสาทและสวนประวัติศาสตร์ช่วงบ่าย) (Osaka (Osaka Castle))
+#### 📍 [13:30 – 15:30 น.] เที่ยวชมปราสาทโอซาก้า Osaka Castle & Park (ชมหอคอยปราสาทและสวนประวัติศาสตร์ช่วงบ่าย) (Osaka (Osaka Castle))
 - 🚆 **การเดินทาง**: Osaka Metro จาก Shinsaibashi -> Morinomiya / Osakajokoen | แตะ ICOCA (240 เยน)
-- 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: แวะจิบกาแฟริมแม่น้ำโทซาโบริที่ Brooklyn Roasting Company Kitahama (ร้านกาแฟชื่อดังวิวสวน Nakanoshima นั่งสาย Sakaisuji ลงสถานี Kitahama ทางออก 29/30 แล้วต่อสาย Keihan ไปปราสาทโอซาก้าได้สะดวกมาก)
+- 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: คาเฟ่และเบเกอรี่ในสวนปราสาท R Baker Osaka Castle Park หรือ Miraiza Osaka-jo
 - 🛡️ **แผนสำรอง & ร้านอาหาร/คาเฟ่สำรอง**:
-  - คาเฟ่แนะนำริมน้ำ (ทางผ่านไปปราสาท): Brooklyn Roasting Company Kitahama (เปิด 08:00–20:00 น. / ส.-อา. ปิด 19:00 น. บรรยากาศริมแม่น้ำสวยมาก)
   - ที่เที่ยวสำรองในสวนปราสาท: Miraiza Osaka-jo (อาคารประวัติศาสตร์สไตล์ยุโรปหน้าปราสาท รวมคาเฟ่และร้านขนม)
   - จุดชมวิวสำรอง: จุดล่องเรือชมคูเมืองปราสาท Osaka Castle Gozabune Boat
   - คาเฟ่สำรอง: R Baker Osaka Castle Park (เบเกอรี่และกาแฟในสวนร่มรื่น)
 
-#### 📍 [17:00 น. เป็นต้นไป] Shinsaibashi & Dotonbori: เดินสำรวจถนนคนเดิน ถ่ายรูปคู่ป้าย Dotonbori Glico Sign และช้อปปิ้งห้าง Daimaru Shinsaibashi (Osaka (Shinsaibashi & Dotonbori))
-- 🚆 **การเดินทาง**: เดินเท้าจากโรงแรม | ฟรี
+#### 📍 [15:45 – 16:45 น.] จิบกาแฟริมแม่น้ำโทซาโบริที่ Brooklyn Roasting Company Kitahama (คาเฟ่ Specialty Coffee ชื่อดังวิวสวน Nakanoshima) (Osaka (Kitahama))
+- 🚆 **การเดินทาง**: นั่งรถไฟ Keihan Line จาก Temmabashi -> Kitahama เพียง 1 สถานี (2 นาที / ทางออก 29 หรือ 30) | แตะ ICOCA (160 เยน)
+- 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: Brooklyn Roasting Company Kitahama (เปิด จ.-ศ. 08:00–20:00 น. / ส.-อา. 08:00–19:00 น.) เมนูแนะนำ: Iced Latte, Drip Coffee และเบเกอรี่โฮมเมด
+- 🛡️ **แผนสำรอง & ร้านอาหาร/คาเฟ่สำรอง**:
+  - ที่เที่ยวใกล้เคียง: สวน Nakanoshima Park & หอประชุมกลางเมืองโอซาก้า (Osaka City Central Public Hall)
+  - คาเฟ่สำรอง: MOTO COFFEE Kitahama (คาเฟ่ริมน้ำข้างเคียงวิวเดียวกัน)
+
+#### 📍 [17:15 น. เป็นต้นไป] Shinsaibashi & Dotonbori: เดินสำรวจถนนคนเดิน ถ่ายรูปคู่ป้าย Dotonbori Glico Sign และช้อปปิ้งห้าง Daimaru Shinsaibashi (Osaka (Shinsaibashi & Dotonbori))
+- 🚆 **การเดินทาง**: นั่ง Osaka Metro สาย Sakaisuji / Midosuji จาก Kitahama กลับย่าน Shinsaibashi & Dotonbori (10 นาที) | แตะ ICOCA (190 เยน)
 - 🍜 **ร้านอาหาร / คาเฟ่แนะนำ**: เลือกได้ตามชอบ: Chibo Okonomiyaki Dotonbori (โอโคโนมิยากิกระทะร้อน) หรือ Hakugintei Ito Building Honmachi (ข้าวแกงกะหรี่หมูทอดมิชลิน) หรือ Tempura Makino Namba (เซตเทมปุระทอดสด) หรือ Kura Sushi Dotonbori (ซูชิสายพานสาขาเรือธง) หรือ Mugen Ramen Sennichimae (ราเมงซุปกระดูกวัวเนื้อวากิว)
 - 🛡️ **แผนสำรอง & ร้านอาหาร/คาเฟ่สำรอง**:
   - ร้านซูชิสายพานสำรอง: Kura Sushi Global Flagship Store Dotonbori (สาขาเรือธงดีไซน์งานเทศกาลญี่ปุ่น มีเกมหยอดจานลุ้นกาชาปอง Bikkura-Pon)

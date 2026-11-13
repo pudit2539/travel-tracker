@@ -54,14 +54,65 @@ const SPECIFIC_ATTRACTION_THUMBNAILS: LandmarkRule[] = [
     tagLabel: 'Amanohashidate',
     wikiQuery: 'Amanohashidate',
   },
+  // 2.5 Brooklyn Roasting Company Kitahama (Riverside Cafe)
+  {
+    keywords: ['brooklyn roasting', 'kitahama', 'nakanoshima', 'คิตาฮามะ'],
+    imageUrl: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-amber-700 via-stone-700 to-slate-800',
+    emoji: '☕',
+    tagLabel: 'Kitahama Cafe',
+    wikiQuery: 'Nakanoshima Park',
+  },
+  // 2.8 Minoh Falls (Waterfall) & Ryuanji (placed BEFORE Katsuo-ji so they don't share the Daruma photo)
+  {
+    keywords: ['minoh falls', 'น้ำตกมิโนะ', 'dainichi'],
+    imageUrl: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-emerald-700 via-teal-600 to-cyan-700',
+    emoji: '🏞️',
+    tagLabel: 'Minoh Falls',
+    wikiQuery: 'Minoo Park',
+  },
+  {
+    keywords: ['ryuanji', 'hashimoto-tei', 'เรียวอันจิ', 'ฮาชิโมโตะ'],
+    imageUrl: 'https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-rose-700 via-amber-700 to-emerald-800',
+    emoji: '🍁',
+    tagLabel: 'Ryuan-ji Minoh',
+    wikiQuery: 'Minoo, Osaka',
+  },
   // 3. Katsuo-ji Temple (Daruma Temple, Minoh)
   {
-    keywords: ['katsuoji', 'katsuo-ji', 'daruma', 'minoh', 'คัตสึโอจิ', 'วัดดารุมะ', 'ดารุมะ', 'มิโนะ', 'น้ำตกมิโนะ'],
+    keywords: ['katsuoji', 'katsuo-ji', 'daruma', 'คัตสึโอจิ', 'วัดดารุมะ', 'ดารุมะ'],
     imageUrl: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=1200&q=85',
     gradient: 'from-red-600 via-rose-600 to-orange-600',
     emoji: '🎯',
     tagLabel: 'Katsuo-ji Temple',
     wikiQuery: 'Katsuo-ji',
+  },
+  // 3.5 Shirahige Shrine, Omihachiman, La Collina (Lake Biwa)
+  {
+    keywords: ['shirahige', 'ชิราฮิเงะ', 'omi-takashima'],
+    imageUrl: 'https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-sky-700 via-blue-700 to-indigo-800',
+    emoji: '⛩️',
+    tagLabel: 'Shirahige Shrine',
+    wikiQuery: 'Shirahige Shrine',
+  },
+  {
+    keywords: ['omihachiman', 'hachiman-bori', 'โอมิฮาจิมัง'],
+    imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-teal-700 via-emerald-700 to-slate-800',
+    emoji: '🛶',
+    tagLabel: 'Omihachiman Canal',
+    wikiQuery: 'Omihachiman',
+  },
+  {
+    keywords: ['la collina', 'club harie', 'ลา คอลลิน่า'],
+    imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=85',
+    gradient: 'from-lime-700 via-emerald-700 to-teal-800',
+    emoji: '🌿',
+    tagLabel: 'La Collina',
+    wikiQuery: 'La Collina Omihachiman',
   },
   // 4. Uji & Byodo-in (Matcha Town)
   {
@@ -333,6 +384,36 @@ const DEFAULT_VISUALS: PlaceVisualMeta[] = [
 export function extractAttractionSearchQuery(placeName?: string, city?: string): string {
   if (!placeName) return city || '';
 
+  const lowerAll = placeName.toLowerCase();
+  const cityLower = (city || '').toLowerCase();
+
+  // Handle transit / airline / checkout stops that otherwise extract non-place names
+  if (lowerAll.includes('vietnam airlines') || lowerAll.includes('สุวรรณภูมิ')) {
+    return 'Suvarnabhumi Airport';
+  }
+  if (
+    lowerAll.includes('thai vietjet') ||
+    lowerAll.includes('airport limousine') ||
+    lowerAll.includes('สนามบินคันไซ') ||
+    /\bkix\b/i.test(lowerAll)
+  ) {
+    return 'Kansai International Airport';
+  }
+  if (lowerAll.includes('jr special rapid')) {
+    return 'Kyoto Station';
+  }
+  if (lowerAll.includes('สถานีเกียวโต') && !/[a-z]{4,}/i.test(placeName)) {
+    return 'Kyoto Station';
+  }
+  if (lowerAll.includes('เช็กเอาต์') || lowerAll.includes('เช็คเอาท์')) {
+    if (lowerAll.includes("hotel the m's")) return "Hotel The M's Kyoto";
+    if (lowerAll.includes('hotel musse')) return 'Kawaramachi Kyoto';
+    if (lowerAll.includes('odysis suites')) return 'Rinku-Town Station';
+  }
+  if (lowerAll.includes('shinsaibashi & dotonbori') && !lowerAll.includes('glico')) {
+    return 'Shinsaibashi-Suji Shopping Street';
+  }
+
   // Remove bracket tags e.g. [ปรับใหม่], [ไฮไลต์]
   let cleaned = placeName.replace(/\[.*?\]/g, ' ').trim();
   // Remove common Thai action prefixes
@@ -343,17 +424,24 @@ export function extractAttractionSearchQuery(placeName?: string, city?: string):
     )
     .trim();
 
-  // Prefer English landmark or hotel phrases if present (e.g. "Hotel Musse Kyoto Shijo Kawaramachi", "Quintessa Hotel Osaka Shinsaibashi Comic & Books", "Ine Funaya")
-  const englishPhrases = cleaned.match(/[A-Za-z][A-Za-z0-9\s&'-]{2,}/g);
+  // Prefer English landmark or hotel phrases if present (allow leading digit like "2nd STREET", strip trailing punctuation)
+  const englishPhrases = cleaned.match(/[A-Za-z0-9][A-Za-z0-9\s&'-]{2,}/g);
   if (englishPhrases && englishPhrases.length > 0) {
     const valid = englishPhrases
-      .map((s) => s.trim())
-      .filter((s) => s.length >= 3 && !/^(day|plan|trip|and|the|from|to|icoca|jr)$/i.test(s));
+      .map((s) => s.replace(/[\s&/-]+$/g, '').trim())
+      .filter(
+        (s) =>
+          s.length >= 3 &&
+          !/^\d+$/.test(s) &&
+          !/^(day|plan|trip|and|the|from|to|icoca|jr|min|hrs?)$/i.test(s)
+      );
     if (valid.length > 0) {
       valid.sort((a, b) => b.length - a.length);
       return valid[0];
     }
   }
+
+  if (cityLower.includes('kyoto station')) return 'Kyoto Station';
 
   // Otherwise take the first concise Thai segment before punctuation
   const firstSegment = cleaned.split(/[,()/•\n-]/)[0].trim();
@@ -759,7 +847,7 @@ export function compressImageFileToDataUrl(
 //   Layer 2: Wikimedia / Wikipedia HD Photo Resolver (1280px HD)
 // ============================================================================
 
-const PHOTO_CACHE_STORAGE_KEY = 'travel_tracker_real_place_photos_v3';
+const PHOTO_CACHE_STORAGE_KEY = 'travel_tracker_real_place_photos_v4';
 
 export interface ResolvedPhotoRecord {
   url: string;
