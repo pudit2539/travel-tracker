@@ -157,9 +157,9 @@ export function HotelVoucherPreviewModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 sm:p-4 backdrop-blur-md bg-black/85 animate-in fade-in duration-200 overscroll-contain">
+    <div className="fixed inset-0 z-[110] flex items-start sm:items-center justify-center p-2 sm:p-4 backdrop-blur-md bg-black/85 overflow-y-auto overscroll-contain animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-4xl max-h-[94dvh] bg-white dark:bg-[#121316] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className="my-auto w-full max-w-4xl max-h-[94dvh] bg-white dark:bg-[#121316] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
       >
@@ -303,7 +303,7 @@ export function HotelVoucherPreviewModal({
               </div>
 
               {/* PDF Viewer Iframe */}
-              <div className="w-full h-[58vh] sm:h-[68vh] rounded-xl overflow-hidden border border-slate-200 dark:border-[#262932] bg-white shadow-inner">
+              <div className="w-full h-[58dvh] sm:h-[68dvh] rounded-xl overflow-hidden border border-slate-200 dark:border-[#262932] bg-white shadow-inner">
                 <iframe
                   src={blobPdfUrl || activeDataUrl || ''}
                   title={`ใบจอง ${hotelName}`}
@@ -316,7 +316,7 @@ export function HotelVoucherPreviewModal({
             </div>
           ) : (
             /* Image Viewer with Zoom Controls */
-            <div className="relative w-full h-[62vh] sm:h-[72vh] flex items-center justify-center overflow-auto p-2">
+            <div className="relative w-full h-[62dvh] sm:h-[72dvh] flex items-center justify-center overflow-auto p-2">
               {/* Floating Image Controls */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white border border-white/10 shadow-lg text-xs">
                 <button

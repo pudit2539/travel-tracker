@@ -2455,7 +2455,7 @@ export default function TripDetailPage() {
           <div className="pt-1 sm:pt-1.5 flex items-center justify-between gap-2 sm:gap-4">
             
             {/* Left: Back Arrow & Trip Details */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <Link
                 href="/"
                 className="p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 shadow-2xs transition-all shrink-0 cursor-pointer"
@@ -2464,38 +2464,43 @@ export default function TripDetailPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Link>
               
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white truncate max-w-[170px] min-[400px]:max-w-[220px] sm:max-w-xs md:max-w-sm lg:max-w-md">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <h1 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white truncate min-w-0">
                     {(trip?.name || trip?.title) || 'รายละเอียดทริป'}
                   </h1>
                   
                   <span 
                     title={isOnline ? 'สถานะ: ออนไลน์' : 'สถานะ: ออฟไลน์ (แคชเครื่อง)'}
-                    className={`inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 ${
+                    className={`hidden sm:inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border shrink-0 ${
                       isOnline 
                         ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900' 
                         : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900'
                     }`}
                   >
                     {isOnline ? <Wifi className="h-3 w-3 text-emerald-500" /> : <WifiOff className="h-3 w-3 text-amber-500" />}
-                    <span className="hidden sm:inline">{isOnline ? 'ออนไลน์' : 'ออฟไลน์'}</span>
+                    <span>{isOnline ? 'ออนไลน์' : 'ออฟไลน์'}</span>
                   </span>
 
                   {isSuper && (
                     <span 
                       title="Super Admin"
-                      className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0"
+                      className="hidden sm:inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0"
                     >
-                      👑 <span className="hidden sm:inline">Super Admin</span>
+                      👑 <span>Super Admin</span>
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-semibold truncate pt-0.5">
+                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold truncate pt-0.5">
+                  <span
+                    className={`sm:hidden w-2 h-2 rounded-full shrink-0 ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                    title={isOnline ? 'ออนไลน์' : 'ออฟไลน์'}
+                  />
                   <span className="text-blue-600 dark:text-blue-400 font-mono font-bold">{trip?.currency || 'JPY'}</span>
                   <span>•</span>
-                  <span>{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
+                  <span className="truncate">{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
+                  {isSuper && <span className="sm:hidden shrink-0" title="Super Admin">👑</span>}
                 </div>
               </div>
             </div>
@@ -4048,8 +4053,8 @@ export default function TripDetailPage() {
               </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[58vh] sm:max-h-[62vh]">
-              <img src={previewImage} alt="Receipt Preview" className="max-h-[56vh] sm:max-h-[60vh] w-auto object-contain rounded-xl shadow-md" />
+            <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[58dvh] sm:max-h-[62dvh]">
+              <img src={previewImage} alt="Receipt Preview" className="max-h-[56dvh] sm:max-h-[60dvh] w-auto object-contain rounded-xl shadow-md" />
             </div>
 
             <div className="pt-2 flex flex-col gap-2">

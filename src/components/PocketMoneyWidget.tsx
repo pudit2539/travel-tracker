@@ -2,11 +2,13 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Plus, AlertTriangle, Edit2, X, ChevronDown, ChevronUp 
 } from 'lucide-react';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { resolveDisplayCurrency } from '@/lib/tripStatus';
+import { useIsMounted } from '@/lib/useIsMounted';
 
 interface PocketMoneyWidgetProps {
   tripId: string;
@@ -38,6 +40,7 @@ export default function PocketMoneyWidget({
   const [addCashAmount, setAddCashAmount] = useState('20000');
 
   // Starting Travel Card State (stored in LocalStorage)
+  const mounted = useIsMounted();
   const [startingTravelCard, setStartingTravelCard] = useState<number>(0);
   const [isEditingTravelCard, setIsEditingTravelCard] = useState(false);
   const [travelCardInput, setTravelCardInput] = useState('0');
@@ -501,13 +504,16 @@ export default function PocketMoneyWidget({
       )}
 
       {/* Add Cash (ATM Withdrawal) Modal */}
-      {showAddCashModal && (
+      {showAddCashModal && mounted && createPortal(
         <div 
-          className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4 animate-in fade-in"
+          className="fixed inset-0 z-60 flex items-start sm:items-center justify-center bg-black/80 p-3 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in"
           onClick={() => setShowAddCashModal(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="เติมเงินสด"
         >
           <div 
-            className="w-full max-w-sm bg-white dark:bg-[#181a20] rounded-3xl p-5 space-y-4 border border-slate-200 dark:border-[#262932] shadow-2xl animate-in zoom-in-95"
+            className="my-auto w-full max-w-sm max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#181a20] rounded-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 border border-slate-200 dark:border-[#262932] shadow-2xl animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
@@ -517,7 +523,7 @@ export default function PocketMoneyWidget({
               <button
                 type="button"
                 onClick={() => setShowAddCashModal(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -535,7 +541,7 @@ export default function PocketMoneyWidget({
                     required
                     value={addCashAmount}
                     onChange={(e) => setAddCashAmount(e.target.value)}
-                    className="w-full pl-8 pr-3 py-3 rounded-2xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-lg font-mono font-black text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full pl-8 pr-3 py-3 rounded-2xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-lg font-mono font-black text-slate-900 dark:text-white outline-none focus:border-emerald-500 touch-manipulation"
                   />
                 </div>
               </div>
@@ -546,7 +552,7 @@ export default function PocketMoneyWidget({
                     key={amt}
                     type="button"
                     onClick={() => setAddCashAmount(amt.toString())}
-                    className="py-1.5 rounded-xl border border-slate-200 dark:border-[#2b2f3d] text-xs font-bold hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/40 cursor-pointer transition-colors"
+                    className="py-2 rounded-xl border border-slate-200 dark:border-[#2b2f3d] text-xs font-bold hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/40 cursor-pointer transition-colors touch-manipulation"
                   >
                     +¥{amt.toLocaleString()}
                   </button>
@@ -555,23 +561,27 @@ export default function PocketMoneyWidget({
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
+                className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95 min-h-[44px] touch-manipulation"
               >
                 ยืนยันการเติมเงินสด
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Add / Top up Travel Card Modal */}
-      {showAddTravelCardModal && (
+      {showAddTravelCardModal && mounted && createPortal(
         <div 
-          className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4 animate-in fade-in"
+          className="fixed inset-0 z-60 flex items-start sm:items-center justify-center bg-black/80 p-3 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in"
           onClick={() => setShowAddTravelCardModal(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="แลกเงินเข้า Travel Card เพิ่ม"
         >
           <div 
-            className="w-full max-w-sm bg-white dark:bg-[#181a20] rounded-3xl p-5 space-y-4 border border-slate-200 dark:border-[#262932] shadow-2xl animate-in zoom-in-95"
+            className="my-auto w-full max-w-sm max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#181a20] rounded-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 border border-slate-200 dark:border-[#262932] shadow-2xl animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
@@ -581,7 +591,7 @@ export default function PocketMoneyWidget({
               <button
                 type="button"
                 onClick={() => setShowAddTravelCardModal(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -599,7 +609,7 @@ export default function PocketMoneyWidget({
                     required
                     value={addTravelCardAmount}
                     onChange={(e) => setAddTravelCardAmount(e.target.value)}
-                    className="w-full pl-8 pr-3 py-3 rounded-2xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-lg font-mono font-black text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                    className="w-full pl-8 pr-3 py-3 rounded-2xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#15171e] text-lg font-mono font-black text-slate-900 dark:text-white outline-none focus:border-blue-500 touch-manipulation"
                     placeholder="20000"
                   />
                 </div>
@@ -611,7 +621,7 @@ export default function PocketMoneyWidget({
                     key={amt}
                     type="button"
                     onClick={() => setAddTravelCardAmount(amt.toString())}
-                    className="py-1.5 rounded-xl border border-slate-200 dark:border-[#2b2f3d] text-xs font-bold hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/40 cursor-pointer transition-colors"
+                    className="py-2 rounded-xl border border-slate-200 dark:border-[#2b2f3d] text-xs font-bold hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/40 cursor-pointer transition-colors touch-manipulation"
                   >
                     +¥{amt.toLocaleString()}
                   </button>
@@ -620,13 +630,14 @@ export default function PocketMoneyWidget({
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95"
+                className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition-all active:scale-95 min-h-[44px] touch-manipulation"
               >
                 ยืนยันการเพิ่มยอดเงินในบัตร
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

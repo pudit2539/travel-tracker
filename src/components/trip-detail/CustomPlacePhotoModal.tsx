@@ -283,12 +283,12 @@ export function CustomPlacePhotoModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="พิมพ์ชื่อโรงแรม / สถานที่เที่ยว เช่น Quintessa Hotel Osaka..."
-              className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-white dark:bg-[#121316] border border-slate-200 dark:border-[#262932] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              className="flex-1 min-w-0 px-3 py-2 sm:py-1.5 rounded-xl text-base sm:text-xs bg-white dark:bg-[#121316] border border-slate-200 dark:border-[#262932] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
             />
             <button
               type="submit"
               disabled={loadingCandidates}
-              className="px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 hover:bg-blue-500 text-white shrink-0 inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              className="px-3 py-2 sm:py-1.5 rounded-xl text-xs font-black bg-blue-600 hover:bg-blue-500 text-white shrink-0 inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 min-h-[38px] sm:min-h-0 touch-manipulation"
             >
               {loadingCandidates ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
               <span>ค้นหา</span>
@@ -301,7 +301,7 @@ export function CustomPlacePhotoModal({
               <span>กำลังดึงตัวเลือกรูปสถานที่จริงจาก Google Maps...</span>
             </div>
           ) : candidates.length > 0 ? (
-            <div className="grid grid-cols-5 gap-1.5 pt-0.5">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 pt-0.5">
               {candidates.map((cand, i) => {
                 const isSelected = previewUrl === cand.url;
                 return (

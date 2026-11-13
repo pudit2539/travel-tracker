@@ -581,7 +581,7 @@ export function FlightBoardingPassCard({
                       </div>
 
                       {/* Metadata Grid */}
-                      <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
                         <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#1e2027] border border-slate-200/70 dark:border-[#262932]">
                           <span className="text-[9px] uppercase font-bold text-slate-400 block">Terminal</span>
                           <span className="font-mono font-black text-slate-800 dark:text-white text-xs">{flight.terminal || '-'}</span>
@@ -879,7 +879,7 @@ export function FlightBoardingPassCard({
                 </div>
 
                 {/* Terminal, Gate, Seat */}
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
                     <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                       Terminal
@@ -919,7 +919,7 @@ export function FlightBoardingPassCard({
                 </div>
 
                 {/* Booking Reference & Passenger Name */}
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                       เลขที่การจอง (Booking Ref / PNR)

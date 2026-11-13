@@ -701,12 +701,12 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
 
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <div className="min-w-0 rounded-2xl p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
-              <div className="text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400">
+            <div className="min-w-0 rounded-2xl p-2 sm:p-3 bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between">
+              <div className="text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400 truncate">
                 ใช้ไปแล้ว ({spentDisp.primaryCurrency})
               </div>
-              <div className="mt-1">
-                <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono">
+              <div className="mt-1 min-w-0">
+                <div className="text-xs sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono tabular-nums truncate">
                   <AnimatedNumber value={spentDisp.primaryAmount} />
                 </div>
                 <div className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
@@ -715,12 +715,12 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               </div>
             </div>
 
-            <div className="min-w-0 rounded-2xl p-2.5 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
-              <div className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300">
+            <div className="min-w-0 rounded-2xl p-2 sm:p-3 bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-[#262932] flex flex-col justify-between">
+              <div className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate">
                 ตั้งเป้าไว้ ({targetDisp.primaryCurrency})
               </div>
-              <div className="mt-1">
-                <div className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono">
+              <div className="mt-1 min-w-0">
+                <div className="text-xs sm:text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight font-mono tabular-nums truncate">
                   {heroDisplayData.targetBudget > 0 ? (
                     <AnimatedNumber value={targetDisp.primaryAmount} />
                   ) : (
@@ -733,18 +733,18 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               </div>
             </div>
 
-            <div className={`min-w-0 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between ${
+            <div className={`min-w-0 rounded-2xl p-2 sm:p-3 flex flex-col justify-between ${
               heroDisplayData.isOver 
                 ? 'bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40' 
                 : 'bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40'
             }`}>
-              <div className={`text-[10px] sm:text-[11px] font-bold ${
+              <div className={`text-[10px] sm:text-[11px] font-bold truncate ${
                 heroDisplayData.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-300'
               }`}>
                 {heroDisplayData.isOver ? 'เกินงบ' : 'คงเหลือ'} ({remDisp.primaryCurrency})
               </div>
-              <div className="mt-1">
-                <div className={`text-sm sm:text-base md:text-lg font-black leading-tight font-mono ${
+              <div className="mt-1 min-w-0">
+                <div className={`text-xs sm:text-base md:text-lg font-black leading-tight font-mono tabular-nums truncate ${
                   heroDisplayData.isOver ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'
                 }`}>
                   <AnimatedNumber value={remDisp.primaryAmount} />
@@ -851,7 +851,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </div>
 
           {/* Right Actions: Clean File Dropdown (PDF/Excel) + Primary Add Activity */}
-          <div className="flex items-center gap-2 ml-auto relative">
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto relative">
             <div className="relative">
               <button
                 type="button"

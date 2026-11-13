@@ -344,11 +344,11 @@ export default function PhotoScrapbookModal({
                 </button>
               </div>
 
-              <div className="rounded-2xl overflow-hidden bg-black/10 flex items-center justify-center max-h-[65vh]">
+              <div className="rounded-2xl overflow-hidden bg-black/10 flex items-center justify-center max-h-[65dvh]">
                 <img
                   src={selectedPhoto.image_url}
                   alt={selectedPhoto.caption}
-                  className="max-h-[62vh] w-auto object-contain rounded-xl shadow-md"
+                  className="max-h-[62dvh] w-auto object-contain rounded-xl shadow-md"
                 />
               </div>
 

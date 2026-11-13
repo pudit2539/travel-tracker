@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -188,12 +189,16 @@ export default function SuperAdminModal({
     return logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [trips, recentExpenses, users]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
   if (!isUserAdmin) {
-    return (
-      <div className="fixed inset-0 z-[110] flex items-center justify-center backdrop-blur-md bg-black/80 p-4">
-        <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#181a20] p-6 text-center space-y-4 border border-rose-500/30 shadow-2xl">
+    return createPortal(
+      <div
+        className="fixed inset-0 z-[110] flex items-start sm:items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overflow-y-auto overscroll-contain"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="my-auto w-full max-w-sm rounded-3xl bg-white dark:bg-[#181a20] p-6 text-center space-y-4 border border-rose-500/30 shadow-2xl">
           <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
           <h2 className="text-base font-black text-slate-900 dark:text-white">ปฏิเสธการเข้าถึง (Access Denied)</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -201,12 +206,13 @@ export default function SuperAdminModal({
           </p>
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-[#262932] text-xs font-bold text-slate-700 dark:text-slate-200"
+            className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-[#262932] text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer min-h-[42px]"
           >
             ปิดหน้าต่าง
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -249,9 +255,13 @@ export default function SuperAdminModal({
     );
   });
 
-  return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-4xl rounded-3xl bg-white dark:bg-[#14161b] shadow-2xl border border-amber-500/30 flex flex-col max-h-[92dvh] overflow-hidden">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[110] flex items-start sm:items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="my-auto w-full max-w-4xl rounded-3xl bg-white dark:bg-[#14161b] shadow-2xl border border-amber-500/30 flex flex-col max-h-[90dvh] overflow-hidden pb-[max(0px,env(safe-area-inset-bottom))]">
         
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-[#262932] flex items-center justify-between shrink-0 bg-gradient-to-r from-amber-500/10 via-transparent to-purple-500/10">
@@ -293,7 +303,7 @@ export default function SuperAdminModal({
         </div>
 
         {/* System Stats Bar */}
-        <div className="grid grid-cols-4 divide-x divide-slate-200 dark:divide-[#262932] border-b border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#181a20]/60 p-3 shrink-0 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-2.5 sm:gap-y-0 sm:divide-x divide-slate-200 dark:divide-[#262932] border-b border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#181a20]/60 p-3 shrink-0 text-center">
           <div>
             <span className="text-[10px] font-bold uppercase text-slate-400 block">ผู้ใช้ทั้งหมด</span>
             <span className="text-lg font-black text-slate-900 dark:text-white">{users.length}</span>
@@ -751,6 +761,7 @@ export default function SuperAdminModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

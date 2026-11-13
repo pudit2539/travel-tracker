@@ -511,7 +511,7 @@ export default function NotificationBell({
             </div>
 
             {/* Notifications List */}
-            <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-[#262932]">
+            <div className="max-h-[60dvh] sm:max-h-96 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-[#262932]">
               {filteredNotifications.length === 0 ? (
                 <div className="p-8 text-center space-y-2">
                   <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#1e2027] flex items-center justify-center text-slate-400 mx-auto">

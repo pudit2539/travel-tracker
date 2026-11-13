@@ -974,7 +974,7 @@ export default function TravelHubModal({
               </div>
 
               {/* Tickets List */}
-              <div className="space-y-2.5 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2.5 max-h-[50dvh] overflow-y-auto custom-scrollbar pr-1">
                 {tickets.length === 0 ? (
                   <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl space-y-2">
                     <QrCode className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto" />
@@ -1113,7 +1113,7 @@ export default function TravelHubModal({
                         className="p-2 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-slate-50 dark:bg-[#15171e] text-slate-900 dark:text-white"
                       />
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <input
                         type="time"
                         value={trainDepTime}
@@ -1261,7 +1261,7 @@ export default function TravelHubModal({
               </div>
 
               {/* Phrase Cards */}
-              <div className="space-y-2.5 max-h-[52vh] overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2.5 max-h-[52dvh] overflow-y-auto custom-scrollbar pr-1">
                 {filteredPhrases.map((p) => {
                   const isSpeaking = speakingId === p.id;
                   const isCopied = copiedPhraseId === p.id;
