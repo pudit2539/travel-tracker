@@ -2319,7 +2319,7 @@ export default function TripDetailPage() {
 
   if (loading && !trip) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-3">
+      <div className="flex flex-col items-center justify-center min-h-[70dvh] gap-3">
         <Loader2 className="h-9 w-9 animate-spin text-blue-600" />
         <p className="text-xs font-bold text-slate-500 dark:text-slate-400">กำลังโหลดข้อมูลทริป...</p>
       </div>

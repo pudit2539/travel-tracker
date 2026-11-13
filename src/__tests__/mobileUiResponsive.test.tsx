@@ -15,7 +15,7 @@ import { ExpenseThumbnailCard } from '@/components/trip-detail/ExpenseCard';
 import LiveTripCard from '@/components/LiveTripCard';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import PocketMoneyWidget from '@/components/PocketMoneyWidget';
-import CustomPlacePhotoModal from '@/components/trip-detail/CustomPlacePhotoModal';
+import { CustomPlacePhotoModal } from '@/components/trip-detail/CustomPlacePhotoModal';
 import SuperAdminModal from '@/components/SuperAdminModal';
 import { FlightBoardingPassCard } from '@/components/trip-detail/FlightBoardingPassCard';
 import { DEFAULT_CATEGORIES } from '@/lib/categories';
@@ -40,17 +40,25 @@ vi.mock('@/lib/supabase', () => {
     in: vi.fn(() => chain),
     update: vi.fn(() => chain),
     delete: vi.fn(() => chain),
+    maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    single: vi.fn(() => Promise.resolve({ data: null, error: null })),
     then: (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve),
+  };
+  const channelMock = {
+    on: vi.fn(() => channelMock),
+    subscribe: vi.fn(() => channelMock),
   };
   return {
     supabase: {
       from: vi.fn(() => chain),
+      channel: vi.fn(() => channelMock),
+      removeChannel: vi.fn(),
     },
   };
 });
 
 vi.mock('@/lib/flights', () => ({
-  getFlights: vi.fn().mockResolvedValue([
+  getFlights: vi.fn().mockReturnValue([
     {
       id: 'fl-1',
       tripId: 'trip-mob-1',
@@ -94,7 +102,7 @@ describe('Comprehensive Mobile UI & Responsive Regression Suite', () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        candidates: [
+        photos: [
           { url: 'https://example.com/p1.jpg', placeName: 'Angle 1' },
           { url: 'https://example.com/p2.jpg', placeName: 'Angle 2' },
           { url: 'https://example.com/p3.jpg', placeName: 'Angle 3' },
@@ -180,7 +188,7 @@ describe('Comprehensive Mobile UI & Responsive Regression Suite', () => {
             idx={9}
             totalItems={20}
             canEditPlan={true}
-            isPlanBExpanded={false}
+            isPlanBOpen={false}
             reordering={false}
             onTogglePlanB={vi.fn()}
             onMoveActivity={vi.fn()}
@@ -318,6 +326,7 @@ describe('Comprehensive Mobile UI & Responsive Regression Suite', () => {
               { id: 's1', main_place: 'Dotonbori Glico Sign', city: 'Osaka', date_label: '4 ธ.ค.', time_slot: '18:00 น.' },
             ]}
             availableDays={['4 ธ.ค.']}
+            selectedDay="4 ธ.ค."
           />
         );
       });
@@ -370,7 +379,7 @@ describe('Comprehensive Mobile UI & Responsive Regression Suite', () => {
 
       // Expand compact widget first
       const toggleBtn = Array.from(container.querySelectorAll('button')).find((b) =>
-        b.getAttribute('title')?.includes('งบประมาณและเงินสด') || b.textContent?.includes('กระเป๋าเงินทริป')
+        b.textContent?.includes('กระเป๋าเงิน') || b.textContent?.includes('จัดการกระเป๋า')
       );
       expect(toggleBtn).toBeDefined();
       await act(async () => {
@@ -378,7 +387,7 @@ describe('Comprehensive Mobile UI & Responsive Regression Suite', () => {
       });
 
       const addCashBtn = Array.from(container.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('เติมเงินสด')
+        b.textContent?.includes('กดตู้ ATM')
       );
       expect(addCashBtn).toBeDefined();
       await act(async () => {
@@ -413,7 +422,7 @@ describe('Comprehensive Mobile UI & Responsive Regression Suite', () => {
         );
       });
       await act(async () => {
-        await Promise.resolve();
+        await new Promise((r) => setTimeout(r, 0));
       });
 
       const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
@@ -441,7 +450,7 @@ describe('Comprehensive Mobile UI & Responsive Regression Suite', () => {
         );
       });
       await act(async () => {
-        await Promise.resolve();
+        await new Promise((r) => setTimeout(r, 0));
       });
 
       const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;

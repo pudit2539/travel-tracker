@@ -478,6 +478,7 @@ function ItineraryStopCardComponent({
                     }}
                     className="p-1.5 rounded-[4px] bg-black/55 hover:bg-black/80 text-white border border-white/25 backdrop-blur-xs cursor-pointer transition-colors"
                     title="ตัวเลือกเพิ่มเติม (ปรับเวลาแวะ / ของต้องซื้อ / โน้ตกลุ่ม / จัดการจุดแวะ)"
+                    aria-label="ตัวเลือกเพิ่มเติม"
                   >
                     <MoreHorizontal className="h-3.5 w-3.5" />
                   </button>

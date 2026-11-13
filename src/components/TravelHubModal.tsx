@@ -1543,7 +1543,7 @@ export default function TravelHubModal({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[35vh] overflow-y-auto custom-scrollbar pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[35dvh] overflow-y-auto custom-scrollbar pr-1">
                   {NEARBY_PRESETS.map((item) => (
                     <div
                       key={item.id}
@@ -1775,11 +1775,13 @@ export default function TravelHubModal({
       ======================================================== */}
       {previewPassImage && (
         <div 
-          className="fixed inset-0 z-60 flex items-center justify-center bg-black/95 p-4 animate-in fade-in"
+          className="fixed inset-0 z-60 flex items-start sm:items-center justify-center bg-black/95 p-3 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in"
           onClick={() => setPreviewPassImage(null)}
+          role="dialog"
+          aria-modal="true"
         >
           <div 
-            className="relative max-w-md w-full bg-white dark:bg-[#181a20] p-4 rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl space-y-3"
+            className="my-auto relative max-w-md w-full max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#181a20] p-4 rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
@@ -1796,8 +1798,8 @@ export default function TravelHubModal({
             </div>
 
             {/* High Brightness White Container for QR scanners */}
-            <div className="rounded-2xl overflow-hidden bg-white flex items-center justify-center max-h-[70vh] p-4 border-2 border-slate-100 shadow-inner">
-              <img src={previewPassImage} alt="Pass Preview" className="max-h-[60vh] w-auto object-contain rounded-lg" />
+            <div className="rounded-2xl overflow-hidden bg-white flex items-center justify-center max-h-[65dvh] p-4 border-2 border-slate-100 shadow-inner">
+              <img src={previewPassImage} alt="Pass Preview" className="max-h-[56dvh] w-auto object-contain rounded-lg" />
             </div>
 
             <button
