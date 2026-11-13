@@ -3,11 +3,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Wallet, CreditCard, Sparkles, Plus, AlertTriangle, 
-  ArrowRight, DollarSign, RefreshCw, Check, Edit2, X, Store, ChevronDown, ChevronUp 
+  Plus, AlertTriangle, Edit2, X, ChevronDown, ChevronUp 
 } from 'lucide-react';
 import AnimatedNumber from '@/components/AnimatedNumber';
-import { convertToThb } from '@/lib/currency';
 import { resolveDisplayCurrency } from '@/lib/tripStatus';
 
 interface PocketMoneyWidgetProps {
@@ -47,7 +45,10 @@ export default function PocketMoneyWidget({
   const [addTravelCardAmount, setAddTravelCardAmount] = useState('20000');
 
   useEffect(() => {
-    if (tripId && typeof window !== 'undefined') {
+    if (!tripId || typeof window === 'undefined') return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       try {
         const savedCash = localStorage.getItem(`trip_starting_cash_${tripId}`);
         if (savedCash) {
@@ -66,7 +67,10 @@ export default function PocketMoneyWidget({
           }
         }
       } catch {}
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [tripId]);
 
   // Compute spending by payment method

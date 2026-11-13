@@ -1,6 +1,7 @@
 // src/lib/placeThumbnails.ts
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { deleteTripMedia } from '@/lib/mediaStorage';
 
 export interface PlacePhotoCandidate {
   url: string;
@@ -759,16 +760,27 @@ export function setCustomPlacePhoto(
   const deletedKeys: string[] = [];
 
   if (!imageUrlOrDataUrl) {
+    const removedUrls: string[] = [];
     if (itemKey) {
+      const prev = memoryCustomPhotoCache.get(itemKey) || map[itemKey];
+      if (prev) removedUrls.push(prev);
       memoryCustomPhotoCache.delete(itemKey);
       delete map[itemKey];
       deletedKeys.push(itemKey);
     }
     if (placeKey) {
+      const prev = memoryCustomPhotoCache.get(placeKey) || map[placeKey];
+      if (prev) removedUrls.push(prev);
       memoryCustomPhotoCache.delete(placeKey);
       delete map[placeKey];
       deletedKeys.push(placeKey);
     }
+    const remainingUrls = new Set(Object.values(map));
+    removedUrls.forEach((oldUrl) => {
+      if (!remainingUrls.has(oldUrl)) {
+        deleteTripMedia({ urlOrPath: oldUrl }).catch(() => {});
+      }
+    });
   } else {
     if (itemKey) {
       memoryCustomPhotoCache.set(itemKey, imageUrlOrDataUrl);

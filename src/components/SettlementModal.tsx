@@ -3,20 +3,21 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { calculateSettlement, TransferPlan, MemberBalance } from '@/lib/settlement';
+import { calculateSettlement, TransferPlan } from '@/lib/settlement';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatExchangeRateDisplay } from '@/lib/currency';
 import { getTripExpenseSplits, saveTripExpenseSplits } from '@/lib/expenseSplits';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { exportExpensesToExcel } from '@/lib/exportExpensesExcel';
 import { copyToClipboard } from '@/lib/clipboard';
 import { toast } from 'sonner';
+import { useIsMounted } from '@/lib/useIsMounted';
 import { 
   X, ArrowRight, Wallet, Check, Copy, Sparkles, 
-  Users, DollarSign, Calculator, ChevronRight, SlidersHorizontal,
-  QrCode, Utensils, Split, Edit2, CheckCircle2, Circle, AlertCircle, 
-  Share2, ArrowUpRight, UserCheck, CheckSquare, Square, Download, Plus, Trash2
+  Calculator, SlidersHorizontal,
+  QrCode, Utensils, 
+  UserCheck, CheckSquare, Square, Download, Plus, Trash2
 } from 'lucide-react';
 
 export interface SharedFundTopup {
@@ -74,11 +75,7 @@ export default function SettlementModal({
   const [promptPayNumber, setPromptPayNumber] = useState<string>('');
   const [copiedPromptPay, setCopiedPromptPay] = useState(false);
   const [editingPromptPay, setEditingPromptPay] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsMounted();
 
   // Lock body scroll and listen for Escape key on mobile / iPad
   useEffect(() => {
@@ -110,7 +107,10 @@ export default function SettlementModal({
   const [splitsMap, setSplitsMap] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
-    if (effectiveTripId) {
+    if (!effectiveTripId) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       setSplitsMap(getTripExpenseSplits(effectiveTripId));
       try {
         const savedSettled = localStorage.getItem(`travel_tracker_settled_transfers_${effectiveTripId}`);
@@ -135,7 +135,10 @@ export default function SettlementModal({
         const rawGuards = localStorage.getItem(`travel_guardian_map_${effectiveTripId}`);
         if (rawGuards) setGuardianMap(JSON.parse(rawGuards));
       } catch {}
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [effectiveTripId, isOpen, currency]);
 
   const saveSharedFunds = (next: SharedFundPool[]) => {

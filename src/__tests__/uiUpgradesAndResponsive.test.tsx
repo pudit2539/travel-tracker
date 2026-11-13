@@ -18,7 +18,6 @@ import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
 import LiveTripCard from '@/components/LiveTripCard';
 import {
   getPlaceVisualMeta,
-  fetchRealPlacePhotoUrl,
   fetchRealPlacePhotoRecord,
   fetchGooglePlacesPhotoCandidates,
   buildStreetViewUrl,
@@ -37,7 +36,6 @@ import {
   ItineraryCompactRow,
 } from '@/components/trip-detail/ItineraryStopCard';
 import {
-  ExpenseCard,
   ExpenseThumbnailCard,
   ExpenseCompactRow,
 } from '@/components/trip-detail/ExpenseCard';

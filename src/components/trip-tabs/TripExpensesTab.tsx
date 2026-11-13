@@ -8,7 +8,7 @@ import {
 import { ExpenseCard, ExpenseThumbnailCard, ExpenseCompactRow } from '@/components/trip-detail/ExpenseCard';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { CategoryItem } from '@/lib/categories';
-import { convertCurrency, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
+import { convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getTripExpenseSplits } from '@/lib/expenseSplits';
@@ -68,7 +68,6 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
   fxRate,
   currencyView = 'foreign',
   heroDisplayData,
-  heroBudgetView,
   setHeroBudgetView,
   userDisplayName,
   userCat,
@@ -116,7 +115,8 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
     };
   }, []);
 
-  const splitsMap = React.useMemo(() => getTripExpenseSplits(trip?.id), [trip?.id, expenses, splitsVersion]);
+  void splitsVersion;
+  const splitsMap = getTripExpenseSplits(trip?.id);
 
   // Build unified member list & lookup map to resolve split member names and avatars
   const allMembersList = React.useMemo(() => {

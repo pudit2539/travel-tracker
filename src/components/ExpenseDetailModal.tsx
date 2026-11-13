@@ -1,20 +1,24 @@
 // src/components/ExpenseDetailModal.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Edit3, Trash2, Camera, Check, CheckCircle2, 
-  Image as ImageIcon, Calendar, DollarSign, Wallet, 
-  Tag, Loader2, ZoomIn, ArrowRight, Users, UserCheck, Download
+  Image as ImageIcon, Calendar, Loader2, ZoomIn, Users, Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CategoryItem, getCategoryMeta } from '@/lib/categories';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { convertToThb } from '@/lib/currency';
-import { getLocalReceiptPhoto, saveLocalReceiptPhoto } from '@/lib/localReceipts';
-import { compressReceiptImage } from '@/lib/imageCompressor';
+import { getLocalReceiptPhoto } from '@/lib/localReceipts';
+import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
+import { useIsMounted } from '@/lib/useIsMounted';
+
+function getCurrentTimestamp(): number {
+  return Date.now();
+}
 import { 
   getExpenseSplitMembers, 
   setExpenseSplitMembers, 
@@ -60,14 +64,10 @@ export function ExpenseDetailModal({
   const [isEditing, setIsEditing] = useState(startInEditMode);
   const [saving, setSaving] = useState(false);
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const [loadingReceipt, setLoadingReceipt] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const editSwitchTimeRef = React.useRef<number>(0);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Lock body scrolling when modal is open to prevent touch scroll bleeding on iOS/iPadOS
   useEffect(() => {
@@ -93,29 +93,33 @@ export function ExpenseDetailModal({
 
   // Split state
   const [splitWith, setSplitWith] = useState<string[]>([]);
-  const [splitMode, setSplitMode] = useState<'all' | 'single' | 'custom'>('all');
+  const [, setSplitMode] = useState<'all' | 'single' | 'custom'>('all');
 
   // Build member options for payer selection & split
   const myId = currentUser?.id || 'me';
-  const memberOptions: Array<{ id: string; name: string; avatar: string }> = [
-    {
-      id: myId,
-      name: `${userDisplayName} (ฉัน)`,
-      avatar: currentUser?.user_metadata?.avatar_id || 'cat_trio',
-    },
-  ];
-  members.forEach((m) => {
-    const isMe =
-      (m.user_id && currentUser && m.user_id === currentUser.id) ||
-      (m.id && currentUser && m.id === currentUser.id);
-    if (!isMe) {
-      memberOptions.push({
-        id: m.user_id || m.id,
-        name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
-        avatar: m.profiles?.avatar_id || 'cat_trio',
-      });
-    }
-  });
+  const myAvatar = currentUser?.user_metadata?.avatar_id || 'cat_trio';
+  const memberOptions = useMemo<Array<{ id: string; name: string; avatar: string }>>(() => {
+    const opts: Array<{ id: string; name: string; avatar: string }> = [
+      {
+        id: myId,
+        name: `${userDisplayName} (ฉัน)`,
+        avatar: myAvatar,
+      },
+    ];
+    members.forEach((m) => {
+      const isMe =
+        (m.user_id && myId !== 'me' && m.user_id === myId) ||
+        (m.id && myId !== 'me' && m.id === myId);
+      if (!isMe) {
+        opts.push({
+          id: m.user_id || m.id,
+          name: m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก',
+          avatar: m.profiles?.avatar_id || 'cat_trio',
+        });
+      }
+    });
+    return opts;
+  }, [myId, myAvatar, userDisplayName, members]);
 
   // Form State for editing
   const [form, setForm] = useState({
@@ -131,7 +135,10 @@ export function ExpenseDetailModal({
 
   // Load / initialize expense data
   useEffect(() => {
-    if (expense && isOpen) {
+    if (!expense || !isOpen) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       setIsEditing(startInEditMode);
       const initialPayerId =
         expense.payer_id === 'me' || (currentUser && expense.payer_id === currentUser.id)
@@ -188,15 +195,24 @@ export function ExpenseDetailModal({
           setLoadingReceipt(false);
         } else {
           getLocalReceiptPhoto(expense.receipt_url)
-            .then((img) => setReceiptImage(img))
-            .catch(() => setReceiptImage(null))
-            .finally(() => setLoadingReceipt(false));
+            .then((img) => {
+              if (active) setReceiptImage(img);
+            })
+            .catch(() => {
+              if (active) setReceiptImage(null);
+            })
+            .finally(() => {
+              if (active) setLoadingReceipt(false);
+            });
         }
       } else {
         setReceiptImage(null);
       }
-    }
-  }, [expense, isOpen, startInEditMode, tripBaseCurrency, tripId]);
+    });
+    return () => {
+      active = false;
+    };
+  }, [expense, isOpen, startInEditMode, tripBaseCurrency, tripId, currentUser, memberOptions, myId]);
 
   if (!isOpen || !expense) return null;
 
@@ -216,13 +232,20 @@ export function ExpenseDetailModal({
 
     setUploadingReceipt(true);
     try {
-      const result = await compressReceiptImage(file);
-      const receiptStorageRef = `local_receipt_${Date.now()}`;
-      await saveLocalReceiptPhoto(receiptStorageRef, result.dataUrl);
-      setReceiptImage(result.dataUrl);
-      // Save dataUrl directly so all devices and mobile can load and download the photo
-      setForm((prev) => ({ ...prev, receipt_url: result.dataUrl }));
-    } catch (err) {
+      const uploaded = await uploadTripMedia({
+        tripId: tripId || expense?.trip_id || 'shared',
+        folder: 'receipts',
+        file,
+        maxWidth: 1200,
+        quality: 0.82,
+        cacheOffline: true,
+      });
+      if (form.receipt_url && form.receipt_url !== uploaded.url) {
+        deleteTripMedia({ urlOrPath: form.receipt_url }).catch(() => {});
+      }
+      setReceiptImage(uploaded.url);
+      setForm((prev) => ({ ...prev, receipt_url: uploaded.url }));
+    } catch {
       toast.error('ไม่สามารถอัปโหลดรูปภาพได้');
     } finally {
       setUploadingReceipt(false);
@@ -288,7 +311,7 @@ export function ExpenseDetailModal({
       e.preventDefault();
       e.stopPropagation();
     }
-    editSwitchTimeRef.current = Date.now();
+    editSwitchTimeRef.current = getCurrentTimestamp();
     setIsEditing(true);
   };
 
@@ -299,7 +322,7 @@ export function ExpenseDetailModal({
       e.stopPropagation();
     }
     // Prevent ghost click / accidental instant submit within 450ms of switching to edit mode
-    if (Date.now() - editSwitchTimeRef.current < 450) {
+    if (getCurrentTimestamp() - editSwitchTimeRef.current < 450) {
       return;
     }
     if (!form.title.trim()) {

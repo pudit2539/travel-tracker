@@ -1,15 +1,15 @@
 // src/components/SuperAdminModal.tsx
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { 
   ShieldAlert, ShieldCheck, Users, Compass, Trash2, 
-  Search, ExternalLink, RefreshCw, X, AlertTriangle, 
-  Crown, CheckCircle2, DollarSign, Calendar, Eye,
-  Activity, ArrowUpRight, UserX, Clock, ChevronDown,
-  ChevronUp, Sparkles, Receipt
+  Search, RefreshCw, X,
+  Crown, CheckCircle2, Eye,
+  Activity, UserX, Clock, ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { toast } from 'sonner';
@@ -45,13 +45,7 @@ export default function SuperAdminModal({
 
   const isUserAdmin = isSuperAdmin(currentUser, currentProfile);
 
-  useEffect(() => {
-    if (isOpen && isUserAdmin) {
-      fetchAdminData();
-    }
-  }, [isOpen, isUserAdmin]);
-
-  const fetchAdminData = async () => {
+  const fetchAdminData = useCallback(async () => {
     setLoading(true);
     try {
       // Parallelize queries across database tables
@@ -89,7 +83,18 @@ export default function SuperAdminModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || !isUserAdmin) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) void fetchAdminData();
+    });
+    return () => {
+      active = false;
+    };
+  }, [isOpen, isUserAdmin, fetchAdminData]);
 
   const handleForceDeleteTrip = async (tripId: string, tripTitle: string) => {
     if (!confirm(`[SUPER ADMIN ACTION]\nคุณแน่ใจหรือไม่ว่าต้องการลบทริป "${tripTitle}" ออกจากระบบถาวร? การกระทำนี้ไม่สามารถย้อนกลับได้`)) {

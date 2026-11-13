@@ -2,8 +2,8 @@ import React from 'react';
 import { 
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
-  Navigation, Eye, MoreHorizontal, Check, Camera, ZoomIn,
-  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Users, Calendar, Plus, Send
+  Navigation, Eye, MoreHorizontal, Camera, ZoomIn,
+  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseTransitInfo } from '@/lib/transitGuide';
@@ -77,8 +77,15 @@ function useStopVisitedState(item: any, canEditPlan: boolean = true, currentUser
   }, [tripId, activityKey]);
 
   React.useEffect(() => {
-    syncVisited();
-    return subscribeVisitedStamps(syncVisited);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) syncVisited();
+    });
+    const unsub = subscribeVisitedStamps(syncVisited);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [syncVisited]);
 
   const toggleVisited = (e?: React.MouseEvent | React.TouchEvent) => {
@@ -170,7 +177,6 @@ function ItineraryStopCardComponent({
   onMoveStopToDay,
   stopShoppingItems: propShoppingItems,
   onToggleShoppingItemStatus,
-  memberNames = [],
 }: ItineraryStopCardProps) {
   const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
@@ -178,7 +184,7 @@ function ItineraryStopCardComponent({
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [showAdminMenu, setShowAdminMenu] = React.useState(false);
   const [showMoveDayList, setShowMoveDayList] = React.useState(false);
-  const [imgError, setImgError] = React.useState(false);
+  const [failedImgUrl, setFailedImgUrl] = React.useState<string | null>(null);
 
   // TabiPlan Interactive Panels
   const [showTimeTuner, setShowTimeTuner] = React.useState(false);
@@ -284,15 +290,6 @@ function ItineraryStopCardComponent({
     handlePatchMeta({ pinnedNotes: existingNotes.filter((n) => n.id !== noteId) });
   };
 
-  const handleToggleGoer = (memberName: string) => {
-    const currentGoers = activeStopMeta.goers || [];
-    const exists = currentGoers.includes(memberName);
-    const nextGoers = exists
-      ? currentGoers.filter((m) => m !== memberName)
-      : [...currentGoers, memberName];
-    handlePatchMeta({ goers: nextGoers });
-  };
-
   const handleQuickAddShopping = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = quickShopName.trim();
@@ -333,12 +330,9 @@ function ItineraryStopCardComponent({
   );
 
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
+  const imgError = failedImgUrl === visual.imageUrl;
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = React.useMemo(() => buildStopUrls(item), [item]);
-
-  React.useEffect(() => {
-    setImgError(false);
-  }, [visual.imageUrl]);
 
   const cleanFoodQuery = React.useMemo(() => {
     if (!item.food_recommendation || item.food_recommendation === '-') return '';
@@ -361,7 +355,6 @@ function ItineraryStopCardComponent({
 
   const boughtShopCount = activeShoppingItems.filter((s) => s.status === 'bought').length;
   const pinnedNotesCount = activeStopMeta.pinnedNotes?.length || 0;
-  const goersList = activeStopMeta.goers || [];
 
   return (
     <>
@@ -415,12 +408,11 @@ function ItineraryStopCardComponent({
             </svg>
 
             {!imgError && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={visual.imageUrl}
                 alt={item.main_place || 'Destination'}
                 loading="lazy"
-                onError={() => setImgError(true)}
+                onError={() => setFailedImgUrl(visual.imageUrl)}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             )}
@@ -1280,15 +1272,12 @@ function ItineraryThumbnailCardComponent({
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
-  const [imgError, setImgError] = React.useState(false);
+  const [failedImgUrl, setFailedImgUrl] = React.useState<string | null>(null);
 
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
+  const imgError = failedImgUrl === visual.imageUrl;
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = React.useMemo(() => buildStopUrls(item), [item]);
-
-  React.useEffect(() => {
-    setImgError(false);
-  }, [visual.imageUrl]);
 
   return (
     <>
@@ -1304,12 +1293,11 @@ function ItineraryThumbnailCardComponent({
             title="แตะที่รูปเพื่อขยายเต็มจอ / ดูหน้าร้าน Street View"
           >
             {!imgError && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={visual.imageUrl}
                 alt={item.main_place || 'Destination'}
                 loading="lazy"
-                onError={() => setImgError(true)}
+                onError={() => setFailedImgUrl(visual.imageUrl)}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             )}
@@ -1504,13 +1492,10 @@ function ItineraryCompactRowComponent({
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
-  const [imgError, setImgError] = React.useState(false);
+  const [failedImgUrl, setFailedImgUrl] = React.useState<string | null>(null);
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
+  const imgError = failedImgUrl === visual.imageUrl;
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
-
-  React.useEffect(() => {
-    setImgError(false);
-  }, [visual.imageUrl]);
 
   return (
     <>
@@ -1531,12 +1516,11 @@ function ItineraryCompactRowComponent({
             title="แตะเพื่อขยายดูรูปสถานที่จริง"
           >
             {!imgError && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={visual.imageUrl}
                 alt={item.main_place || 'Stop'}
                 loading="lazy"
-                onError={() => setImgError(true)}
+                onError={() => setFailedImgUrl(visual.imageUrl)}
                 className="w-full h-full object-cover"
               />
             )}

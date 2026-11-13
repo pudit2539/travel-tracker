@@ -16,7 +16,6 @@ interface ExportExpensesParams {
 export function buildExpensesWorkbook({
   tripName = 'TravelTracker',
   expenses = [],
-  membersList = [],
   settlementSummary,
   tripCurrency = 'JPY',
   fxRate = 0.210,

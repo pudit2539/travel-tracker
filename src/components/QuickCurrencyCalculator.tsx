@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
   X, ArrowRightLeft, Sparkles, Plus, 
-  Coins, Check, Percent, Store, CreditCard, Wallet, Users, User, Loader2, RefreshCw
+  Coins, Check, Store, CreditCard, Users, Loader2, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay, syncLiveJpyToThb } from '@/lib/currency';
@@ -89,16 +89,27 @@ export default function QuickCurrencyCalculator({
   const [recentlySaved, setRecentlySaved] = useState<string | null>(null);
 
   useEffect(() => {
-    if (defaultCurrency && defaultCurrency !== 'THB') {
-      setForeignCurrency(defaultCurrency.toUpperCase());
-    }
+    if (!defaultCurrency || defaultCurrency === 'THB') return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) setForeignCurrency(defaultCurrency.toUpperCase());
+    });
+    return () => {
+      active = false;
+    };
   }, [defaultCurrency]);
 
   useEffect(() => {
-    if (propFxRate) {
+    if (!propFxRate) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       setFxRate(propFxRate);
       setTempRate(String(propFxRate.toFixed(3)));
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [propFxRate]);
 
   // Body scroll lock and ESC key listener
@@ -233,7 +244,8 @@ export default function QuickCurrencyCalculator({
 
       if (insertError) {
         // Fallback if payment_method column is not yet on expenses schema directly
-        const { payment_method: _, ...fallbackRow } = rowToInsert;
+        const fallbackRow = { ...rowToInsert };
+        delete (fallbackRow as Record<string, unknown>).payment_method;
         const { data: fbRows, error: fbError } = await supabase
           .from('expenses')
           .insert([fallbackRow as ExpenseInsert])

@@ -5,8 +5,8 @@ import React, { useState, useMemo } from 'react';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { 
-  Plus, Trash2, Users, Check, AlertCircle, Sparkles, 
-  Utensils, Calculator, ChevronRight, UserCheck
+  Plus, Trash2, Users, Check, AlertCircle, 
+  Utensils, Calculator
 } from 'lucide-react';
 
 export interface ItemizedDish {

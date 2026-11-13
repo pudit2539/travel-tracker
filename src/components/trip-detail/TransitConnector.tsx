@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { Footprints, Bus, Navigation, ExternalLink, ArrowDown } from 'lucide-react';
+import { Bus, ExternalLink } from 'lucide-react';
 import { extractCleanPlaceName } from '@/components/InteractiveTripMap';
 
 interface TransitConnectorProps {

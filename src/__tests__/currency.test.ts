@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { 
   convertCurrency, 
-  convertToThb, 
   formatCurrencyWithThb, 
   formatExchangeRateDisplay,
   setCustomJpyToThbRate,

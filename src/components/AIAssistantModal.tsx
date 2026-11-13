@@ -4,8 +4,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
-  Sparkles, X, MapPin, ExternalLink, Loader2, 
-  Utensils, Coffee, CloudRain, Compass, Search, Plus, Bot
+  Sparkles, X, ExternalLink, Loader2, Bot
 } from 'lucide-react';
 
 interface AIAssistantModalProps {
@@ -19,7 +18,6 @@ export default function AIAssistantModal({
   isOpen,
   onClose,
   currentCity = 'Osaka',
-  onAddToItinerary,
 }: AIAssistantModalProps) {
   const [city, setCity] = useState(currentCity);
   const [customQuery, setCustomQuery] = useState('');

@@ -4,9 +4,9 @@ import React, { useMemo, useState, useDeferredValue } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
-  BookmarkCheck, List, Building2, Utensils, Dices, QrCode,
+  List, Building2, Utensils, Dices, QrCode,
   LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles, ExternalLink,
-  Users, UserCheck, Clock, Train, ArrowUpToLine, ArrowDownToLine, ShoppingBag,
+  Clock, ArrowUpToLine, ArrowDownToLine, ShoppingBag,
   Search, X, Shield, Calendar
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -146,7 +146,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
   const [wishlistInitialTab, setWishlistInitialTab] = useState<'wishlist' | 'shopping'>('wishlist');
   const [showFileMenu, setShowFileMenu] = useState(false);
-  const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
+  const [groupViewFilter] = useState<'all' | 'mine'>('all');
   const [showScrollJump, setShowScrollJump] = useState(false);
   const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({});
 

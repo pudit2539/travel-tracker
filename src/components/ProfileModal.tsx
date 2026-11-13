@@ -3,12 +3,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import { CAT_AVATARS, getCatAvatar } from '@/lib/avatars';
+import { CAT_AVATARS } from '@/lib/avatars';
 import { 
-  X, Check, User, Lock, Mail, Key, LogOut, 
-  Loader2, Eye, EyeOff, Sparkles, Copy, CheckCircle2, Shield, AlertCircle,
-  Laptop, Smartphone, Tablet, Monitor, RefreshCw
+  X, Check, User, Lock, LogOut, 
+  Loader2, Eye, EyeOff, Copy, CheckCircle2, AlertCircle,
+  Laptop, Smartphone, Tablet, RefreshCw
 } from 'lucide-react';
 import { fetchUserDevices, removeUserDevice, signOutOtherDevices, DeviceSession } from '@/lib/sessionManager';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -21,7 +20,7 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }: ProfileModalProps) {
-  const router = useRouter();
+  const userId = user?.id as string | undefined;
 
   // Profile data
   const [displayName, setDisplayName] = useState('');
@@ -49,17 +48,17 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
   const [signingOutOthers, setSigningOutOthers] = useState(false);
 
   const loadDevices = useCallback(async () => {
-    if (!user?.id) return;
+    if (!userId) return;
     setLoadingDevices(true);
     try {
-      const list = await fetchUserDevices(user.id);
+      const list = await fetchUserDevices(userId);
       setDevices(list);
     } catch (e) {
       console.error('Failed to load devices', e);
     } finally {
       setLoadingDevices(false);
     }
-  }, [user?.id]);
+  }, [userId]);
 
   const handleSignOutOthers = async () => {
     if (!user?.id) return;
@@ -81,13 +80,13 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
   };
 
   const fetchProfile = useCallback(async () => {
-    if (!user?.id) return;
+    if (!userId || !user) return;
     setLoading(true);
     setSaveError('');
     try {
       // Check local storage first
       try {
-        const cached = localStorage.getItem(`travel_tracker_profile_${user.id}`);
+        const cached = localStorage.getItem(`travel_tracker_profile_${userId}`);
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed.display_name) setDisplayName(parsed.display_name);
@@ -98,7 +97,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
       const { data } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
 
       if (data) {
@@ -113,7 +112,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId, user]);
 
   // Body scroll lock and ESC key listener
   useEffect(() => {
@@ -132,11 +131,17 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
 
   // Fetch current user profile and active devices
   useEffect(() => {
-    if (isOpen && user?.id) {
-      fetchProfile();
-      loadDevices();
-    }
-  }, [isOpen, user?.id, fetchProfile, loadDevices]);
+    if (!isOpen || !userId) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      void fetchProfile();
+      void loadDevices();
+    });
+    return () => {
+      active = false;
+    };
+  }, [isOpen, userId, fetchProfile, loadDevices]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();

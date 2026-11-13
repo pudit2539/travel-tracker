@@ -4,11 +4,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   X, Dices, Utensils, MapPin, ExternalLink, 
-  RotateCw, Sparkles, Star, ChevronRight, Check, Award, ArrowRight,
-  Compass, Eye, ShoppingBag, Landmark, Coffee, Beer, Flame, Train
+  RotateCw, Award, ArrowRight, Compass
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CURATED_EXPLORE_SPOTS, CuratedExploreSpot } from '@/data/curatedExploreSpots';
+import { CURATED_EXPLORE_SPOTS } from '@/data/curatedExploreSpots';
 import { triggerHaptic } from '@/lib/haptics';
 
 export interface DecisionItem {
@@ -47,7 +46,6 @@ export default function DiningDecisionPickerModal({
   onClose,
   itinerary = [],
   defaultCity,
-  tripId,
   checkedSpots = {},
   onOpenRadar,
 }: DiningDecisionPickerModalProps) {
@@ -58,13 +56,16 @@ export default function DiningDecisionPickerModal({
   const [selectedScope, setSelectedScope] = useState<'all' | 'curated' | 'itinerary'>('all');
 
   // City Filter
-  const [selectedCity, setSelectedCity] = useState<'all' | 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe'>(
-    (defaultCity as any) || 'all'
-  );
+  const [cityOverride, setCityOverride] = useState<'all' | 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe' | null>(null);
+  const normalizedDefaultCity: 'all' | 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe' =
+    defaultCity && ['Osaka', 'Kyoto', 'Nara', 'Kobe'].includes(defaultCity)
+      ? (defaultCity as 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe')
+      : 'all';
+  const selectedCity = cityOverride ?? normalizedDefaultCity;
 
   // Category Filter
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [onlyUnvisited, setOnlyUnvisited] = useState(false);
+  const [onlyUnvisited] = useState(false);
 
   // Shuffling animation state
   const [isShuffling, setIsShuffling] = useState(false);
@@ -75,16 +76,10 @@ export default function DiningDecisionPickerModal({
 
   const shuffleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (defaultCity && ['Osaka', 'Kyoto', 'Nara', 'Kobe'].includes(defaultCity)) {
-      setSelectedCity(defaultCity as any);
-    }
-  }, [defaultCity]);
-
-  // Reset category filter when switching between dining and attractions
-  useEffect(() => {
+  const handleSwitchKind = (kind: 'dining' | 'attraction') => {
+    setActiveKind(kind);
     setSelectedCategory('all');
-  }, [activeKind]);
+  };
 
   // Body scroll lock and ESC key listener
   useEffect(() => {
@@ -426,7 +421,7 @@ export default function DiningDecisionPickerModal({
           <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-[#101420] rounded-2xl border border-slate-200 dark:border-[#1e2638]">
             <button
               type="button"
-              onClick={() => setActiveKind('dining')}
+              onClick={() => handleSwitchKind('dining')}
               className={`py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeKind === 'dining'
                   ? 'bg-white dark:bg-[#1a2234] text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/80 dark:border-[#2a364f]'
@@ -439,7 +434,7 @@ export default function DiningDecisionPickerModal({
 
             <button
               type="button"
-              onClick={() => setActiveKind('attraction')}
+              onClick={() => handleSwitchKind('attraction')}
               className={`py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeKind === 'attraction'
                   ? 'bg-white dark:bg-[#1a2234] text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/80 dark:border-[#2a364f]'
@@ -514,7 +509,7 @@ export default function DiningDecisionPickerModal({
                 <button
                   key={c.key}
                   type="button"
-                  onClick={() => setSelectedCity(c.key as any)}
+                  onClick={() => setCityOverride(c.key as any)}
                   className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                     selectedCity === c.key
                       ? 'bg-blue-600 text-white shadow-xs'

@@ -1,9 +1,9 @@
 // src/components/WeatherWidget.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchDestinationWeather, WeatherData } from '@/lib/weather';
-import { CloudSun, Droplets, Thermometer, Wind, RefreshCw, Sparkles } from 'lucide-react';
+import { Droplets, RefreshCw, Sparkles } from 'lucide-react';
 
 interface WeatherWidgetProps {
   defaultCity?: string;
@@ -16,7 +16,7 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const loadWeather = async (targetCity: string) => {
+  const loadWeather = useCallback(async (targetCity: string) => {
     setLoading(true);
     try {
       const data = await fetchDestinationWeather(targetCity);
@@ -26,11 +26,17 @@ export default function WeatherWidget({ defaultCity = 'osaka' }: WeatherWidgetPr
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadWeather(city);
-  }, [city]);
+    let active = true;
+    queueMicrotask(() => {
+      if (active) void loadWeather(city);
+    });
+    return () => {
+      active = false;
+    };
+  }, [city, loadWeather]);
 
   return (
     <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 backdrop-blur-xl card-elevation transition-all duration-300 group space-y-3.5">

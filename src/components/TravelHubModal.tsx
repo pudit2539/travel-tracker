@@ -3,18 +3,19 @@
 
 import { useState, useEffect, useRef, useMemo, useDeferredValue, useCallback } from 'react';
 import { 
-  X, Sparkles, Languages, MapPin, QrCode, Share2, 
-  Download, Volume2, Copy, Check, ExternalLink, 
-  Smartphone, Plus, Trash2, Camera, ShieldCheck, 
-  Compass, Search, ArrowRight, Eye, Store, DollarSign,
-  Utensils, Train, ShoppingBag, AlertTriangle, Building,
-  FileCheck, Sparkle, RefreshCw, Calculator, PhoneCall,
-  Percent, ArrowUpDown, ChevronRight, CheckCircle2,
+  X, Languages, QrCode, Share2, 
+  Volume2, Copy, Check, ExternalLink, 
+  Plus, Trash2, Camera, ShieldCheck, 
+  Compass, Search, Eye,
+  Train, AlertTriangle, Building,
+  Calculator, PhoneCall,
+  CheckCircle2,
   Luggage, Info, Maximize2, ShieldAlert, Lightbulb
 } from 'lucide-react';
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
-import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
+import { getLocalReceiptPhoto } from '@/lib/localReceipts';
+import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { copyToClipboard } from '@/lib/clipboard';
 
@@ -195,9 +196,7 @@ export default function TravelHubModal({
   expenses = [],
   itinerary = [],
   members = [],
-  userDisplayName = 'ฉัน',
   fxRate = 0.235,
-  onOpenScrapbook,
   onOpenPacking,
 }: TravelHubModalProps) {
   // Navigation Tabs: 'calculator' | 'tickets' | 'phrases' | 'rules' | 'radar' | 'story'
@@ -224,7 +223,7 @@ export default function TravelHubModal({
   // Tax-Free price = Total
   // Tax-Included price = Total * (1 + taxRate)
   // Tax savings = Tax-Included price - Total
-  const { taxFreePrice, taxIncludedPrice, taxSavedYen, priceInThb, taxSavedThb, isTaxFreeEligible, remainingForTaxFree } = useMemo(() => {
+  const { taxFreePrice, taxSavedYen, priceInThb, taxSavedThb, isTaxFreeEligible, remainingForTaxFree } = useMemo(() => {
     let tf = 0;
     let ti = 0;
     let saved = 0;
@@ -298,23 +297,30 @@ export default function TravelHubModal({
 
   useEffect(() => {
     if (!tripId || typeof window === 'undefined') return;
-    try {
-      const raw = localStorage.getItem(`travel_train_bookings_${tripId}`);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setTrainBookings(parsed);
-          return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      try {
+        const raw = localStorage.getItem(`travel_train_bookings_${tripId}`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setTrainBookings(parsed);
+            return;
+          }
         }
+        localStorage.setItem(
+          `travel_train_bookings_${tripId}`,
+          JSON.stringify(DEFAULT_KANSAI_TRAIN_BOOKINGS)
+        );
+        setTrainBookings(DEFAULT_KANSAI_TRAIN_BOOKINGS);
+      } catch {
+        setTrainBookings(DEFAULT_KANSAI_TRAIN_BOOKINGS);
       }
-      localStorage.setItem(
-        `travel_train_bookings_${tripId}`,
-        JSON.stringify(DEFAULT_KANSAI_TRAIN_BOOKINGS)
-      );
-      setTrainBookings(DEFAULT_KANSAI_TRAIN_BOOKINGS);
-    } catch {
-      setTrainBookings(DEFAULT_KANSAI_TRAIN_BOOKINGS);
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [tripId, isOpen]);
 
   const handleAddTrainBooking = (e: React.FormEvent) => {
@@ -364,6 +370,7 @@ export default function TravelHubModal({
         const parsed: TicketPass[] = JSON.parse(raw);
         const hydrated = await Promise.all(
           parsed.map(async (t) => {
+            if (t.imageUrl) return t;
             if (t.imageStorageKey) {
               const dataUrl = await getLocalReceiptPhoto(t.imageStorageKey);
               return { ...t, imageUrl: dataUrl || undefined };
@@ -380,9 +387,14 @@ export default function TravelHubModal({
 
   // Load Saved Passes from LocalStorage & LocalReceipt DB
   useEffect(() => {
-    if (isOpen && tripId) {
-      loadTickets();
-    }
+    if (!isOpen || !tripId) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) void loadTickets();
+    });
+    return () => {
+      active = false;
+    };
   }, [isOpen, tripId, loadTickets]);
 
   const handleUploadPass = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -390,60 +402,81 @@ export default function TravelHubModal({
     if (!file || !trip?.id) return;
 
     setUploadingTicket(true);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      const dataUrl = reader.result as string;
-      const storageKey = `pass_${trip.id}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      
-      try {
-        await saveLocalReceiptPhoto(storageKey, dataUrl);
-        const defaultTitles: Record<string, string> = {
-          vjw: 'Visit Japan Web QR (ตม. & ศุลกากร)',
-          flight: 'Boarding Pass ตั๋วเครื่องบิน',
-          train: 'Shinkansen / JR Pass Ticket',
-          hotel: 'Hotel Voucher ใบจองที่พัก',
-          attraction: 'บัตรเข้าสวนสนุก / กิจกรรม',
-          other: 'เอกสารสำคัญประจำทริป',
-        };
+    try {
+      const uploaded = await uploadTripMedia({
+        tripId: trip.id,
+        folder: 'passes',
+        file,
+        maxWidth: 1600,
+        quality: 0.86,
+        cacheOffline: true,
+      });
 
-        const newTicket: TicketPass = {
-          id: storageKey,
-          title: ticketTitle.trim() || defaultTitles[ticketCategory] || 'ตั๋วเดินทาง',
-          category: ticketCategory,
-          imageStorageKey: storageKey,
-          imageUrl: dataUrl,
-          createdAt: Date.now(),
-        };
+      const defaultTitles: Record<string, string> = {
+        vjw: 'Visit Japan Web QR (ตม. & ศุลกากร)',
+        flight: 'Boarding Pass ตั๋วเครื่องบิน',
+        train: 'Shinkansen / JR Pass Ticket',
+        hotel: 'Hotel Voucher ใบจองที่พัก',
+        attraction: 'บัตรเข้าสวนสนุก / กิจกรรม',
+        other: 'เอกสารสำคัญประจำทริป',
+      };
 
-        const updated = [newTicket, ...tickets];
-        setTickets(updated);
-        localStorage.setItem(
-          `travel_hub_tickets_${trip.id}`,
-          JSON.stringify(updated.map(({ imageUrl, ...rest }) => rest))
-        );
+      const newTicket: TicketPass = {
+        id: uploaded.storageKey,
+        title: ticketTitle.trim() || defaultTitles[ticketCategory] || 'ตั๋วเดินทาง',
+        category: ticketCategory,
+        imageStorageKey: uploaded.storageKey,
+        imageUrl: uploaded.url,
+        createdAt: Date.now(),
+      };
 
-        triggerConfetti();
-        setTicketTitle('');
-        toast.success('บันทึกตั๋ว / QR Code เรียบร้อยแล้ว 🎟️');
-      } catch (err) {
-        console.error('Save pass err', err);
-        toast.error('ไม่สามารถบันทึกตั๋วได้');
-      } finally {
-        setUploadingTicket(false);
-      }
-    };
+      const updated = [newTicket, ...tickets];
+      setTickets(updated);
+      localStorage.setItem(
+        `travel_hub_tickets_${trip.id}`,
+        JSON.stringify(
+          updated.map((t) => {
+            if (t.imageUrl?.startsWith('data:')) {
+              const copy = { ...t };
+              delete copy.imageUrl;
+              return copy;
+            }
+            return t;
+          })
+        )
+      );
+
+      triggerConfetti();
+      setTicketTitle('');
+      toast.success('บันทึกตั๋ว / QR Code เรียบร้อยแล้ว 🎟️');
+    } catch (err) {
+      console.error('Save pass err', err);
+      toast.error('ไม่สามารถบันทึกตั๋วได้');
+    } finally {
+      setUploadingTicket(false);
+      e.target.value = '';
+    }
   };
 
   const handleDeletePass = async (id: string, storageKey: string) => {
     if (!confirm('คุณต้องการลบตั๋ว/QR นี้ใช่หรือไม่?')) return;
     try {
-      await deleteLocalReceiptPhoto(storageKey);
+      const target = tickets.find((t) => t.id === id);
+      await deleteTripMedia({ urlOrPath: target?.imageUrl, storageKey });
       const updated = tickets.filter((t) => t.id !== id);
       setTickets(updated);
       localStorage.setItem(
         `travel_hub_tickets_${trip?.id}`,
-        JSON.stringify(updated.map(({ imageUrl, ...rest }) => rest))
+        JSON.stringify(
+          updated.map((t) => {
+            if (t.imageUrl?.startsWith('data:')) {
+              const copy = { ...t };
+              delete copy.imageUrl;
+              return copy;
+            }
+            return t;
+          })
+        )
       );
       toast.success('ลบตั๋วเรียบร้อยแล้ว');
     } catch (e) {

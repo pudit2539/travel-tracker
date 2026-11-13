@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Calendar, MapPin, Clock, Compass, Check, Plane } from 'lucide-react';
+import { Calendar, Clock, Compass, Check, Plane } from 'lucide-react';
 import AnimatedNumber from '@/components/AnimatedNumber';
 
 interface TripHeroCoverProps {

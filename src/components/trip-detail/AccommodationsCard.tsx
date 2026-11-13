@@ -5,8 +5,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Building, ChevronDown, ChevronUp, Plus, Edit3, Trash2, 
-  MapPin, Calendar, Moon, ExternalLink, Copy, Check, 
-  Receipt, DollarSign, Sparkles, Phone, FileText, CheckCircle2,
+  MapPin, Moon, ExternalLink, Copy, Check, 
+  Receipt, FileText, CheckCircle2,
   X, AlertCircle, BookmarkCheck, Upload, Eye, Download, Image as ImageIcon,
   Loader2, Clock, Camera
 } from 'lucide-react';
@@ -15,7 +15,6 @@ import {
   AccommodationStay, 
   AccommodationVoucherFile,
   getAccommodations, 
-  saveAccommodations, 
   addAccommodation, 
   updateAccommodation, 
   deleteAccommodation,
@@ -25,7 +24,9 @@ import {
   downloadVoucherFile,
   syncAccommodationsToSupabase
 } from '@/lib/accommodations';
+import { useIsMounted } from '@/lib/useIsMounted';
 import { saveLocalReceiptPhoto, getLocalReceiptPhoto, deleteLocalReceiptPhoto } from '@/lib/localReceipts';
+import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
 import HotelVoucherPreviewModal from './HotelVoucherPreviewModal';
 import { convertToThb, convertCurrency } from '@/lib/currency';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -50,13 +51,10 @@ function StayPhotoBanner({
 }) {
   const resolvedTripId = tripId || stay.tripId;
   const visual = usePlaceVisualMeta(stay.name, stay.city, idx, stay.id, resolvedTripId);
-  const [imgErr, setImgErr] = useState(false);
+  const [failedImgUrl, setFailedImgUrl] = useState<string | null>(null);
+  const imgErr = failedImgUrl === visual.imageUrl;
   const [showLightbox, setShowLightbox] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
-
-  useEffect(() => {
-    setImgErr(false);
-  }, [visual.imageUrl]);
 
   return (
     <>
@@ -67,12 +65,11 @@ function StayPhotoBanner({
         title="แตะเพื่อดูรูปตึกโรงแรมเต็มจอ / เปิดดูหน้าร้าน Google Street View"
       >
         {!imgErr && (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={visual.imageUrl}
             alt={stay.name}
             loading="lazy"
-            onError={() => setImgErr(true)}
+            onError={() => setFailedImgUrl(visual.imageUrl)}
             className="w-full h-full object-cover group-hover/hotelimg:scale-105 transition-transform duration-500"
           />
         )}
@@ -272,7 +269,6 @@ export function AccommodationsCard({
   tripId,
   tripCurrency,
   fxRate,
-  members = [],
   currentUser,
   defaultOpen = false,
   tripStartDate,
@@ -288,11 +284,7 @@ export function AccommodationsCard({
   const [showModal, setShowModal] = useState(false);
   const [editingStay, setEditingStay] = useState<AccommodationStay | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsMounted();
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -359,14 +351,12 @@ export function AccommodationsCard({
         if (metaRow?.backup_plan) {
           const parsed = JSON.parse(metaRow.backup_plan);
           if (parsed.accommodations !== undefined && Array.isArray(parsed.accommodations)) {
-            let needsSupabaseResync = false;
             const hydratedStays = await Promise.all(
               parsed.accommodations.map(async (stay: AccommodationStay) => {
                 if (stay.voucherFile) {
-                  if (!stay.voucherFile.dataUrl && stay.voucherFile.storageKey) {
+                  if (!stay.voucherFile.dataUrl && !stay.voucherFile.storageUrl && stay.voucherFile.storageKey) {
                     const localData = await getLocalReceiptPhoto(stay.voucherFile.storageKey);
                     if (localData) {
-                      needsSupabaseResync = true;
                       return {
                         ...stay,
                         voucherFile: {
@@ -385,10 +375,9 @@ export function AccommodationsCard({
 
             setStays(hydratedStays);
             if (typeof window !== 'undefined') {
-              localStorage.setItem(`travel_tracker_accommodations_${tripId}`, JSON.stringify(hydratedStays));
-            }
-            if (needsSupabaseResync) {
-              syncAccommodationsToSupabase(tripId, hydratedStays).catch(() => {});
+              try {
+                localStorage.setItem(`travel_tracker_accommodations_${tripId}`, JSON.stringify(hydratedStays));
+              } catch {}
             }
           }
         }
@@ -484,8 +473,8 @@ export function AccommodationsCard({
     }
   };
 
-  // Handle Voucher File Selection (PDF or Image)
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Voucher File Selection (PDF or Image) -> upload to Supabase Storage with IndexedDB fallback
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -495,23 +484,31 @@ export function AccommodationsCard({
     }
 
     setIsReadingFile(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
+    try {
+      const uploaded = await uploadTripMedia({
+        tripId,
+        folder: 'vouchers',
+        file,
+        maxWidth: 1800,
+        quality: 0.86,
+        cacheOffline: true,
+        includeDataUrl: true,
+      });
+
       setFormVoucher({
         name: file.name,
-        type: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+        type: uploaded.mimeType || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
         size: file.size,
-        dataUrl,
+        storageKey: uploaded.storageKey,
+        ...(uploaded.isRemote ? { storageUrl: uploaded.url, storagePath: uploaded.storagePath } : {}),
+        ...(uploaded.dataUrl ? { dataUrl: uploaded.dataUrl } : {}),
         uploadedAt: Date.now(),
       });
+    } catch {
+      toast.error('เกิดข้อผิดพลาดในการอ่านหรืออัปโหลดไฟล์');
+    } finally {
       setIsReadingFile(false);
-    };
-    reader.onerror = () => {
-      toast.error('เกิดข้อผิดพลาดในการอ่านไฟล์');
-      setIsReadingFile(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleRemoveVoucher = () => {
@@ -522,7 +519,7 @@ export function AccommodationsCard({
   const handlePreviewVoucher = async (stay: AccommodationStay) => {
     if (!stay.voucherFile) return;
     let fileToPreview = stay.voucherFile;
-    if (!fileToPreview.dataUrl && fileToPreview.storageKey) {
+    if (!fileToPreview.storageUrl && !fileToPreview.dataUrl && fileToPreview.storageKey) {
       const dataUrl = await getLocalReceiptPhoto(fileToPreview.storageKey);
       if (dataUrl) {
         fileToPreview = { ...fileToPreview, dataUrl };
@@ -538,13 +535,13 @@ export function AccommodationsCard({
   const handleDownloadVoucher = async (stay: AccommodationStay) => {
     if (!stay.voucherFile) return;
     let fileToDownload = stay.voucherFile;
-    if (!fileToDownload.dataUrl && fileToDownload.storageKey) {
+    if (!fileToDownload.storageUrl && !fileToDownload.dataUrl && fileToDownload.storageKey) {
       const dataUrl = await getLocalReceiptPhoto(fileToDownload.storageKey);
       if (dataUrl) {
         fileToDownload = { ...fileToDownload, dataUrl };
       }
     }
-    if (fileToDownload.dataUrl) {
+    if (fileToDownload.storageUrl || fileToDownload.dataUrl) {
       downloadVoucherFile(fileToDownload, stay.name);
       toast.success(`ดาวน์โหลดใบจอง "${stay.name}" เรียบร้อยแล้ว 📥`);
     } else {
@@ -596,7 +593,7 @@ export function AccommodationsCard({
 
     // Populate existing voucher file
     if (stay.voucherFile) {
-      if (stay.voucherFile.dataUrl) {
+      if (stay.voucherFile.storageUrl || stay.voucherFile.dataUrl) {
         setFormVoucher(stay.voucherFile);
       } else if (stay.voucherFile.storageKey) {
         getLocalReceiptPhoto(stay.voucherFile.storageKey).then((dataUrl) => {
@@ -778,21 +775,37 @@ export function AccommodationsCard({
         }
       }
 
-      // Prepare Voucher File storage in IndexedDB
+      // Prepare Voucher File storage in Supabase Storage (primary) + IndexedDB (offline cache)
       let finalVoucher: AccommodationVoucherFile | undefined = undefined;
       if (formVoucher) {
         const storageKey = formVoucher.storageKey || `voucher_${tripId}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
         if (formVoucher.dataUrl) {
           await saveLocalReceiptPhoto(storageKey, formVoucher.dataUrl);
         }
+        if (
+          editingStay?.voucherFile?.storageUrl &&
+          editingStay.voucherFile.storageUrl !== formVoucher.storageUrl
+        ) {
+          deleteTripMedia({
+            urlOrPath: editingStay.voucherFile.storageUrl || editingStay.voucherFile.storagePath,
+            storageKey: editingStay.voucherFile.storageKey,
+          }).catch(() => {});
+        }
         finalVoucher = {
           ...formVoucher,
           storageKey,
-          dataUrl: formVoucher.dataUrl,
+          dataUrl: formVoucher.storageUrl ? undefined : formVoucher.dataUrl,
         };
-      } else if (editingStay?.voucherFile?.storageKey) {
+      } else if (editingStay?.voucherFile) {
         // User explicitly removed the voucher in edit mode
-        await deleteLocalReceiptPhoto(editingStay.voucherFile.storageKey);
+        if (editingStay.voucherFile.storageKey) {
+          await deleteLocalReceiptPhoto(editingStay.voucherFile.storageKey);
+        }
+        if (editingStay.voucherFile.storageUrl || editingStay.voucherFile.storagePath) {
+          deleteTripMedia({
+            urlOrPath: editingStay.voucherFile.storageUrl || editingStay.voucherFile.storagePath,
+          }).catch(() => {});
+        }
       }
 
       if (editingStay) {

@@ -1,7 +1,7 @@
 // src/app/page.tsx
 'use client';
 
-import { useState, useEffect, useLayoutEffect, useMemo, useDeferredValue } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useDeferredValue, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
@@ -9,12 +9,12 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  Compass, Plus, Calendar, DollarSign, ArrowRight, 
+  Compass, Plus, Calendar, ArrowRight, 
   LogOut, Moon, Sun, PlaneTakeoff, Search, Edit3, 
-  Trash2, Users, Sparkles, TrendingUp, AlertCircle, 
-  Share2, CheckCircle2, Loader2, X, User, Bell, Coins, 
-  Check, ArrowUpRight, Shield, Globe2, KeyRound, Sparkle,
-  MapPin, Clock, CloudSun, Heart, Shuffle, ChevronRight, BookmarkCheck,
+  Trash2, Users, Sparkles, AlertCircle, 
+  Loader2, X, Coins, 
+  ArrowUpRight, KeyRound,
+  Clock, Shuffle,
   LayoutGrid, AlignJustify, Camera, ChevronDown, ChevronUp, Calculator
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,11 +25,10 @@ import NotificationBell from '@/components/NotificationBell';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb, convertToThb, formatExchangeRateDisplay } from '@/lib/currency';
+import { getCustomJpyToThbRate, convertToThb } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { isSuperAdmin } from '@/lib/permissions';
-import { copyToClipboard } from '@/lib/clipboard';
 import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { getTripStatusBadge } from '@/lib/tripStatus';
 import { getPlaceVisualMeta, usePlaceVisualMeta, triggerViewTransition } from '@/lib/placeThumbnails';
@@ -68,7 +67,6 @@ function TripCoverMedia({
   return (
     <>
       {!imgErr && (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={visual.imageUrl}
           alt={targetPlace}
@@ -220,6 +218,10 @@ export default function HomePage() {
   // Super Admin state
   const [showSuperAdminModal, setShowSuperAdminModal] = useState(false);
   const [adminViewMode, setAdminViewMode] = useState<'my' | 'all'>('my');
+  const adminViewModeRef = useRef<'my' | 'all'>('my');
+  useEffect(() => {
+    adminViewModeRef.current = adminViewMode;
+  }, [adminViewMode]);
   const isSuper = useMemo(() => isSuperAdmin(user, profile), [user, profile]);
 
   // Modals state
@@ -279,28 +281,7 @@ export default function HomePage() {
     } catch {}
   }, []);
 
-  useEffect(() => {
-    // ดักจับกรณีผู้ใช้คลิกลิงก์ Reset Password จากอีเมลที่อาจถูกส่งมาที่ Root URL (/)
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash || '';
-      const search = window.location.search || '';
-      if (hash.includes('type=recovery') || search.includes('type=recovery')) {
-        window.location.replace(`/login${window.location.search}${window.location.hash}`);
-        return;
-      }
-    }
-
-    // Clean up legacy unkeyed caches to prevent cross-account leak
-    try {
-      localStorage.removeItem('travel_tracker_home_trips_cache');
-      localStorage.removeItem('travel_tracker_cached_profile');
-    } catch {}
-
-    setFxRate(getCustomJpyToThbRate());
-    checkUserAndFetchTrips();
-  }, []);
-
-  const checkUserAndFetchTrips = async (customMode?: 'my' | 'all') => {
+  const checkUserAndFetchTrips = useCallback(async (customMode?: 'my' | 'all') => {
     try {
       const { session } = await getSafeSession();
       if (!session) {
@@ -353,7 +334,7 @@ export default function HomePage() {
       const memberTripIds = memberRows.map((r: any) => r.trip_id).filter(Boolean);
       const memberRoleMap = new Map(memberRows.map((r: any) => [r.trip_id, r.role]));
 
-      const effectiveMode = customMode !== undefined ? customMode : adminViewMode;
+      const effectiveMode = customMode !== undefined ? customMode : adminViewModeRef.current;
       const isAdmin = isSuperAdmin(session.user, profRes.status === 'fulfilled' ? profRes.value.data : null);
 
       // Query trips: if Super Admin in 'all' mode, fetch all trips in the system!
@@ -455,7 +436,35 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // ดักจับกรณีผู้ใช้คลิกลิงก์ Reset Password จากอีเมลที่อาจถูกส่งมาที่ Root URL (/)
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+        window.location.replace(`/login${window.location.search}${window.location.hash}`);
+        return;
+      }
+    }
+
+    // Clean up legacy unkeyed caches to prevent cross-account leak
+    try {
+      localStorage.removeItem('travel_tracker_home_trips_cache');
+      localStorage.removeItem('travel_tracker_cached_profile');
+    } catch {}
+
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setFxRate(getCustomJpyToThbRate());
+      void checkUserAndFetchTrips();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [checkUserAndFetchTrips]);
 
   // สร้างทริปใหม่ พร้อม Popup แจ้งเตือนสวยงามและ Redirect อัตโนมัติ
   const handleCreateTrip = async (e: React.FormEvent) => {
@@ -470,7 +479,7 @@ export default function HomePage() {
 
       if (!currentUserId) {
         toast.error('กรุณาเข้าสู่ระบบก่อนสร้างทริป');
-        window.location.href = '/login';
+        router.push('/login');
         return;
       }
 
@@ -530,7 +539,7 @@ export default function HomePage() {
 
         // Auto navigate ไปยังหน้าทริป
         setTimeout(() => {
-          window.location.href = `/trips/${data.id}`;
+          router.push(`/trips/${data.id}`);
         }, 1200);
       }
     } catch (err: any) {
@@ -690,7 +699,7 @@ export default function HomePage() {
       setJoinCode('');
       toast.success(`เข้าร่วมทริป "${tripData.name || 'ทริป'}" เรียบร้อยแล้ว! 🎉`);
       await checkUserAndFetchTrips();
-      window.location.href = `/trips/${code}`;
+      router.push(`/trips/${code}`);
     } catch (err: any) {
       setJoinError('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
@@ -1411,7 +1420,7 @@ export default function HomePage() {
                 <div
                   key={t.id}
                   onClick={() => {
-                    window.location.href = `/trips/${t.id}`;
+                    router.push(`/trips/${t.id}`);
                   }}
                   className="group relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-2xs hover:shadow-md"
                 >
@@ -1535,7 +1544,7 @@ export default function HomePage() {
                   }}
                   whileHover={{ y: -4, transition: { duration: 0.15 } }}
                   onClick={() => {
-                    window.location.href = `/trips/${t.id}`;
+                    router.push(`/trips/${t.id}`);
                   }}
                   className="group relative rounded-3xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] hover:border-[#C83E2D] dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-[0_8px_22px_-12px_rgba(35,28,20,0.12)] hover:shadow-lg"
                 >
@@ -1940,7 +1949,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => {
-                window.location.href = `/trips/${createdTripSuccess.id}`;
+                router.push(`/trips/${createdTripSuccess.id}`);
               }}
               className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:scale-105 transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >

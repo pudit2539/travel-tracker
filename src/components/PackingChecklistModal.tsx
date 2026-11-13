@@ -4,9 +4,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
   Luggage, Check, Plus, Trash2, X, Sparkles, 
-  CloudSun, Snowflake, Sun, CloudRain, Wind,
-  ShieldCheck, Smartphone, Pill, Shirt, PlusCircle, 
-  CheckCircle2, Circle, ArrowRight, Thermometer, Layers
+  CloudSun, Snowflake, Sun, CloudRain,
+  ShieldCheck, Smartphone, Pill, Shirt, PlusCircle
 } from 'lucide-react';
 import { triggerConfetti } from '@/lib/confetti';
 
@@ -179,30 +178,33 @@ export default function PackingChecklistModal({
     return 'cool';
   }, [tripName, tripCountry, destinationCity, tripStartDate]);
 
-  const [selectedProfile, setSelectedProfile] = useState<WeatherProfile>(initialProfile);
-
-  // Update profile if trip details change
-  useEffect(() => {
-    setSelectedProfile(initialProfile);
-  }, [initialProfile]);
+  const [profileOverride, setProfileOverride] = useState<WeatherProfile | null>(null);
+  const selectedProfile = profileOverride ?? initialProfile;
 
   useEffect(() => {
     if (!tripId) return;
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        setItems(JSON.parse(saved));
-      } else {
-        const initial = DEFAULT_PACKING_ITEMS.map((it, idx) => ({
-          ...it,
-          id: `default_${idx}_${Date.now()}`,
-        }));
-        setItems(initial);
-        localStorage.setItem(storageKey, JSON.stringify(initial));
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          setItems(JSON.parse(saved));
+        } else {
+          const initial = DEFAULT_PACKING_ITEMS.map((it, idx) => ({
+            ...it,
+            id: `default_${idx}_${Date.now()}`,
+          }));
+          setItems(initial);
+          localStorage.setItem(storageKey, JSON.stringify(initial));
+        }
+      } catch {
+        setItems([]);
       }
-    } catch {
-      setItems([]);
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [tripId, storageKey]);
 
   const saveItems = (updated: ChecklistItem[]) => {
@@ -373,7 +375,7 @@ export default function PackingChecklistModal({
                     <button
                       key={pKey}
                       type="button"
-                      onClick={() => setSelectedProfile(pKey)}
+                      onClick={() => setProfileOverride(pKey)}
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-blue-600 text-white shadow-2xs'

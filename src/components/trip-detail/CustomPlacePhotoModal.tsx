@@ -15,18 +15,18 @@ import {
   Loader2,
   ExternalLink,
   Navigation,
-  ZoomIn,
   Cloud,
 } from 'lucide-react';
 import {
   getCustomPlacePhoto,
   setCustomPlacePhoto,
-  compressImageFileToDataUrl,
   extractAttractionSearchQuery,
   fetchGooglePlacesPhotoCandidates,
   buildStreetViewUrl,
   PlacePhotoCandidate,
 } from '@/lib/placeThumbnails';
+import { uploadTripMedia } from '@/lib/mediaStorage';
+import { useIsMounted } from '@/lib/useIsMounted';
 
 export interface CustomPlacePhotoModalProps {
   isOpen: boolean;
@@ -47,7 +47,7 @@ export function CustomPlacePhotoModal({
   tripId,
   currentAutoImageUrl,
 }: CustomPlacePhotoModalProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [urlInput, setUrlInput] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -57,32 +57,31 @@ export function CustomPlacePhotoModal({
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Initialize modal state & fetch 5 Google Maps candidate angles
   useEffect(() => {
     if (!isOpen) return;
-    const existing = getCustomPlacePhoto(placeName, itemId);
-    setPreviewUrl(existing || '');
-    setUrlInput(existing && !existing.startsWith('data:') ? existing : '');
-    setStatusMsg(null);
-
-    const initialSearch = extractAttractionSearchQuery(placeName, city) || placeName;
-    setSearchQuery(initialSearch);
-
     let cancelled = false;
-    setLoadingCandidates(true);
-    fetchGooglePlacesPhotoCandidates(initialSearch, city)
-      .then((list) => {
-        if (!cancelled) {
-          setCandidates(list);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingCandidates(false);
-      });
+    const initialSearch = extractAttractionSearchQuery(placeName, city) || placeName;
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const existing = getCustomPlacePhoto(placeName, itemId);
+      setPreviewUrl(existing || '');
+      setUrlInput(existing && !existing.startsWith('data:') ? existing : '');
+      setStatusMsg(null);
+      setSearchQuery(initialSearch);
+      setLoadingCandidates(true);
+
+      fetchGooglePlacesPhotoCandidates(initialSearch, city)
+        .then((list) => {
+          if (!cancelled) {
+            setCandidates(list);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingCandidates(false);
+        });
+    });
 
     return () => {
       cancelled = true;
@@ -105,8 +104,14 @@ export function CustomPlacePhotoModal({
             setIsProcessing(true);
             setStatusMsg('กำลังประมวลผลภาพที่แคปหน้าจอ...');
             try {
-              const dataUrl = await compressImageFileToDataUrl(blob, 1100, 0.85);
-              setPreviewUrl(dataUrl);
+              const uploaded = await uploadTripMedia({
+                tripId: tripId || 'shared',
+                folder: 'places',
+                file: blob,
+                maxWidth: 1100,
+                quality: 0.85,
+              });
+              setPreviewUrl(uploaded.url);
               setStatusMsg('วางภาพจาก Clipboard สำเร็จ! กด "บันทึกรูปนี้" ได้เลย');
             } catch {
               setStatusMsg('ไม่สามารถอ่านภาพจาก Clipboard ได้');
@@ -121,7 +126,7 @@ export function CustomPlacePhotoModal({
 
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [isOpen]);
+  }, [isOpen, tripId]);
 
   if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
@@ -151,10 +156,16 @@ export function CustomPlacePhotoModal({
     const file = e.target.files?.[0];
     if (!file) return;
     setIsProcessing(true);
-    setStatusMsg('กำลังย่อขนาดและปรับความคมชัดของรูปภาพ...');
+    setStatusMsg('กำลังย่อขนาดและอัปโหลดรูปภาพ...');
     try {
-      const dataUrl = await compressImageFileToDataUrl(file, 1100, 0.85);
-      setPreviewUrl(dataUrl);
+      const uploaded = await uploadTripMedia({
+        tripId: tripId || 'shared',
+        folder: 'places',
+        file,
+        maxWidth: 1100,
+        quality: 0.85,
+      });
+      setPreviewUrl(uploaded.url);
       setStatusMsg(`เลือกรูป "${file.name}" สำเร็จ! กดบันทึกรูปนี้ได้เลย`);
     } catch {
       setStatusMsg('เกิดข้อผิดพลาดในการอ่านไฟล์รูปภาพ');
@@ -238,7 +249,6 @@ export function CustomPlacePhotoModal({
           className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-[#25314d]"
         >
           {displayPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={displayPreview}
               alt={placeName}
@@ -310,7 +320,6 @@ export function CustomPlacePhotoModal({
                     }`}
                     title={cand.placeName || `มุมที่ ${i + 1}`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={cand.url}
                       alt={cand.placeName || `Option ${i + 1}`}
@@ -463,11 +472,7 @@ export function PlacePhotoLightboxModal({
   directionsUrl,
   onOpenCustomPhoto,
 }: PlacePhotoLightboxModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsMounted();
 
   useEffect(() => {
     if (!isOpen || typeof window === 'undefined') return;
@@ -523,7 +528,6 @@ export function PlacePhotoLightboxModal({
 
         {/* Full-Resolution Image Container */}
         <div className="relative bg-black flex items-center justify-center min-h-[240px] max-h-[68dvh] overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt={placeName}

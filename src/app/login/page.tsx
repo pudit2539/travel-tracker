@@ -4,9 +4,9 @@ import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  Eye, EyeOff, Lock, Mail, User, Compass, KeyRound, 
-  ArrowRight, Loader2, Sparkles, Sun, Moon, AlertCircle, 
-  CheckCircle2, Users, ArrowLeft, Check, ShieldCheck 
+  Eye, EyeOff, Lock, Mail, User, KeyRound, 
+  ArrowRight, Loader2, Sun, Moon, AlertCircle, 
+  CheckCircle2, Users, ShieldCheck 
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { setRememberMePreference, trackCurrentDevice } from '@/lib/sessionManager';
@@ -78,7 +78,7 @@ function LoginForm() {
       }
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setShowResetPasswordModal(true);
       }

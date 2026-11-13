@@ -1,5 +1,6 @@
 // src/lib/photos.ts
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+import { deleteTripMedia } from '@/lib/mediaStorage';
 
 export interface PhotoMemory {
   id: string;
@@ -57,7 +58,9 @@ export function saveTripPhoto(
 }
 
 export function deleteTripPhoto(tripId: string, photoId: string): PhotoMemory[] {
-  const existing = getTripPhotos(tripId).filter(p => p.id !== photoId);
+  const current = getTripPhotos(tripId);
+  const target = current.find((p) => p.id === photoId);
+  const existing = current.filter((p) => p.id !== photoId);
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(`${PHOTO_STORAGE_PREFIX}${tripId}`, JSON.stringify(existing));
@@ -65,6 +68,10 @@ export function deleteTripPhoto(tripId: string, photoId: string): PhotoMemory[] 
     } catch (e) {
       console.error('Failed to delete photo', e);
     }
+  }
+
+  if (target?.image_url) {
+    deleteTripMedia({ urlOrPath: target.image_url }).catch(() => {});
   }
 
   syncTripMetadataToSupabase(tripId, { photos: existing }).catch((err) => {

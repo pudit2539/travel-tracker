@@ -3,7 +3,6 @@ import {
   saveTripSnapshot, 
   getTripSnapshots, 
   deleteTripSnapshot, 
-  exportFullBackupJSON, 
   parseBackupJSON 
 } from '../lib/versionSnapshot';
 

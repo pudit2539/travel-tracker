@@ -14,14 +14,14 @@ import {
   getFlights, 
   addOrUpdateFlight, 
   deleteFlight, 
-  toggleFlightPaymentStatus,
-  syncFlightsToSupabase 
+  toggleFlightPaymentStatus
 } from '@/lib/flights';
 import { convertToThb, convertCurrency } from '@/lib/currency';
 import { supabase } from '@/lib/supabase';
 import { triggerConfetti } from '@/lib/confetti';
 import { copyToClipboard } from '@/lib/clipboard';
 import { sanitizeSpentAtDate } from './AccommodationsCard';
+import { useIsMounted } from '@/lib/useIsMounted';
 
 interface FlightBoardingPassCardProps {
   tripId: string;
@@ -43,15 +43,13 @@ export function FlightBoardingPassCard({
   fxRate = 1,
   currentUser,
   defaultOpen = false,
-  tripStartDate,
-  tripEndDate,
   onExpenseCreated,
   onShowToast,
 }: FlightBoardingPassCardProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [flights, setFlights] = useState<FlightTicket[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
 
   // Modal State for Add / Edit
   const [showModal, setShowModal] = useState(false);
@@ -78,10 +76,6 @@ export function FlightBoardingPassCard({
   const [formPaymentStatus, setFormPaymentStatus] = useState<'paid' | 'unpaid'>('paid');
   const [formNotes, setFormNotes] = useState('');
   const [formAutoCreateExpense, setFormAutoCreateExpense] = useState(true);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Lock body scroll and Escape key listener when modal is open
   useEffect(() => {

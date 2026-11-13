@@ -5,7 +5,9 @@ export interface AccommodationVoucherFile {
   type: string;             // MIME type เช่น application/pdf หรือ image/jpeg
   size?: number;            // ขนาดไฟล์ (bytes)
   storageKey?: string;      // IndexedDB storage key
-  dataUrl?: string;         // Base64 dataUrl สำหรับ preview / download ทันที
+  storageUrl?: string;      // Public URL ใน Supabase Storage (trip-media)
+  storagePath?: string;     // Path ใน bucket สำหรับลบไฟล์
+  dataUrl?: string;         // Base64 dataUrl สำหรับ preview / fallback
   uploadedAt?: number;
 }
 
@@ -31,8 +33,8 @@ export interface AccommodationStay {
   createdAt: number;
 }
 
-import { supabase } from '@/lib/supabase';
 import { deleteLocalReceiptPhoto, getLocalReceiptPhoto } from '@/lib/localReceipts';
+import { deleteTripMedia } from '@/lib/mediaStorage';
 
 const STORAGE_PREFIX = 'travel_tracker_accommodations_';
 
@@ -42,11 +44,26 @@ const STORAGE_PREFIX = 'travel_tracker_accommodations_';
  */
 function sanitizeStaysForStorage(stays: AccommodationStay[]): AccommodationStay[] {
   return stays.map((stay) => {
-    if (stay.voucherFile && stay.voucherFile.storageKey) {
-      const { dataUrl, ...restVoucher } = stay.voucherFile;
+    if (stay.voucherFile && (stay.voucherFile.storageUrl || stay.voucherFile.storageKey)) {
+      const sanitizedVoucher = { ...stay.voucherFile };
+      delete sanitizedVoucher.dataUrl;
       return {
         ...stay,
-        voucherFile: restVoucher,
+        voucherFile: sanitizedVoucher,
+      };
+    }
+    return stay;
+  });
+}
+
+function stripRemoteVoucherDataUrls(stays: AccommodationStay[]): AccommodationStay[] {
+  return stays.map((stay) => {
+    if (stay.voucherFile?.storageUrl && stay.voucherFile.dataUrl) {
+      const sanitizedVoucher = { ...stay.voucherFile };
+      delete sanitizedVoucher.dataUrl;
+      return {
+        ...stay,
+        voucherFile: sanitizedVoucher,
       };
     }
     return stay;
@@ -58,7 +75,7 @@ import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 export async function syncAccommodationsToSupabase(tripId: string, stays: AccommodationStay[]): Promise<void> {
   if (!tripId) return;
   try {
-    await syncTripMetadataToSupabase(tripId, { accommodations: stays });
+    await syncTripMetadataToSupabase(tripId, { accommodations: sanitizeStaysForStorage(stays) });
   } catch (err) {
     console.warn('Failed to sync accommodations to Supabase:', err);
   }
@@ -78,10 +95,11 @@ export function getAccommodations(tripId: string): AccommodationStay[] {
 
 export function saveAccommodations(tripId: string, stays: AccommodationStay[]): void {
   if (!tripId) return;
+  const storageReady = stripRemoteVoucherDataUrls(stays);
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(stays));
-      window.dispatchEvent(new CustomEvent('travel_tracker_accommodations_updated', { detail: { tripId, stays } }));
+      localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, JSON.stringify(storageReady));
+      window.dispatchEvent(new CustomEvent('travel_tracker_accommodations_updated', { detail: { tripId, stays: storageReady } }));
     } catch {
       // If browser localStorage quota (5MB) is reached, save sanitized version in localStorage
       try {
@@ -93,8 +111,8 @@ export function saveAccommodations(tripId: string, stays: AccommodationStay[]): 
       }
     }
   }
-  // Async sync FULL stays to Supabase for multi-device cross-platform availability
-  syncAccommodationsToSupabase(tripId, stays).catch(() => {});
+  // Async sync lightweight stays (no base64 blobs when backed by Storage/IndexedDB) to Supabase
+  syncAccommodationsToSupabase(tripId, storageReady).catch(() => {});
 }
 
 export function addAccommodation(
@@ -141,6 +159,11 @@ export function deleteAccommodation(
   const stayToDelete = current.find((s) => s.id === stayId);
   if (stayToDelete?.voucherFile?.storageKey) {
     deleteLocalReceiptPhoto(stayToDelete.voucherFile.storageKey).catch(() => {});
+  }
+  if (stayToDelete?.voucherFile?.storageUrl || stayToDelete?.voucherFile?.storagePath) {
+    deleteTripMedia({
+      urlOrPath: stayToDelete.voucherFile.storageUrl || stayToDelete.voucherFile.storagePath,
+    }).catch(() => {});
   }
   const updated = current.filter((s) => s.id !== stayId);
   saveAccommodations(tripId, updated);
@@ -230,7 +253,8 @@ export function formatFileSize(bytes?: number): string {
  * Download hotel booking voucher file directly (with Web Share API support for iOS/Android)
  */
 export async function downloadVoucherFile(voucher: AccommodationVoucherFile, fallbackStayName: string): Promise<void> {
-  if (typeof window === 'undefined' || !voucher.dataUrl) return;
+  const sourceUrl = voucher.storageUrl || voucher.dataUrl;
+  if (typeof window === 'undefined' || !sourceUrl) return;
 
   const defaultExt = voucher.type?.includes('pdf') || voucher.name?.toLowerCase().endsWith('.pdf') ? '.pdf' : '.jpg';
   const cleanHotelName = (fallbackStayName || 'Hotel').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
@@ -238,15 +262,24 @@ export async function downloadVoucherFile(voucher: AccommodationVoucherFile, fal
   const mime = voucher.type || (safeName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
 
   try {
-    if (voucher.dataUrl.startsWith('data:')) {
-      const arr = voucher.dataUrl.split(',');
+    let blob: Blob | null = null;
+    if (sourceUrl.startsWith('data:')) {
+      const arr = sourceUrl.split(',');
       const bstr = atob(arr[1]);
       let n = bstr.length;
       const u8arr = new Uint8Array(n);
       while (n--) {
         u8arr[n] = bstr.charCodeAt(n);
       }
-      const blob = new Blob([u8arr], { type: mime });
+      blob = new Blob([u8arr], { type: mime });
+    } else if (/^https?:\/\//i.test(sourceUrl)) {
+      const response = await fetch(sourceUrl);
+      if (response.ok) {
+        blob = await response.blob();
+      }
+    }
+
+    if (blob) {
       const file = new File([blob], safeName, { type: mime });
 
       // If mobile browser supports Web Share API with files (iOS Safari, Android Chrome)
@@ -257,8 +290,8 @@ export async function downloadVoucherFile(voucher: AccommodationVoucherFile, fal
             title: safeName,
           });
           return;
-        } catch (shareErr: any) {
-          if (shareErr.name === 'AbortError') return; // User closed share sheet intentionally
+        } catch (shareErr: unknown) {
+          if (shareErr instanceof Error && shareErr.name === 'AbortError') return; // User closed share sheet intentionally
         }
       }
 
@@ -280,7 +313,7 @@ export async function downloadVoucherFile(voucher: AccommodationVoucherFile, fal
 
   // Basic fallback
   const link = document.createElement('a');
-  link.href = voucher.dataUrl;
+  link.href = sourceUrl;
   link.download = safeName;
   link.target = '_blank';
   document.body.appendChild(link);
@@ -329,7 +362,7 @@ export function openVoucherInNewTab(dataUrl: string, mimeType?: string): void {
  * Hydrate dataUrl for a stay's voucherFile from IndexedDB if not present
  */
 export async function hydrateStayVoucher(stay: AccommodationStay): Promise<AccommodationStay> {
-  if (stay.voucherFile?.storageKey && !stay.voucherFile.dataUrl) {
+  if (stay.voucherFile?.storageKey && !stay.voucherFile.dataUrl && !stay.voucherFile.storageUrl) {
     try {
       const dataUrl = await getLocalReceiptPhoto(stay.voucherFile.storageKey);
       if (dataUrl) {

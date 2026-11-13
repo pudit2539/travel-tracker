@@ -327,9 +327,14 @@ export default function WishlistDrawer({
   const [activeTab, setActiveTab] = useState<'shopping' | 'wishlist'>(initialTab);
 
   useEffect(() => {
-    if (isOpen && initialTab) {
-      setActiveTab(initialTab);
-    }
+    if (!isOpen || !initialTab) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) setActiveTab(initialTab);
+    });
+    return () => {
+      active = false;
+    };
   }, [isOpen, initialTab]);
 
   // --- Shopping Bag State ---
@@ -364,13 +369,23 @@ export default function WishlistDrawer({
 
   useEffect(() => {
     if (!tripId || typeof window === 'undefined') return;
-    const syncShop = () => setShoppingItems(getShoppingBag(tripId));
-    syncShop();
-    return subscribeShoppingBag(syncShop);
+    let active = true;
+    const syncShop = () => {
+      if (active) setShoppingItems(getShoppingBag(tripId));
+    };
+    queueMicrotask(syncShop);
+    const unsub = subscribeShoppingBag(syncShop);
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [tripId]);
 
   useEffect(() => {
-    if (tripId && typeof window !== 'undefined') {
+    if (!tripId || typeof window === 'undefined') return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       try {
         const raw = localStorage.getItem(`trip_wishlist_${tripId}`);
         if (raw) {
@@ -380,7 +395,10 @@ export default function WishlistDrawer({
       } catch {
         // ignore
       }
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [tripId]);
 
   const shoppingSummary = useMemo(

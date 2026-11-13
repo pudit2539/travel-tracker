@@ -4,8 +4,8 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Wallet, Calculator, PieChart, Coins, Sliders, 
-  ArrowRight, CheckCircle2, AlertTriangle, TrendingUp,
-  Percent, ArrowUpRight, ArrowDownRight, Sparkles,
+  ArrowRight, CheckCircle2, AlertTriangle,
+  ArrowUpRight, ArrowDownRight, Sparkles,
   CreditCard, Flame, Zap, Calendar,
   RefreshCw, BarChart3
 } from 'lucide-react';
@@ -36,7 +36,6 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
   distinctPayers,
   totalSpent,
   members,
-  memberBudgets,
   categories,
   categoryBudgets,
   expenses = [],

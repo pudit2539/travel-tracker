@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Building, Clock, Users, Sliders, History, 
-  ChevronDown, ChevronRight, Wallet, RotateCcw, Check
+  ChevronDown, ChevronRight, Wallet, Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -13,17 +13,15 @@ import {
   CategoryBudgetMap, 
   MemberBudgetMap, 
   getTripCategories, 
-  saveCustomCategory, 
-  deleteCustomCategory, 
   getCategoryBudgets, 
   saveCategoryBudgets, 
   getMemberBudgets, 
   saveMemberBudgets 
 } from '@/lib/categories';
 import { supabase } from '@/lib/supabase';
-import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { convertToThb, convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
+import { useIsMounted } from '@/lib/useIsMounted';
 
 export const SUPPORTED_CURRENCIES = [
   { code: 'THB', symbol: '฿', name: 'บาทไทย (THB)', flag: '🇹🇭' },
@@ -67,7 +65,7 @@ export default function BudgetCategoryModal({
   onOpenRollback,
   onShowToast,
 }: BudgetCategoryModalProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const [currency, setCurrency] = useState<string>('THB');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -86,10 +84,6 @@ export default function BudgetCategoryModal({
   const [showCategorySection, setShowCategorySection] = useState(false);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetMap>({});
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Lock background scroll and handle Escape key
   useEffect(() => {
@@ -175,7 +169,10 @@ export default function BudgetCategoryModal({
 
   // Initial populate from trip & storage
   useEffect(() => {
-    if (isOpen && trip) {
+    if (!isOpen || !trip) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       const activeCur = trip.currency || 'THB';
       setCurrency(activeCur);
 
@@ -206,7 +203,10 @@ export default function BudgetCategoryModal({
         setDailyPerPersonInput(String(defaultDailyPerPerson));
         setDailyTotalInput(String(dailyTotal));
       }
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [isOpen, trip, detectedFixedFromExpenses, tripDays, memberCount]);
 
   // Synchronize Daily Allowance <-> Daily Total
@@ -233,17 +233,17 @@ export default function BudgetCategoryModal({
   const dailyNumber = Math.max(0, Number(dailyTotalInput) || 0);
   const totalComputedBudget = fixedNumber + dailyNumber;
 
-  // Auto split members whenever total budget changes and splitMode is 'even'
-  useEffect(() => {
+  const effectiveMemberBudgets = useMemo<MemberBudgetMap>(() => {
     if (splitMode === 'even') {
       const perPerson = Math.round(totalComputedBudget / memberCount);
       const updated: MemberBudgetMap = {};
       allMembersList.forEach((m) => {
         updated[m.key] = perPerson;
       });
-      setMemberBudgets(updated);
+      return updated;
     }
-  }, [totalComputedBudget, splitMode, memberCount, allMembersList]);
+    return memberBudgets;
+  }, [splitMode, totalComputedBudget, memberCount, allMembersList, memberBudgets]);
 
   const handleMemberBudgetChange = (key: string, val: string) => {
     const num = Number(val);
@@ -332,7 +332,7 @@ export default function BudgetCategoryModal({
 
       if (error) throw error;
 
-      saveMemberBudgets(trip.id, memberBudgets);
+      saveMemberBudgets(trip.id, effectiveMemberBudgets);
       if (showCategorySection) {
         saveCategoryBudgets(trip.id, categoryBudgets);
       }
@@ -620,7 +620,7 @@ export default function BudgetCategoryModal({
             {/* Member Allocation Cards */}
             <div className="space-y-2 pt-1">
               {allMembersList.map((m) => {
-                const allocated = Number(memberBudgets[m.key] || 0);
+                const allocated = Number(effectiveMemberBudgets[m.key] || 0);
                 const pct = totalComputedBudget > 0 ? Math.round((allocated / totalComputedBudget) * 100) : 0;
                 return (
                   <div 

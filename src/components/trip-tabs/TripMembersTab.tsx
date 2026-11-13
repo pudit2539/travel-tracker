@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Users, Share2, Trash2, Crown, Shield, Eye, Edit3, MapPin, UserPlus, ArrowRightLeft, Receipt } from 'lucide-react';
+import { Users, Share2, Trash2, Crown, Eye, Edit3, MapPin, UserPlus, ArrowRightLeft, Receipt } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { TripRole } from '@/lib/permissions';
 

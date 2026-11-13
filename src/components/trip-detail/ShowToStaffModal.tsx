@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Copy, Check, Navigation, ExternalLink, MapPin, Volume2, Sparkles } from 'lucide-react';
+import { X, Copy, Check, Navigation, ExternalLink, MapPin, Volume2 } from 'lucide-react';
 import { copyToClipboard } from '@/lib/clipboard';
 
 export interface ShowToStaffModalProps {
@@ -26,8 +26,6 @@ export function ShowToStaffModal({
   city,
   timeSlot,
   transportInfo,
-  platformInfo,
-  transportNote,
   mapsUrl,
   directionsUrl,
 }: ShowToStaffModalProps) {

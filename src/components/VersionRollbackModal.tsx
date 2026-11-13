@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { 
   X, History, RotateCcw, Download, Upload, 
   ShieldCheck, AlertTriangle, CheckCircle2, Clock, 
-  Trash2, Plus, Loader2, FileJson, ArrowDownToLine
+  Trash2, Plus, Loader2, FileJson
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -55,9 +55,14 @@ export default function VersionRollbackModal({
   }, [tripId]);
 
   useEffect(() => {
-    if (isOpen && tripId) {
-      loadSnapshots();
-    }
+    if (!isOpen || !tripId) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) loadSnapshots();
+    });
+    return () => {
+      active = false;
+    };
   }, [isOpen, tripId, loadSnapshots]);
 
   // Body scroll lock and ESC key listener

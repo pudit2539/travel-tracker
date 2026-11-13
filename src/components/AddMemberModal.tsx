@@ -1,12 +1,12 @@
 // src/components/AddMemberModal.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { 
   Users, UserPlus, X, Search, Check, Loader2, 
-  Shield, Sparkles, AlertCircle, Eye, Edit3, MapPin, Receipt 
+  Shield, Eye, Edit3, MapPin, Receipt 
 } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { TripRole, ROLE_INFO } from '@/lib/permissions';
@@ -36,16 +36,7 @@ export function AddMemberModal({
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<TripRole>('contributor');
 
-  useEffect(() => {
-    if (isOpen) {
-      loadSystemUsers();
-      setSelectedUserId(null);
-      setSelectedRole('contributor');
-      setSearchQuery('');
-    }
-  }, [isOpen]);
-
-  const loadSystemUsers = async () => {
+  const loadSystemUsers = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -60,7 +51,22 @@ export function AddMemberModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setSelectedUserId(null);
+      setSelectedRole('contributor');
+      setSearchQuery('');
+      void loadSystemUsers();
+    });
+    return () => {
+      active = false;
+    };
+  }, [isOpen, loadSystemUsers]);
 
   if (!isOpen) return null;
 

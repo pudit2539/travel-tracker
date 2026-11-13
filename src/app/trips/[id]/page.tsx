@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/components/ThemeProvider';
@@ -34,7 +34,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, formatCurrencyWithThb, convertCurrency, convertToThb } from '@/lib/currency';
+import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency } from '@/lib/currency';
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -50,11 +50,8 @@ import {
   getCategoryMeta 
 } from '@/lib/categories';
 import { getTripPhotos } from '@/lib/photos';
-import { 
-  saveLocalReceiptPhoto, 
-  getLocalReceiptPhoto, 
-  deleteLocalReceiptPhoto 
-} from '@/lib/localReceipts';
+import { getLocalReceiptPhoto } from '@/lib/localReceipts';
+import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
 import { compressReceiptImage } from '@/lib/imageCompressor';
 import ItemizedReceiptSplitter, { ItemizedDish } from '@/components/ItemizedReceiptSplitter';
 import { parseTransitInfo, formatTransitInfo } from '@/lib/transitGuide';
@@ -97,19 +94,27 @@ const ExpenseDetailModal = dynamic(() => import('@/components/ExpenseDetailModal
 const TransferOwnershipModal = dynamic(() => import('@/components/TransferOwnershipModal'), { ssr: false });
 const AddMemberModal = dynamic(() => import('@/components/AddMemberModal'), { ssr: false });
 import { 
-  Camera, Upload, MapPin, Utensils, ShieldAlert, 
-  Plus, Download, Moon, Sun, ExternalLink, ChevronDown, 
-  ChevronUp, ArrowLeft, Trash2, Clock, Bus, Loader2, 
-  Edit3, Share2, Users, PieChart, Sparkles, Search, 
+  Camera, MapPin, Utensils, 
+  Plus, Moon, Sun, 
+  ArrowLeft, Trash2, Bus, Loader2, 
+  Share2, Users, PieChart, Sparkles, 
   Copy, Check, Image as ImageIcon, X, AlertCircle, 
-  CheckCircle2, DollarSign, Calendar, ArrowUp, ArrowDown,
-  PlusCircle, User, Wallet, Filter, Calculator, Navigation, 
-  Bot, Sliders, AlertTriangle, FileText, History, Wifi, WifiOff, 
-  LogOut, ChevronRight, Eye, ShieldCheck, HardDriveDownload, Receipt,
-  Luggage, Coins, Map as MapIcon, List, Compass
+  CheckCircle2, DollarSign, 
+  Bot, Wifi, WifiOff, 
+  LogOut, ChevronRight, HardDriveDownload, Receipt,
+  Compass
 } from 'lucide-react';
 
+const getNowMs = () => Date.now();
+
+function omitPaymentMethod<T extends Record<string, any>>(row: T): Omit<T, 'payment_method'> {
+  const copy = { ...row };
+  delete copy.payment_method;
+  return copy;
+}
+
 export default function TripDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const rawId = params?.id;
@@ -119,7 +124,7 @@ export default function TripDetailPage() {
   const { theme, setTheme, mounted } = useTheme();
 
   // Offline Hook
-  const { isOnline, lastSyncedAt, cacheTripOffline, getOfflineTripCache } = useOfflineSync(tripId);
+  const { isOnline, cacheTripOffline, getOfflineTripCache } = useOfflineSync(tripId);
 
   // State ข้อมูลหลัก
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -131,7 +136,6 @@ export default function TripDetailPage() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetMap>({});
   const [memberBudgets, setMemberBudgets] = useState<MemberBudgetMap>({});
-  const [photosCount, setPhotosCount] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'plan' | 'expenses' | 'analytics' | 'members'>('plan');
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set(['plan']));
   const [heroBudgetView, setHeroBudgetView] = useState<'all' | 'me' | string>('all');
@@ -154,7 +158,6 @@ export default function TripDetailPage() {
   const [selectedDayFilter, setSelectedDayFilter] = useState<string>('all');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState<string>('all');
   const [expensePayerFilter, setExpensePayerFilter] = useState<string>('all');
-  const [expenseFilterMode, setExpenseFilterMode] = useState<'payer' | 'shared'>('payer');
   const [expenseSearchQuery, setExpenseSearchQuery] = useState<string>('');
   const deferredExpenseSearch = useDeferredValue(expenseSearchQuery);
 
@@ -206,7 +209,7 @@ export default function TripDetailPage() {
     transferTargetMember, setTransferTargetMember,
     showAddMemberModal, setShowAddMemberModal,
     previewImage, setPreviewImage,
-    previewLoading, setPreviewLoading,
+    setPreviewLoading,
     copiedLink, setCopiedLink,
     copiedAuthLink, setCopiedAuthLink,
     copiedCode, setCopiedCode,
@@ -393,11 +396,9 @@ export default function TripDetailPage() {
       const cats = getTripCategories(tripId);
       const cBudgets = getCategoryBudgets(tripId);
       const mBudgets = getMemberBudgets(tripId);
-      const tripPhotos = getTripPhotos(tripId);
       setCategories(cats);
       setCategoryBudgets(cBudgets);
       setMemberBudgets(mBudgets);
-      setPhotosCount(tripPhotos.length);
 
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         setLoading(false);
@@ -421,9 +422,7 @@ export default function TripDetailPage() {
 
       const session = sessionRes.session;
       if (!session?.user) {
-        if (typeof window !== 'undefined') {
-          window.location.href = `/login?returnUrl=/trips/${tripId}`;
-        }
+        router.push(`/login?returnUrl=/trips/${tripId}`);
         return;
       }
       setCurrentUser(session.user);
@@ -520,7 +519,6 @@ export default function TripDetailPage() {
             }
             if (parsed.photos && Array.isArray(parsed.photos) && typeof window !== 'undefined') {
               writeStorageIfChanged(`travel_tracker_photos_${tripId}`, parsed.photos);
-              setPhotosCount(parsed.photos.length);
             }
             if (parsed.settledTransfers && typeof window !== 'undefined') {
               const localSettled = (() => {
@@ -632,10 +630,16 @@ export default function TripDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [tripId, cacheTripOffline, getOfflineTripCache]);
+  }, [tripId, cacheTripOffline, getOfflineTripCache, router]);
 
   useEffect(() => {
-    fetchTripData();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) void fetchTripData();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [fetchTripData]);
 
   // 100% Offline-First Expense Queue Auto-Flush when internet reconnects
@@ -656,7 +660,7 @@ export default function TripDetailPage() {
             .insert([row as any])
             .select();
           if (error) {
-            const { payment_method, ...fallbackRow } = row;
+            const fallbackRow = omitPaymentMethod(row as Record<string, any>);
             const { data: fbRows, error: err2 } = await supabase
               .from('expenses')
               .insert([fallbackRow as any])
@@ -688,6 +692,7 @@ export default function TripDetailPage() {
   }, [isOnline, tripId, fetchTripData, markLocalAction]);
 
   // Supabase Realtime Subscription: ฟังการเปลี่ยนแปลงแบบ Real-time (พร้อม debounce เพื่อลด query ซ้ำซ้อนเมื่อมี batch edits)
+  const currentUserId = currentUser?.id;
   useEffect(() => {
     if (!tripId) return;
 
@@ -715,11 +720,11 @@ export default function TripDetailPage() {
           const isSelf = Date.now() - lastLocalActionTime.current < 4500;
 
           if (payload.eventType === 'INSERT') {
-            if (!isSelf && payload.new?.user_id !== currentUser?.id) {
+            if (!isSelf && payload.new?.user_id !== currentUserId) {
               toast.info('✨ มีสมาชิกใหม่เข้าร่วมทริปแล้ว!');
             }
           } else if (payload.eventType === 'UPDATE') {
-            if (currentUser && payload.new?.user_id === currentUser.id) {
+            if (currentUserId && payload.new?.user_id === currentUserId) {
               const newRole = payload.new?.role;
               const roleLabel = ROLE_INFO[newRole as TripRole]?.label || newRole;
               if (!isSelf) {
@@ -729,7 +734,7 @@ export default function TripDetailPage() {
               toast.info('มีการอัปเดตสิทธิ์หรือข้อมูลสมาชิกในทริป');
             }
           } else if (payload.eventType === 'DELETE') {
-            if (currentUser && payload.old?.user_id === currentUser.id) {
+            if (currentUserId && payload.old?.user_id === currentUserId) {
               toast.error('คุณถูกนำออกจากทริปนี้แล้ว');
             } else if (!isSelf) {
               toast.info('มีสมาชิกออกจากทริป');
@@ -766,7 +771,7 @@ export default function TripDetailPage() {
         (payload: any) => {
           const isSelf = 
             Date.now() - lastLocalActionTime.current < 4500 || 
-            (currentUser?.id && (payload.new?.created_by === currentUser.id || payload.new?.payer_id === currentUser.id));
+            (currentUserId && (payload.new?.created_by === currentUserId || payload.new?.payer_id === currentUserId));
 
           // Only notify when another member makes changes
           if (!isSelf) {
@@ -792,7 +797,7 @@ export default function TripDetailPage() {
         (payload: any) => {
           const isSelf = 
             Date.now() - lastLocalActionTime.current < 4500 || 
-            (currentUser?.id && payload.new?.updated_by === currentUser.id);
+            (currentUserId && payload.new?.updated_by === currentUserId);
 
           if (payload.new?.date_label !== '__meta_trip_data__' && payload.old?.date_label !== '__meta_trip_data__') {
             if (!isSelf && (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE')) {
@@ -810,7 +815,7 @@ export default function TripDetailPage() {
       if (refreshTimer) clearTimeout(refreshTimer);
       supabase.removeChannel(channel);
     };
-  }, [tripId, currentUser?.id, fetchTripData]);
+  }, [tripId, currentUserId, fetchTripData]);
 
   const handleJoinTripDirectly = async (codeToUse?: string) => {
     if (!currentUser || !tripId) return;
@@ -854,13 +859,18 @@ export default function TripDetailPage() {
 
   // ตรวจสอบ Gemini API Key จาก Browser LocalStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedKey = localStorage.getItem('travel_tracker_gemini_api_key');
-      if (savedKey) {
-        setHasSavedGeminiKey(true);
-        setGeminiApiKeyInput(savedKey);
-      }
-    }
+    if (typeof window === 'undefined') return;
+    const savedKey = localStorage.getItem('travel_tracker_gemini_api_key');
+    if (!savedKey) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setHasSavedGeminiKey(true);
+      setGeminiApiKeyInput(savedKey);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSaveGeminiKey = (key: string) => {
@@ -878,6 +888,77 @@ export default function TripDetailPage() {
       setShowAiKeyModal(false);
     }
   };
+
+  const userDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'นักเดินทาง';
+  const userCat = getCatAvatar(userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id);
+
+  // คำนวณยอดเงินรวม (แปลงทุกค่าใช้จ่ายเป็นสกุลเงินหลักของทริป)
+  const tripBaseCurrency = trip?.currency || 'THB';
+
+  // รายชื่อผู้จ่ายคนอื่นๆ ทั้งหมด (สำหรับแท็บตัวกรองรายจ่าย กรองตัวฉันเองออกอย่างสมบูรณ์)
+  const otherPayers = useMemo(() => {
+    const myId = currentUser?.id?.toLowerCase();
+    const myName = userDisplayName?.trim().toLowerCase();
+    const myEmail = currentUser?.email?.trim().toLowerCase();
+
+    const map = new Map<string, { key: string; name: string; avatar?: string }>();
+
+    // 1. จากตารางสมาชิก (Members)
+    members.forEach((m) => {
+      const mUserId = m.user_id?.toLowerCase();
+      const mName = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก').trim();
+      const mEmail = m.profiles?.email?.trim().toLowerCase();
+
+      const isMe = (myId && mUserId === myId) || 
+                   (myName && mName.toLowerCase() === myName) || 
+                   (myEmail && mEmail === myEmail);
+      if (isMe) return;
+
+      const norm = mName.toLowerCase();
+      const key = m.user_id || mName;
+      if (!map.has(norm) && !map.has(key)) {
+        const obj = { key, name: mName, avatar: m.profiles?.avatar_id || undefined };
+        map.set(norm, obj);
+        map.set(key, obj);
+      }
+    });
+
+    // 2. จากประวัติค่าใช้จ่าย (Expenses)
+    expenses.forEach((e) => {
+      const pName = (e.payer_name || '').trim();
+      if (!pName) return;
+
+      const isMe = (myId && e.payer_id?.toLowerCase() === myId) || 
+                   (myName && pName.toLowerCase() === myName);
+      if (isMe) return;
+
+      const norm = pName.toLowerCase();
+      const pKey = e.payer_id || pName;
+      if (!map.has(norm) && !map.has(pKey)) {
+        const obj = { key: pKey, name: pName, avatar: e.payer_avatar || undefined };
+        map.set(norm, obj);
+        map.set(pKey, obj);
+      }
+    });
+
+    return Array.from(new Set(map.values()));
+  }, [members, expenses, currentUser, userDisplayName]);
+
+  // สมาชิกทั้งหมดสำหรับใช้ใน Itemized Receipt Splitter
+  const mySplitId = currentUser?.id || 'me';
+  const mySplitName = userDisplayName || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
+  const mySplitAvatar = userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id || 'cat_pink';
+  const allMembersForSplit = useMemo(
+    () => [
+      { id: mySplitId, name: `${mySplitName} (ฉัน)`, avatar: mySplitAvatar },
+      ...otherPayers.map((p) => ({
+        id: p.key || p.name,
+        name: p.name,
+        avatar: p.avatar || 'cat_purple',
+      })),
+    ],
+    [mySplitId, mySplitName, mySplitAvatar, otherPayers]
+  );
 
   // จัดการการนำเข้าไฟล์ Excel
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1342,12 +1423,13 @@ export default function TripDetailPage() {
 
       let receiptStorageRef = null;
       if (scannedData.receipt_url) {
-        const localReceiptKey = `receipt_${tripId}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-        try {
-          await saveLocalReceiptPhoto(localReceiptKey, scannedData.receipt_url);
-        } catch {}
-        // Save the full compressed image dataUrl to Supabase so other devices & mobile can access immediately
-        receiptStorageRef = scannedData.receipt_url;
+        const uploadedReceipt = await uploadTripMedia({
+          tripId,
+          folder: 'receipts',
+          dataUrl: scannedData.receipt_url,
+          cacheOffline: true,
+        });
+        receiptStorageRef = uploadedReceipt.url;
       }
 
       let primaryExpenseId: string | undefined;
@@ -1395,7 +1477,7 @@ export default function TripDetailPage() {
           const { data: insertedRows, error } = await supabase.from('expenses').insert(rowsToInsert).select();
           if (error) {
             // Supabase fallback if column payment_method doesn't exist yet
-            const fallbackRows = rowsToInsert.map(({ payment_method, ...rest }) => rest);
+            const fallbackRows = rowsToInsert.map((r) => omitPaymentMethod(r));
             const { data: fbRows, error: err2 } = await supabase.from('expenses').insert(fallbackRows).select();
             if (err2) throw err2;
             if (fbRows) {
@@ -1438,7 +1520,7 @@ export default function TripDetailPage() {
         } else {
           const { data: insertedRows, error } = await supabase.from('expenses').insert([rowToInsert]).select();
           if (error) {
-            const { payment_method, ...fallbackRow } = rowToInsert;
+            const fallbackRow = omitPaymentMethod(rowToInsert);
             const { data: fbRows, error: err2 } = await supabase.from('expenses').insert([fallbackRow]).select();
             if (err2) {
               // If network failed mid-request, fallback to offline queue seamlessly
@@ -1478,7 +1560,7 @@ export default function TripDetailPage() {
 
       if (isHotel) {
         syncExpenseToAccommodation(tripId, {
-          id: primaryExpenseId || 'exp_' + Date.now(),
+          id: primaryExpenseId || 'exp_' + getNowMs(),
           title: finalTitle,
           amount: calculatedAmount,
           currency: scannedData.currency || trip?.currency || 'THB',
@@ -1486,7 +1568,7 @@ export default function TripDetailPage() {
         }).catch(() => {});
       } else if (isFlight) {
         syncExpenseToFlight(tripId, {
-          id: primaryExpenseId || 'exp_' + Date.now(),
+          id: primaryExpenseId || 'exp_' + getNowMs(),
           title: finalTitle,
           amount: calculatedAmount,
           currency: scannedData.currency || trip?.currency || 'THB',
@@ -1610,7 +1692,7 @@ export default function TripDetailPage() {
     if (!confirm('ต้องการลบรายการค่าใช้จ่ายนี้ใช่หรือไม่?')) return;
     if (receiptRef) {
       try {
-        await deleteLocalReceiptPhoto(receiptRef);
+        await deleteTripMedia({ urlOrPath: receiptRef, storageKey: receiptRef });
       } catch {}
     }
     if (tripId) {
@@ -1836,15 +1918,22 @@ export default function TripDetailPage() {
   }, [canSeeMoney]);
 
   useEffect(() => {
-    if (!canSeeMoney && (activeTab === 'expenses' || activeTab === 'analytics')) {
-      setActiveTab('plan');
-    }
-    setVisitedTabs((prev) => {
-      if (prev.has(activeTab)) return prev;
-      const next = new Set(prev);
-      next.add(activeTab);
-      return next;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      if (!canSeeMoney && (activeTab === 'expenses' || activeTab === 'analytics')) {
+        setActiveTab('plan');
+      }
+      setVisitedTabs((prev) => {
+        if (prev.has(activeTab)) return prev;
+        const next = new Set(prev);
+        next.add(activeTab);
+        return next;
+      });
     });
+    return () => {
+      cancelled = true;
+    };
   }, [canSeeMoney, activeTab]);
 
   const handleUpdateMemberRole = async (memberId: string, newRole: TripRole) => {
@@ -1963,12 +2052,6 @@ export default function TripDetailPage() {
       return false;
     }
   };
-
-  const userDisplayName = userProfile?.display_name || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'นักเดินทาง';
-  const userCat = getCatAvatar(userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id);
-
-  // คำนวณยอดเงินรวม (แปลงทุกค่าใช้จ่ายเป็นสกุลเงินหลักของทริป)
-  const tripBaseCurrency = trip?.currency || 'THB';
 
   const totalSpent = useMemo(() => {
     return expenses.reduce((acc, curr) => {
@@ -2111,69 +2194,6 @@ export default function TripDetailPage() {
     }
   }, [heroBudgetView, totalSpent, targetBudget, expenses, currentUser, userDisplayName, memberBudgets, members, otherMembers, tripBaseCurrency, fxRate, tripId]);
 
-  // รายชื่อผู้จ่ายคนอื่นๆ ทั้งหมด (สำหรับแท็บตัวกรองรายจ่าย กรองตัวฉันเองออกอย่างสมบูรณ์)
-  const otherPayers = useMemo(() => {
-    const myId = currentUser?.id?.toLowerCase();
-    const myName = userDisplayName?.trim().toLowerCase();
-    const myEmail = currentUser?.email?.trim().toLowerCase();
-
-    const map = new Map<string, { key: string; name: string; avatar?: string }>();
-
-    // 1. จากตารางสมาชิก (Members)
-    members.forEach((m) => {
-      const mUserId = m.user_id?.toLowerCase();
-      const mName = (m.profiles?.display_name || m.profiles?.email?.split('@')[0] || 'สมาชิก').trim();
-      const mEmail = m.profiles?.email?.trim().toLowerCase();
-
-      const isMe = (myId && mUserId === myId) || 
-                   (myName && mName.toLowerCase() === myName) || 
-                   (myEmail && mEmail === myEmail);
-      if (isMe) return;
-
-      const norm = mName.toLowerCase();
-      const key = m.user_id || mName;
-      if (!map.has(norm) && !map.has(key)) {
-        const obj = { key, name: mName, avatar: m.profiles?.avatar_id || undefined };
-        map.set(norm, obj);
-        map.set(key, obj);
-      }
-    });
-
-    // 2. จากประวัติค่าใช้จ่าย (Expenses)
-    expenses.forEach((e) => {
-      const pName = (e.payer_name || '').trim();
-      if (!pName) return;
-
-      const isMe = (myId && e.payer_id?.toLowerCase() === myId) || 
-                   (myName && pName.toLowerCase() === myName);
-      if (isMe) return;
-
-      const norm = pName.toLowerCase();
-      const pKey = e.payer_id || pName;
-      if (!map.has(norm) && !map.has(pKey)) {
-        const obj = { key: pKey, name: pName, avatar: e.payer_avatar || undefined };
-        map.set(norm, obj);
-        map.set(pKey, obj);
-      }
-    });
-
-    return Array.from(new Set(map.values()));
-  }, [members, expenses, currentUser, userDisplayName]);
-
-  // สมาชิกทั้งหมดสำหรับใช้ใน Itemized Receipt Splitter
-  const allMembersForSplit = useMemo(() => {
-    const list: Array<{ id: string; name: string; avatar: string }> = [];
-    const myName = userDisplayName || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
-    const myAvatar = userProfile?.avatar_id || currentUser?.user_metadata?.avatar_id || 'cat_pink';
-    list.push({ id: currentUser?.id || 'me', name: `${myName} (ฉัน)`, avatar: myAvatar });
-
-    otherPayers.forEach((p) => {
-      list.push({ id: p.key || p.name, name: p.name, avatar: p.avatar || 'cat_purple' });
-    });
-
-    return list;
-  }, [currentUser, userDisplayName, userProfile, otherPayers]);
-
   // สรุปยอดจ่ายแยกตามรายคน (ตัดชื่อซ้ำ)
   const distinctPayers = useMemo(() => {
     const myId = currentUser?.id?.toLowerCase();
@@ -2236,7 +2256,7 @@ export default function TripDetailPage() {
       }
       return true;
     });
-  }, [expenses, expenseCategoryFilter, expensePayerFilter, expenseFilterMode, deferredExpenseSearch, currentUser, userDisplayName, tripId]);
+  }, [expenses, expenseCategoryFilter, expensePayerFilter, deferredExpenseSearch, currentUser, userDisplayName, tripId]);
 
   // วันทั้งหมดที่มีใน Itinerary
   const availableDays = useMemo(() => {
@@ -3100,7 +3120,6 @@ export default function TripDetailPage() {
           isOpen={showScrapbookModal}
           onClose={() => {
             setShowScrapbookModal(false);
-            setPhotosCount(getTripPhotos(tripId).length);
           }}
           tripId={tripId}
           tripName={trip?.name || trip?.title || ''}
@@ -3919,7 +3938,6 @@ export default function TripDetailPage() {
             </div>
 
             <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[58vh] sm:max-h-[62vh]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={previewImage} alt="Receipt Preview" className="max-h-[56vh] sm:max-h-[60vh] w-auto object-contain rounded-xl shadow-md" />
             </div>
 

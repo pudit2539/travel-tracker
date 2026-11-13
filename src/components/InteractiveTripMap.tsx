@@ -4,8 +4,8 @@
 import { useState, useMemo } from 'react';
 import { 
   MapPin, ExternalLink, Navigation, Compass, 
-  Clock, Bus, Utensils, ArrowRight, Sparkles, 
-  ChevronRight, Map, CheckCircle2, AlertCircle, Calendar
+  Clock, Bus, Utensils, Sparkles, 
+  ChevronRight, Map, Calendar
 } from 'lucide-react';
 
 interface InteractiveTripMapProps {

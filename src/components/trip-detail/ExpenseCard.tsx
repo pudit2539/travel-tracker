@@ -6,7 +6,6 @@ import { Trash2, Image as ImageIcon, Edit3 } from 'lucide-react';
 import { getCatAvatar } from '@/lib/avatars';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 import { getCategoryMeta, CategoryItem } from '@/lib/categories';
-import { convertToThb } from '@/lib/currency';
 import { resolveDisplayCurrency } from '@/lib/tripStatus';
 
 interface ExpenseCardProps {
@@ -228,7 +227,6 @@ export const ExpenseThumbnailCard = React.memo(function ExpenseThumbnailCard({
   onOpenReceiptPreview,
   onDeleteExpense,
   onSelectExpense,
-  onEditExpense,
   splitMembers,
 }: ExpenseCardProps) {
   const catMeta = getCategoryMeta(categories, expense.category);
@@ -346,8 +344,6 @@ export const ExpenseThumbnailCard = React.memo(function ExpenseThumbnailCard({
 export const ExpenseCompactRow = React.memo(function ExpenseCompactRow({
   expense,
   categories,
-  currentUserId,
-  userDisplayName,
   fxRate,
   currencyView = 'foreign',
   canModify,

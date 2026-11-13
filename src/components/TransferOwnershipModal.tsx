@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Crown, X, Lock, AlertTriangle, Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Crown, X, Lock, AlertTriangle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { CatAvatarBadge } from '@/components/CatAvatarBadge';
 
 interface TransferOwnershipModalProps {

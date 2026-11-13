@@ -73,12 +73,19 @@ export default function NotificationBell({
 
   // Initialize stored IDs and mute state on client mount
   useEffect(() => {
-    setReadIds(getStoredIds(READ_NOTIFS_KEY));
-    setClearedIds(getStoredIds(CLEARED_NOTIFS_KEY));
-    try {
-      const storedMute = localStorage.getItem(NOTIF_MUTED_KEY);
-      if (storedMute === 'true') setIsMuted(true);
-    } catch {}
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setReadIds(getStoredIds(READ_NOTIFS_KEY));
+      setClearedIds(getStoredIds(CLEARED_NOTIFS_KEY));
+      try {
+        const storedMute = localStorage.getItem(NOTIF_MUTED_KEY);
+        if (storedMute === 'true') setIsMuted(true);
+      } catch {}
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const toggleMute = () => {

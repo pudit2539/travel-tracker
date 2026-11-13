@@ -1,11 +1,7 @@
 // src/components/RouteVisualizer.tsx
 'use client';
 
-import { useState } from 'react';
-import { 
-  MapPin, ExternalLink, Navigation, Compass, 
-  Bus, Footprints, Clock, ArrowRight, Sparkles, ChevronRight
-} from 'lucide-react';
+import { ExternalLink, Navigation, Compass, ChevronRight } from 'lucide-react';
 import { extractCleanPlaceName } from '@/components/InteractiveTripMap';
 
 interface RouteVisualizerProps {
@@ -14,8 +10,6 @@ interface RouteVisualizerProps {
 }
 
 export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualizerProps) {
-  const [activeStop, setActiveStop] = useState<number | null>(null);
-
   if (!items || items.length === 0) return null;
 
   // Build combined Google Maps Multi-Stop directions link

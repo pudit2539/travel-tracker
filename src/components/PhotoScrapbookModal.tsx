@@ -4,10 +4,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   Camera, Image as ImageIcon, Plus, Trash2, X, 
-  MapPin, Calendar, Heart, Download, Eye, Sparkles, Loader2,
-  HardDriveDownload, Pin
+  MapPin, Calendar, Eye, Loader2,
+  HardDriveDownload
 } from 'lucide-react';
 import { PhotoMemory, getTripPhotos, saveTripPhoto, deleteTripPhoto } from '@/lib/photos';
+import { uploadTripMedia } from '@/lib/mediaStorage';
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 
@@ -22,7 +23,6 @@ export default function PhotoScrapbookModal({
   isOpen,
   onClose,
   tripId,
-  tripName,
 }: PhotoScrapbookModalProps) {
   const [photos, setPhotos] = useState<PhotoMemory[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -41,9 +41,14 @@ export default function PhotoScrapbookModal({
   }, [tripId]);
 
   useEffect(() => {
-    if (isOpen && tripId) {
-      loadPhotos();
-    }
+    if (!isOpen || !tripId) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) loadPhotos();
+    });
+    return () => {
+      active = false;
+    };
   }, [isOpen, tripId, loadPhotos]);
 
   useEffect(() => {
@@ -67,18 +72,26 @@ export default function PhotoScrapbookModal({
     };
   }, [isOpen, onClose]);
 
-  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setImageUrl(dataUrl);
+    try {
+      const uploaded = await uploadTripMedia({
+        tripId,
+        folder: 'scrapbook',
+        file,
+        maxWidth: 1400,
+        quality: 0.84,
+      });
+      setImageUrl(uploaded.url);
+    } catch {
+      toast.error('ไม่สามารถอัปโหลดหรืออ่านไฟล์รูปภาพได้');
+    } finally {
       setUploading(false);
-    };
-    reader.readAsDataURL(file);
+      e.target.value = '';
+    }
   };
 
   const handleAddPhoto = (e: React.FormEvent) => {

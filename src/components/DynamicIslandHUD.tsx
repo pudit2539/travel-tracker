@@ -5,10 +5,8 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Navigation, MapPin, Train, Utensils, Coins, 
-  QrCode, Dices, ChevronDown, ChevronUp, ExternalLink, 
-  Sparkles, Clock, Compass, Bell, Check, X, ShieldAlert
+  QrCode, Dices, ChevronDown, ChevronUp, ExternalLink
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface DynamicIslandHUDProps {
   trip: any;
@@ -21,16 +19,13 @@ interface DynamicIslandHUDProps {
 }
 
 export default function DynamicIslandHUD({
-  trip,
   itinerary = [],
-  fxRate = 0.210,
   onOpenCurrencyCalc,
   onOpenTicketLocker,
   onOpenGourmetRadar,
   onOpenDiningDecision,
 }: DynamicIslandHUDProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [hasScrolled, setHasScrolled] = useState(false);
   const islandRef = useRef<HTMLDivElement>(null);
 
   // Auto detect active stop from itinerary
@@ -41,7 +36,6 @@ export default function DynamicIslandHUD({
     // Try finding today's item, else take first or second item
     const today = new Date();
     const day = today.getDate();
-    const month = today.getMonth() + 1; // 1-12
 
     // Check if any date_label matches today
     const found = valid.find((item) => {
@@ -52,17 +46,6 @@ export default function DynamicIslandHUD({
 
     return found || valid[0];
   }, [itinerary]);
-
-  // Next upcoming stop
-  const nextStop = useMemo(() => {
-    const valid = itinerary.filter((i) => i.date_label !== '__meta_trip_data__');
-    if (!activeStop || valid.length < 2) return null;
-    const currentIdx = valid.findIndex((i) => i.id === activeStop.id);
-    if (currentIdx >= 0 && currentIdx < valid.length - 1) {
-      return valid[currentIdx + 1];
-    }
-    return valid[1] || null;
-  }, [itinerary, activeStop]);
 
   // Extract first backup dining from active stop if available
   const currentBackup = useMemo(() => {
@@ -101,19 +84,6 @@ export default function DynamicIslandHUD({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isExpanded]);
-
-  // Handle scroll detection
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 150) {
-        setHasScrolled(true);
-      } else {
-        setHasScrolled(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   if (!activeStop) return null;
 

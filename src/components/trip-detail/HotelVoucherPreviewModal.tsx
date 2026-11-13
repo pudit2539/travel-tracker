@@ -14,6 +14,7 @@ import {
   formatFileSize 
 } from '@/lib/accommodations';
 import { getLocalReceiptPhoto, saveLocalReceiptPhoto } from '@/lib/localReceipts';
+import { useIsMounted } from '@/lib/useIsMounted';
 
 interface HotelVoucherPreviewModalProps {
   isOpen: boolean;
@@ -31,36 +32,49 @@ export function HotelVoucherPreviewModal({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [activeDataUrl, setActiveDataUrl] = useState<string | null>(voucher?.dataUrl || null);
-  const [blobPdfUrl, setBlobPdfUrl] = useState<string | null>(null);
+  const [convertedPdf, setConvertedPdf] = useState<{ source: string; blobUrl: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
 
+  // Sync storageUrl / dataUrl or resolve from IndexedDB if not passed directly
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Sync dataUrl or resolve from IndexedDB if not passed directly
-  useEffect(() => {
-    if (voucher?.dataUrl) {
-      setActiveDataUrl(voucher.dataUrl);
-      setLoading(false);
+    let active = true;
+    const directSource = voucher?.storageUrl || voucher?.dataUrl;
+    if (directSource) {
+      queueMicrotask(() => {
+        if (!active) return;
+        setActiveDataUrl(directSource);
+        setLoading(false);
+      });
     } else if (voucher?.storageKey) {
-      setLoading(true);
+      queueMicrotask(() => {
+        if (active) setLoading(true);
+      });
       getLocalReceiptPhoto(voucher.storageKey)
         .then((data) => {
-          if (data) setActiveDataUrl(data);
+          if (active && data) setActiveDataUrl(data);
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          if (active) setLoading(false);
+        });
     } else {
-      setActiveDataUrl(null);
-      setLoading(false);
+      queueMicrotask(() => {
+        if (!active) return;
+        setActiveDataUrl(null);
+        setLoading(false);
+      });
     }
+    return () => {
+      active = false;
+    };
   }, [voucher]);
 
   // Convert Base64 PDF to Object Blob URL for iOS Safari / Mobile rendering
   useEffect(() => {
     const isPdfType = voucher?.type?.includes('pdf') || voucher?.name?.toLowerCase().endsWith('.pdf');
     if (isPdfType && activeDataUrl && activeDataUrl.startsWith('data:')) {
+      let objUrl: string | null = null;
+      let active = true;
       try {
         const arr = activeDataUrl.split(',');
         const mime = arr[0].match(/:(.*?);/)?.[1] || 'application/pdf';
@@ -71,25 +85,36 @@ export function HotelVoucherPreviewModal({
           u8arr[n] = bstr.charCodeAt(n);
         }
         const blob = new Blob([u8arr], { type: mime });
-        const objUrl = URL.createObjectURL(blob);
-        setBlobPdfUrl(objUrl);
-        return () => {
-          URL.revokeObjectURL(objUrl);
-        };
-      } catch (e) {
-        setBlobPdfUrl(activeDataUrl);
+        objUrl = URL.createObjectURL(blob);
+        const targetUrl = objUrl;
+        queueMicrotask(() => {
+          if (active) setConvertedPdf({ source: activeDataUrl, blobUrl: targetUrl });
+        });
+      } catch {
+        // Fallback directly to activeDataUrl
       }
-    } else {
-      setBlobPdfUrl(activeDataUrl);
+      return () => {
+        active = false;
+        if (objUrl) URL.revokeObjectURL(objUrl);
+      };
     }
   }, [voucher, activeDataUrl]);
 
+  const blobPdfUrl =
+    activeDataUrl && convertedPdf?.source === activeDataUrl ? convertedPdf.blobUrl : activeDataUrl;
+
   // Reset zoom & rotation when modal opens/closes
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       setZoom(1);
       setRotation(0);
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [isOpen]);
 
   // Lock body scroll on iOS/iPadOS
@@ -332,7 +357,6 @@ export function HotelVoucherPreviewModal({
                 </button>
               </div>
 
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={activeDataUrl || ''}
                 alt={`ใบจอง ${hotelName}`}

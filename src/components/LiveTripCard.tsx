@@ -29,6 +29,7 @@ import {
 } from '@/lib/shoppingBag';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
+import { useIsMounted } from '@/lib/useIsMounted';
 
 interface LiveTripCardProps {
   trip: any;
@@ -178,7 +179,7 @@ function LiveTripCard({
   selectedDay,
   onShowToast,
 }: LiveTripCardProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
   const [visitedMap, setVisitedMap] = useState<Record<string, boolean>>({});
   const [showStampAnimation, setShowStampAnimation] = useState<string | null>(null);
@@ -214,26 +215,30 @@ function LiveTripCard({
   }, [tripId]);
 
   useEffect(() => {
-    setMounted(true);
-    refreshStamps();
-    refreshShoppingProps();
-    try {
-      const savedStyle = localStorage.getItem(`companion_style_${tripId}`) as CompanionStyle;
-      if (savedStyle === 'feminine' || savedStyle === 'masculine') {
-        setCompanionStyle(savedStyle);
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      refreshStamps();
+      refreshShoppingProps();
+      try {
+        const savedStyle = localStorage.getItem(`companion_style_${tripId}`) as CompanionStyle;
+        if (savedStyle === 'feminine' || savedStyle === 'masculine') {
+          setCompanionStyle(savedStyle);
+        }
+        const savedPrivacy = localStorage.getItem(
+          `presence_privacy_${tripId}`
+        ) as PresencePrivacyLevel;
+        if (savedPrivacy) setPrivacyLevel(savedPrivacy);
+      } catch {
+        // ignore
       }
-      const savedPrivacy = localStorage.getItem(
-        `presence_privacy_${tripId}`
-      ) as PresencePrivacyLevel;
-      if (savedPrivacy) setPrivacyLevel(savedPrivacy);
-    } catch {
-      // ignore
-    }
+    });
     const unsubStamps = subscribeVisitedStamps(refreshStamps);
     const unsubShop = subscribeShoppingBag(refreshShoppingProps);
     // Update clock every 30 seconds instead of every 1s to avoid 60x/min full SVG re-renders
     const timer = setInterval(() => setCurrentTime(new Date()), 30000);
     return () => {
+      active = false;
       unsubStamps();
       unsubShop();
       clearInterval(timer);

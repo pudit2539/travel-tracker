@@ -2,7 +2,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { ShieldAlert, RotateCcw, Home, Sparkles, AlertCircle } from 'lucide-react';
+import { ShieldAlert, RotateCcw, Home } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -39,7 +39,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       try {
         sessionStorage.clear();
       } catch {}
-      window.location.href = '/';
+      window.location.assign(new URL('/', window.location.origin).toString());
     }
   };
 

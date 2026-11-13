@@ -4,13 +4,14 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   X, QrCode, Plus, Trash2, Camera, Download, 
-  Sun, Sparkles, Copy, Check, Eye, 
-  Upload, ShieldCheck, Ticket, AlertCircle, Maximize2,
-  ZoomIn, ZoomOut, RotateCcw, ImageIcon, RefreshCw, FileText,
+  Sun, Copy, Check, 
+  Upload, ShieldCheck, Ticket, Maximize2,
+  ZoomIn, ZoomOut, RotateCcw, RefreshCw,
   User, Users, UserPlus, Pencil, PlusCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
 import { copyToClipboard } from '@/lib/clipboard';
 
 export interface VaultPassItem {
@@ -81,66 +82,10 @@ const DEFAULT_PRESET_PASSES: VaultPassItem[] = [
   },
 ];
 
-/**
- * Client-side Canvas Image Compression
- * Scales high-resolution mobile screenshots (Visit Japan Web / K-ETA / Tickets)
- * to max 1600px width/height and quality 0.86 to ensure crisp scanner readability
- * without exceeding storage or network quotas.
- */
-function compressPassImage(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!file.type.startsWith('image/')) {
-      reject(new Error('ไฟล์ที่เลือกไม่ใช่รูปภาพ'));
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('ไม่สามารถอ่านไฟล์ได้'));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('ไม่สามารถประมวลผลรูปภาพได้'));
-      img.onload = () => {
-        let { width, height } = img;
-        const maxDimension = 1600;
-
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-          } else {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(reader.result as string);
-          return;
-        }
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
-        resolve(dataUrl);
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 export default function TicketPassLockerModal({
   isOpen,
   onClose,
   tripId,
-  tripName,
   initialPasses,
   onPassesUpdated,
   members,
@@ -225,17 +170,28 @@ export default function TicketPassLockerModal({
   const [activeCardAttachId, setActiveCardAttachId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialPasses && initialPasses.length > 0) {
-      setPasses(initialPasses);
-    }
+    if (!initialPasses || initialPasses.length === 0) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) setPasses(initialPasses);
+    });
+    return () => {
+      active = false;
+    };
   }, [initialPasses]);
 
   // Reset zoom whenever viewing pass changes
   useEffect(() => {
-    if (activeViewingPass) {
+    if (!activeViewingPass) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       setZoomLevel(1);
       setIsMaxBrightness(true);
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [activeViewingPass]);
 
   // Body scroll lock and ESC key listener
@@ -287,11 +243,21 @@ export default function TicketPassLockerModal({
   const handleNewPassImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/') && !file.type.includes('pdf')) {
+      toast.error('กรุณาเลือกไฟล์รูปภาพหรือ PDF');
+      return;
+    }
 
     setIsCompressing(true);
     try {
-      const dataUrl = await compressPassImage(file);
-      setNewQrImage(dataUrl);
+      const uploaded = await uploadTripMedia({
+        tripId: tripId || 'shared',
+        folder: 'passes',
+        file,
+        maxWidth: 1600,
+        quality: 0.86,
+      });
+      setNewQrImage(uploaded.url);
       toast.success('แนบภาพตั๋ว / QR เรียบร้อยแล้ว 📸');
     } catch {
       toast.error('ไม่สามารถประมวลผลไฟล์ภาพได้');
@@ -309,12 +275,26 @@ export default function TicketPassLockerModal({
   const handleCardImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeCardAttachId) return;
+    if (!file.type.startsWith('image/') && !file.type.includes('pdf')) {
+      toast.error('กรุณาเลือกไฟล์รูปภาพหรือ PDF');
+      return;
+    }
 
+    const prevPass = passes.find((p) => p.id === activeCardAttachId);
     try {
-      const dataUrl = await compressPassImage(file);
+      const uploaded = await uploadTripMedia({
+        tripId: tripId || 'shared',
+        folder: 'passes',
+        file,
+        maxWidth: 1600,
+        quality: 0.86,
+      });
+      if (prevPass?.qrCodeUrl && prevPass.qrCodeUrl !== uploaded.url) {
+        deleteTripMedia({ urlOrPath: prevPass.qrCodeUrl }).catch(() => {});
+      }
       const updated = passes.map((p) => {
         if (p.id === activeCardAttachId) {
-          return { ...p, qrCodeUrl: dataUrl };
+          return { ...p, qrCodeUrl: uploaded.url };
         }
         return p;
       });
@@ -329,6 +309,10 @@ export default function TicketPassLockerModal({
   };
 
   const handleRemovePassImage = (passId: string) => {
+    const target = passes.find((p) => p.id === passId);
+    if (target?.qrCodeUrl) {
+      deleteTripMedia({ urlOrPath: target.qrCodeUrl }).catch(() => {});
+    }
     const updated = passes.map((p) => {
       if (p.id === passId) {
         return { ...p, qrCodeUrl: undefined };
@@ -490,6 +474,10 @@ export default function TicketPassLockerModal({
 
   const handleDeletePass = (id: string) => {
     if (confirm('คุณต้องการลบตั๋วหรือเอกสารนี้ออกจากตู้เซฟใช่หรือไม่?')) {
+      const target = passes.find((p) => p.id === id);
+      if (target?.qrCodeUrl) {
+        deleteTripMedia({ urlOrPath: target.qrCodeUrl }).catch(() => {});
+      }
       const next = passes.filter((p) => p.id !== id);
       savePassesList(next);
       if (activeViewingPass?.id === id) setActiveViewingPass(null);
@@ -907,7 +895,6 @@ export default function TicketPassLockerModal({
                   {newQrImage && (
                     <div className="flex items-center gap-2 bg-white dark:bg-[#181a20] px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#262932]">
                       <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={newQrImage} alt="preview" className="w-full h-full object-cover" />
                       </div>
                       <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
@@ -1079,7 +1066,6 @@ export default function TicketPassLockerModal({
                           className="flex items-center gap-2 cursor-pointer flex-1 min-w-0 group"
                         >
                           <div className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 shrink-0 overflow-hidden flex items-center justify-center">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={pass.qrCodeUrl}
                               alt={pass.title}
@@ -1256,7 +1242,6 @@ export default function TicketPassLockerModal({
                   className="transition-transform duration-200 flex items-center justify-center max-w-full"
                   style={{ transform: `scale(${zoomLevel})` }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={activeViewingPass.qrCodeUrl}
                     alt={activeViewingPass.title}

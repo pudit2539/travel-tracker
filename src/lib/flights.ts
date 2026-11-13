@@ -1,5 +1,4 @@
 // src/lib/flights.ts
-import { supabase } from '@/lib/supabase';
 
 export interface FlightTicket {
   id: string;

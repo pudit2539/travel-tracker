@@ -23,7 +23,7 @@ export default function GlobalError({
       try {
         sessionStorage.clear();
       } catch {}
-      window.location.href = '/';
+      window.location.assign(new URL('/', window.location.origin).toString());
     }
   };
 

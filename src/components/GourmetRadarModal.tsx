@@ -4,8 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
   X, Search, MapPin, ExternalLink, Star, 
-  Utensils, Coffee, Beef, Flame, Sparkles, Filter, 
-  CheckCircle2, Compass, Share2, Award, ChevronRight, Dices
+  Utensils, Award, Dices
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
@@ -161,7 +160,6 @@ export default function GourmetRadarModal({
   onClose,
   itinerary = [],
   tripId,
-  fxRate = 0.210,
   initialCheckedSpots = {},
   onToggleCheckIn,
   onOpenDecisionPicker,
@@ -172,21 +170,20 @@ export default function GourmetRadarModal({
   const [filterType, setFilterType] = useState<'all' | 'plan' | 'curated' | 'checked'>('all');
 
   // Checked-in / Visited spots tracking
-  const [checkedSpots, setCheckedSpots] = useState<Record<string, boolean>>(() => {
+  const [localCheckedOverrides, setLocalCheckedOverrides] = useState<Record<string, boolean>>(() => {
     if (typeof window !== 'undefined' && tripId) {
       try {
         const cached = localStorage.getItem(`gourmet_checked_${tripId}`);
-        if (cached) return { ...initialCheckedSpots, ...JSON.parse(cached) };
+        if (cached) return JSON.parse(cached);
       } catch {}
     }
-    return initialCheckedSpots || {};
+    return {};
   });
 
-  useEffect(() => {
-    if (initialCheckedSpots && Object.keys(initialCheckedSpots).length > 0) {
-      setCheckedSpots((prev) => ({ ...prev, ...initialCheckedSpots }));
-    }
-  }, [initialCheckedSpots]);
+  const checkedSpots = useMemo<Record<string, boolean>>(
+    () => ({ ...initialCheckedSpots, ...localCheckedOverrides }),
+    [initialCheckedSpots, localCheckedOverrides]
+  );
 
   // Body scroll lock and ESC key listener
   useEffect(() => {
@@ -236,11 +233,9 @@ export default function GourmetRadarModal({
     });
   }, [allSpots, selectedCity, selectedCategory, filterType, searchQuery, checkedSpots]);
 
-  const [displayLimit, setDisplayLimit] = useState(30);
-
-  useEffect(() => {
-    setDisplayLimit(30);
-  }, [selectedCity, selectedCategory, filterType, searchQuery]);
+  const filterKey = `${selectedCity}|${selectedCategory}|${filterType}|${searchQuery}`;
+  const [limitState, setLimitState] = useState<{ key: string; limit: number }>({ key: filterKey, limit: 30 });
+  const displayLimit = limitState.key === filterKey ? limitState.limit : 30;
 
   const visibleSpots = useMemo(() => {
     return filteredSpots.slice(0, displayLimit);
@@ -253,7 +248,7 @@ export default function GourmetRadarModal({
   const handleToggleCheck = (spot: DiningSpot) => {
     const nextState = !checkedSpots[spot.id];
     const updated = { ...checkedSpots, [spot.id]: nextState };
-    setCheckedSpots(updated);
+    setLocalCheckedOverrides(updated);
 
     if (tripId) {
       if (typeof window !== 'undefined') {
@@ -580,7 +575,7 @@ export default function GourmetRadarModal({
           {filteredSpots.length > displayLimit && (
             <button
               type="button"
-              onClick={() => setDisplayLimit((prev) => prev + 30)}
+              onClick={() => setLimitState({ key: filterKey, limit: displayLimit + 30 })}
               className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1e2027] dark:hover:bg-[#262932] text-slate-700 dark:text-slate-300 font-bold text-xs transition-all border border-slate-200 dark:border-[#262932] cursor-pointer"
             >
               โหลดร้านอาหารเพิ่มเติม (+30 ร้าน) • เหลืออีก {filteredSpots.length - displayLimit} ร้าน
