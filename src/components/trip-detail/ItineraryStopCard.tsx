@@ -37,8 +37,44 @@ import {
   CustomPlacePhotoModal,
   PlacePhotoLightboxModal,
 } from '@/components/trip-detail/CustomPlacePhotoModal';
-import { usePlaceVisualMeta } from '@/lib/placeThumbnails';
+import { usePlaceVisualMeta, PlaceVisualMeta } from '@/lib/placeThumbnails';
 import { triggerHaptic } from '@/lib/haptics';
+
+function hasMeaningfulText(val?: string | null): boolean {
+  const trimmed = (val || '').trim();
+  return trimmed.length > 0 && !/^[-–—_•]+$/.test(trimmed);
+}
+
+/**
+ * Resilient place image selector: tries visual.imageUrl first, and if it fails
+ * (e.g., expired Google Places photoUri or 403 hotlink block), automatically falls
+ * back to visual.fallbackImageUrl instead of leaving a blank placeholder banner.
+ */
+function useResilientPlaceImage(visual: PlaceVisualMeta) {
+  const [failedUrls, setFailedUrls] = React.useState<string[]>([]);
+
+  const primaryFailed = failedUrls.includes(visual.imageUrl);
+  const fallbackUrl =
+    visual.fallbackImageUrl && visual.fallbackImageUrl !== visual.imageUrl
+      ? visual.fallbackImageUrl
+      : null;
+  const fallbackFailed = fallbackUrl ? failedUrls.includes(fallbackUrl) : true;
+
+  const activeSrc = !primaryFailed
+    ? visual.imageUrl
+    : fallbackUrl && !fallbackFailed
+    ? fallbackUrl
+    : null;
+
+  const isUsingFallback = Boolean(primaryFailed && activeSrc);
+
+  const handleImgError = React.useCallback(() => {
+    if (!activeSrc) return;
+    setFailedUrls((prev) => (prev.includes(activeSrc) ? prev : [...prev, activeSrc]));
+  }, [activeSrc]);
+
+  return { activeSrc, isUsingFallback, handleImgError };
+}
 
 export interface ItineraryStopCardProps {
   item: any;
@@ -188,7 +224,6 @@ function ItineraryStopCardComponent({
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [showAdminMenu, setShowAdminMenu] = React.useState(false);
   const [showMoveDayList, setShowMoveDayList] = React.useState(false);
-  const [failedImgUrl, setFailedImgUrl] = React.useState<string | null>(null);
 
   // TabiPlan Interactive Panels
   const [showTimeTuner, setShowTimeTuner] = React.useState(false);
@@ -334,8 +369,11 @@ function ItineraryStopCardComponent({
   );
 
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
-  const imgError = failedImgUrl === visual.imageUrl;
+  const { activeSrc, isUsingFallback, handleImgError } = useResilientPlaceImage(visual);
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
+  const hasTransitNote = hasMeaningfulText(transitGuide.details);
+  const hasFoodNote = hasMeaningfulText(item.food_recommendation);
+  const hasBackupPlan = hasMeaningfulText(item.backup_plan);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = React.useMemo(() => buildStopUrls(item), [item]);
 
   const cleanFoodQuery = React.useMemo(() => {
@@ -417,12 +455,13 @@ function ItineraryStopCardComponent({
                 <path d="M0,130 C150,90 260,170 400,110 L400,200 L0,200 Z" fill="#243342" />
               </svg>
 
-              {!imgError && (
+              {activeSrc && (
                 <img
-                  src={visual.imageUrl}
+                  src={activeSrc}
                   alt={item.main_place || 'Destination'}
                   loading="lazy"
-                  onError={() => setFailedImgUrl(visual.imageUrl)}
+                  referrerPolicy="no-referrer"
+                  onError={handleImgError}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               )}
@@ -440,7 +479,7 @@ function ItineraryStopCardComponent({
                 <span className="px-2 py-0.5 rounded-[3px] bg-white/95 text-[#1A1A1A] text-[10px] font-bold tracking-wider uppercase shadow-2xs">
                   STOP {String(idx + 1).padStart(2, '0')} / {visual.tagLabel}
                 </span>
-                {visual.isCustomPhoto && (
+                {visual.isCustomPhoto && !isUsingFallback && (
                   <span className="px-1.5 py-0.5 rounded-[3px] bg-emerald-600/90 text-white text-[9px] font-bold">
                     ✨ รูปของฉัน
                   </span>
@@ -827,9 +866,9 @@ function ItineraryStopCardComponent({
             )}
 
             {/* Editorial Traveler's Note Box (Transit Details + Food Recommendation) */}
-            {(transitGuide.details || item.food_recommendation) && (
+            {(hasTransitNote || hasFoodNote) && (
               <div className="bg-[#FAF7F2] dark:bg-[#1D1F26] border-l-2 border-l-[#C83E2D] rounded-r-md p-3 space-y-2.5 text-left">
-                {transitGuide.details && (
+                {hasTransitNote && (
                   <div>
                     <div className="text-[10px] font-bold tracking-widest text-[#C83E2D] dark:text-[#E05A47] uppercase mb-0.5">
                       Transit & Route Note
@@ -840,8 +879,8 @@ function ItineraryStopCardComponent({
                   </div>
                 )}
 
-                {item.food_recommendation && (
-                  <div className={transitGuide.details ? 'pt-2 border-t border-[#EBE4D8] dark:border-[#2C2F3A]' : ''}>
+                {hasFoodNote && (
+                  <div className={hasTransitNote ? 'pt-2 border-t border-[#EBE4D8] dark:border-[#2C2F3A]' : ''}>
                     <div className="flex items-center justify-between gap-2 mb-0.5">
                       <span className="text-[10px] font-bold tracking-widest text-[#C83E2D] dark:text-[#E05A47] uppercase">
                         Traveler’s Note · ร้านแนะนำ
@@ -867,7 +906,7 @@ function ItineraryStopCardComponent({
             )}
 
             {/* Backup Plan (Plan B) */}
-            {item.backup_plan && (
+            {hasBackupPlan && (
               <div className="pt-0.5 text-left">
                 <button
                   type="button"
@@ -1278,7 +1317,7 @@ function ItineraryStopCardComponent({
         <PlacePhotoLightboxModal
           isOpen={showLightbox}
           onClose={() => setShowLightbox(false)}
-          imageUrl={visual.imageUrl}
+          imageUrl={activeSrc || visual.imageUrl}
           placeName={item.main_place || 'จุดหมาย'}
           city={item.city}
           tagLabel={visual.tagLabel}
@@ -1315,11 +1354,12 @@ function ItineraryThumbnailCardComponent({
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
-  const [failedImgUrl, setFailedImgUrl] = React.useState<string | null>(null);
 
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
-  const imgError = failedImgUrl === visual.imageUrl;
+  const { activeSrc, handleImgError } = useResilientPlaceImage(visual);
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
+  const hasTransitNote = hasMeaningfulText(transitGuide.details);
+  const hasFoodNote = hasMeaningfulText(item.food_recommendation);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = React.useMemo(() => buildStopUrls(item), [item]);
 
   return (
@@ -1336,12 +1376,13 @@ function ItineraryThumbnailCardComponent({
             title="แตะที่รูปเพื่อขยายเต็มจอ / ดูหน้าร้าน Street View"
           >
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {!imgError && (
+              {activeSrc && (
                 <img
-                  src={visual.imageUrl}
+                  src={activeSrc}
                   alt={item.main_place || 'Destination'}
                   loading="lazy"
-                  onError={() => setFailedImgUrl(visual.imageUrl)}
+                  referrerPolicy="no-referrer"
+                  onError={handleImgError}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               )}
@@ -1434,21 +1475,21 @@ function ItineraryThumbnailCardComponent({
               {item.main_place}
             </a>
 
-            {transitGuide.details ? (
+            {hasTransitNote ? (
               <p className="text-[11px] text-[#443E36] dark:text-slate-300 line-clamp-1 flex items-center gap-1.5 font-medium">
                 <Bus className="h-3 w-3 text-[#C83E2D] shrink-0" />
                 <span className="truncate">{transitGuide.details}</span>
               </p>
             ) : null}
 
-            {item.food_recommendation ? (
+            {hasFoodNote ? (
               <p className="text-[11px] text-[#B52F1E] dark:text-amber-300 line-clamp-1 flex items-center gap-1.5 font-semibold">
                 <Utensils className="h-3 w-3 text-[#C83E2D] shrink-0" />
                 <span className="truncate">{item.food_recommendation}</span>
               </p>
             ) : null}
 
-            {!transitGuide.details && !item.food_recommendation && (
+            {!hasTransitNote && !hasFoodNote && (
               <p className="text-[11px] text-[#8C8275] dark:text-slate-500 font-medium">
                 {item.date_label || `Day ${idx + 1}`} · แตะที่รูปเพื่อขยายเต็มจอ
               </p>
@@ -1524,7 +1565,7 @@ function ItineraryThumbnailCardComponent({
         <PlacePhotoLightboxModal
           isOpen={showLightbox}
           onClose={() => setShowLightbox(false)}
-          imageUrl={visual.imageUrl}
+          imageUrl={activeSrc || visual.imageUrl}
           placeName={item.main_place || 'จุดหมาย'}
           city={item.city}
           tagLabel={visual.tagLabel}
@@ -1560,9 +1601,8 @@ function ItineraryCompactRowComponent({
   const [showStaffModal, setShowStaffModal] = React.useState(false);
   const [showCustomPhotoModal, setShowCustomPhotoModal] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
-  const [failedImgUrl, setFailedImgUrl] = React.useState<string | null>(null);
   const visual = usePlaceVisualMeta(item.main_place, item.city, idx, item.id, item.trip_id);
-  const imgError = failedImgUrl === visual.imageUrl;
+  const { activeSrc, handleImgError } = useResilientPlaceImage(visual);
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
 
@@ -1584,12 +1624,13 @@ function ItineraryCompactRowComponent({
             className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-[#1C2630] border border-[#EAE3D6] dark:border-[#262932] block cursor-zoom-in"
             title="แตะเพื่อขยายดูรูปสถานที่จริง"
           >
-            {!imgError && (
+            {activeSrc && (
               <img
-                src={visual.imageUrl}
+                src={activeSrc}
                 alt={item.main_place || 'Stop'}
                 loading="lazy"
-                onError={() => setFailedImgUrl(visual.imageUrl)}
+                referrerPolicy="no-referrer"
+                onError={handleImgError}
                 className="w-full h-full object-cover"
               />
             )}
@@ -1709,7 +1750,7 @@ function ItineraryCompactRowComponent({
         <PlacePhotoLightboxModal
           isOpen={showLightbox}
           onClose={() => setShowLightbox(false)}
-          imageUrl={visual.imageUrl}
+          imageUrl={activeSrc || visual.imageUrl}
           placeName={item.main_place || 'จุดหมาย'}
           city={item.city}
           tagLabel={visual.tagLabel}

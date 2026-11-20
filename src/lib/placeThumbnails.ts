@@ -11,6 +11,7 @@ export interface PlacePhotoCandidate {
 
 export interface PlaceVisualMeta {
   imageUrl: string;
+  fallbackImageUrl?: string;
   gradient: string;
   emoji: string;
   tagLabel: string;
@@ -1237,6 +1238,7 @@ export function usePlaceVisualMeta(
     return {
       ...baseMeta,
       imageUrl: customPhoto,
+      fallbackImageUrl: baseMeta.imageUrl,
       photoSource: 'custom',
       attributionText: 'รูปที่คุณเลือกเอง',
       isCustomPhoto: true,
@@ -1247,13 +1249,17 @@ export function usePlaceVisualMeta(
     return {
       ...baseMeta,
       imageUrl: resolvedRecord.url,
+      fallbackImageUrl: baseMeta.imageUrl,
       photoSource: resolvedRecord.source,
       attributionText: resolvedRecord.attribution,
       isCustomPhoto: false,
     };
   }
 
-  return baseMeta;
+  return {
+    ...baseMeta,
+    fallbackImageUrl: baseMeta.imageUrl,
+  };
 }
 
 /**

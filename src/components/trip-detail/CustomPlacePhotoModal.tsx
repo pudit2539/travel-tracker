@@ -252,6 +252,7 @@ export function CustomPlacePhotoModal({
             <img
               src={displayPreview}
               alt={placeName}
+              referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -531,6 +532,7 @@ export function PlacePhotoLightboxModal({
           <img
             src={imageUrl}
             alt={placeName}
+            referrerPolicy="no-referrer"
             className="w-full max-h-[68dvh] object-contain select-none"
           />
         </div>

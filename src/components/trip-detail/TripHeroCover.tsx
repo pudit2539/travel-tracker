@@ -128,6 +128,7 @@ export function TripHeroCover({
           <img
             src={coverImage}
             alt={trip?.name || 'Trip Destination Cover'}
+            referrerPolicy="no-referrer"
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-85"
           />
           {/* Soft Vignette for Top Badges */}

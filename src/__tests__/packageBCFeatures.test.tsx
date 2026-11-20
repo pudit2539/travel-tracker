@@ -22,6 +22,8 @@ import {
   computeTripWrappedStats,
 } from '@/components/trip-detail/GoshuinPassportModal';
 import { TripPlanTab } from '@/components/trip-tabs/TripPlanTab';
+import { ItineraryStopCard } from '@/components/trip-detail/ItineraryStopCard';
+import { setCustomPlacePhoto } from '@/lib/placeThumbnails';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -318,6 +320,64 @@ describe('Package B & C: Nationwide Gourmet Radar, Smart Dining Picker, Day Pace
 
       expect(container.textContent).toContain('โหมดวันฝนตก (Plan B)');
       expect(container.textContent).toContain('Nishiki Market ในร่ม');
+    });
+
+    it('ItineraryStopCard falls back to curated HD photo when custom photo fails and hides "-" empty food note', async () => {
+      const brokenCustomUrl = 'https://expired.example.com/broken-hotel.jpg';
+      setCustomPlacePhoto("เช็กอินเข้าที่พัก Hotel The M's Kyoto", brokenCustomUrl, 'stop-broken-1');
+
+      const stop = {
+        id: 'stop-broken-1',
+        trip_id: 'trip-broken-1',
+        date_label: '5 ธ.ค.',
+        time_slot: '15:00 น.',
+        city: 'Kyoto Station',
+        main_place: "เช็กอินเข้าที่พัก Hotel The M's Kyoto",
+        transport_info: 'เดินเท้าจากสถานีเกียวโต | ฟรี',
+        food_recommendation: '-',
+        backup_plan: '-',
+      };
+
+      await act(async () => {
+        root.render(
+          <ItineraryStopCard
+            item={stop}
+            idx={3}
+            totalItems={5}
+            canEditPlan={true}
+            reordering={false}
+            isPlanBOpen={false}
+            onTogglePlanB={vi.fn()}
+            onMoveActivity={vi.fn()}
+            onOpenEditActivity={vi.fn()}
+            onDeleteActivity={vi.fn()}
+          />
+        );
+      });
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      // Dash-only food_recommendation & backup_plan must not render clutter
+      expect(container.textContent).not.toContain('ร้านแนะนำ');
+      expect(container.textContent).not.toContain('แผนสำรอง (Plan B)');
+
+      // Initially renders custom photo with no-referrer policy
+      let img = container.querySelector('img') as HTMLImageElement;
+      expect(img).not.toBeNull();
+      expect(img.getAttribute('src')).toBe(brokenCustomUrl);
+      expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
+      expect(container.textContent).toContain('รูปของฉัน');
+
+      // Simulate image load error -> must fall back seamlessly to curated photo & hide stale custom badge
+      await act(async () => {
+        img.dispatchEvent(new Event('error'));
+      });
+      img = container.querySelector('img') as HTMLImageElement;
+      expect(img).not.toBeNull();
+      expect(img.getAttribute('src')).not.toBe(brokenCustomUrl);
+      expect(img.getAttribute('src')).toBeTruthy();
+      expect(container.textContent).not.toContain('รูปของฉัน');
     });
   });
 });
