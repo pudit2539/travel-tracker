@@ -168,6 +168,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({});
   const [visitedStamps, setVisitedStamps] = useState<Record<string, boolean>>({});
   const [activeScrollDay, setActiveScrollDay] = useState<string | null>(null);
+  const dayStripRef = useRef<HTMLDivElement | null>(null);
   const dayPillRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const toggleDayCollapse = React.useCallback((dayLabel: string) => {
@@ -244,13 +245,18 @@ export const TripPlanTab = React.memo(function TripPlanTab({
     return () => observer.disconnect();
   }, [selectedDayFilter, itinerary.length]);
 
-  // Auto-scroll active day pill into view horizontally when day selection changes
+  // Auto-scroll ONLY the horizontal day-pill strip (never use scrollIntoView, which hijacks vertical window scroll on sticky bars)
   React.useEffect(() => {
     const key = selectedDayFilter !== 'all' ? selectedDayFilter : activeScrollDay;
     if (!key) return;
+    const strip = dayStripRef.current;
     const btn = dayPillRefs.current[key];
-    if (btn && typeof btn.scrollIntoView === 'function') {
-      btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    if (!strip || !btn) return;
+    const targetLeft = Math.max(0, btn.offsetLeft - (strip.clientWidth - btn.offsetWidth) / 2);
+    if (typeof strip.scrollTo === 'function') {
+      strip.scrollTo({ left: targetLeft, behavior: 'smooth' });
+    } else {
+      strip.scrollLeft = targetLeft;
     }
   }, [selectedDayFilter, activeScrollDay]);
 
@@ -1116,7 +1122,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         {/* Bottom Row: Smart Sticky Day Filter Pills with City, Progress & Scroll-Spy */}
         {availableDays.length > 1 && (
           <div
-            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5 pb-0.5"
+            ref={dayStripRef}
+            className="relative flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5 pb-0.5"
             role="tablist"
             aria-label="เลือกวันในแผนเที่ยว"
           >

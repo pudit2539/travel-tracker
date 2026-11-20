@@ -271,6 +271,15 @@ describe('Package A: On-Trip Focus Mode, Tools Sheet, 1-Tap Stop Expense & Smart
       expect(dayBar.textContent).toContain('0/1');
       expect(dayBar.textContent).toContain('Kyoto');
 
+      // Regression guard: active day pill sync must scroll ONLY horizontal strip, NEVER call element.scrollIntoView (which hijacks vertical page scroll)
+      const dayStrip = dayBar.querySelector('[role="tablist"]') as HTMLElement;
+      const pillScrollIntoViewSpy = vi.fn();
+      dayStrip.querySelectorAll('button').forEach((b) => {
+        b.scrollIntoView = pillScrollIntoViewSpy;
+      });
+      const stripScrollToSpy = vi.fn();
+      dayStrip.scrollTo = stripScrollToSpy;
+
       // Planning controls visible before Focus Mode
       expect(container.textContent).toContain('เพิ่มกิจกรรม');
 
@@ -300,6 +309,7 @@ describe('Package A: On-Trip Focus Mode, Tools Sheet, 1-Tap Stop Expense & Smart
       expect(container.textContent).toContain('โหมดลุยหน้างาน');
       expect(container.textContent).not.toContain('เพิ่มกิจกรรม');
       expect(setSelectedDayFilter).toHaveBeenCalledWith('4 ธ.ค.');
+      expect(pillScrollIntoViewSpy).not.toHaveBeenCalled();
     });
   });
 });
