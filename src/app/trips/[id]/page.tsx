@@ -38,6 +38,7 @@ import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency } from '@
 import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
+import { buildQuickExpensePrefillFromStop } from '@/lib/quickStopExpense';
 import { isSuperAdmin, TripRole, ROLE_INFO, canModifyExpense } from '@/lib/permissions';
 import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { 
@@ -2313,15 +2314,70 @@ export default function TripDetailPage() {
     return itinerary.filter((item) => item.date_label?.trim() === selectedDayFilter);
   }, [itinerary, selectedDayFilter]);
 
+  const handleLogExpenseForStop = useCallback(
+    (stop?: any) => {
+      const prefill = buildQuickExpensePrefillFromStop(stop, tripBaseCurrency, trip?.start_date);
+      setScannedData((prev: any) => ({
+        ...prev,
+        title: prefill.title,
+        amount: '',
+        category: prefill.category,
+        currency: prefill.currency,
+        spent_at: prefill.spent_at,
+        receipt_url: '',
+        items: [],
+      }));
+      setShowScanModal(true);
+    },
+    [tripBaseCurrency, trip?.start_date, setShowScanModal]
+  );
+
   const { pullDistance, isRefreshing, isReadyToRefresh } = usePullToRefresh({
     onRefresh: fetchTripData,
   });
 
   if (loading && !trip) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70dvh] gap-3">
-        <Loader2 className="h-9 w-9 animate-spin text-blue-600" />
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">กำลังโหลดข้อมูลทริป...</p>
+      <div className="max-w-5xl mx-auto px-3.5 sm:px-4 pt-6 pb-20 min-h-[70dvh] space-y-4 animate-in fade-in duration-200">
+        {/* Hero Cover Skeleton */}
+        <div className="rounded-3xl border border-[#DFD7C7] dark:border-[#262932] bg-white dark:bg-[#181a20] overflow-hidden shadow-xs">
+          <div className="h-44 sm:h-52 bg-slate-200/80 dark:bg-[#22252E] animate-pulse" />
+          <div className="p-4 sm:p-5 space-y-3">
+            <div className="h-6 w-2/3 rounded-xl bg-slate-200/90 dark:bg-[#262932] animate-pulse" />
+            <div className="flex gap-2">
+              <div className="h-4 w-28 rounded-lg bg-slate-200/70 dark:bg-[#22252E] animate-pulse" />
+              <div className="h-4 w-20 rounded-lg bg-slate-200/70 dark:bg-[#22252E] animate-pulse" />
+            </div>
+          </div>
+        </div>
+        {/* Quick Bar Skeleton */}
+        <div className="flex gap-2 overflow-hidden">
+          {[1, 2, 3, 4].map((n) => (
+            <div
+              key={n}
+              className="h-9 w-24 rounded-xl bg-slate-200/80 dark:bg-[#1e2027] animate-pulse shrink-0"
+            />
+          ))}
+        </div>
+        {/* Editorial Stop Card Skeletons */}
+        {[1, 2].map((n) => (
+          <div
+            key={n}
+            className="rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-white dark:bg-[#181a20] overflow-hidden p-4 space-y-3"
+          >
+            <div className="h-32 rounded-xl bg-slate-200/75 dark:bg-[#22252E] animate-pulse" />
+            <div className="h-5 w-3/4 rounded-lg bg-slate-200/80 dark:bg-[#262932] animate-pulse" />
+            <div className="h-4 w-1/2 rounded-lg bg-slate-200/60 dark:bg-[#22252E] animate-pulse" />
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="h-10 rounded-lg bg-slate-200/75 dark:bg-[#22252E] animate-pulse" />
+              <div className="h-10 rounded-lg bg-slate-200/60 dark:bg-[#1e2027] animate-pulse" />
+            </div>
+          </div>
+        ))}
+        <div className="flex items-center justify-center gap-2 pt-2 text-slate-500 dark:text-slate-400">
+          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+          <p className="text-xs font-bold">กำลังโหลดข้อมูลทริป...</p>
+        </div>
       </div>
     );
   }
@@ -2776,6 +2832,7 @@ export default function TripDetailPage() {
                 onOpenAIAssistant={() => setShowAIAssistantModal(true)}
                 onMoveStopToDay={handleMoveStopToDay}
                 onSyncShoppingExpense={handleSyncShoppingExpense}
+                onLogExpenseForStop={canAddExpense ? handleLogExpenseForStop : undefined}
               />
             </div>
           )}

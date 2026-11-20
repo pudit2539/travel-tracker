@@ -1,19 +1,24 @@
 'use client';
 
-import React, { useMemo, useState, useDeferredValue } from 'react';
+import React, { useMemo, useState, useDeferredValue, useRef } from 'react';
 import { 
   Coins, ChevronRight, ChevronUp, ChevronDown, 
   FileText, Upload, Download, Plus, Navigation, MapPin, Compass,
   List, Building2, Utensils, Dices, QrCode,
-  LayoutGrid, Rows3, Plane, CloudSun, FolderDown, Sparkles, ExternalLink,
-  Clock, ArrowUpToLine, ArrowDownToLine, ShoppingBag,
-  Search, X, Shield, Calendar, Luggage, Camera, Bot, Copy, Users
+  LayoutGrid, Rows3, Plane, FolderDown, Sparkles, ExternalLink,
+  Clock, ArrowUpToLine, ArrowDownToLine,
+  Search, X, Shield, Calendar, Copy, Users,
+  SlidersHorizontal, Zap, Receipt, CheckCircle2
 } from 'lucide-react';
 import { copyToClipboard } from '@/lib/clipboard';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import LiveTripCard from '@/components/LiveTripCard';
 import { getAccommodations, getGoogleMapsUrl } from '@/lib/accommodations';
+import { TripToolsSheet } from '@/components/trip-detail/TripToolsSheet';
+import { getTripVisitedStamps, subscribeVisitedStamps } from '@/lib/visitedStamps';
+import { computeDaySummaries, pickRecommendedFocusDay } from '@/lib/quickStopExpense';
+import { triggerHaptic } from '@/lib/haptics';
 
 const WeatherWidget = dynamic(() => import('@/components/WeatherWidget'), { ssr: false });
 const RouteVisualizer = dynamic(() => import('@/components/RouteVisualizer'), { ssr: false });
@@ -106,6 +111,7 @@ interface TripPlanTabProps {
     item: ShoppingBagItem,
     nextStatus: 'planned' | 'bought' | 'out_of_stock' | 'skipped'
   ) => Promise<void> | void;
+  onLogExpenseForStop?: (item?: any) => void;
 }
 
 export const TripPlanTab = React.memo(function TripPlanTab({
@@ -150,13 +156,19 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   onOpenAIAssistant,
   onMoveStopToDay,
   onSyncShoppingExpense,
+  onLogExpenseForStop,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
   const [wishlistInitialTab, setWishlistInitialTab] = useState<'wishlist' | 'shopping'>('wishlist');
+  const [showToolsSheet, setShowToolsSheet] = useState(false);
+  const [onTripFocusMode, setOnTripFocusMode] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
   const [showScrollJump, setShowScrollJump] = useState(false);
   const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({});
+  const [visitedStamps, setVisitedStamps] = useState<Record<string, boolean>>({});
+  const [activeScrollDay, setActiveScrollDay] = useState<string | null>(null);
+  const dayPillRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const toggleDayCollapse = React.useCallback((dayLabel: string) => {
     setCollapsedDays((prev) => ({
@@ -170,6 +182,77 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const tripId = trip?.id || '';
   const [stopMetaMap, setStopMetaMap] = useState<Record<string, StopSmartMeta>>({});
   const [shoppingBag, setShoppingBag] = useState<ShoppingBagItem[]>([]);
+
+  // Hydrate persisted On-Trip Focus Mode per trip safely after mount
+  React.useEffect(() => {
+    if (!tripId || typeof window === 'undefined') return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      try {
+        const saved = localStorage.getItem(`travel_tracker_focus_mode_${tripId}`);
+        if (saved === '1') setOnTripFocusMode(true);
+      } catch {}
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tripId]);
+
+  // Subscribe to visited stamps so Smart Day Pills update in real time
+  React.useEffect(() => {
+    if (!tripId) return;
+    let cancelled = false;
+    const syncStamps = () => setVisitedStamps(getTripVisitedStamps(tripId));
+    queueMicrotask(() => {
+      if (!cancelled) syncStamps();
+    });
+    const unsub = subscribeVisitedStamps(syncStamps);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [tripId]);
+
+  const daySummaries = useMemo(
+    () => computeDaySummaries(availableDays, itinerary, visitedStamps),
+    [availableDays, itinerary, visitedStamps]
+  );
+
+  // Scroll-spy for Day sections when viewing "All Days"
+  React.useEffect(() => {
+    if (selectedDayFilter !== 'all' || typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+    const headers = Array.from(document.querySelectorAll<HTMLElement>('[data-day-section]'));
+    if (headers.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const day = visible[0].target.getAttribute('data-day-section');
+          if (day) setActiveScrollDay(day);
+        }
+      },
+      { rootMargin: '-96px 0px -65% 0px', threshold: 0.05 }
+    );
+
+    headers.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [selectedDayFilter, itinerary.length]);
+
+  // Auto-scroll active day pill into view horizontally when day selection changes
+  React.useEffect(() => {
+    const key = selectedDayFilter !== 'all' ? selectedDayFilter : activeScrollDay;
+    if (!key) return;
+    const btn = dayPillRefs.current[key];
+    if (btn && typeof btn.scrollIntoView === 'function') {
+      btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [selectedDayFilter, activeScrollDay]);
 
   React.useEffect(() => {
     if (!tripId) return;
@@ -420,6 +503,32 @@ export const TripPlanTab = React.memo(function TripPlanTab({
     setOpenLogisticsPanel((prev) => (prev === panel ? 'none' : panel));
   };
 
+  const handleToggleFocusMode = () => {
+    const next = !onTripFocusMode;
+    triggerHaptic(next ? 'medium' : 'light');
+    setOnTripFocusMode(next);
+    try {
+      if (tripId) localStorage.setItem(`travel_tracker_focus_mode_${tripId}`, next ? '1' : '0');
+    } catch {}
+    if (next) {
+      setOpenLogisticsPanel('none');
+      setShowWeatherSection(false);
+      setShowFileMenu(false);
+      if (displayLayout !== 'card') {
+        handleSelectDisplayLayout('card');
+      }
+      if (selectedDayFilter === 'all') {
+        const recommendedDay = pickRecommendedFocusDay(daySummaries);
+        if (recommendedDay) handleSelectDay(recommendedDay);
+      }
+      toast.success('เปิดโหมดลุยหน้างานแล้ว 🧭', {
+        description: 'ซ่อนเครื่องมือแก้ไขแผนเพื่อให้ใช้งานมือเดียวได้ลื่นที่สุด',
+      });
+    } else {
+      toast.info('กลับสู่โหมดวางแผนทริปปกติ');
+    }
+  };
+
   // Check if any accommodation is for this day (hydrated cleanly after mount for SSR parity)
   const [stays, setStays] = useState<ReturnType<typeof getAccommodations>>([]);
   React.useEffect(() => {
@@ -494,15 +603,15 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         showBudget={canSeeMoney}
       />
 
-      {/* 2. Sleek Quick-Glance Logistics & Concierge Tray (Single Compact Row) */}
-      <div className="p-2 sm:p-2.5 rounded-2xl bg-[#FDFBF7] dark:bg-[#181a20] border border-[#DFD7C7] dark:border-[#262932] shadow-[0_2px_10px_rgba(35,30,20,0.04)]">
-        <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-0.5">
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Logistics Drawers Toggles */}
+      {/* 2. Decluttered Quick-Glance Tray + On-Trip Focus Toggle + Tools Sheet */}
+      <div className="p-2 sm:p-2.5 rounded-2xl bg-[#FDFBF7] dark:bg-[#181a20] border border-[#DFD7C7] dark:border-[#262932] shadow-[0_2px_10px_rgba(35,30,20,0.04)] space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          {/* Core High-Frequency Actions (5 compact pills instead of 12) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1">
             <button
               type="button"
               onClick={() => toggleLogisticsPanel('flights')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                 showFlights
                   ? 'bg-[#1C2630] dark:bg-blue-600 text-white border-[#1C2630] dark:border-blue-600 shadow-xs'
                   : 'bg-[#F6F2E9] dark:bg-[#121316] text-[#2C2A26] dark:text-slate-300 border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D]'
@@ -516,7 +625,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             <button
               type="button"
               onClick={() => toggleLogisticsPanel('hotels')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                 showHotels
                   ? 'bg-[#2E7D5B] text-white border-[#2E7D5B] shadow-xs'
                   : 'bg-[#F6F2E9] dark:bg-[#121316] text-[#2C2A26] dark:text-slate-300 border-[#DFD7C7] dark:border-[#262932] hover:border-[#2E7D5B]'
@@ -531,7 +640,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               <button
                 type="button"
                 onClick={() => toggleLogisticsPanel('budget')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
+                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
                   showBudget
                     ? 'bg-[#C83E2D] text-white border-[#C83E2D] shadow-xs'
                     : 'bg-[#F6F2E9] dark:bg-[#121316] text-[#2C2A26] dark:text-slate-300 border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D]'
@@ -545,107 +654,95 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
             <button
               type="button"
-              onClick={() => setShowWeatherSection(!showWeatherSection)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
-                showWeatherSection
-                  ? 'bg-[#1C2630] dark:bg-sky-600 text-white border-[#1C2630] dark:border-sky-600 shadow-xs'
-                  : 'bg-[#F6F2E9] dark:bg-[#121316] text-[#2C2A26] dark:text-slate-300 border-[#DFD7C7] dark:border-[#262932] hover:border-[#1C2630]'
-              }`}
-            >
-              <CloudSun className="h-3.5 w-3.5 shrink-0" />
-              <span>อากาศ</span>
-            </button>
-
-            <div className="h-5 w-px bg-[#DFD7C7] dark:bg-[#262932] mx-0.5 shrink-0" />
-
-            {/* Concierge Tools */}
-            <button
-              type="button"
               onClick={onOpenTicketLocker}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <QrCode className="h-3.5 w-3.5 text-[#1C2630] dark:text-indigo-500 shrink-0" />
+              <QrCode className="h-3.5 w-3.5 text-[#1C2630] dark:text-indigo-400 shrink-0" />
               <span>QR Pass</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenGourmetRadar}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
             >
               <Utensils className="h-3.5 w-3.5 text-[#C83E2D] shrink-0" />
               <span>ร้านอร่อย</span>
             </button>
+          </div>
 
+          {/* Right Pinned Controls: On-Trip Focus Toggle + All Tools Sheet */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
-              onClick={() => onOpenDiningDecision?.()}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              onClick={handleToggleFocusMode}
+              aria-pressed={onTripFocusMode}
+              className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shrink-0 active:scale-95 ${
+                onTripFocusMode
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs shadow-emerald-600/25'
+                  : 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70 hover:bg-emerald-100'
+              }`}
+              title={onTripFocusMode ? 'ออกจากโหมดลุยหน้างาน' : 'เปิดโหมดลุยหน้างาน (ซ่อนเมนูแก้ไข ใช้งานมือเดียว)'}
             >
-              <Dices className="h-3.5 w-3.5 text-[#1C2630] dark:text-blue-500 shrink-0" />
-              <span>สุ่มมื้อ</span>
+              <Zap className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">{onTripFocusMode ? 'ลุยหน้างาน: เปิด' : 'ลุยหน้างาน'}</span>
+              <span className="sm:hidden">{onTripFocusMode ? 'หน้างาน' : 'ลุยเที่ยว'}</span>
             </button>
 
             <button
               type="button"
               onClick={() => {
-                setWishlistInitialTab('shopping');
-                setShowWishlistDrawer(true);
+                triggerHaptic('light');
+                setShowToolsSheet(true);
               }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+              aria-label="เปิดศูนย์รวมเครื่องมือทริปทั้งหมด"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#1C2630] hover:bg-[#2A3744] dark:bg-blue-600 dark:hover:bg-blue-700 px-2.5 sm:px-3 py-1.5 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
             >
-              <ShoppingBag className="h-3.5 w-3.5 text-[#C83E2D] shrink-0" />
-              <span>
-                กระเป๋าช้อป ({shoppingSummary.boughtCount}/{shoppingSummary.totalCount})
-              </span>
+              <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+              <span>เครื่องมือ</span>
             </button>
-
-            {onOpenPacking && (
-              <button
-                type="button"
-                onClick={onOpenPacking}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
-                title="เช็คลิสต์จัดกระเป๋า (Sync ออนไลน์)"
-              >
-                <Luggage className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                <span>จัดกระเป๋า</span>
-              </button>
-            )}
-
-            {onOpenScrapbook && (
-              <button
-                type="button"
-                onClick={onOpenScrapbook}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
-                title="อัลบั้มความทรงจำ Photo Scrapbook"
-              >
-                <Camera className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                <span>อัลบั้มภาพ</span>
-              </button>
-            )}
-
-            {onOpenAIAssistant && (
-              <button
-                type="button"
-                onClick={onOpenAIAssistant}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2C2A26] dark:text-slate-300 bg-[#F6F2E9] dark:bg-[#121316] border border-[#DFD7C7] dark:border-[#262932] hover:border-[#C83E2D] px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
-                title="ถาม AI แนะนำร้านและที่เที่ยวเพิ่มลงแผน"
-              >
-                <Bot className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>AI แนะนำ</span>
-              </button>
-            )}
           </div>
-
-          <button
-            type="button"
-            onClick={() => setShowTravelHubModal(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#1C2630] hover:bg-[#2A3744] dark:bg-blue-600 dark:hover:bg-blue-700 px-3 py-1.5 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
-          >
-            <Compass className="h-3.5 w-3.5 shrink-0" />
-            <span>Travel Hub</span>
-          </button>
         </div>
+
+        {/* Active On-Trip Focus Mode Quick One-Hand Bar */}
+        {onTripFocusMode && (
+          <div className="pt-2 border-t border-[#EAE2D3] dark:border-[#262932] flex flex-wrap items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span>โหมดลุยหน้างาน · เน้นนำทาง เช็กอิน และจดจ่ายเร็ว</span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {onOpenDiningDecision && (
+                <button
+                  type="button"
+                  onClick={() => onOpenDiningDecision()}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200/80 dark:border-violet-800/60 text-[11px] font-bold cursor-pointer active:scale-95"
+                >
+                  <Dices className="h-3 w-3" />
+                  <span>สุ่มมื้อ</span>
+                </button>
+              )}
+              {onLogExpenseForStop && (
+                <button
+                  type="button"
+                  onClick={() => onLogExpenseForStop(displayedItinerary[0])}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer active:scale-95 shadow-2xs"
+                >
+                  <Receipt className="h-3 w-3" />
+                  <span>จดจ่ายด่วน</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowTravelHubModal(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#22252E] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#323642] text-[11px] font-bold cursor-pointer active:scale-95"
+              >
+                <Compass className="h-3 w-3" />
+                <span>แปลภาษา / SOS</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Expandable Logistics Panels (Only shown when toggled so the journey stays super clean) */}
@@ -778,11 +875,14 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         onShowToast={onShowToast}
       />
 
-      {/* 4. Unified Itinerary View Switcher + Day Filter Bar */}
+      {/* 4. Unified Itinerary View Switcher + Smart Sticky Day Filter Bar */}
       <div
         id="itinerary-day-bar"
-        className="p-3 sm:p-3.5 rounded-3xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] shadow-2xs space-y-2.5 scroll-mt-20"
+        className="sticky top-[54px] sm:top-[106px] z-20 p-2.5 sm:p-3.5 rounded-3xl bg-white/95 dark:bg-[#181a20]/95 backdrop-blur-md border border-slate-200/90 dark:border-[#262932] shadow-sm space-y-2.5 scroll-mt-20"
       >
+        {/* Top Row & Search/Filter Row: Hidden in On-Trip Focus Mode for clean one-hand navigation */}
+        {!onTripFocusMode && (
+          <>
         {/* Top Row: 4-Mode View Switcher + File Menu & Add Button */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* 4-Mode Segmented View Switcher */}
@@ -1010,35 +1110,90 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             </button>
           )}
         </div>
+          </>
+        )}
 
-        {/* Bottom Row: Swipeable Day Filter Pills */}
+        {/* Bottom Row: Smart Sticky Day Filter Pills with City, Progress & Scroll-Spy */}
         {availableDays.length > 1 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pt-1 pb-0.5">
+          <div
+            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5 pb-0.5"
+            role="tablist"
+            aria-label="เลือกวันในแผนเที่ยว"
+          >
             <button
               type="button"
               onClick={() => handleSelectDay('all')}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-2xl text-xs font-bold shrink-0 transition-all cursor-pointer border flex flex-col items-start justify-center min-h-[40px] ${
                 selectedDayFilter === 'all'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
+                  ? 'bg-[#1C2630] dark:bg-blue-600 text-white border-[#1C2630] dark:border-blue-600 shadow-xs'
+                  : 'bg-slate-100/90 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border-transparent hover:bg-slate-200 dark:hover:bg-[#262932]'
               }`}
             >
-              📅 ทุกวัน ({itinerary.length})
+              <span>📅 ทุกวัน</span>
+              <span className={`text-[10px] font-mono ${selectedDayFilter === 'all' ? 'text-white/75' : 'text-slate-500 dark:text-slate-400'}`}>
+                {itinerary.length} จุด
+              </span>
             </button>
-            {availableDays.map((day, dIdx) => (
-              <button
-                key={day}
-                type="button"
-                onClick={() => handleSelectDay(day)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                  selectedDayFilter === day
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
-                }`}
-              >
-                Day {dIdx + 1} • {day}
-              </button>
-            ))}
+
+            {daySummaries.map((summary) => {
+              const isSelected = selectedDayFilter === summary.day;
+              const isScrollSpyActive = selectedDayFilter === 'all' && activeScrollDay === summary.day;
+              return (
+                <button
+                  key={summary.day}
+                  ref={(el) => {
+                    dayPillRefs.current[summary.day] = el;
+                  }}
+                  type="button"
+                  onClick={() => handleSelectDay(summary.day)}
+                  className={`relative overflow-hidden px-3 py-1.5 rounded-2xl text-left shrink-0 transition-all cursor-pointer border min-h-[40px] ${
+                    isSelected
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                      : isScrollSpyActive
+                      ? 'bg-amber-50/90 dark:bg-amber-950/30 text-slate-900 dark:text-white border-[#C83E2D]/60 ring-1 ring-[#C83E2D]/30'
+                      : 'bg-slate-100/90 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border-transparent hover:bg-slate-200 dark:hover:bg-[#262932]'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-black leading-tight">
+                    <span>D{summary.dayNumber}</span>
+                    <span className={isSelected ? 'text-white/90 font-bold' : 'font-bold'}>{summary.day}</span>
+                    {summary.isComplete && (
+                      <CheckCircle2
+                        className={`h-3 w-3 shrink-0 ${isSelected ? 'text-emerald-200' : 'text-emerald-500'}`}
+                      />
+                    )}
+                  </div>
+                  <div
+                    className={`flex items-center gap-1.5 text-[10px] font-semibold mt-0.5 leading-tight ${
+                      isSelected ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    {summary.primaryCity && (
+                      <span className="truncate max-w-[76px]">{summary.primaryCity}</span>
+                    )}
+                    {summary.primaryCity && <span>·</span>}
+                    <span className="font-mono">
+                      {summary.visitedStops}/{summary.totalStops}
+                    </span>
+                  </div>
+                  {/* Micro 2px Day Progress Bar */}
+                  {summary.totalStops > 0 && (
+                    <div className="absolute left-0 right-0 bottom-0 h-[2.5px] bg-black/10 dark:bg-white/10">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          summary.isComplete
+                            ? 'bg-emerald-400'
+                            : isSelected
+                            ? 'bg-white/85'
+                            : 'bg-[#C83E2D]'
+                        }`}
+                        style={{ width: `${summary.progressPct}%` }}
+                      />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -1211,6 +1366,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                   canEditPlan={canEditPlan}
                   currentUser={currentUser}
                   onOpenEditActivity={handleOpenEditActivity}
+                  onLogExpenseForStop={onLogExpenseForStop}
                 />
               ))}
             </div>
@@ -1229,6 +1385,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 canEditPlan={canEditPlan}
                 currentUser={currentUser}
                 onOpenEditActivity={handleOpenEditActivity}
+                onLogExpenseForStop={onLogExpenseForStop}
               />
             ))}
           </div>
@@ -1247,6 +1404,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 canEditPlan={canEditPlan}
                 currentUser={currentUser}
                 onOpenEditActivity={handleOpenEditActivity}
+                onLogExpenseForStop={onLogExpenseForStop}
               />
             ))}
           </div>
@@ -1271,7 +1429,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               return (
                 <React.Fragment key={item.id || idx}>
                   {isNewDayGroup && item.date_label && (
-                    <div className="pt-3 first:pt-0">
+                    <div className="pt-3 first:pt-0" data-day-section={item.date_label}>
                       <div
                         onClick={() => toggleDayCollapse(item.date_label)}
                         className="px-4 py-3 rounded-xl bg-[#FDFBF7] dark:bg-[#181a20] border border-[#DFD7C7] dark:border-[#2C2A26] border-l-4 border-l-[#C83E2D] space-y-2 cursor-pointer hover:bg-[#FAF6EE] dark:hover:bg-[#1e2129] transition-colors select-none shadow-[0_2px_8px_rgba(35,30,20,0.04)]"
@@ -1360,6 +1518,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                         stopShoppingItems={stopShopping}
                         onToggleShoppingItemStatus={handleToggleShoppingItemStatus}
                         memberNames={memberNames}
+                        onLogExpenseForStop={onLogExpenseForStop}
+                        focusMode={onTripFocusMode}
                       />
                       {nextItem && (
                         <TransitConnector
@@ -1414,6 +1574,41 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           </button>
         </div>
       )}
+
+      {/* Categorized All-Tools Bottom Sheet */}
+      <TripToolsSheet
+        isOpen={showToolsSheet}
+        onClose={() => setShowToolsSheet(false)}
+        staysCount={stays.length}
+        shoppingBoughtCount={shoppingSummary.boughtCount}
+        shoppingTotalCount={shoppingSummary.totalCount}
+        canSeeMoney={canSeeMoney}
+        spentSummaryText={spentDisp.primaryText}
+        showFlights={showFlights}
+        showHotels={showHotels}
+        showBudget={showBudget}
+        showWeather={showWeatherSection}
+        onToggleFlights={() => toggleLogisticsPanel('flights')}
+        onToggleHotels={() => toggleLogisticsPanel('hotels')}
+        onToggleBudget={() => toggleLogisticsPanel('budget')}
+        onToggleWeather={() => setShowWeatherSection(!showWeatherSection)}
+        onOpenTicketLocker={onOpenTicketLocker}
+        onOpenGourmetRadar={onOpenGourmetRadar}
+        onOpenDiningDecision={onOpenDiningDecision ? () => onOpenDiningDecision() : undefined}
+        onOpenShoppingBag={() => {
+          setWishlistInitialTab('shopping');
+          setShowWishlistDrawer(true);
+        }}
+        onOpenWishlist={() => {
+          setWishlistInitialTab('wishlist');
+          setShowWishlistDrawer(true);
+        }}
+        onOpenPacking={onOpenPacking}
+        onOpenScrapbook={onOpenScrapbook}
+        onOpenAIAssistant={onOpenAIAssistant}
+        onOpenTravelHub={() => setShowTravelHubModal(true)}
+        onOpenPrintable={() => setShowPrintableModal(true)}
+      />
 
       {/* Wishlist & Shopping Bag Drawer Modal */}
       {showWishlistDrawer && (

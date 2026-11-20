@@ -3,7 +3,7 @@ import {
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
   Navigation, Eye, MoreHorizontal, Camera, ZoomIn,
-  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send
+  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send, Receipt
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseTransitInfo } from '@/lib/transitGuide';
@@ -61,6 +61,8 @@ export interface ItineraryStopCardProps {
   stopShoppingItems?: ShoppingBagItem[];
   onToggleShoppingItemStatus?: (item: ShoppingBagItem) => void;
   memberNames?: string[];
+  onLogExpenseForStop?: (item: any) => void;
+  focusMode?: boolean;
 }
 
 function useStopVisitedState(item: any, canEditPlan: boolean = true, currentUser?: any) {
@@ -177,6 +179,8 @@ function ItineraryStopCardComponent({
   onMoveStopToDay,
   stopShoppingItems: propShoppingItems,
   onToggleShoppingItemStatus,
+  onLogExpenseForStop,
+  focusMode = false,
 }: ItineraryStopCardProps) {
   const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
@@ -468,7 +472,8 @@ function ItineraryStopCardComponent({
                   <Camera className="h-3.5 w-3.5" />
                 </button>
 
-                {/* Decluttered Stop Action & Admin Menu Button */}
+                {/* Decluttered Stop Action & Admin Menu Button (hidden in On-Trip Focus Mode) */}
+                {!focusMode && (
                 <div className="relative">
                   <button
                     type="button"
@@ -641,6 +646,7 @@ function ItineraryStopCardComponent({
                     </div>
                   )}
                 </div>
+                )}
               </div>
             </div>
 
@@ -1199,13 +1205,13 @@ function ItineraryStopCardComponent({
           </div>
           )}
 
-            {/* Editorial 2-Button Action Grid (Option A - POPEYE/BRUTUS Style) */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
+            {/* Editorial Action Grid (2-Button default, or 2+1 / 3-Button with 1-Tap Quick Expense) */}
+            <div className={`grid gap-2 pt-1 ${onLogExpenseForStop ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
               <a
                 href={mainPlaceDirectionsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="min-h-10 py-2.5 px-3 rounded-md bg-[#1C2630] hover:bg-[#293847] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation shadow-2xs"
+                className={`${onLogExpenseForStop ? 'col-span-2 sm:col-span-1' : ''} min-h-10 py-2.5 px-3 rounded-md bg-[#1C2630] hover:bg-[#293847] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation shadow-2xs`}
               >
                 <Navigation className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">นำทาง Google Maps</span>
@@ -1220,6 +1226,22 @@ function ItineraryStopCardComponent({
                 <MessageSquare className="h-3.5 w-3.5 text-[#C83E2D] dark:text-rose-400 shrink-0" />
                 <span className="truncate">โชว์ชื่อภาษาญี่ปุ่น</span>
               </button>
+
+              {onLogExpenseForStop && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    onLogExpenseForStop(item);
+                  }}
+                  aria-label="จดรายจ่ายจุดนี้"
+                  className="min-h-10 py-2.5 px-3 rounded-md bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation active:scale-95"
+                  title="จดรายจ่ายที่จุดแวะนี้ทันที"
+                >
+                  <Receipt className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="truncate">จดจ่ายจุดนี้</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1280,12 +1302,14 @@ function ItineraryThumbnailCardComponent({
   canEditPlan,
   currentUser,
   onOpenEditActivity,
+  onLogExpenseForStop,
 }: {
   item: any;
   idx: number;
   canEditPlan: boolean;
   currentUser?: any;
   onOpenEditActivity: (item: any) => void;
+  onLogExpenseForStop?: (item: any) => void;
 }) {
   const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
@@ -1432,8 +1456,8 @@ function ItineraryThumbnailCardComponent({
           </div>
         </div>
 
-        {/* Bottom 2-Action Bar */}
-        <div className="grid grid-cols-2 gap-1.5 p-2.5 pt-0">
+        {/* Bottom Action Bar */}
+        <div className={`grid gap-1.5 p-2.5 pt-0 ${onLogExpenseForStop ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <a
             href={mainPlaceDirectionsUrl}
             target="_blank"
@@ -1441,7 +1465,7 @@ function ItineraryThumbnailCardComponent({
             className="min-h-9 py-1.5 px-2 rounded bg-[#1C2630] hover:bg-[#293847] text-white text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer touch-manipulation"
           >
             <Navigation className="h-3 w-3 shrink-0" />
-            <span className="truncate">นำทาง Maps</span>
+            <span className="truncate">นำทาง</span>
           </a>
           <button
             type="button"
@@ -1451,6 +1475,21 @@ function ItineraryThumbnailCardComponent({
             <MessageSquare className="h-3 w-3 text-[#C83E2D] shrink-0" />
             <span className="truncate">โชว์ชื่อญี่ปุ่น</span>
           </button>
+          {onLogExpenseForStop && (
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                onLogExpenseForStop(item);
+              }}
+              aria-label="จดรายจ่ายจุดนี้"
+              className="min-h-9 py-1.5 px-2 rounded bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer touch-manipulation"
+              title="จดรายจ่ายที่จุดแวะนี้"
+            >
+              <Receipt className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="truncate">จดจ่าย</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -1508,12 +1547,14 @@ function ItineraryCompactRowComponent({
   canEditPlan,
   currentUser,
   onOpenEditActivity,
+  onLogExpenseForStop,
 }: {
   item: any;
   idx: number;
   canEditPlan: boolean;
   currentUser?: any;
   onOpenEditActivity: (item: any) => void;
+  onLogExpenseForStop?: (item: any) => void;
 }) {
   const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
@@ -1608,6 +1649,21 @@ function ItineraryCompactRowComponent({
           >
             <Eye className="h-3.5 w-3.5" />
           </button>
+
+          {onLogExpenseForStop && (
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                onLogExpenseForStop(item);
+              }}
+              aria-label="จดรายจ่ายจุดนี้"
+              className="p-2 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 hover:bg-emerald-100 transition-colors cursor-pointer"
+              title="จดรายจ่ายที่จุดแวะนี้"
+            >
+              <Receipt className="h-3.5 w-3.5" />
+            </button>
+          )}
 
           {canEditPlan && (
             <button
