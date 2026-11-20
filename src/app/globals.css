@@ -42,6 +42,7 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
+  --font-serif: Cambria, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
 
 html {
@@ -55,6 +56,7 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-variant-numeric: lining-nums tabular-nums;
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
   overflow-x: hidden;

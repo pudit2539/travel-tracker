@@ -363,7 +363,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 </div>
 
                 <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
-                  <span className="font-serif text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#1A1A1A] dark:text-white">
+                  <span className="font-sans tabular-nums lining-nums text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#1A1A1A] dark:text-white">
                     <AnimatedNumber value={spentDisplay.primaryAmount} />
                   </span>
                   <span className="text-base sm:text-xl font-bold text-[#C83E2D] dark:text-blue-400">

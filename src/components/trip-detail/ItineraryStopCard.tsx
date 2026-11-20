@@ -690,7 +690,7 @@ function ItineraryStopCardComponent({
             <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#F0ECE3] dark:border-[#262932]">
               <div className="flex items-center gap-2 flex-wrap">
                 {item.time_slot && (
-                  <span className="font-serif text-base sm:text-lg font-bold text-[#181818] dark:text-white tracking-tight">
+                  <span className="font-sans tabular-nums lining-nums text-base sm:text-lg font-black text-[#181818] dark:text-white tracking-tight">
                     {item.time_slot.replace('-', ' — ')}
                   </span>
                 )}
