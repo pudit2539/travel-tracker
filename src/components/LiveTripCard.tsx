@@ -39,6 +39,10 @@ interface LiveTripCardProps {
   fxRate?: number;
   onOpenActivityDetail?: (item: any) => void;
   onShowToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
+  onOpenPassport?: (tab?: 'passport' | 'wrapped') => void;
+  onOpenDiningDecision?: () => void;
+  rainyDayMode?: boolean;
+  onToggleRainyDay?: () => void;
 }
 
 type CompanionStyle = 'feminine' | 'masculine';
@@ -212,6 +216,10 @@ function LiveTripCard({
   availableDays = [],
   selectedDay,
   onShowToast,
+  onOpenPassport,
+  onOpenDiningDecision,
+  rainyDayMode = false,
+  onToggleRainyDay,
 }: LiveTripCardProps) {
   const mounted = useIsMounted();
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
@@ -533,9 +541,20 @@ function LiveTripCard({
 
           <div className="flex items-center gap-1.5 flex-wrap">
             {activeDayActivities.length > 0 && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#EBF5EE] dark:bg-emerald-500/15 text-[#1F6E43] dark:text-emerald-300 border border-[#C5E3CE] dark:border-emerald-500/30">
-                ⛩️ เช็คอินแล้ว {visitedCount}/{activeDayActivities.length} จุด ({progressPct}%)
-              </span>
+              onOpenPassport ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenPassport('passport')}
+                  className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#EBF5EE] hover:bg-[#DAF0E1] dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 text-[#1F6E43] dark:text-emerald-300 border border-[#C5E3CE] dark:border-emerald-500/30 cursor-pointer transition-colors"
+                  title="เปิดสมุดสะสมตราปั๊ม Goshuin Passport"
+                >
+                  ⛩️ เช็คอินแล้ว {visitedCount}/{activeDayActivities.length} จุด ({progressPct}%)
+                </button>
+              ) : (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#EBF5EE] dark:bg-emerald-500/15 text-[#1F6E43] dark:text-emerald-300 border border-[#C5E3CE] dark:border-emerald-500/30">
+                  ⛩️ เช็คอินแล้ว {visitedCount}/{activeDayActivities.length} จุด ({progressPct}%)
+                </span>
+              )
             )}
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F3EFE6] dark:bg-white/10 text-[#4A443B] dark:text-white/90 border border-[#DFD7C7] dark:border-white/10 max-w-[140px] truncate">
               {activeDayLabel}
@@ -709,6 +728,56 @@ function LiveTripCard({
                 {cityTheme.cheerJa}
               </span>
             </p>
+
+            {/* Contextual Companion Reactions (Completion / Rainy Mode / Meal Time / Passport Shortcut) */}
+            {(progressPct === 100 && activeDayActivities.length > 0) ||
+            rainyDayMode ||
+            onOpenPassport ||
+            onOpenDiningDecision ? (
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                {progressPct === 100 && activeDayActivities.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenPassport?.('wrapped')}
+                    className="px-2 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800 text-[10px] font-black cursor-pointer hover:bg-amber-200/80 transition-colors"
+                  >
+                    🎉 เก็บครบ 100% แล้ว! ดูการ์ด Trip Wrapped
+                  </button>
+                )}
+                {rainyDayMode && (
+                  <button
+                    type="button"
+                    onClick={onToggleRainyDay}
+                    className="px-2 py-0.5 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-300/80 dark:border-sky-800 text-[10px] font-black cursor-pointer"
+                  >
+                    ☔ โหมดวันฝนตกเปิดอยู่ · ดู Plan B ในร่ม
+                  </button>
+                )}
+                {onOpenPassport && !(progressPct === 100 && activeDayActivities.length > 0) && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenPassport('passport')}
+                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/20 border border-[#DFD7C7] dark:border-white/15 text-[10px] font-bold text-[#C83E2D] dark:text-rose-300 cursor-pointer transition-colors"
+                  >
+                    ⛩️ สมุดตราปั๊ม & Wrapped
+                  </button>
+                )}
+                {onOpenDiningDecision && (() => {
+                  const jstHour = mounted ? Number(destinationTimeString.split(':')[0] || 0) : -1;
+                  const isMealWindow = (jstHour >= 11 && jstHour <= 13) || (jstHour >= 17 && jstHour <= 20);
+                  if (!isMealWindow) return null;
+                  return (
+                    <button
+                      type="button"
+                      onClick={onOpenDiningDecision}
+                      className="px-2 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 text-[10px] font-bold text-rose-700 dark:text-rose-300 cursor-pointer hover:bg-rose-100 transition-colors"
+                    >
+                      🍜 ใกล้เวลามื้ออาหาร! กดสุ่มร้านเด็ดเลย
+                    </button>
+                  );
+                })()}
+              </div>
+            ) : null}
 
             {/* Bought Shopping Props Carried by Companion */}
             {shoppingProps.length > 0 && (

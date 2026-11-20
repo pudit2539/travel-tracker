@@ -1,5 +1,18 @@
 // src/data/curatedExploreSpots.ts
 
+export type ExploreCityGroup =
+  | 'Osaka'
+  | 'Kyoto'
+  | 'Nara'
+  | 'Kobe'
+  | 'Tokyo'
+  | 'Fukuoka'
+  | 'Sapporo'
+  | 'Nagoya'
+  | 'Kanazawa';
+
+export type SpotBudgetTier = 'budget' | 'mid' | 'premium';
+
 export interface CuratedExploreSpot {
   id: string;
   kind: 'dining' | 'attraction';
@@ -13,12 +26,96 @@ export interface CuratedExploreSpot {
   categoryLabel: string;
   categoryIcon: string;
   city: string;
-  cityGroup: 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe';
+  cityGroup: ExploreCityGroup;
   area: string;
   highlight: string;
   recommendedTime?: string;
   priceEstimate?: string;
   mapLink: string;
+  openLate?: boolean;
+  walkInFriendly?: boolean;
+  budgetTier?: SpotBudgetTier;
+  lat?: number;
+  lng?: number;
+}
+
+export const ALL_JAPAN_CITY_GROUPS: Array<{ id: ExploreCityGroup; label: string; emoji: string }> = [
+  { id: 'Osaka', label: 'โอซาก้า (Osaka)', emoji: '🐙' },
+  { id: 'Kyoto', label: 'เกียวโต (Kyoto)', emoji: '⛩️' },
+  { id: 'Nara', label: 'นารา (Nara)', emoji: '🦌' },
+  { id: 'Kobe', label: 'โกเบ (Kobe)', emoji: '⚓' },
+  { id: 'Tokyo', label: 'โตเกียว (Tokyo)', emoji: '🗼' },
+  { id: 'Fukuoka', label: 'ฟุกุโอกะ (Fukuoka)', emoji: '🍜' },
+  { id: 'Sapporo', label: 'ซัปโปโร (Sapporo)', emoji: '❄️' },
+  { id: 'Nagoya', label: 'นาโกย่า (Nagoya)', emoji: '🏯' },
+  { id: 'Kanazawa', label: 'คานาซาวะ (Kanazawa)', emoji: '🦀' },
+];
+
+export function normalizeCityGroup(rawCity?: string): ExploreCityGroup | 'Other' {
+  const c = (rawCity || '').toLowerCase();
+  if (/kyoto|เกียวโต|arashiyama|อาราชิยามะ|uji|อุจิ|gion|กิออน|fushimi/.test(c)) return 'Kyoto';
+  if (/nara|นารา/.test(c)) return 'Nara';
+  if (/kobe|โกเบ|sannomiya/.test(c)) return 'Kobe';
+  if (/osaka|โอซาก้า|namba|นัมบะ|umeda|อุเมดะ|shinsaibashi|ชินไซบาชิ|dotonbori|tennoji|usj|rinku/.test(c)) return 'Osaka';
+  if (/tokyo|โตเกียว|shinjuku|ชินจูกุ|shibuya|ชิบูย่า|asakusa|อาซากุสะ|ginza|กินซ่า|ueno|akihabara|harajuku|tsukiji|kawaguchiko/.test(c)) return 'Tokyo';
+  if (/fukuoka|ฟุกุโอกะ|hakata|ฮากาตะ|tenjin|yufuin|kyushu/.test(c)) return 'Fukuoka';
+  if (/sapporo|ซัปโปโร|susukino|otaru|hokkaido|ฮอกไกโด/.test(c)) return 'Sapporo';
+  if (/nagoya|นาโกย่า|sakae|aichi/.test(c)) return 'Nagoya';
+  if (/kanazawa|คานาซาวะ|ishikawa/.test(c)) return 'Kanazawa';
+  return 'Other';
+}
+
+export function inferSpotBudgetTier(priceEstimate?: string, explicitTier?: SpotBudgetTier): SpotBudgetTier {
+  if (explicitTier) return explicitTier;
+  if (!priceEstimate) return 'mid';
+  const nums = Array.from(priceEstimate.matchAll(/(\d[\d,]*)/g))
+    .map((m) => Number(m[1].replace(/,/g, '')))
+    .filter((n) => Number.isFinite(n) && n >= 200);
+  if (nums.length === 0) return 'mid';
+  const maxVal = Math.max(...nums);
+  if (maxVal <= 1600) return 'budget';
+  if (maxVal <= 3500) return 'mid';
+  return 'premium';
+}
+
+export function isSpotOpenLate(spot: {
+  openLate?: boolean;
+  recommendedTime?: string;
+  timeSlot?: string;
+  highlight?: string;
+  category?: string;
+}): boolean {
+  if (typeof spot.openLate === 'boolean') return spot.openLate;
+  const text = `${spot.recommendedTime || ''} ${spot.timeSlot || ''} ${spot.highlight || ''}`.toLowerCase();
+  return (
+    spot.category === 'izakaya' ||
+    /(ดึก|หลังเที่ยงคืน|22:00|23:00|23:30|24:00|00:00|01:00|02:00|24 ชม|late night)/.test(text)
+  );
+}
+
+export function isSpotWalkInFriendly(spot: {
+  walkInFriendly?: boolean;
+  recommendedTime?: string;
+  highlight?: string;
+}): boolean {
+  if (typeof spot.walkInFriendly === 'boolean') return spot.walkInFriendly;
+  const text = `${spot.recommendedTime || ''} ${spot.highlight || ''}`.toLowerCase();
+  if (/(ต้องจอง|แนะนำจองล่วงหน้า|จองล่วงหน้า|reservation required|ควรจอง)/.test(text)) {
+    return false;
+  }
+  return true;
+}
+
+export function detectTripCityGroups(itinerary: any[], tripDestination?: string): ExploreCityGroup[] {
+  const found = new Set<ExploreCityGroup>();
+  const destGroup = normalizeCityGroup(tripDestination);
+  if (destGroup !== 'Other') found.add(destGroup);
+  for (const item of itinerary || []) {
+    if (item?.date_label === '__meta_trip_data__') continue;
+    const g = normalizeCityGroup(`${item?.city || ''} ${item?.main_place || ''}`);
+    if (g !== 'Other') found.add(g);
+  }
+  return Array.from(found);
 }
 
 export const CURATED_EXPLORE_SPOTS: CuratedExploreSpot[] = [
@@ -37,9 +134,13 @@ export const CURATED_EXPLORE_SPOTS: CuratedExploreSpot[] = [
     cityGroup: 'Osaka',
     area: 'Honmachi (1 สถานีจาก Shinsaibashi)',
     highlight: 'สุดยอดข้าวแกงกะหรี่สไตล์โอซาก้ารางวัลมิชลิน บิบ กูร์มองด์ & Tabelog Top 100 คำแรกหวานหอมผลไม้เคี่ยว ตามด้วยความเผ็ดร้อนลึก ท็อปหมูทอดทงคัตสึ ผักโขม ชีส และไข่ดิบ (สาขาหลักเปิดกลางวัน 11:45–16:00 น. / สาขาตึก Ito B2 เปิดรอบเย็น จ.-ศ. 17:30–20:30 น. / ปิดวันอาทิตย์)',
-    recommendedTime: 'มื้อกลางวัน / มื้อเย็น (9 ธ.ค. หรือ 11 ธ.ค.)',
+    recommendedTime: 'มื้อกลางวัน / มื้อเย็น (สาขาหลัก 11:45–16:00 / สาขา Ito 17:30–20:30)',
     priceEstimate: '¥950 - ¥1,450',
     mapLink: 'https://maps.google.com/?q=Hakugintei+Honmachi+Osaka',
+    walkInFriendly: true,
+    budgetTier: 'budget',
+    lat: 34.6838,
+    lng: 135.4981,
   },
   {
     id: 'curated_food_osaka_tempura_makino',
@@ -53,9 +154,13 @@ export const CURATED_EXPLORE_SPOTS: CuratedExploreSpot[] = [
     cityGroup: 'Osaka',
     area: 'Namba Sennichimae / Hankyu Sanbangai Umeda 2F',
     highlight: 'ร้านเทมปุระทอดสดทีละชิ้นเสิร์ฟร้อนๆ หน้าเคาน์เตอร์บาร์ แป้งบางกรอบฟูไม่อมน้ำมัน ไฮไลต์คือไข่เทมปุระเยิ้มๆ คลุกข้าวสวยร้อนๆ และมีปลาหมึกดองเกลือ (Ika no Shiokara) กับผักดองให้ตักทานฟรีไม่อั้น',
-    recommendedTime: 'มื้อกลางวัน / มื้อค่ำ (9 ธ.ค., 11 ธ.ค., 12 ธ.ค.)',
+    recommendedTime: 'มื้อกลางวัน / มื้อค่ำ (11:00–21:30 น.)',
     priceEstimate: '¥1,300 - ¥2,200',
     mapLink: 'https://maps.google.com/?q=Tempura+Makino+Namba+Osaka',
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 34.6661,
+    lng: 135.5034,
   },
   {
     id: 'curated_food_osaka_kura_sushi_dotonbori',
@@ -69,9 +174,14 @@ export const CURATED_EXPLORE_SPOTS: CuratedExploreSpot[] = [
     cityGroup: 'Osaka',
     area: 'Dotonbori (Claude Bldg 2F) / Namba Parks South',
     highlight: 'ซูชิสายพานยอดฮิตสาขาเรือธงระดับโลก ตกแต่งสไตล์งานเทศกาลญี่ปุ่นโดย Kashiwa Sato สั่งอาหารผ่านจอทัชสกรีนรองรับภาษาไทย/อังกฤษ เริ่มต้นจานละ ~150 เยน สนุกกับเกมหยอดจานสะสมครบ 5 จานลุ้นกาชาปอง Bikkura-Pon',
-    recommendedTime: 'มื้อเย็น / มื้อดึก (9 ธ.ค., 11 ธ.ค., 13 ธ.ค. เปิด 11:00–23:00 น.)',
+    recommendedTime: 'มื้อเย็น / มื้อดึก (เปิด 11:00–23:00 น.)',
     priceEstimate: '¥1,200 - ¥2,500',
     mapLink: 'https://maps.google.com/?q=Kura+Sushi+Global+Flagship+Store+Dotonbori',
+    openLate: true,
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 34.6688,
+    lng: 135.5023,
   },
   {
     id: 'curated_food_osaka_mugen_ramen',
@@ -85,9 +195,14 @@ export const CURATED_EXPLORE_SPOTS: CuratedExploreSpot[] = [
     cityGroup: 'Osaka',
     area: 'Sennichimae (ใกล้ Dotonbori) / Namba-Naka',
     highlight: 'ราเมงซุปกระดูกวัวสีขาวข้น (Gyukotsu Paitan Ramen) เคี่ยวนานจนหอมมันกลมกล่อม ท็อปด้วยเนื้อวากิวเซอร์ลอยด์สไลด์แผ่นใหญ่เต็มชาม และมีเมนูซุปหม่าล่ารสจัดจ้าน ถูกปากคนไทยมาก',
-    recommendedTime: 'มื้อเย็น / มื้อดึก (9 ธ.ค., 11 ธ.ค., 13 ธ.ค.)',
+    recommendedTime: 'มื้อเย็น / มื้อดึก (เปิดถึง 23:00+ น.)',
     priceEstimate: '¥1,100 - ¥2,200',
     mapLink: 'https://maps.google.com/?q=Mugen+Ramen+Sennichimae+Osaka',
+    openLate: true,
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 34.6672,
+    lng: 135.5038,
   },
   {
     id: 'curated_cafe_osaka_brooklyn_kitahama',
@@ -101,9 +216,13 @@ export const CURATED_EXPLORE_SPOTS: CuratedExploreSpot[] = [
     cityGroup: 'Osaka',
     area: 'Kitahama Station Exit 29/30 (เดิน 3 นาที)',
     highlight: 'คาเฟ่ Specialty Coffee สุดเท่ริมแม่น้ำโทซาโบริ ตรงข้ามสวน Nakanoshima มีระเบียงไม้ Outdoor นั่งจิบกาแฟรับลมชมวิวแม่น้ำสุดชิล (เปิด จ.-ศ. 08:00–20:00 น. / ส.-อา. 08:00–19:00 น.) อยู่บนเส้นทางผ่านจาก Shinsaibashi ไปปราสาทโอซาก้า',
-    recommendedTime: 'ช่วงบ่าย (9 ธ.ค. ก่อนไปปราสาทโอซาก้า หรือ 12 ธ.ค.)',
+    recommendedTime: 'ช่วงเช้า / บ่ายชิลล์ริมแม่น้ำ (08:00–19:00 น.)',
     priceEstimate: '¥550 - ¥1,200',
     mapLink: 'https://maps.google.com/?q=Brooklyn+Roasting+Company+Kitahama+Osaka',
+    walkInFriendly: true,
+    budgetTier: 'budget',
+    lat: 34.6912,
+    lng: 135.5071,
   },
   {
     id: 'curated_food_umeda_kiji',
@@ -764,5 +883,298 @@ export const CURATED_EXPLORE_SPOTS: CuratedExploreSpot[] = [
     recommendedTime: '16:00 - 21:00 น.',
     priceEstimate: 'เข้าชมฟรี (เครื่องดื่ม/ของกิน ¥600 - ¥1,500)',
     mapLink: 'https://maps.google.com/?q=Tenshiba+Tennoji+Park+Osaka',
+    walkInFriendly: true,
+    budgetTier: 'budget',
+    lat: 34.6512,
+    lng: 135.5105,
+  },
+  // =========================================================================
+  // 5. NATIONWIDE JAPAN CURATED DINING & ATTRACTIONS (Tokyo, Fukuoka, Sapporo, Nagoya, Kanazawa)
+  // =========================================================================
+  {
+    id: 'curated_food_tokyo_afuri_ramen',
+    kind: 'dining',
+    name: 'AFURI Ramen (ราเมงซุปยูซุเกลือหอมสดชื่น)',
+    japaneseName: 'AFURI 恵比寿・原宿・新宿',
+    category: 'ramen',
+    categoryLabel: 'ราเมงซุปยูซุ',
+    categoryIcon: '🍜',
+    city: 'Tokyo (Ebisu / Harajuku / Shinjuku)',
+    cityGroup: 'Tokyo',
+    area: 'Shinjuku Lumine / Harajuku / Ebisu',
+    highlight: 'ราเมงซุปไก่ใสผสานกลิ่นส้มยูซุสดชื่น หมูชาชูย่างเตาถ่านหอมกรุ่น มีเส้นโฮลวีตให้เลือก เปิดดึกหลายสาขา',
+    recommendedTime: 'มื้อกลางวัน / มื้อดึก (เปิดถึง 23:00 น.)',
+    priceEstimate: '¥1,200 - ¥1,600',
+    mapLink: 'https://maps.google.com/?q=AFURI+Ramen+Shinjuku+Tokyo',
+    openLate: true,
+    walkInFriendly: true,
+    budgetTier: 'budget',
+    lat: 35.6896,
+    lng: 139.7006,
+  },
+  {
+    id: 'curated_food_tokyo_tsujihan',
+    kind: 'dining',
+    name: 'Nihonbashi Kaisen Don Tsujihan (ข้าวหน้าปลาดิบภูเขาไฟ + ซุปปลาไท)',
+    japaneseName: '日本橋海鮮丼 つじ半',
+    category: 'general',
+    categoryLabel: 'ข้าวหน้าปลาดิบ',
+    categoryIcon: '🍣',
+    city: 'Tokyo (Nihonbashi / Tokyo Station)',
+    cityGroup: 'Tokyo',
+    area: 'Nihonbashi (เดิน 5 นาทีจากสถานี Tokyo)',
+    highlight: 'ข้าวหน้าปลาดิบสับคลุกไข่ปลาอิคุระและอูนิ ปิดท้ายด้วยการราดซุปกระดูกปลาไทร้อนๆ ทำเป็นข้าวต้มโอฉะสึเกะรสกลมกล่อม',
+    recommendedTime: 'มื้อกลางวัน / มื้อเย็น (11:00 - 21:00 น.)',
+    priceEstimate: '¥1,250 - ¥3,600',
+    mapLink: 'https://maps.google.com/?q=Tsujihan+Nihonbashi+Tokyo',
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 35.6818,
+    lng: 139.7728,
+  },
+  {
+    id: 'curated_food_tokyo_gyukatsu_motomura',
+    kind: 'dining',
+    name: 'Gyukatsu Motomura (เนื้อชุบเกล็ดขนมปังทอดย่างเตาหิน)',
+    japaneseName: '牛かつ もと村 渋谷・新宿・原宿',
+    category: 'wagyu',
+    categoryLabel: 'กิวคัตสึเนื้อย่างหิน',
+    categoryIcon: '🥩',
+    city: 'Tokyo (Shibuya / Shinjuku)',
+    cityGroup: 'Tokyo',
+    area: 'Shibuya / Shinjuku',
+    highlight: 'เนื้อวัวชุบแป้งทอดแบบ Medium Rare เสิร์ฟพร้อมเตาหินร้อนส่วนตัวให้ย่างตามระดับความสุกที่ชอบ จิ้มวาซาบิและซอสโชยุ',
+    recommendedTime: 'มื้อกลางวัน / มื้อค่ำ (11:00 - 22:00 น.)',
+    priceEstimate: '¥1,800 - ¥2,600',
+    mapLink: 'https://maps.google.com/?q=Gyukatsu+Motomura+Shibuya+Tokyo',
+    openLate: true,
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 35.6595,
+    lng: 139.7016,
+  },
+  {
+    id: 'curated_food_tokyo_koffee_mameya',
+    kind: 'dining',
+    name: 'KOFFEE MAMEYA Omotesando (บาร์กาแฟ Specialty สไตล์มินิมอล)',
+    japaneseName: 'コーヒーマメヤ 表参道',
+    category: 'cafe',
+    categoryLabel: 'คาเฟ่ Specialty',
+    categoryIcon: '☕',
+    city: 'Tokyo (Omotesando / Harajuku)',
+    cityGroup: 'Tokyo',
+    area: 'Omotesando',
+    highlight: 'บาริสต้าสวมเสื้อกาวน์ให้คำแนะนำเมล็ดกาแฟจากโรงคั่วระดับโลกแบบตัวต่อตัว บรรยากาศเรือนไม้ญี่ปุ่นเรียบหรู',
+    recommendedTime: 'ช่วงสาย / บ่าย (10:00 - 18:00 น.)',
+    priceEstimate: '¥700 - ¥1,400',
+    mapLink: 'https://maps.google.com/?q=Koffee+Mameya+Omotesando+Tokyo',
+    walkInFriendly: true,
+    budgetTier: 'budget',
+    lat: 35.6673,
+    lng: 139.7107,
+  },
+  {
+    id: 'curated_food_tokyo_omoide_yokocho',
+    kind: 'dining',
+    name: 'Shinjuku Omoide Yokocho (ตรอกยากิโทริและอิซากายะย้อนยุค)',
+    japaneseName: '新宿西口 思い出横丁',
+    category: 'izakaya',
+    categoryLabel: 'อิซากายะ & ยากิโทริ',
+    categoryIcon: '🍺',
+    city: 'Tokyo (Shinjuku West)',
+    cityGroup: 'Tokyo',
+    area: 'Shinjuku West Exit',
+    highlight: 'ซอยอิซากายะบรรยากาศยุคโชวะไฟโคมแดง มีร้านไก่ย่างถ่านและเบียร์สดเรียงรายกว่า 60 ร้าน เหมาะมานั่งชิลล์รอบดึก',
+    recommendedTime: 'มื้อค่ำ / รอบดึก (17:00 - 24:00 น.)',
+    priceEstimate: '¥1,500 - ¥3,000',
+    mapLink: 'https://maps.google.com/?q=Omoide+Yokocho+Shinjuku+Tokyo',
+    openLate: true,
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 35.693,
+    lng: 139.6996,
+  },
+  {
+    id: 'curated_attr_tokyo_shibuya_sky',
+    kind: 'attraction',
+    name: 'SHIBUYA SKY (จุดชมวิว 360° เหนือห้าแยกชิบูย่า)',
+    japaneseName: '渋谷スカイ',
+    category: 'viewpoint',
+    categoryLabel: 'จุดชมวิว 360 องศา',
+    categoryIcon: '🌃',
+    city: 'Tokyo (Shibuya)',
+    cityGroup: 'Tokyo',
+    area: 'Shibuya Scramble Square 46F',
+    highlight: 'ดาดฟ้ากระจกเปิดโล่งชมวิวเมืองโตเกียว หอคอยโตเกียว และภูเขาไฟฟูจิในวันฟ้าใส (แนะนำจองล่วงหน้าสำหรับรอบพระอาทิตย์ตก)',
+    recommendedTime: 'ช่วงเย็น 16:30 - 20:00 น. (แนะนำจองล่วงหน้า)',
+    priceEstimate: '¥2,200 - ¥2,500',
+    mapLink: 'https://maps.google.com/?q=SHIBUYA+SKY+Tokyo',
+    walkInFriendly: false,
+    budgetTier: 'mid',
+    lat: 35.6584,
+    lng: 139.7022,
+  },
+  {
+    id: 'curated_food_fukuoka_shinshin',
+    kind: 'dining',
+    name: 'Hakata Ramen ShinShin (ราเมงทงคตสึเส้นเล็กตำนานฮากาตะ)',
+    japaneseName: '博多らーめん ShinShin 天神本店・博多デイトス店',
+    category: 'ramen',
+    categoryLabel: 'ฮากาตะราเมง',
+    categoryIcon: '🍜',
+    city: 'Fukuoka (Tenjin / Hakata)',
+    cityGroup: 'Fukuoka',
+    area: 'Tenjin / Hakata Station Deitos 2F',
+    highlight: 'ซุปกระดูกหมูทงคตสึเคี่ยวเนียนนุ่มไม่เหม็นคาว เส้นบางเคี้ยวหนึบ สั่งคู่เกี๊ยวซ่าฮากาตะชิ้นพอดีคำ สาขา Tenjin เปิดดึกถึงตี 3',
+    recommendedTime: 'มื้อกลางวัน / มื้อดึก (เปิดถึง 23:00–03:00 น.)',
+    priceEstimate: '¥900 - ¥1,500',
+    mapLink: 'https://maps.google.com/?q=Hakata+Ramen+ShinShin+Tenjin+Fukuoka',
+    openLate: true,
+    walkInFriendly: true,
+    budgetTier: 'budget',
+    lat: 33.5916,
+    lng: 130.3974,
+  },
+  {
+    id: 'curated_food_fukuoka_nakasu_yatai',
+    kind: 'dining',
+    name: 'Nakasu Yatai Street Stalls (ซุ้มราเมง & โอเด้งริมแม่น้ำนากาสึ)',
+    japaneseName: '中洲屋台街',
+    category: 'street',
+    categoryLabel: 'สตรีทฟู้ดยะไต',
+    categoryIcon: '🍢',
+    city: 'Fukuoka (Nakasu)',
+    cityGroup: 'Fukuoka',
+    area: 'Nakasu Kawabata',
+    highlight: 'เอกลักษณ์ห้ามพลาดของฟุกุโอกะ นั่งซุ้มแผงลอยริมน้ำกินราเมงร้อนๆ โอเด้ง และไข่ปลาเมนไทโกะย่างท่ามกลางลมเย็นยามค่ำ',
+    recommendedTime: 'มื้อค่ำ / รอบดึก (18:00 - 24:00 น.)',
+    priceEstimate: '¥1,200 - ¥2,500',
+    mapLink: 'https://maps.google.com/?q=Nakasu+Yatai+Fukuoka',
+    openLate: true,
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 33.5903,
+    lng: 130.4055,
+  },
+  {
+    id: 'curated_food_fukuoka_fuk_coffee',
+    kind: 'dining',
+    name: 'FUK COFFEE (คาเฟ่ธีมสนามบิน & พุดดิ้งคัสตาร์ดชื่อดัง)',
+    japaneseName: 'フックコーヒー 祇園・春吉',
+    category: 'cafe',
+    categoryLabel: 'คาเฟ่ & พุดดิ้ง',
+    categoryIcon: '☕',
+    city: 'Fukuoka (Gion / Canal City)',
+    cityGroup: 'Fukuoka',
+    area: 'ใกล้ Canal City Hakata',
+    highlight: 'คาเฟ่สุดชิคธีมรหัสสนามบิน FUK เมนูซิกเนเจอร์คือพุดดิ้งเนื้อแน่นท็อปไอศกรีมวานิลลาและลาเต้หอมเข้ม',
+    recommendedTime: 'ช่วงเช้า / บ่าย (08:00 - 20:00 น.)',
+    priceEstimate: '¥600 - ¥1,200',
+    mapLink: 'https://maps.google.com/?q=FUK+COFFEE+Fukuoka',
+    walkInFriendly: true,
+    budgetTier: 'budget',
+    lat: 33.5918,
+    lng: 130.4136,
+  },
+  {
+    id: 'curated_food_sapporo_garaku',
+    kind: 'dining',
+    name: 'Soup Curry GARAKU (ซุปแกงกะหรี่ฮอกไกโดใส่ผักย่าง & น่องไก่เปื่อย)',
+    japaneseName: 'スープカレー GARAKU 札幌本店',
+    category: 'general',
+    categoryLabel: 'ซุปแกงกะหรี่ซัปโปโร',
+    categoryIcon: '🍛',
+    city: 'Sapporo (Odori / Susukino)',
+    cityGroup: 'Sapporo',
+    area: 'ใกล้ Tanukikoji / Odori Park',
+    highlight: 'ซุปแกงกะหรี่ร้านดังคิวทองของซัปโปโร หอมกลิ่นดาชิญี่ปุ่น ผักฮอกไกโดย่างหวานฉ่ำ บรอกโคลีทอดกรอบ เลือกระดับความเผ็ดได้',
+    recommendedTime: 'มื้อกลางวัน / มื้อเย็น (11:30 - 21:00 น.)',
+    priceEstimate: '¥1,400 - ¥2,000',
+    mapLink: 'https://maps.google.com/?q=Soup+Curry+GARAKU+Sapporo',
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 43.0575,
+    lng: 141.3536,
+  },
+  {
+    id: 'curated_food_sapporo_daruma',
+    kind: 'dining',
+    name: 'Jingisukan Daruma (เนื้อแกะย่างกระทะโดมตำนานซุซุกิโนะ)',
+    japaneseName: '成吉思汗 だるま 本店',
+    category: 'wagyu',
+    categoryLabel: 'เจงกิสข่านปิ้งย่าง',
+    categoryIcon: '🔥',
+    city: 'Sapporo (Susukino)',
+    cityGroup: 'Sapporo',
+    area: 'Susukino',
+    highlight: 'เนื้อแกะสดนุ่มย่างเตาถ่านหอมกรุ่นไร้กลิ่นสาบ เปิดตั้งแต่ปี 1954 จิ้มซอสสูตรลับกับพริกกระเทียม กินคู่เบียร์ซัปโปโรสุดฟิน',
+    recommendedTime: 'มื้อเย็น / รอบดึก (17:00 - 23:00 น.)',
+    priceEstimate: '¥2,500 - ¥4,000',
+    mapLink: 'https://maps.google.com/?q=Jingisukan+Daruma+Susukino+Sapporo',
+    openLate: true,
+    walkInFriendly: true,
+    budgetTier: 'premium',
+    lat: 43.0545,
+    lng: 141.3522,
+  },
+  {
+    id: 'curated_food_nagoya_horaiken',
+    kind: 'dining',
+    name: 'Atsuta Horaiken (ข้าวหน้าปลาไหลย่างถ่าน Hitsumabushi ต้นตำรับ)',
+    japaneseName: 'あつた蓬莱軒 神宮店・松坂屋店',
+    category: 'general',
+    categoryLabel: 'ข้าวหน้าปลาไหลนาโกย่า',
+    categoryIcon: '🍱',
+    city: 'Nagoya (Atsuta / Sakae)',
+    cityGroup: 'Nagoya',
+    area: 'Matsuzakaya Sakae South 10F / Atsuta Shrine',
+    highlight: 'ต้นตำรับ Hitsumabushi อายุกว่า 150 ปี ปลาไหลย่างถ่านหนังกรอบเนื้อฟู ทานได้ 3 สไตล์: แบบดั้งเดิม / ใส่เครื่องเคียง / ราดน้ำซุปดาชิ',
+    recommendedTime: 'มื้อกลางวัน / มื้อเย็น (11:30 - 20:30 น.)',
+    priceEstimate: '¥4,400 - ¥5,500',
+    mapLink: 'https://maps.google.com/?q=Atsuta+Horaiken+Nagoya',
+    walkInFriendly: true,
+    budgetTier: 'premium',
+    lat: 35.1646,
+    lng: 136.9079,
+  },
+  {
+    id: 'curated_food_nagoya_yabaton',
+    kind: 'dining',
+    name: 'Yabaton Misokatsu (หมูทอดทงคัตสึราดซอสมิโสะแดงนาโกย่า)',
+    japaneseName: '矢場とん 矢場町本店・名古屋駅店',
+    category: 'general',
+    categoryLabel: 'มิโสะคัตสึ',
+    categoryIcon: '🍖',
+    city: 'Nagoya (Sakae / Nagoya Station)',
+    cityGroup: 'Nagoya',
+    area: 'Nagoya Station Esca / Yabacho',
+    highlight: 'หมูทอดชิ้นหนาเสิร์ฟบนกระทะร้อน ราดซอสมิโสะแดงสูตรเข้มข้นหวานเค็มกลมกล่อมที่โต๊ะต่อหน้า รสชาติเป็นเอกลักษณ์ของนาโกย่า',
+    recommendedTime: 'มื้อกลางวัน / มื้อค่ำ (11:00 - 21:30 น.)',
+    priceEstimate: '¥1,500 - ¥2,300',
+    mapLink: 'https://maps.google.com/?q=Yabaton+Nagoya',
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 35.1623,
+    lng: 136.9061,
+  },
+  {
+    id: 'curated_food_kanazawa_morimori',
+    kind: 'dining',
+    name: 'Mori Mori Sushi Omicho Market (ซูชิสายพานปลาทะเลญี่ปุ่นสดเด้ง)',
+    japaneseName: 'もりもり寿し 近江町店・金沢駅前店',
+    category: 'general',
+    categoryLabel: 'ซูชิทะเลโฮคุริคุ',
+    categoryIcon: '🦀',
+    city: 'Kanazawa (Omicho Market / Kanazawa Station)',
+    cityGroup: 'Kanazawa',
+    area: 'Omicho Market / Kanazawa Forus 6F',
+    highlight: 'ซูชิสายพานคุณภาพระดับโอมากาเสะในราคาน่ารัก เมนูห้ามพลาดคือปลาโนโดกุโระ (Nodoguro) ปูหิมะ และกุ้งหวานอามะเอบิจากทะเลญี่ปุ่น',
+    recommendedTime: 'มื้อเช้าสาย / มื้อกลางวัน (08:00 - 17:00 น.)',
+    priceEstimate: '¥2,000 - ¥3,800',
+    mapLink: 'https://maps.google.com/?q=Mori+Mori+Sushi+Omicho+Kanazawa',
+    walkInFriendly: true,
+    budgetTier: 'mid',
+    lat: 36.5718,
+    lng: 136.6565,
   },
 ];

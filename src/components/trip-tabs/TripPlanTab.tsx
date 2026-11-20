@@ -8,7 +8,7 @@ import {
   LayoutGrid, Rows3, Plane, FolderDown, Sparkles, ExternalLink,
   Clock, ArrowUpToLine, ArrowDownToLine,
   Search, X, Shield, Calendar, Copy, Users,
-  SlidersHorizontal, Zap, Receipt, CheckCircle2
+  SlidersHorizontal, Zap, Receipt, CheckCircle2, CloudRain
 } from 'lucide-react';
 import { copyToClipboard } from '@/lib/clipboard';
 import { toast } from 'sonner';
@@ -44,6 +44,7 @@ import {
   updateStopMeta,
   subscribeStopMeta,
   calculateDayCascadeSchedule,
+  analyzeDayPace,
 } from '@/lib/smartTimeline';
 import {
   ShoppingBagItem,
@@ -112,6 +113,7 @@ interface TripPlanTabProps {
     nextStatus: 'planned' | 'bought' | 'out_of_stock' | 'skipped'
   ) => Promise<void> | void;
   onLogExpenseForStop?: (item?: any) => void;
+  onOpenPassport?: (tab?: 'passport' | 'wrapped') => void;
 }
 
 export const TripPlanTab = React.memo(function TripPlanTab({
@@ -157,11 +159,13 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   onMoveStopToDay,
   onSyncShoppingExpense,
   onLogExpenseForStop,
+  onOpenPassport,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
   const [wishlistInitialTab, setWishlistInitialTab] = useState<'wishlist' | 'shopping'>('wishlist');
   const [showToolsSheet, setShowToolsSheet] = useState(false);
   const [onTripFocusMode, setOnTripFocusMode] = useState(false);
+  const [rainyDayMode, setRainyDayMode] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
   const [showScrollJump, setShowScrollJump] = useState(false);
@@ -475,6 +479,26 @@ export const TripPlanTab = React.memo(function TripPlanTab({
     [displayedItinerary, stopMetaMap, selectedDayFilter]
   );
 
+  // Package C: Day Pace & Conflict Detector for the selected day
+  const dayPace = useMemo(
+    () =>
+      selectedDayFilter === 'all' || displayedItinerary.length === 0
+        ? null
+        : analyzeDayPace(displayedItinerary, dayCascadeSchedule),
+    [displayedItinerary, dayCascadeSchedule, selectedDayFilter]
+  );
+
+  const handleToggleRainyDayMode = () => {
+    const next = !rainyDayMode;
+    triggerHaptic(next ? 'medium' : 'light');
+    setRainyDayMode(next);
+    if (next) {
+      toast.info('เปิดโหมดวันฝนตก (Plan B) ☔', {
+        description: 'กางแผนสำรองทั้งหมดและไฮไลต์จุดเที่ยวในร่มให้เรียบร้อยแล้ว',
+      });
+    }
+  };
+
   // Sub-layout state for itinerary ('card' | 'thumbnail' | 'compact' | 'map')
   const [displayLayout, setDisplayLayout] = useState<ItineraryDisplayLayout>(() =>
     itineraryViewMode === 'map' ? 'map' : 'card'
@@ -728,6 +752,19 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                   <span>สุ่มมื้อ</span>
                 </button>
               )}
+              <button
+                type="button"
+                onClick={handleToggleRainyDayMode}
+                aria-pressed={rainyDayMode}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-bold cursor-pointer active:scale-95 ${
+                  rainyDayMode
+                    ? 'bg-sky-600 text-white border-sky-600'
+                    : 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200/80 dark:border-sky-800/60'
+                }`}
+              >
+                <CloudRain className="h-3 w-3" />
+                <span>วันฝนตก</span>
+              </button>
               {onLogExpenseForStop && (
                 <button
                   type="button"
@@ -879,6 +916,10 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         fxRate={fxRate}
         onOpenActivityDetail={handleOpenEditActivity}
         onShowToast={onShowToast}
+        onOpenPassport={onOpenPassport}
+        onOpenDiningDecision={onOpenDiningDecision ? () => onOpenDiningDecision() : undefined}
+        rainyDayMode={rainyDayMode}
+        onToggleRainyDay={handleToggleRainyDayMode}
       />
 
       {/* 4. Unified Itinerary View Switcher + Smart Sticky Day Filter Bar */}
@@ -1115,6 +1156,22 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               <span className="sm:hidden">{allPlanBExpanded ? 'ย่อสำรอง' : 'แผนสำรอง'}</span>
             </button>
           )}
+
+          {/* 1-Tap Rainy Day Plan B Mode Toggle */}
+          <button
+            type="button"
+            onClick={handleToggleRainyDayMode}
+            aria-pressed={rainyDayMode}
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold border shrink-0 transition-all cursor-pointer active:scale-95 ${
+              rainyDayMode
+                ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
+                : 'bg-sky-50/70 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300 border-sky-200/80 dark:border-sky-800/60 hover:border-sky-400'
+            }`}
+            title="สลับเป็นโหมดวันฝนตก: กางแผนสำรอง (Plan B) ทุกจุดอัตโนมัติ"
+          >
+            <CloudRain className="h-3.5 w-3.5 shrink-0" />
+            <span>{rainyDayMode ? 'โหมดฝนตก: เปิด' : 'วันฝนตก'}</span>
+          </button>
         </div>
           </>
         )}
@@ -1234,6 +1291,32 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         </div>
       )}
 
+      {/* 1-Tap Rainy Day Plan B Active Banner */}
+      {rainyDayMode && (
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-sky-50/90 dark:bg-sky-950/40 border border-sky-300/80 dark:border-sky-800/70 flex flex-wrap items-center justify-between gap-2.5 text-xs animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <CloudRain className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <span className="font-black text-sky-900 dark:text-sky-200 block">
+                ☔ โหมดวันฝนตก (Plan B) เปิดอยู่
+              </span>
+              <span className="text-[11px] font-medium text-sky-700 dark:text-sky-300/90 block">
+                กางแผนสำรอง & ที่เที่ยวในร่มให้ครบ {stopsWithPlanB.length} จุดแล้ว เที่ยวต่อได้ไม่สะดุด
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleRainyDayMode}
+            className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#181a20] border border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 font-bold text-[11px] hover:bg-sky-100 cursor-pointer shrink-0"
+          >
+            กลับแผนปกติ
+          </button>
+        </div>
+      )}
+
       {/* 5. Main Itinerary Content Area (4 View Modes with Accessibility Focus Target) */}
       <div id="itinerary-view-container" tabIndex={-1} className="outline-none">
         {/* 4.5 TabiPlan Smart Cascade Summary (Shown when a specific day is selected) */}
@@ -1248,6 +1331,20 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                     ตารางเวลาไหลอัตโนมัติ: {dayCascadeSchedule.dayStartTime}–{dayCascadeSchedule.dayEndTime}
                   </span>
                 </span>
+                {dayPace && (
+                  <span
+                    title={dayPace.detailTip}
+                    className={`px-2 py-0.5 rounded-lg text-[11px] font-black border ${
+                      dayPace.level === 'packed'
+                        ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+                        : dayPace.level === 'balanced'
+                        ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
+                        : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                    }`}
+                  >
+                    {dayPace.emoji} {dayPace.badgeLabel}
+                  </span>
+                )}
                 <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/50">
                   🎯 เวลาเที่ยว {(dayCascadeSchedule.totalSightseeingMin / 60).toFixed(1)} ชม.
                 </span>
@@ -1512,7 +1609,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                         canEditPlan={canEditPlan}
                         currentUser={currentUser}
                         reordering={reordering}
-                        isPlanBOpen={expandedPlanB[item.id] || false}
+                        isPlanBOpen={rainyDayMode || expandedPlanB[item.id] || false}
                         onTogglePlanB={handleTogglePlanB}
                         onMoveActivity={handleMoveActivity}
                         onOpenEditActivity={handleOpenEditActivity}
@@ -1615,6 +1712,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         onOpenAIAssistant={onOpenAIAssistant}
         onOpenTravelHub={() => setShowTravelHubModal(true)}
         onOpenPrintable={() => setShowPrintableModal(true)}
+        onOpenPassport={onOpenPassport}
       />
 
       {/* Wishlist & Shopping Bag Drawer Modal */}

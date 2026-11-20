@@ -836,3 +836,80 @@ export const KANSAI_TRANSIT_SUGGESTIONS: TransitSuggestion[] = [
     badge: '🚉 สถานี',
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Day Pace & Conflict Analyzer (Package C - Smart Planning)
+// ---------------------------------------------------------------------------
+
+export interface DayPaceAnalysis {
+  level: 'relaxed' | 'balanced' | 'packed';
+  emoji: string;
+  badgeLabel: string;
+  detailTip: string;
+  cityCount: number;
+  cities: string[];
+  hasConflict: boolean;
+}
+
+/**
+ * Evaluates a single day's stop density, inter-city transfers, and schedule conflicts
+ * so travelers can spot overpacked days or timing collisions at a glance.
+ */
+export function analyzeDayPace(
+  stops: CascadeStopInput[],
+  cascade: DayCascadeResult
+): DayPaceAnalysis {
+  const activeCount = cascade.activeStopsCount || stops.length;
+  const citySet = new Set<string>();
+  for (const s of stops) {
+    const raw = (s.city || '').split(/[(\/→➔\-–]/)[0].trim();
+    if (raw) citySet.add(raw);
+  }
+  const cities = Array.from(citySet);
+  const cityCount = cities.length;
+  const sightseeingHours = cascade.totalSightseeingMin / 60;
+  const hasConflict = cascade.lateStopsCount > 0;
+
+  if (hasConflict || activeCount >= 7 || sightseeingHours >= 9.5 || cityCount >= 3 || cascade.totalTravelMin >= 150) {
+    const reasons: string[] = [];
+    if (hasConflict) reasons.push(`เวลาซ้อน/สาย ${cascade.lateStopsCount} จุด`);
+    if (cityCount >= 3) reasons.push(`ย้ายข้าม ${cityCount} เมืองในวันเดียว`);
+    if (activeCount >= 7 || sightseeingHours >= 9.5) reasons.push(`${activeCount} จุด (${sightseeingHours.toFixed(1)} ชม.)`);
+    if (cascade.totalTravelMin >= 150) reasons.push(`เดินทางรวม ${cascade.totalTravelMin} นาที`);
+
+    return {
+      level: 'packed',
+      emoji: '🔴',
+      badgeLabel: hasConflict ? 'แผนชน / เวลาซ้อน' : 'แผนแน่นมาก',
+      detailTip: reasons.length > 0 ? `${reasons.join(' • ')} — แนะนำกดข้ามจุดรองหรือย้ายบางจุดไปวันอื่น` : 'ตารางค่อนข้างแน่น เผื่อเวลาต่อรถเพิ่ม',
+      cityCount,
+      cities,
+      hasConflict,
+    };
+  }
+
+  if (activeCount >= 4 || sightseeingHours >= 5.5 || cityCount === 2) {
+    return {
+      level: 'balanced',
+      emoji: '🟡',
+      badgeLabel: 'กำลังพอดี',
+      detailTip:
+        cityCount === 2
+          ? `เที่ยว 2 โซน (${cities.join(' ➔ ')}) เวลาลงตัวพอดี`
+          : `จังหวะกำลังดี มีเวลาพักกินข้าวและถ่ายรูปสบายๆ`,
+      cityCount,
+      cities,
+      hasConflict: false,
+    };
+  }
+
+  return {
+    level: 'relaxed',
+    emoji: '🟢',
+    badgeLabel: 'สบายๆ ชิลล์',
+    detailTip: 'ตารางโปร่ง เดินเล่นแวะคาเฟ่หรือสุ่มร้านนอกแพลนเพิ่มได้สบาย',
+    cityCount,
+    cities,
+    hasConflict: false,
+  };
+}

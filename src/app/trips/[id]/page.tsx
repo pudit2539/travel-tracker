@@ -39,6 +39,7 @@ import { triggerConfetti } from '@/lib/confetti';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { buildQuickExpensePrefillFromStop } from '@/lib/quickStopExpense';
+import { GoshuinPassportModal } from '@/components/trip-detail/GoshuinPassportModal';
 import { isSuperAdmin, TripRole, ROLE_INFO, canModifyExpense } from '@/lib/permissions';
 import { getSafeSession, trackCurrentDevice } from '@/lib/sessionManager';
 import { 
@@ -2314,6 +2315,14 @@ export default function TripDetailPage() {
     return itinerary.filter((item) => item.date_label?.trim() === selectedDayFilter);
   }, [itinerary, selectedDayFilter]);
 
+  const [showPassportModal, setShowPassportModal] = useState(false);
+  const [passportInitialTab, setPassportInitialTab] = useState<'passport' | 'wrapped'>('passport');
+
+  const handleOpenPassport = useCallback((tab: 'passport' | 'wrapped' = 'passport') => {
+    setPassportInitialTab(tab);
+    setShowPassportModal(true);
+  }, []);
+
   const handleLogExpenseForStop = useCallback(
     (stop?: any) => {
       const prefill = buildQuickExpensePrefillFromStop(stop, tripBaseCurrency, trip?.start_date);
@@ -2833,6 +2842,7 @@ export default function TripDetailPage() {
                 onMoveStopToDay={handleMoveStopToDay}
                 onSyncShoppingExpense={handleSyncShoppingExpense}
                 onLogExpenseForStop={canAddExpense ? handleLogExpenseForStop : undefined}
+                onOpenPassport={handleOpenPassport}
               />
             </div>
           )}
@@ -3072,6 +3082,7 @@ export default function TripDetailPage() {
           onClose={() => setShowGourmetRadarModal(false)}
           itinerary={itinerary}
           tripId={tripId}
+          tripDestination={`${trip?.name || trip?.title || ''} ${trip?.country || ''}`.trim()}
           fxRate={fxRate}
           availableDays={availableDays}
           defaultDay={selectedDayFilter !== 'all' ? selectedDayFilter : availableDays[0]}
@@ -3102,7 +3113,36 @@ export default function TripDetailPage() {
           itinerary={itinerary}
           defaultCity={diningPickerDefaultCity}
           tripId={tripId}
+          tripDestination={`${trip?.name || trip?.title || ''} ${trip?.country || ''}`.trim()}
+          availableDays={availableDays}
+          defaultDay={selectedDayFilter !== 'all' ? selectedDayFilter : availableDays[0]}
+          onAddToItinerary={(item) =>
+            handleOpenAddActivity(
+              {
+                title: item.title,
+                city: item.city,
+                food_recommend: item.food_recommend,
+                mapsQuery: item.mapsQuery,
+                date_label: item.date_label,
+              },
+              item.date_label
+            )
+          }
           onOpenRadar={() => setShowGourmetRadarModal(true)}
+        />
+      )}
+
+      {/* Goshuin Digital Stamp Passport & Trip Wrapped Story Modal */}
+      {showPassportModal && (
+        <GoshuinPassportModal
+          isOpen={showPassportModal}
+          onClose={() => setShowPassportModal(false)}
+          trip={trip}
+          itinerary={itinerary}
+          expenses={expenses}
+          fxRate={fxRate}
+          tripBaseCurrency={tripBaseCurrency}
+          initialTab={passportInitialTab}
         />
       )}
 

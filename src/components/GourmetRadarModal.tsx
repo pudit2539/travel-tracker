@@ -4,18 +4,30 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
   X, Search, MapPin, ExternalLink, Star, 
-  Utensils, Award, Dices, Plus
+  Utensils, Award, Dices, Plus, MessageSquare, Moon, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
-import { CURATED_EXPLORE_SPOTS } from '@/data/curatedExploreSpots';
+import {
+  CURATED_EXPLORE_SPOTS,
+  ALL_JAPAN_CITY_GROUPS,
+  ExploreCityGroup,
+  SpotBudgetTier,
+  normalizeCityGroup,
+  inferSpotBudgetTier,
+  isSpotOpenLate,
+  isSpotWalkInFriendly,
+  detectTripCityGroups,
+} from '@/data/curatedExploreSpots';
 import { ModalPortal } from '@/components/ModalPortal';
+import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
 
 interface GourmetRadarModalProps {
   isOpen: boolean;
   onClose: () => void;
   itinerary: any[];
   tripId?: string;
+  tripDestination?: string;
   fxRate?: number;
   initialCheckedSpots?: Record<string, boolean>;
   onToggleCheckIn?: (spotId: string, checked: boolean) => void;
@@ -40,7 +52,7 @@ export interface DiningSpot {
   categoryLabel: string;
   categoryIcon: string;
   city: string;
-  cityGroup: 'Osaka' | 'Kyoto' | 'Nara' | 'Other';
+  cityGroup: ExploreCityGroup | 'Other';
   dateLabel: string;
   timeSlot?: string;
   type: 'main' | 'backup' | 'curated';
@@ -48,6 +60,9 @@ export interface DiningSpot {
   priceEstimate?: string;
   mapLink: string;
   rawText: string;
+  openLate: boolean;
+  walkInFriendly: boolean;
+  budgetTier: SpotBudgetTier;
 }
 
 export function extractDiningSpots(itinerary: any[]): DiningSpot[] {
@@ -56,16 +71,8 @@ export function extractDiningSpots(itinerary: any[]): DiningSpot[] {
   itinerary.forEach((item) => {
     if (item.date_label === '__meta_trip_data__') return;
 
-    // Detect City Group
-    const cityRaw = (item.city || '').toLowerCase();
-    let cityGroup: 'Osaka' | 'Kyoto' | 'Nara' | 'Other' = 'Other';
-    if (cityRaw.includes('osaka') || cityRaw.includes('โอซาก้า') || cityRaw.includes('minoh')) {
-      cityGroup = 'Osaka';
-    } else if (cityRaw.includes('kyoto') || cityRaw.includes('เกียวโต') || cityRaw.includes('arashiyama') || cityRaw.includes('uji')) {
-      cityGroup = 'Kyoto';
-    } else if (cityRaw.includes('nara') || cityRaw.includes('นารา')) {
-      cityGroup = 'Nara';
-    }
+    // Detect City Group across all Japan regions
+    const cityGroup = normalizeCityGroup(`${item.city || ''} ${item.main_place || ''}`);
 
     // Helper: Categorize dining text
     const categorize = (text: string): { category: DiningSpot['category']; label: string; icon: string } => {
@@ -105,6 +112,9 @@ export function extractDiningSpots(itinerary: any[]): DiningSpot[] {
         type: 'main',
         mapLink: link,
         rawText: item.food_recommendation,
+        openLate: isSpotOpenLate({ timeSlot: item.time_slot, highlight: item.food_recommendation, category: cat.category }),
+        walkInFriendly: isSpotWalkInFriendly({ highlight: item.food_recommendation }),
+        budgetTier: inferSpotBudgetTier(item.food_recommendation),
       });
     }
 
@@ -136,13 +146,16 @@ export function extractDiningSpots(itinerary: any[]): DiningSpot[] {
             type: 'backup',
             mapLink: bLink,
             rawText: clean,
+            openLate: isSpotOpenLate({ timeSlot: item.time_slot, highlight: clean, category: cat.category }),
+            walkInFriendly: isSpotWalkInFriendly({ highlight: clean }),
+            budgetTier: inferSpotBudgetTier(clean),
           });
         }
       });
     }
   });
 
-  // 3. Curated recommendations outside itinerary (Osaka, Umeda, Kyoto, Nara, Kobe)
+  // 3. Curated recommendations nationwide (Osaka, Kyoto, Nara, Kobe, Tokyo, Fukuoka, Sapporo, Nagoya, Kanazawa)
   CURATED_EXPLORE_SPOTS.filter((s) => s.kind === 'dining').forEach((c) => {
     spots.push({
       id: c.id,
@@ -152,7 +165,7 @@ export function extractDiningSpots(itinerary: any[]): DiningSpot[] {
       categoryLabel: c.categoryLabel,
       categoryIcon: c.categoryIcon,
       city: `${c.city} (${c.area})`,
-      cityGroup: c.cityGroup === 'Kobe' ? 'Other' : (c.cityGroup as any),
+      cityGroup: c.cityGroup,
       dateLabel: 'นอกแพลนแนะนำ',
       timeSlot: c.recommendedTime,
       type: 'curated',
@@ -160,6 +173,9 @@ export function extractDiningSpots(itinerary: any[]): DiningSpot[] {
       priceEstimate: c.priceEstimate,
       mapLink: c.mapLink,
       rawText: `${c.name} ${c.japaneseName || ''} ${c.highlight}`,
+      openLate: isSpotOpenLate(c),
+      walkInFriendly: isSpotWalkInFriendly(c),
+      budgetTier: inferSpotBudgetTier(c.priceEstimate, c.budgetTier),
     });
   });
 
@@ -171,6 +187,7 @@ export default function GourmetRadarModal({
   onClose,
   itinerary = [],
   tripId,
+  tripDestination,
   initialCheckedSpots = {},
   onToggleCheckIn,
   onOpenDecisionPicker,
@@ -179,11 +196,23 @@ export default function GourmetRadarModal({
   onAddToItinerary,
 }: GourmetRadarModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCity, setSelectedCity] = useState<'all' | 'Osaka' | 'Kyoto' | 'Nara' | 'Other'>('all');
+  const [selectedCity, setSelectedCity] = useState<'all' | ExploreCityGroup | 'Other'>('all');
   const [selectedCategory, setSelectedCategory] = useState<'all' | DiningSpot['category']>('all');
   const [filterType, setFilterType] = useState<'all' | 'plan' | 'curated' | 'checked'>('all');
+  const [onlyOpenLate, setOnlyOpenLate] = useState(false);
+  const [onlyWalkIn, setOnlyWalkIn] = useState(false);
+  const [budgetFilter, setBudgetFilter] = useState<'all' | SpotBudgetTier>('all');
+  const [staffModalSpot, setStaffModalSpot] = useState<DiningSpot | null>(null);
   const [customTargetDay, setTargetDay] = useState<string | null>(null);
   const targetDay = customTargetDay ?? defaultDay ?? availableDays[0] ?? '';
+
+  const prioritizedCities = useMemo(() => {
+    const tripCities = detectTripCityGroups(itinerary, tripDestination);
+    return [
+      ...ALL_JAPAN_CITY_GROUPS.filter((c) => tripCities.includes(c.id)),
+      ...ALL_JAPAN_CITY_GROUPS.filter((c) => !tripCities.includes(c.id)),
+    ];
+  }, [itinerary, tripDestination]);
 
   // Checked-in / Visited spots tracking
   const [localCheckedOverrides, setLocalCheckedOverrides] = useState<Record<string, boolean>>(() => {
@@ -232,6 +261,11 @@ export default function GourmetRadarModal({
       if (filterType === 'plan' && s.type === 'curated') return false;
       if (filterType === 'curated' && s.type !== 'curated') return false;
 
+      // Practical On-Trip filters (Open late, Walk-in, Budget tier)
+      if (onlyOpenLate && !s.openLate) return false;
+      if (onlyWalkIn && !s.walkInFriendly) return false;
+      if (budgetFilter !== 'all' && s.budgetTier !== budgetFilter) return false;
+
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -247,9 +281,9 @@ export default function GourmetRadarModal({
 
       return true;
     });
-  }, [allSpots, selectedCity, selectedCategory, filterType, searchQuery, checkedSpots]);
+  }, [allSpots, selectedCity, selectedCategory, filterType, onlyOpenLate, onlyWalkIn, budgetFilter, searchQuery, checkedSpots]);
 
-  const filterKey = `${selectedCity}|${selectedCategory}|${filterType}|${searchQuery}`;
+  const filterKey = `${selectedCity}|${selectedCategory}|${filterType}|${onlyOpenLate}|${onlyWalkIn}|${budgetFilter}|${searchQuery}`;
   const [limitState, setLimitState] = useState<{ key: string; limit: number }>({ key: filterKey, limit: 30 });
   const displayLimit = limitState.key === filterKey ? limitState.limit : 30;
 
@@ -362,28 +396,33 @@ export default function GourmetRadarModal({
             )}
           </div>
 
-          {/* City Filter Pills + Day Selector */}
+          {/* City Filter Pills (Auto-Prioritized for Current Trip + Nationwide Japan) + Day Selector */}
           <div className="flex flex-wrap items-center justify-between gap-2 pb-0.5">
-            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">เมือง:</span>
-              {[
-                { id: 'all', label: 'ทั้งหมด' },
-                { id: 'Osaka', label: '🐙 โอซาก้า (Osaka)' },
-                { id: 'Kyoto', label: '⛩️ เกียวโต (Kyoto)' },
-                { id: 'Nara', label: '🦌 นารา (Nara)' },
-                { id: 'Other', label: '🗾 เมืองอื่น (โตเกียว/ฟุกุโอกะ/อื่น ๆ)' },
-              ].map((c) => (
+              <button
+                type="button"
+                onClick={() => setSelectedCity('all')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
+                  selectedCity === 'all'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                }`}
+              >
+                ทั้งหมด
+              </button>
+              {prioritizedCities.map((c) => (
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => setSelectedCity(c.id as any)}
+                  onClick={() => setSelectedCity(c.id)}
                   className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
                     selectedCity === c.id
                       ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                       : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
                   }`}
                 >
-                  {c.label}
+                  {c.emoji} {c.label}
                 </button>
               ))}
             </div>
@@ -405,6 +444,59 @@ export default function GourmetRadarModal({
                 </select>
               </div>
             )}
+          </div>
+
+          {/* Practical On-Trip Filters: Open Late, Walk-In, Budget Tier */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            <button
+              type="button"
+              onClick={() => setOnlyOpenLate((v) => !v)}
+              aria-pressed={onlyOpenLate}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shrink-0 transition-all cursor-pointer border ${
+                onlyOpenLate
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                  : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-indigo-400'
+              }`}
+            >
+              <Moon className="h-3 w-3" />
+              <span>เปิดดึก (21:00+)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setOnlyWalkIn((v) => !v)}
+              aria-pressed={onlyWalkIn}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shrink-0 transition-all cursor-pointer border ${
+                onlyWalkIn
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                  : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-emerald-400'
+              }`}
+            >
+              <Sparkles className="h-3 w-3" />
+              <span>วอล์กอินได้</span>
+            </button>
+
+            <span className="h-4 w-px bg-slate-200 dark:bg-[#262932] mx-0.5 shrink-0" />
+
+            {[
+              { id: 'all', label: 'ทุกงบ' },
+              { id: 'budget', label: '💴 ≤¥1,500' },
+              { id: 'mid', label: '💴 ¥1,500–3,500' },
+              { id: 'premium', label: '💎 พรีเมียม' },
+            ].map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => setBudgetFilter(b.id as any)}
+                className={`px-2.5 py-1 rounded-xl text-[11px] font-bold shrink-0 transition-all cursor-pointer border ${
+                  budgetFilter === b.id
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white'
+                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                }`}
+              >
+                {b.label}
+              </button>
+            ))}
           </div>
 
           {/* Category Filter Pills */}
@@ -594,6 +686,16 @@ export default function GourmetRadarModal({
                     </span>
 
                     <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setStaffModalSpot(spot)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#181a20] hover:bg-slate-100 dark:hover:bg-[#22252E] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#323642] text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                        title="แสดงชื่อร้านภาษาญี่ปุ่นตัวใหญ่ให้คนขับแท็กซี่หรือพนักงานดู"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5 text-[#C83E2D]" />
+                        <span>โชว์พนักงาน</span>
+                      </button>
+
                       {onAddToItinerary && (
                         <button
                           type="button"
@@ -676,6 +778,17 @@ export default function GourmetRadarModal({
 
       </div>
     </div>
+    {staffModalSpot && (
+      <ShowToStaffModal
+        isOpen={true}
+        onClose={() => setStaffModalSpot(null)}
+        placeName={staffModalSpot.japaneseName ? `${staffModalSpot.name} (${staffModalSpot.japaneseName})` : staffModalSpot.name}
+        city={staffModalSpot.city}
+        timeSlot={staffModalSpot.timeSlot}
+        mapsUrl={staffModalSpot.mapLink}
+        directionsUrl={staffModalSpot.mapLink}
+      />
+    )}
     </ModalPortal>
   );
 }

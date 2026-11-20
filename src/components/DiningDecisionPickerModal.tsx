@@ -4,12 +4,19 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   X, Dices, Utensils, MapPin, ExternalLink, 
-  RotateCw, Award, ArrowRight, Compass
+  RotateCw, Award, ArrowRight, Compass, Plus, MessageSquare, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CURATED_EXPLORE_SPOTS } from '@/data/curatedExploreSpots';
+import {
+  CURATED_EXPLORE_SPOTS,
+  ALL_JAPAN_CITY_GROUPS,
+  ExploreCityGroup,
+  normalizeCityGroup,
+  detectTripCityGroups,
+} from '@/data/curatedExploreSpots';
 import { triggerHaptic } from '@/lib/haptics';
 import { ModalPortal } from '@/components/ModalPortal';
+import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
 
 export interface DecisionItem {
   id: string;
@@ -20,7 +27,7 @@ export interface DecisionItem {
   categoryLabel: string;
   categoryIcon: string;
   city: string;
-  cityGroup: 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe';
+  cityGroup: ExploreCityGroup | 'Other';
   area?: string;
   source: 'itinerary_main' | 'itinerary_backup' | 'curated';
   sourceLabel: string;
@@ -38,8 +45,19 @@ interface DiningDecisionPickerModalProps {
   itinerary: any[];
   defaultCity?: string;
   tripId?: string;
+  tripDestination?: string;
   checkedSpots?: Record<string, boolean>;
   onOpenRadar?: () => void;
+  availableDays?: string[];
+  defaultDay?: string;
+  onAddToItinerary?: (item: {
+    title: string;
+    category: string;
+    city?: string;
+    food_recommend?: string;
+    mapsQuery?: string;
+    date_label?: string;
+  }) => void;
 }
 
 export default function DiningDecisionPickerModal({
@@ -47,8 +65,13 @@ export default function DiningDecisionPickerModal({
   onClose,
   itinerary = [],
   defaultCity,
+  tripId,
+  tripDestination,
   checkedSpots = {},
   onOpenRadar,
+  availableDays = [],
+  defaultDay,
+  onAddToItinerary,
 }: DiningDecisionPickerModalProps) {
   // Main Toggle: Dining vs Attractions
   const [activeKind, setActiveKind] = useState<'dining' | 'attraction'>('dining');
@@ -56,17 +79,40 @@ export default function DiningDecisionPickerModal({
   // Scope: All vs Curated Only (นอกแพลน) vs Itinerary Only (ในแพลน)
   const [selectedScope, setSelectedScope] = useState<'all' | 'curated' | 'itinerary'>('all');
 
-  // City Filter
-  const [cityOverride, setCityOverride] = useState<'all' | 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe' | null>(null);
-  const normalizedDefaultCity: 'all' | 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe' =
-    defaultCity && ['Osaka', 'Kyoto', 'Nara', 'Kobe'].includes(defaultCity)
-      ? (defaultCity as 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe')
+  // City Filter across all Japan regions
+  const [cityOverride, setCityOverride] = useState<'all' | ExploreCityGroup | null>(null);
+  const validCityIds = useMemo(() => ALL_JAPAN_CITY_GROUPS.map((c) => c.id), []);
+  const normalizedDefaultCity: 'all' | ExploreCityGroup =
+    defaultCity && validCityIds.includes(defaultCity as ExploreCityGroup)
+      ? (defaultCity as ExploreCityGroup)
       : 'all';
   const selectedCity = cityOverride ?? normalizedDefaultCity;
 
-  // Category Filter
+  // Category & Unvisited Filters
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [onlyUnvisited] = useState(false);
+  const [onlyUnvisited, setOnlyUnvisited] = useState(false);
+  const [customTargetDay, setCustomTargetDay] = useState<string | null>(null);
+  const targetDay = customTargetDay ?? defaultDay ?? availableDays[0] ?? '';
+  const [staffModalSpot, setStaffModalSpot] = useState<DecisionItem | null>(null);
+
+  // Merge checked spots from Gourmet Radar localStorage too so "เฉพาะร้านที่ยังไม่เคยไป" stays accurate
+  const mergedCheckedSpots = useMemo<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined' || !tripId) return checkedSpots;
+    try {
+      const cached = localStorage.getItem(`gourmet_checked_${tripId}`);
+      if (cached) return { ...JSON.parse(cached), ...checkedSpots };
+    } catch {}
+    return checkedSpots;
+  }, [checkedSpots, tripId]);
+
+  const prioritizedCities = useMemo(() => {
+    const tripCities = detectTripCityGroups(itinerary, tripDestination);
+    const ordered = [
+      ...ALL_JAPAN_CITY_GROUPS.filter((c) => tripCities.includes(c.id)),
+      ...ALL_JAPAN_CITY_GROUPS.filter((c) => !tripCities.includes(c.id)),
+    ];
+    return ordered;
+  }, [itinerary, tripDestination]);
 
   // Shuffling animation state
   const [isShuffling, setIsShuffling] = useState(false);
@@ -112,15 +158,7 @@ export default function DiningDecisionPickerModal({
     itinerary.forEach((item) => {
       if (item.date_label === '__meta_trip_data__') return;
 
-      const cityRaw = (item.city || '').toLowerCase();
-      let cityGroup: 'Osaka' | 'Kyoto' | 'Nara' | 'Kobe' = 'Osaka';
-      if (cityRaw.includes('kyoto') || cityRaw.includes('เกียวโต') || cityRaw.includes('arashiyama') || cityRaw.includes('uji')) {
-        cityGroup = 'Kyoto';
-      } else if (cityRaw.includes('nara') || cityRaw.includes('นารา')) {
-        cityGroup = 'Nara';
-      } else if (cityRaw.includes('kobe') || cityRaw.includes('โกเบ')) {
-        cityGroup = 'Kobe';
-      }
+      const cityGroup = normalizeCityGroup(`${item.city || ''} ${item.main_place || ''}`);
 
       // Dining from main food_recommendation
       if (item.food_recommendation && item.food_recommendation.trim().length > 0 && item.food_recommendation !== '-') {
@@ -299,12 +337,12 @@ export default function DiningDecisionPickerModal({
       // Category Filter
       if (selectedCategory !== 'all' && item.category !== selectedCategory) return false;
 
-      // Unvisited Filter
-      if (onlyUnvisited && checkedSpots[item.id]) return false;
+      // Unvisited Filter (uses both passed checkedSpots and local Gourmet Radar check-ins)
+      if (onlyUnvisited && mergedCheckedSpots[item.id]) return false;
 
       return true;
     });
-  }, [allDecisionItems, activeKind, selectedScope, selectedCity, selectedCategory, onlyUnvisited, checkedSpots]);
+  }, [allDecisionItems, activeKind, selectedScope, selectedCity, selectedCategory, onlyUnvisited, mergedCheckedSpots]);
 
   // 3. Category options for the current kind
   const categoryOptions = useMemo(() => {
@@ -495,30 +533,50 @@ export default function DiningDecisionPickerModal({
             </div>
           </div>
 
-          {/* City Filter Pills */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              เลือกเมือง / โซน:
-            </label>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {[
-                { key: 'all', label: 'ทุกเมือง' },
-                { key: 'Osaka', label: 'Osaka / Umeda' },
-                { key: 'Kyoto', label: 'Kyoto' },
-                { key: 'Nara', label: 'Nara' },
-                { key: 'Kobe', label: 'Kobe' },
-              ].map((c) => (
+          {/* City Filter Pills (Nationwide Japan, prioritized for current trip) + Only Unvisited Toggle */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                เลือกเมือง / โซน:
+              </label>
+              <button
+                type="button"
+                onClick={() => setOnlyUnvisited((v) => !v)}
+                aria-pressed={onlyUnvisited}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer border ${
+                  onlyUnvisited
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-emerald-400'
+                }`}
+              >
+                <Sparkles className="h-3 w-3" />
+                <span>เฉพาะร้านที่ยังไม่เคยไป</span>
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+              <button
+                type="button"
+                onClick={() => setCityOverride('all')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                  selectedCity === 'all'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
+                }`}
+              >
+                ทุกเมือง
+              </button>
+              {prioritizedCities.map((c) => (
                 <button
-                  key={c.key}
+                  key={c.id}
                   type="button"
-                  onClick={() => setCityOverride(c.key as any)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                    selectedCity === c.key
+                  onClick={() => setCityOverride(c.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                    selectedCity === c.id
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
                   }`}
                 >
-                  {c.label}
+                  {c.emoji} {c.id}
                 </button>
               ))}
             </div>
@@ -626,17 +684,69 @@ export default function DiningDecisionPickerModal({
                   </p>
                 )}
 
-                {/* Direct Google Maps Action Button */}
-                <div className="pt-1">
-                  <a
-                    href={pickedItem.mapLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span>เปิดดูตำแหน่ง & นำทางบน Google Maps</span>
-                  </a>
+                {/* Action Buttons: Google Maps + Add to Itinerary + Show to Staff */}
+                <div className="pt-1 space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <a
+                      href={pickedItem.mapLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-h-[44px] py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <ExternalLink className="h-4 w-4 shrink-0" />
+                      <span>เปิดนำทาง Google Maps</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => setStaffModalSpot(pickedItem)}
+                      className="min-h-[44px] py-2.5 px-4 rounded-2xl bg-white dark:bg-[#181a20] hover:bg-slate-50 dark:hover:bg-[#22252E] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-[#323642] font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+                    >
+                      <MessageSquare className="h-4 w-4 text-[#C83E2D] shrink-0" />
+                      <span>โชว์พนักงาน / แท็กซี่</span>
+                    </button>
+                  </div>
+
+                  {onAddToItinerary && (
+                    <div className="flex items-center gap-2 pt-0.5">
+                      {availableDays.length > 0 && (
+                        <select
+                          value={targetDay}
+                          onChange={(e) => setCustomTargetDay(e.target.value)}
+                          aria-label="เลือกวันที่จะเพิ่มลงแพลน"
+                          className="min-h-[44px] px-3 py-2 rounded-2xl border border-amber-300/80 dark:border-amber-800 bg-white dark:bg-[#181a20] text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+                        >
+                          {availableDays.map((d) => (
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('success');
+                          onAddToItinerary({
+                            title: pickedItem.name,
+                            category: pickedItem.categoryLabel,
+                            city: pickedItem.cityGroup !== 'Other' ? pickedItem.cityGroup : pickedItem.city,
+                            food_recommend:
+                              pickedItem.kind === 'dining'
+                                ? `${pickedItem.name}${pickedItem.highlight ? ` — ${pickedItem.highlight}` : ''}`
+                                : undefined,
+                            mapsQuery: `${pickedItem.name} ${pickedItem.city}`,
+                            date_label: targetDay || availableDays[0] || undefined,
+                          });
+                          onClose();
+                        }}
+                        className="flex-1 min-h-[44px] py-2.5 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs sm:text-sm shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 transition-all"
+                      >
+                        <Plus className="h-4 w-4 shrink-0" />
+                        <span>เพิ่มลงแพลน{targetDay ? ` (${targetDay})` : 'วันนี้เลย'}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -741,6 +851,17 @@ export default function DiningDecisionPickerModal({
 
       </div>
     </div>
+    {staffModalSpot && (
+      <ShowToStaffModal
+        isOpen={true}
+        onClose={() => setStaffModalSpot(null)}
+        placeName={staffModalSpot.japaneseName ? `${staffModalSpot.name} (${staffModalSpot.japaneseName})` : staffModalSpot.name}
+        city={staffModalSpot.city}
+        timeSlot={staffModalSpot.timeSlot || staffModalSpot.recommendedTime}
+        mapsUrl={staffModalSpot.mapLink}
+        directionsUrl={staffModalSpot.mapLink}
+      />
+    )}
     </ModalPortal>
   );
 }

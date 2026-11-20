@@ -18,6 +18,7 @@ import {
   Compass,
   FileText,
   Wrench,
+  Stamp,
 } from 'lucide-react';
 import { ModalPortal } from '@/components/ModalPortal';
 import { triggerHaptic } from '@/lib/haptics';
@@ -48,6 +49,7 @@ interface TripToolsSheetProps {
   onOpenAIAssistant?: () => void;
   onOpenTravelHub: () => void;
   onOpenPrintable: () => void;
+  onOpenPassport?: (tab?: 'passport' | 'wrapped') => void;
 }
 
 interface ToolTile {
@@ -87,6 +89,7 @@ export function TripToolsSheet({
   onOpenAIAssistant,
   onOpenTravelHub,
   onOpenPrintable,
+  onOpenPassport,
 }: TripToolsSheetProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -213,6 +216,18 @@ export function TripToolsSheet({
   ];
 
   const planAndMemoryTools: ToolTile[] = [
+    ...(onOpenPassport
+      ? [
+          {
+            id: 'passport',
+            label: 'สมุดตราปั๊ม & Wrapped',
+            subtitle: 'Goshuin + การ์ดแชร์ Story',
+            icon: <Stamp className="h-4 w-4" />,
+            accent: 'bg-rose-500/10 text-[#C83E2D] dark:text-rose-400',
+            onClick: () => runAction(() => onOpenPassport('passport')),
+          },
+        ]
+      : []),
     ...(onOpenAIAssistant
       ? [
           {
