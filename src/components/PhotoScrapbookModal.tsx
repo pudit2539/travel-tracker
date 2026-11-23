@@ -132,9 +132,9 @@ export default function PhotoScrapbookModal({
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-        <div className="my-auto w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
+        <div className="my-auto w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         {/* Header */}
-        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
+        <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#24324a] shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
               📸
@@ -162,7 +162,7 @@ export default function PhotoScrapbookModal({
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#262932] transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#24324a] transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -174,12 +174,12 @@ export default function PhotoScrapbookModal({
           
           {/* Add Photo Form (Accordion) */}
           {showAddForm && (
-            <form onSubmit={handleAddPhoto} className="p-4 sm:p-5 rounded-3xl bg-slate-50/60 dark:bg-[#121316]/60 border border-slate-200 dark:border-[#262932] space-y-3.5 animate-in fade-in">
+            <form onSubmit={handleAddPhoto} className="p-4 sm:p-5 rounded-3xl bg-slate-50/60 dark:bg-[#0d131f]/60 border border-slate-200 dark:border-[#24324a] space-y-3.5 animate-in fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
                 {/* Image Upload Area */}
                 <div>
-                  <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-2xl cursor-pointer bg-white dark:bg-[#181a20] hover:opacity-90 overflow-hidden relative shadow-inner">
+                  <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-2xl cursor-pointer bg-white dark:bg-[#161c27] hover:opacity-90 overflow-hidden relative shadow-inner">
                     {uploading ? (
                       <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
                     ) : imageUrl ? (
@@ -203,7 +203,7 @@ export default function PhotoScrapbookModal({
                       type="text"
                       required
                       placeholder="เช่น ถ่ายรูปคู่ป้ายกูลิโกะ, ราเมงข้อสอบสุดฟิน..."
-                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-base sm:text-xs outline-none focus:border-blue-500 font-bold text-slate-900 dark:text-white"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-base sm:text-xs outline-none focus:border-blue-500 font-bold text-slate-900 dark:text-white"
                       value={caption}
                       onChange={(e) => setCaption(e.target.value)}
                     />
@@ -215,7 +215,7 @@ export default function PhotoScrapbookModal({
                       <input
                         type="text"
                         placeholder="เช่น Dotonbori, Osaka"
-                        className="w-full p-2 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium"
+                        className="w-full p-2 rounded-xl border border-slate-300 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                       />
@@ -225,7 +225,7 @@ export default function PhotoScrapbookModal({
                       <input
                         type="text"
                         placeholder="เช่น 5 ธ.ค., Day 2"
-                        className="w-full p-2 rounded-xl border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium"
+                        className="w-full p-2 rounded-xl border border-slate-300 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium"
                         value={dateLabel}
                         onChange={(e) => setDateLabel(e.target.value)}
                       />
@@ -236,7 +236,7 @@ export default function PhotoScrapbookModal({
                     <button
                       type="button"
                       onClick={() => setShowAddForm(false)}
-                      className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
                     >
                       ยกเลิก
                     </button>
@@ -255,7 +255,7 @@ export default function PhotoScrapbookModal({
 
           {/* Photo Gallery Grid (Authentic Polaroid Cards) */}
           {photos.length === 0 ? (
-            <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl p-8 bg-white/40 dark:bg-[#121316]/40">
+            <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-[#24324a] rounded-3xl p-8 bg-white/40 dark:bg-[#0d131f]/40">
               <ImageIcon className="h-12 w-12 text-blue-400 mx-auto mb-2 animate-float-slow" />
               <h3 className="font-black text-base text-slate-900 dark:text-white mb-1">ยังไม่มีรูปภาพในสมุดความทรงจำ</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 font-medium">
@@ -275,7 +275,7 @@ export default function PhotoScrapbookModal({
                 return (
                   <div
                     key={p.id}
-                    className={`group relative bg-white dark:bg-[#1e2027] p-3 pb-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer ${rotation}`}
+                    className={`group relative bg-white dark:bg-[#1a202c] p-3 pb-4 rounded-2xl border border-slate-200/90 dark:border-[#24324a] shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer ${rotation}`}
                     onClick={() => setSelectedPhoto(p)}
                   >
                     {/* Decorative Thumbtack Pin */}
@@ -301,7 +301,7 @@ export default function PhotoScrapbookModal({
                         {p.caption}
                       </h4>
 
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold pt-1 border-t border-slate-100 dark:border-[#262932]">
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold pt-1 border-t border-slate-100 dark:border-[#24324a]">
                         <span className="flex items-center gap-1 truncate max-w-[120px]">
                           <MapPin className="h-3 w-3 text-blue-500 shrink-0" />
                           <span className="truncate">{p.location || 'Japan'}</span>
@@ -328,10 +328,10 @@ export default function PhotoScrapbookModal({
             onClick={() => setSelectedPhoto(null)}
           >
             <div 
-              className="my-auto relative max-w-2xl w-full max-h-[90dvh] overflow-y-auto bg-white dark:bg-[#181a20] p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl space-y-3 animate-in zoom-in-95 modal-safe-card"
+              className="my-auto relative max-w-2xl w-full max-h-[90dvh] overflow-y-auto bg-white dark:bg-[#161c27] p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] rounded-3xl border border-slate-200 dark:border-[#24324a] shadow-2xl space-y-3 animate-in zoom-in-95 modal-safe-card"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#24324a]">
                 <div className="flex items-center gap-2">
                   <span className="text-base">📸</span>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">

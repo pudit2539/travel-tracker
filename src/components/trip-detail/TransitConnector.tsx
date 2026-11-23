@@ -29,27 +29,29 @@ export const TransitConnector = React.memo(function TransitConnector({
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(cleanFrom)}&destination=${encodeURIComponent(cleanTo)}&travelmode=transit`;
 
   return (
-    <div className="relative py-1.5 px-3 flex items-center gap-3 group">
-      {/* Option A Editorial Transit Circle Icon */}
-      <div className="w-6 h-6 rounded-full bg-[#EFE9DE] dark:bg-[#23262F] border border-[#D8CFC0] dark:border-[#343844] flex items-center justify-center text-[#6A6052] dark:text-amber-300 shrink-0 shadow-2xs">
-        <Bus className="h-3 w-3" />
+    <div className="relative py-2 px-3 flex items-center gap-3 group">
+      {/* Oceanic Chrono-Timeline Node */}
+      <div className="relative flex flex-col items-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-[#e0f2fe] dark:bg-[#080e19] border border-[#bae6fd] dark:border-[#4cd7f6]/35 flex items-center justify-center text-[#0284c7] dark:text-[#4cd7f6] shadow-[0_0_10px_rgba(56,189,248,0.18)]">
+          <Bus className="h-3.5 w-3.5" />
+        </div>
       </div>
 
-      {/* Editorial Transit Info Row */}
+      {/* Oceanic Glacial Transit Telemetry Pill */}
       <a
         href={directionsUrl}
         target="_blank"
         rel="noreferrer"
-        className="inline-flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#7A7062] dark:text-slate-300 hover:text-[#C83E2D] dark:hover:text-amber-300 transition-colors cursor-pointer"
+        className="inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#161c27] border border-[#dbeafe] dark:border-[#24324a] hover:border-[#2563eb] dark:hover:border-[#4cd7f6]/50 text-[11px] font-medium text-[#475569] dark:text-[#c3c6d7] hover:text-[#1d4ed8] dark:hover:text-[#4cd7f6] shadow-2xs transition-all cursor-pointer"
         title="เปิดเส้นทางนำทางและเช็กชานชาลาแบบ Real-time ใน Google Maps"
       >
-        <span className="px-2 py-0.5 rounded-[3px] bg-[#EAE3D5] dark:bg-[#262932] text-[#38322A] dark:text-slate-100 font-semibold">
+        <span className="px-2 py-0.5 rounded-full bg-[#eff6ff] dark:bg-[#080e19] text-[#1d4ed8] dark:text-[#4cd7f6] font-mono text-[10px] font-semibold">
           เส้นทางรถไฟ / นำทาง
         </span>
-        <span className="truncate max-w-[160px] sm:max-w-[240px]">
+        <span className="truncate max-w-[160px] sm:max-w-[260px] text-[#0f172a] dark:text-[#dde2f3] font-semibold">
           {cleanFrom.split(',')[0]} → {cleanTo.split(',')[0]}
         </span>
-        <span className="inline-flex items-center gap-1 text-[#C83E2D] dark:text-amber-400 font-semibold">
+        <span className="inline-flex items-center gap-1 text-[#0284c7] dark:text-[#4cd7f6] font-bold">
           <span>เช็กชานชาลาสด</span>
           <ExternalLink className="h-2.5 w-2.5" />
         </span>

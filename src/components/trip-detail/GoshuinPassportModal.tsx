@@ -310,12 +310,12 @@ export function GoshuinPassportModal({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="my-auto w-full max-w-2xl rounded-3xl bg-[#FDFBF7] dark:bg-[#181a20] border border-[#DFD7C7] dark:border-[#262932] shadow-2xl max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card"
+          className="my-auto w-full max-w-2xl rounded-3xl bg-[#ffffff] dark:bg-[#161c27] border border-[#e2e8f0] dark:border-[#24324a] shadow-2xl max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card"
         >
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-[#EAE2D3] dark:border-[#262932] flex items-center justify-between gap-3 shrink-0">
+          <div className="p-4 sm:p-5 border-b border-[#e2e8f0] dark:border-[#24324a] flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-2xl bg-[#C83E2D] text-white flex items-center justify-center shadow-md shadow-[#C83E2D]/25 shrink-0 font-serif font-black text-base">
+              <div className="w-10 h-10 rounded-2xl bg-[#2563eb] text-white flex items-center justify-center shadow-md shadow-[#2563eb]/25 shrink-0 font-serif font-black text-base">
                 印
               </div>
               <div className="min-w-0">
@@ -331,7 +331,7 @@ export function GoshuinPassportModal({
               type="button"
               onClick={onClose}
               aria-label="ปิดสมุดตราปั๊ม"
-              className="min-w-[40px] min-h-[40px] rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#22252E] flex items-center justify-center cursor-pointer"
+              className="min-w-[40px] min-h-[40px] rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] flex items-center justify-center cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -339,13 +339,13 @@ export function GoshuinPassportModal({
 
           {/* 2-Tab Switcher */}
           <div className="px-4 pt-3 shrink-0">
-            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#F3EFE6] dark:bg-[#121316] border border-[#E5DEC9] dark:border-[#262932]">
+            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#f1f5f9] dark:bg-[#0d131f] border border-[#e2e8f0] dark:border-[#24324a]">
               <button
                 type="button"
                 onClick={() => setActiveTab('passport')}
                 className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   activeTab === 'passport'
-                    ? 'bg-white dark:bg-[#1e2027] text-[#C83E2D] dark:text-rose-400 shadow-xs'
+                    ? 'bg-white dark:bg-[#1a202c] text-[#2563eb] dark:text-rose-400 shadow-xs'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -357,7 +357,7 @@ export function GoshuinPassportModal({
                 onClick={() => setActiveTab('wrapped')}
                 className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   activeTab === 'wrapped'
-                    ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-xs'
+                    ? 'bg-white dark:bg-[#1a202c] text-blue-600 dark:text-blue-400 shadow-xs'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -372,18 +372,18 @@ export function GoshuinPassportModal({
             {activeTab === 'passport' ? (
               <>
                 {/* Passport Progress Banner */}
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-[#121316] border border-[#E5DEC9] dark:border-[#262932] space-y-2">
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-[#0d131f] border border-[#e2e8f0] dark:border-[#24324a] space-y-2">
                   <div className="flex items-center justify-between text-xs font-black">
                     <span className="text-slate-800 dark:text-white">
                       ความคืบหน้าการสะสมตราประทับ
                     </span>
-                    <span className="font-mono text-[#C83E2D] dark:text-rose-400">
+                    <span className="font-mono text-[#2563eb] dark:text-rose-400">
                       {wrapped.visitedCount}/{wrapped.totalStops} ({wrapped.completionPct}%)
                     </span>
                   </div>
-                  <div className="h-2.5 rounded-full bg-[#EFE9DD] dark:bg-[#22252E] overflow-hidden">
+                  <div className="h-2.5 rounded-full bg-[#EFE9DD] dark:bg-[#1a202c] overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#C83E2D] to-amber-500 transition-all duration-500"
+                      className="h-full rounded-full bg-gradient-to-r from-[#2563eb] to-amber-500 transition-all duration-500"
                       style={{ width: `${wrapped.completionPct}%` }}
                     />
                   </div>
@@ -400,14 +400,14 @@ export function GoshuinPassportModal({
                         key={s.id}
                         className={`p-3 rounded-2xl border transition-all flex flex-col items-center text-center gap-1.5 relative overflow-hidden ${
                           s.visited
-                            ? 'bg-[#FFFDF9] dark:bg-[#1E1A18] border-[#C83E2D]/45 shadow-xs'
-                            : 'bg-slate-50/70 dark:bg-[#121316]/60 border-dashed border-slate-200 dark:border-[#262932] opacity-65'
+                            ? 'bg-[#FFFDF9] dark:bg-[#1E1A18] border-[#2563eb]/45 shadow-xs'
+                            : 'bg-slate-50/70 dark:bg-[#0d131f]/60 border-dashed border-slate-200 dark:border-[#24324a] opacity-65'
                         }`}
                       >
                         <div
                           className={`w-14 h-14 rounded-full border-2 flex flex-col items-center justify-center select-none ${
                             s.visited
-                              ? 'border-[#C83E2D] text-[#C83E2D] bg-[#FFF2EE] dark:bg-rose-950/40 -rotate-6 shadow-inner'
+                              ? 'border-[#2563eb] text-[#2563eb] bg-[#FFF2EE] dark:bg-rose-950/40 -rotate-6 shadow-inner'
                               : 'border-slate-300 dark:border-slate-700 text-slate-400'
                           }`}
                         >
@@ -423,7 +423,7 @@ export function GoshuinPassportModal({
                           {s.city}
                         </span>
                         {s.visited && s.meta?.at && (
-                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/50 text-[#C83E2D] dark:text-rose-300">
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/50 text-[#2563eb] dark:text-rose-300">
                             ✓ {s.meta.at}
                           </span>
                         )}
@@ -435,7 +435,7 @@ export function GoshuinPassportModal({
             ) : (
               /* Tab 2: Shareable Trip Wrapped Story Preview */
               <div className="space-y-3">
-                <div className="mx-auto max-w-sm rounded-3xl bg-gradient-to-b from-[#1C2630] via-[#241E1B] to-[#121316] p-5 text-white border-2 border-[#C83E2D]/70 shadow-2xl space-y-4 relative overflow-hidden">
+                <div className="mx-auto max-w-sm rounded-3xl bg-gradient-to-b from-[#1e3a8a] via-[#241E1B] to-[#0d131f] p-5 text-white border-2 border-[#2563eb]/70 shadow-2xl space-y-4 relative overflow-hidden">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <span className="text-[10px] font-black tracking-[0.2em] text-amber-300 uppercase">
@@ -450,7 +450,7 @@ export function GoshuinPassportModal({
                         </p>
                       )}
                     </div>
-                    <div className="w-12 h-12 rounded-full border-2 border-[#C83E2D] text-[#FF7A6B] flex items-center justify-center font-serif font-black text-xs -rotate-12 shrink-0">
+                    <div className="w-12 h-12 rounded-full border-2 border-[#2563eb] text-[#FF7A6B] flex items-center justify-center font-serif font-black text-xs -rotate-12 shrink-0">
                       御朱印
                     </div>
                   </div>
@@ -506,7 +506,7 @@ export function GoshuinPassportModal({
                   </div>
 
                   {wrapped.topSpenderName && (
-                    <div className="p-3 rounded-2xl bg-gradient-to-r from-[#C83E2D]/30 to-amber-500/20 border border-amber-400/30 flex items-center justify-between gap-2">
+                    <div className="p-3 rounded-2xl bg-gradient-to-r from-[#2563eb]/30 to-amber-500/20 border border-amber-400/30 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <Trophy className="h-4 w-4 text-amber-300 shrink-0" />
                         <div className="min-w-0">
@@ -530,7 +530,7 @@ export function GoshuinPassportModal({
                   <button
                     type="button"
                     onClick={handleDownloadStoryPng}
-                    className="min-h-[44px] py-2.5 px-4 rounded-2xl bg-[#C83E2D] hover:bg-[#B03222] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md cursor-pointer active:scale-95 transition-all"
+                    className="min-h-[44px] py-2.5 px-4 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md cursor-pointer active:scale-95 transition-all"
                   >
                     <Download className="h-4 w-4" />
                     <span>บันทึกรูป Story (9:16 PNG)</span>
@@ -538,7 +538,7 @@ export function GoshuinPassportModal({
                   <button
                     type="button"
                     onClick={handleCopyWrappedText}
-                    className="min-h-[44px] py-2.5 px-4 rounded-2xl bg-white dark:bg-[#1e2027] border border-slate-300 dark:border-[#262932] text-slate-800 dark:text-slate-200 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                    className="min-h-[44px] py-2.5 px-4 rounded-2xl bg-white dark:bg-[#1a202c] border border-slate-300 dark:border-[#24324a] text-slate-800 dark:text-slate-200 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
                   >
                     {copiedSummary ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                     <span>{copiedSummary ? 'คัดลอกแล้ว!' : 'คัดลอกสรุปแชร์ LINE'}</span>
@@ -549,11 +549,11 @@ export function GoshuinPassportModal({
           </div>
 
           {/* Footer */}
-          <div className="p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-[#EAE2D3] dark:border-[#262932] flex justify-end shrink-0">
+          <div className="p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-[#e2e8f0] dark:border-[#24324a] flex justify-end shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-5 py-2 rounded-xl border border-[#DFD7C7] dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer"
+              className="min-h-[44px] px-5 py-2 rounded-xl border border-[#e2e8f0] dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer"
             >
               ปิดหน้าต่าง
             </button>

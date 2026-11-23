@@ -178,7 +178,7 @@ export default function PocketMoneyWidget({
   const creditSummaryDisp = resolveDisplayCurrency(creditCardSpent, currency, fxRate, currencyView);
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] p-3.5 sm:p-4.5 space-y-3.5 shadow-sm transition-all">
+    <div className="rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] p-3.5 sm:p-4.5 space-y-3.5 shadow-sm transition-all">
       
       {/* Compact Summary Bar & Toggle Header */}
       <div className="flex flex-wrap items-center justify-between gap-2.5">
@@ -193,7 +193,7 @@ export default function PocketMoneyWidget({
           <div>
             <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               <span>กระเป๋าเงิน & ช่องทางชำระเงิน</span>
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#222836] text-slate-600 dark:text-slate-300">
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1a202c] text-slate-600 dark:text-slate-300">
                 {isWalletExpanded ? (
                   <>ย่อเก็บ <ChevronUp className="h-3 w-3" /></>
                 ) : (
@@ -214,7 +214,7 @@ export default function PocketMoneyWidget({
                   💳 Travel Card {hasTravelCardBudget ? 'เหลือ' : 'ใช้ไป'} {cardSummaryDisp.primarySymbol}{cardSummaryDisp.primaryAmount.toLocaleString()}
                 </span>
                 {creditCardSpent > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-[#1e2027] text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-[#262932]">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-[#1a202c] text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-[#24324a]">
                     💳 เครดิต {creditSummaryDisp.primarySymbol}{creditSummaryDisp.primaryAmount.toLocaleString()}
                   </span>
                 )}
@@ -366,7 +366,7 @@ export default function PocketMoneyWidget({
         </div>
 
         {/* Wallet 3: Credit Card */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/30 dark:bg-[#1e2027] border border-indigo-200/60 dark:border-[#262932] flex flex-col justify-between space-y-2">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/30 dark:bg-[#1a202c] border border-indigo-200/60 dark:border-[#24324a] flex flex-col justify-between space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
               <span>💳 บัตรเครดิต</span>
@@ -393,7 +393,7 @@ export default function PocketMoneyWidget({
             );
           })()}
 
-          <div className="text-[10px] text-indigo-800/80 dark:text-indigo-300/60 pt-1 border-t border-indigo-200/60 dark:border-[#262932] flex justify-between">
+          <div className="text-[10px] text-indigo-800/80 dark:text-indigo-300/60 pt-1 border-t border-indigo-200/60 dark:border-[#24324a] flex justify-between">
             <span>ยอดรูดรอบบิลนี้</span>
             <span>{expenses.filter(e => e.payment_method === 'credit_card').length} รายการ</span>
           </div>
@@ -454,7 +454,7 @@ export default function PocketMoneyWidget({
                 type="number"
                 value={cashInput}
                 onChange={(e) => setCashInput(e.target.value)}
-                className="w-full pl-7 pr-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-[#181a20] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-7 pr-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-[#161c27] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="100000"
                 autoFocus
               />
@@ -485,7 +485,7 @@ export default function PocketMoneyWidget({
                 type="number"
                 value={travelCardInput}
                 onChange={(e) => setTravelCardInput(e.target.value)}
-                className="w-full pl-7 pr-3 py-2 rounded-xl border border-blue-300 dark:border-blue-800 bg-white dark:bg-[#181a20] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-7 pr-3 py-2 rounded-xl border border-blue-300 dark:border-blue-800 bg-white dark:bg-[#161c27] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="เช่น 150000"
                 autoFocus
               />
@@ -513,10 +513,10 @@ export default function PocketMoneyWidget({
           aria-label="เติมเงินสด"
         >
           <div 
-            className="my-auto w-full max-w-sm max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#181a20] rounded-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 border border-slate-200 dark:border-[#262932] shadow-2xl animate-in zoom-in-95"
+            className="my-auto w-full max-w-sm max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#161c27] rounded-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 border border-slate-200 dark:border-[#24324a] shadow-2xl animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#24324a]">
               <span className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <span>🏧 เติมเงินสด (กดตู้ ATM)</span>
               </span>
@@ -581,10 +581,10 @@ export default function PocketMoneyWidget({
           aria-label="แลกเงินเข้า Travel Card เพิ่ม"
         >
           <div 
-            className="my-auto w-full max-w-sm max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#181a20] rounded-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 border border-slate-200 dark:border-[#262932] shadow-2xl animate-in zoom-in-95"
+            className="my-auto w-full max-w-sm max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#161c27] rounded-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 border border-slate-200 dark:border-[#24324a] shadow-2xl animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#24324a]">
               <span className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <span>💳 แลกเงินเข้า Travel Card เพิ่ม</span>
               </span>

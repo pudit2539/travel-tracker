@@ -55,7 +55,7 @@ function ExpenseCardComponent({
   return (
     <div 
       onClick={() => onSelectExpense?.(expense)}
-      className="p-4 sm:p-4.5 hover:bg-gradient-to-r hover:from-blue-50/60 hover:via-indigo-50/25 hover:to-white dark:hover:from-[#1e2027] dark:hover:to-[#181a20] active:bg-blue-100/30 dark:active:bg-[#1e2027] transition-all duration-200 cursor-pointer group space-y-2.5 relative"
+      className="p-4 sm:p-4.5 hover:bg-gradient-to-r hover:from-blue-50/60 hover:via-indigo-50/25 hover:to-white dark:hover:from-[#1a202c] dark:hover:to-[#161c27] active:bg-blue-100/30 dark:active:bg-[#1a202c] transition-all duration-200 cursor-pointer group space-y-2.5 relative"
       title="คลิกเพื่อดูรายละเอียดและแก้ไข"
     >
       {/* Top Row: Icon + Title on Left, Total Amount + Actions on Right */}
@@ -131,13 +131,13 @@ function ExpenseCardComponent({
       </div>
 
       {/* Bottom Row: Metadata (Split Badge, Category, Date, Method) on Left, Per-person Amount on Right */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#262932]">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#24324a]">
         <div className="flex flex-wrap items-center gap-1.5 text-xs min-w-0">
           {isSplit ? (
             <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-lg border bg-blue-50/80 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/80 dark:border-blue-900/50 shadow-2xs shrink-0">
               <span className="flex -space-x-1.5 overflow-hidden shrink-0">
                 {splitMembers.map((m, mIdx) => (
-                  <CatAvatarBadge key={mIdx} cat={getCatAvatar(m.avatar)} size="xs" className="ring-1 ring-white dark:ring-[#181a20]" />
+                  <CatAvatarBadge key={mIdx} cat={getCatAvatar(m.avatar)} size="xs" className="ring-1 ring-white dark:ring-[#161c27]" />
                 ))}
               </span>
               <span className="truncate max-w-[130px] sm:max-w-none">
@@ -149,7 +149,7 @@ function ExpenseCardComponent({
               className={`inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-lg border shrink-0 ${
                 isMyExpense
                   ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/50 shadow-xs'
-                  : 'bg-slate-100 text-slate-700 dark:bg-[#1e2027] dark:text-slate-200 border border-slate-200 dark:border-[#262932]'
+                  : 'bg-slate-100 text-slate-700 dark:bg-[#1a202c] dark:text-slate-200 border border-slate-200 dark:border-[#24324a]'
               }`}
             >
               <CatAvatarBadge cat={payerCat} size="xs" />
@@ -159,7 +159,7 @@ function ExpenseCardComponent({
             </span>
           )}
 
-          <span className="font-semibold text-slate-600 dark:text-slate-300 text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-slate-100/90 dark:bg-[#1e2027] border border-slate-200/60 dark:border-[#262932]">
+          <span className="font-semibold text-slate-600 dark:text-slate-300 text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-slate-100/90 dark:bg-[#1a202c] border border-slate-200/60 dark:border-[#24324a]">
             {catMeta.label}
           </span>
           <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] px-1.5 py-0.5">
@@ -244,7 +244,7 @@ export const ExpenseThumbnailCard = React.memo(function ExpenseThumbnailCard({
   return (
     <div
       onClick={() => onSelectExpense?.(expense)}
-      className="group relative rounded-3xl overflow-hidden border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl flex flex-col justify-between cursor-pointer"
+      className="group relative rounded-3xl overflow-hidden border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] card-elevation transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl flex flex-col justify-between cursor-pointer"
     >
       {/* Top Visual Thumbnail Banner (Clean media strip — title sits on solid surface below) */}
       <div className="relative w-full aspect-[16/10] overflow-hidden flex flex-col justify-between p-2.5 sm:p-3 bg-gradient-to-br from-blue-600/90 via-indigo-600/85 to-slate-900">
@@ -294,17 +294,17 @@ export const ExpenseThumbnailCard = React.memo(function ExpenseThumbnailCard({
       </div>
 
       {/* Card Body: High-Contrast Title & Category */}
-      <div className="p-3 sm:p-3.5 pb-2 space-y-1 bg-white dark:bg-[#181a20] text-left">
-        <h4 className="font-bold text-[#1A1A1A] dark:text-white text-sm sm:text-base leading-snug break-words">
+      <div className="p-3 sm:p-3.5 pb-2 space-y-1 bg-white dark:bg-[#161c27] text-left">
+        <h4 className="font-bold text-[#0f172a] dark:text-white text-sm sm:text-base leading-snug break-words">
           {expense.title}
         </h4>
-        <p className="text-[11px] text-[#6E675F] dark:text-slate-400 font-semibold truncate">
+        <p className="text-[11px] text-[#475569] dark:text-slate-400 font-semibold truncate">
           {catMeta.icon} {catMeta.label}
         </p>
       </div>
 
       {/* Card Footer */}
-      <div className="px-3 pb-3 pt-2 border-t border-slate-100 dark:border-[#262932] flex items-center justify-between gap-2 text-xs bg-white dark:bg-[#181a20]">
+      <div className="px-3 pb-3 pt-2 border-t border-slate-100 dark:border-[#24324a] flex items-center justify-between gap-2 text-xs bg-white dark:bg-[#161c27]">
         <div className="flex items-center gap-1.5 min-w-0">
           <CatAvatarBadge cat={payerCat} size="xs" />
           <span className="font-bold text-slate-700 dark:text-slate-200 truncate text-[11px]">
@@ -359,10 +359,10 @@ export const ExpenseCompactRow = React.memo(function ExpenseCompactRow({
   return (
     <div
       onClick={() => onSelectExpense?.(expense)}
-      className="px-3.5 py-2.5 hover:bg-blue-50/50 dark:hover:bg-[#1e2027] transition-colors flex items-center justify-between gap-2.5 cursor-pointer text-xs"
+      className="px-3.5 py-2.5 hover:bg-blue-50/50 dark:hover:bg-[#1a202c] transition-colors flex items-center justify-between gap-2.5 cursor-pointer text-xs"
     >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
-        <span className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-[#1e2027] flex items-center justify-center text-sm shrink-0">
+        <span className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-[#1a202c] flex items-center justify-center text-sm shrink-0">
           {catMeta.icon}
         </span>
         <div className="min-w-0 flex-1">

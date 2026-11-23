@@ -108,10 +108,10 @@ export function ShowToStaffModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl max-h-[90dvh] rounded-3xl bg-white dark:bg-[#181a20] border-2 border-slate-200 dark:border-[#262932] shadow-2xl glow-blue flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className="w-full max-w-xl max-h-[90dvh] rounded-3xl bg-white dark:bg-[#161c27] border-2 border-slate-200 dark:border-[#24324a] shadow-2xl glow-blue flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
       >
         {/* Top Header */}
-        <div className="shrink-0 px-4 sm:px-6 py-3.5 border-b border-slate-200/80 dark:border-[#262932] flex items-center justify-between bg-slate-50/80 dark:bg-[#181a20]">
+        <div className="shrink-0 px-4 sm:px-6 py-3.5 border-b border-slate-200/80 dark:border-[#24324a] flex items-center justify-between bg-slate-50/80 dark:bg-[#161c27]">
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-xl bg-[#e79b71]/15 text-[#e79b71] flex items-center justify-center text-base font-black">
               🇯🇵
@@ -129,7 +129,7 @@ export function ShowToStaffModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-200/70 dark:bg-[#262932] text-slate-600 dark:text-slate-300 hover:text-rose-500 cursor-pointer transition-colors"
+            className="p-2 rounded-xl bg-slate-200/70 dark:bg-[#24324a] text-slate-600 dark:text-slate-300 hover:text-rose-500 cursor-pointer transition-colors"
             title="ปิดหน้าต่าง"
           >
             <X className="h-5 w-5" />
@@ -139,7 +139,7 @@ export function ShowToStaffModal({
         {/* Scrollable Body (Safe for both Portrait & Landscape on Mobile & iPad) */}
         <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y min-h-0 p-4 sm:p-6 space-y-4 custom-scrollbar">
           {/* Situation Selector Pills */}
-          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932]">
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#0d131f] border border-slate-200/80 dark:border-[#24324a]">
             {(['taxi', 'station', 'ask'] as const).map((mode) => (
               <button
                 key={mode}
@@ -225,11 +225,11 @@ export function ShowToStaffModal({
         </div>
 
         {/* Sticky Safe-Area Footer */}
-        <div className="shrink-0 p-3.5 sm:p-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] border-t border-slate-200/80 dark:border-[#262932] bg-slate-50/90 dark:bg-[#181a20] grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="shrink-0 p-3.5 sm:p-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] border-t border-slate-200/80 dark:border-[#24324a] bg-slate-50/90 dark:bg-[#161c27] grid grid-cols-2 sm:grid-cols-3 gap-2">
           <button
             type="button"
             onClick={handleCopy}
-            className="py-2.5 px-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-800 dark:text-slate-100 text-xs font-black flex items-center justify-center gap-1.5 hover:border-blue-400 active:scale-95 transition-all cursor-pointer"
+            className="py-2.5 px-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-800 dark:text-slate-100 text-xs font-black flex items-center justify-center gap-1.5 hover:border-blue-400 active:scale-95 transition-all cursor-pointer"
           >
             {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-blue-500" />}
             <span>{copied ? 'คัดลอกชื่อแล้ว!' : 'คัดลอกชื่อสถานที่'}</span>

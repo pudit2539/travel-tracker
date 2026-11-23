@@ -519,22 +519,22 @@ function LiveTripCard({
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-2xl p-3.5 sm:p-5 bg-[#FDFBF7] dark:bg-gradient-to-br dark:from-slate-900 dark:via-[#181a20] dark:to-[#121316] text-[#1A1A1A] dark:text-white border border-[#DFD7C7] dark:border-blue-500/30 border-l-4 border-l-[#C83E2D] shadow-[0_3px_14px_rgba(35,30,20,0.06)] dark:shadow-xl space-y-3 group">
-        {/* Decorative Background Glows (Dark Mode only, subtle warm wash in Light Mode) */}
-        <div className="hidden dark:block absolute -top-16 -right-16 w-44 h-44 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="hidden dark:block absolute -bottom-16 -left-16 w-44 h-44 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl p-3.5 sm:p-5 bg-[#eff6ff] dark:bg-gradient-to-br dark:from-[#1c2434] dark:via-[#161c27] dark:to-[#080e19] text-[#0f172a] dark:text-[#dde2f3] border border-[#bfdbfe] dark:border-[#4cd7f6]/20 border-l-4 border-l-[#2563eb] dark:border-l-[#4cd7f6] shadow-[0_4px_18px_rgba(37,99,235,0.08)] dark:shadow-[0_12px_32px_rgba(4,9,20,0.6)] space-y-3 group">
+        {/* Subtle Arctic Cyan Ambient Glow (Dark Mode) */}
+        <div className="hidden dark:block absolute -top-14 -right-14 w-44 h-44 bg-[#4cd7f6]/12 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden dark:block absolute -bottom-16 -left-16 w-44 h-44 bg-[#2563eb]/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Header: Live Local Time & Stamp Progress */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <span className="flex h-2 w-2 sm:h-2.5 sm:w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C83E2D] dark:bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-[#C83E2D] dark:bg-emerald-400" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2563eb] dark:bg-[#4cd7f6] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-[#2563eb] dark:bg-[#4cd7f6]" />
             </span>
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#C83E2D] dark:text-blue-300">
+            <span className="text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#1e3a8a] dark:text-[#4cd7f6]">
               🇯🇵 LIVE COMPANION • เวลาญี่ปุ่น {destinationTimeString}
             </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F5EFE4] dark:bg-amber-500/15 text-[#9A5B13] dark:text-amber-300 border border-[#E5D6BE] dark:border-amber-400/30">
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/90 dark:bg-[#080e19]/80 text-[#1d4ed8] dark:text-[#7bd0ff] border border-[#bfdbfe] dark:border-[#4cd7f6]/25">
               {cityTheme.badgeText}
             </span>
           </div>
@@ -545,18 +545,18 @@ function LiveTripCard({
                 <button
                   type="button"
                   onClick={() => onOpenPassport('passport')}
-                  className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#EBF5EE] hover:bg-[#DAF0E1] dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 text-[#1F6E43] dark:text-emerald-300 border border-[#C5E3CE] dark:border-emerald-500/30 cursor-pointer transition-colors"
+                  className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/90 hover:bg-white dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 cursor-pointer transition-colors"
                   title="เปิดสมุดสะสมตราปั๊ม Goshuin Passport"
                 >
                   ⛩️ เช็คอินแล้ว {visitedCount}/{activeDayActivities.length} จุด ({progressPct}%)
                 </button>
               ) : (
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#EBF5EE] dark:bg-emerald-500/15 text-[#1F6E43] dark:text-emerald-300 border border-[#C5E3CE] dark:border-emerald-500/30">
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/90 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
                   ⛩️ เช็คอินแล้ว {visitedCount}/{activeDayActivities.length} จุด ({progressPct}%)
                 </span>
               )
             )}
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F3EFE6] dark:bg-white/10 text-[#4A443B] dark:text-white/90 border border-[#DFD7C7] dark:border-white/10 max-w-[140px] truncate">
+            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-white/80 dark:bg-[#080e19]/80 text-[#334155] dark:text-[#c3c6d7] border border-[#cbd5e1] dark:border-[#24324a] max-w-[140px] truncate">
               {activeDayLabel}
             </span>
           </div>
@@ -565,14 +565,14 @@ function LiveTripCard({
         {/* Mini Progress Bar (Reacts to Simulate Walk or GPS Vector Projection) */}
         {activeDayActivities.length > 0 && (
           <div className="relative z-10 space-y-1">
-            <div className="w-full h-1.5 rounded-full bg-[#EAE3D5] dark:bg-white/10 overflow-hidden relative">
+            <div className="w-full h-1.5 rounded-full bg-[#dbeafe] dark:bg-[#080e19] overflow-hidden relative">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#C83E2D] via-[#D96B27] to-[#2E7D5B] dark:from-emerald-400 dark:via-teal-400 dark:to-blue-400 transition-all duration-300"
+                className="h-full rounded-full bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#06b6d4] dark:from-[#2563eb] dark:via-[#38bdf8] dark:to-[#4cd7f6] transition-all duration-300"
                 style={{ width: `${Math.max(effectiveWalkPct, 5)}%` }}
               />
             </div>
             {(simulatingWalk || (gpsActive && gpsMetrics)) && (
-              <div className="flex items-center justify-between text-[10px] text-[#1F6E43] dark:text-emerald-300 font-bold">
+              <div className="flex items-center justify-between text-[10px] text-[#0284c7] dark:text-[#4cd7f6] font-bold">
                 <span>
                   {simulatingWalk
                     ? `🚶 กำลังจำลองเดินไป "${getActivityTitle(nextUpActivity)}" (${simProgressPct}%)`
@@ -581,7 +581,7 @@ function LiveTripCard({
                       : `📍 เปิด GPS แล้ว (จุดแวะนี้ยังไม่มีพิกัดระบุ — เช็กอินด้วยปุ่มด้านล่างได้)`}
                 </span>
                 {gpsActive && gpsMetrics && gpsMetrics.isExactStop && gpsMetrics.deviationMeters > 120 && (
-                  <span className="text-[#C83E2D] dark:text-rose-300 font-black animate-pulse">
+                  <span className="text-rose-600 dark:text-rose-300 font-black animate-pulse">
                     ⚠️ ออกนอกเส้นทาง {gpsMetrics.deviationMeters} ม.
                   </span>
                 )}
@@ -590,13 +590,13 @@ function LiveTripCard({
           </div>
         )}
 
-        {/* TabiPlan Interactive Chibi Companion + Speech Bubble Banner (Compact Horizontal on Mobile) */}
-        <div className="relative z-10 p-2.5 sm:p-3 rounded-xl bg-[#F6F2E9] dark:bg-gradient-to-r dark:from-indigo-950/70 dark:via-slate-900/80 dark:to-blue-950/70 border border-[#E5DEC9] dark:border-indigo-400/25 flex flex-row items-start sm:items-center gap-2.5 sm:gap-3">
+        {/* TabiPlan Interactive Chibi Companion + Speech Bubble Banner */}
+        <div className="relative z-10 p-2.5 sm:p-3 rounded-xl bg-white/85 dark:bg-[#080e19]/75 border border-[#dbeafe] dark:border-[#24324a] flex flex-row items-start sm:items-center gap-2.5 sm:gap-3 backdrop-blur-md">
           {/* Layered City-Reactive Chibi Avatar SVG */}
           <div className="relative shrink-0 flex flex-col items-center">
             <div
               onClick={handleToggleCompanionStyle}
-              className="w-15 h-15 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gradient-to-b dark:from-blue-500/20 dark:to-indigo-500/20 border border-[#DFD7C7] dark:border-white/15 flex items-center justify-center relative cursor-pointer hover:scale-105 transition-transform shadow-2xs"
+              className="w-15 h-15 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-[#f8fafd] dark:bg-gradient-to-b dark:from-[#2563eb]/20 dark:to-[#4cd7f6]/15 border border-[#dbeafe] dark:border-[#4cd7f6]/20 flex items-center justify-center relative cursor-pointer hover:scale-105 transition-transform shadow-2xs"
               title="แตะเพื่อสลับตัวละคร (สาวคาวาอี้ ⟷ หนุ่มนักสำรวจ)"
             >
               <svg viewBox="0 0 100 100" className="w-13 h-13 sm:w-18 sm:h-18 drop-shadow-xs">
@@ -686,7 +686,7 @@ function LiveTripCard({
             <button
               type="button"
               onClick={handleToggleCompanionStyle}
-              className="-mt-2 relative z-10 px-2 py-0.5 rounded-full bg-[#1C2630] dark:bg-indigo-600 text-[9px] font-black text-white border border-white/25 shadow-xs whitespace-nowrap cursor-pointer"
+              className="-mt-2 relative z-10 px-2 py-0.5 rounded-full bg-[#1e3a8a] dark:bg-[#2563eb] text-[9px] font-bold text-white border border-white/25 shadow-xs whitespace-nowrap cursor-pointer"
               title="แตะเพื่อสลับตัวละคร"
             >
               {companionStyle === 'feminine' ? '👧 สาวคาวาอี้' : '👦 หนุ่มนักสำรวจ'}
@@ -696,35 +696,35 @@ function LiveTripCard({
           {/* Companion Speech & Controls */}
           <div className="flex-1 min-w-0 space-y-1.5 text-left">
             <div className="flex flex-wrap items-center justify-between gap-1">
-              <span className="text-[10px] sm:text-[11px] font-black text-[#8A3B12] dark:text-indigo-300 flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-[#D97706] dark:text-amber-300 shrink-0" />
+              <span className="text-[10px] sm:text-[11px] font-bold text-[#1e3a8a] dark:text-[#7bd0ff] flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-[#2563eb] dark:text-[#4cd7f6] shrink-0" />
                 <span className="truncate">{cityTheme.accessoryLabel}</span>
               </span>
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleSpeakCheer('th-TH')}
-                  className="px-1.5 py-0.5 rounded-md bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/20 border border-[#DFD7C7] dark:border-white/10 text-[10px] font-bold text-[#2C2A26] dark:text-white inline-flex items-center gap-1 cursor-pointer"
+                  className="px-2 py-0.5 rounded-full bg-[#eff6ff] dark:bg-[#161c27] hover:bg-[#dbeafe] dark:hover:bg-[#242a36] border border-[#bfdbfe] dark:border-[#24324a] text-[10px] font-bold text-[#1d4ed8] dark:text-[#b4c5ff] inline-flex items-center gap-1 cursor-pointer"
                   title="ฟังเสียงพูดภาษาไทย"
                 >
-                  <Volume2 className="h-2.5 w-2.5 text-[#D97706] dark:text-amber-300" />
+                  <Volume2 className="h-2.5 w-2.5 text-[#2563eb] dark:text-[#4cd7f6]" />
                   <span>เสียงไทย</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSpeakCheer('ja-JP')}
-                  className="px-1.5 py-0.5 rounded-md bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/20 border border-[#DFD7C7] dark:border-white/10 text-[10px] font-bold text-[#C83E2D] dark:text-rose-200 inline-flex items-center gap-1 cursor-pointer"
+                  className="px-2 py-0.5 rounded-full bg-[#e0f2fe] dark:bg-[#161c27] hover:bg-[#bae6fd] dark:hover:bg-[#242a36] border border-[#bae6fd] dark:border-[#4cd7f6]/25 text-[10px] font-bold text-[#0369a1] dark:text-[#4cd7f6] inline-flex items-center gap-1 cursor-pointer"
                   title="ฟังเสียงพากย์ภาษาญี่ปุ่น"
                 >
-                  <Volume2 className="h-2.5 w-2.5 text-[#C83E2D] dark:text-rose-300" />
+                  <Volume2 className="h-2.5 w-2.5 text-[#0284c7] dark:text-[#4cd7f6]" />
                   <span>日本語</span>
                 </button>
               </div>
             </div>
 
-            <p className="text-[11px] sm:text-xs font-bold text-[#1A1A1A] dark:text-white/95 leading-snug">
+            <p className="text-[11px] sm:text-xs font-bold text-[#0f172a] dark:text-[#f8fafc] leading-snug">
               &ldquo;{cityTheme.cheerTh}&rdquo;
-              <span className="block text-[10px] font-normal text-[#6E675F] dark:text-indigo-200/80 mt-0.5">
+              <span className="block text-[10px] font-normal text-[#475569] dark:text-[#94a3b8] mt-0.5">
                 {cityTheme.cheerJa}
               </span>
             </p>
@@ -757,7 +757,7 @@ function LiveTripCard({
                   <button
                     type="button"
                     onClick={() => onOpenPassport('passport')}
-                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/20 border border-[#DFD7C7] dark:border-white/15 text-[10px] font-bold text-[#C83E2D] dark:text-rose-300 cursor-pointer transition-colors"
+                    className="px-2.5 py-0.5 rounded-full bg-[#eff6ff] dark:bg-[#161c27] hover:bg-[#dbeafe] dark:hover:bg-[#242a36] border border-[#bfdbfe] dark:border-[#4cd7f6]/25 text-[10px] font-bold text-[#1d4ed8] dark:text-[#7bd0ff] cursor-pointer transition-colors"
                   >
                     ⛩️ สมุดตราปั๊ม & Wrapped
                   </button>
@@ -805,10 +805,10 @@ function LiveTripCard({
                   setSimulatingWalk(false);
                   setGpsActive((v) => !v);
                 }}
-                className={`px-2 py-1 rounded-lg text-[10px] font-black inline-flex items-center gap-1 border cursor-pointer transition-all ${
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 border cursor-pointer transition-all ${
                   gpsActive
-                    ? 'bg-[#2E7D5B] text-white border-[#2E7D5B] shadow-2xs'
-                    : 'bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/15 text-[#2C2A26] dark:text-slate-200 border-[#D8D0C0] dark:border-white/15'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                    : 'bg-[#f8fafd] dark:bg-[#161c27] hover:bg-[#eff6ff] dark:hover:bg-[#242a36] text-[#334155] dark:text-[#c3c6d7] border-[#cbd5e1] dark:border-[#24324a]'
                 }`}
               >
                 <LocateFixed className="h-3 w-3" />
@@ -826,34 +826,34 @@ function LiveTripCard({
                     setSimulatingWalk(true);
                   }
                 }}
-                className={`px-2 py-1 rounded-lg text-[10px] font-black inline-flex items-center gap-1 border cursor-pointer transition-all ${
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 border cursor-pointer transition-all ${
                   simulatingWalk
-                    ? 'bg-[#D97706] text-white border-[#D97706]'
-                    : 'bg-white dark:bg-white/10 hover:bg-[#EFE9DC] dark:hover:bg-white/15 text-[#2C2A26] dark:text-slate-200 border-[#D8D0C0] dark:border-white/15'
+                    ? 'bg-[#0284c7] text-white border-[#0284c7]'
+                    : 'bg-[#f8fafd] dark:bg-[#161c27] hover:bg-[#eff6ff] dark:hover:bg-[#242a36] text-[#334155] dark:text-[#c3c6d7] border-[#cbd5e1] dark:border-[#24324a]'
                 }`}
               >
                 {simulatingWalk ? <Pause className="h-3 w-3" /> : <Footprints className="h-3 w-3" />}
                 <span>{simulatingWalk ? `หยุดจำลอง (${simProgressPct}%)` : 'จำลองเดินเที่ยว'}</span>
               </button>
 
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#EFECE4] dark:bg-black/30 border border-[#DFD7C7] dark:border-white/10 text-[10px] text-[#4A443B] dark:text-slate-300">
-                <Shield className="h-3 w-3 text-[#1C2630] dark:text-sky-400 shrink-0" />
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f1f5f9] dark:bg-[#080e19] border border-[#cbd5e1] dark:border-[#24324a] text-[10px] text-[#475569] dark:text-[#94a3b8]">
+                <Shield className="h-3 w-3 text-[#2563eb] dark:text-[#4cd7f6] shrink-0" />
                 <span>แชร์พิกัด:</span>
                 <select
                   value={privacyLevel}
                   onChange={(e) => handleChangePrivacy(e.target.value as PresencePrivacyLevel)}
-                  className="bg-transparent text-[#C83E2D] dark:text-sky-300 font-bold outline-none cursor-pointer"
+                  className="bg-transparent text-[#1d4ed8] dark:text-[#4cd7f6] font-bold outline-none cursor-pointer"
                 >
-                  <option value="off" className="bg-white dark:bg-slate-900 text-[#1A1A1A] dark:text-white">
+                  <option value="off" className="bg-white dark:bg-[#0d131f] text-[#0f172a] dark:text-white">
                     ปิดแชร์
                   </option>
-                  <option value="progress" className="bg-white dark:bg-slate-900 text-[#1A1A1A] dark:text-white">
+                  <option value="progress" className="bg-white dark:bg-[#0d131f] text-[#0f172a] dark:text-white">
                     เฉพาะ % เส้นทาง
                   </option>
-                  <option value="district" className="bg-white dark:bg-slate-900 text-[#1A1A1A] dark:text-white">
+                  <option value="district" className="bg-white dark:bg-[#0d131f] text-[#0f172a] dark:text-white">
                     เฉพาะชื่อย่าน
                   </option>
-                  <option value="exact" className="bg-white dark:bg-slate-900 text-[#1A1A1A] dark:text-white">
+                  <option value="exact" className="bg-white dark:bg-[#0d131f] text-[#0f172a] dark:text-white">
                     พิกัดจริงในกลุ่ม
                   </option>
                 </select>
@@ -862,34 +862,36 @@ function LiveTripCard({
           </div>
         </div>
 
-        {/* Next Destination Spotlight Card */}
+        {/* Next Destination Spotlight Card (Recessed Telemetry Panel) */}
         {nextUpActivity ? (
-          <div className="relative z-10 p-3 sm:p-4 rounded-xl bg-white dark:bg-white/5 border border-[#DFD7C7] dark:border-white/10 shadow-[0_2px_8px_rgba(35,30,20,0.04)] space-y-2.5">
+          <div className="relative z-10 p-3 sm:p-4 rounded-xl bg-white dark:bg-[#080e19]/85 border border-[#dbeafe] dark:border-[#24324a] shadow-[0_2px_10px_rgba(15,23,42,0.04)] space-y-2.5 backdrop-blur-md">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1 min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span
-                    className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md shadow-2xs ${
-                      isCheckedIn ? 'bg-[#2E7D5B] text-white' : 'bg-[#C83E2D] text-white'
+                    className={`text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full shadow-2xs ${
+                      isCheckedIn
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] text-white'
                     }`}
                   >
                     {isCheckedIn ? 'ครบทุกจุดในวันนี้แล้ว ✓' : 'NEXT UP • จุดหมายถัดไป'}
                   </span>
                   {getActivityTime(nextUpActivity) && (
-                    <span className="text-[11px] font-mono font-bold text-[#9A5B13] dark:text-amber-300 flex items-center gap-1">
+                    <span className="text-[11px] font-mono font-bold text-[#0284c7] dark:text-[#4cd7f6] flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       <span>{getActivityTime(nextUpActivity)}</span>
                     </span>
                   )}
                 </div>
 
-                <h3 className="font-serif text-base sm:text-lg font-black text-[#1A1A1A] dark:text-white leading-snug break-words">
+                <h3 className="font-serif text-base sm:text-lg font-bold text-[#0f172a] dark:text-[#f8fafc] leading-snug break-words">
                   {getActivityTitle(nextUpActivity)}
                 </h3>
 
                 {getActivityCity(nextUpActivity) && (
-                  <p className="text-xs text-[#6E675F] dark:text-slate-300 flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-[#C83E2D] shrink-0" />
+                  <p className="text-xs text-[#475569] dark:text-[#94a3b8] flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 text-[#2563eb] dark:text-[#4cd7f6] shrink-0" />
                     <span className="truncate">{getActivityCity(nextUpActivity)}</span>
                   </p>
                 )}
@@ -898,7 +900,7 @@ function LiveTripCard({
               {/* Japanese Eki Stamp Badge */}
               {isCheckedIn && (
                 <div className="relative shrink-0 flex items-center justify-center">
-                  <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full border-2 border-dashed border-[#C83E2D] bg-[#C83E2D]/10 flex flex-col items-center justify-center text-[#C83E2D] dark:text-rose-400 rotate-[-12deg] shadow-sm animate-in zoom-in-75">
+                  <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full border-2 border-dashed border-[#0284c7] dark:border-[#4cd7f6] bg-[#e0f2fe] dark:bg-[#4cd7f6]/10 flex flex-col items-center justify-center text-[#0369a1] dark:text-[#4cd7f6] rotate-[-12deg] shadow-sm animate-in zoom-in-75">
                     <span className="text-[7px] font-black tracking-widest uppercase">STAMP</span>
                     <span className="text-sm font-black">済</span>
                     <span className="text-[7px] font-mono opacity-80">VISITED</span>
@@ -912,7 +914,7 @@ function LiveTripCard({
               <button
                 type="button"
                 onClick={() => handleOpenGoogleMaps(nextUpActivity)}
-                className="py-2 px-3 rounded-lg bg-[#1C2630] hover:bg-[#2A3744] dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
+                className="py-2 px-3 rounded-xl bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] hover:from-[#1e40af] hover:to-[#1d4ed8] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(37,99,235,0.28)] transition-all cursor-pointer active:scale-95"
               >
                 <Navigation className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">นำทาง Maps</span>
@@ -921,20 +923,20 @@ function LiveTripCard({
               <button
                 type="button"
                 onClick={() => setShowStaffModal(true)}
-                className="py-2 px-3 rounded-lg bg-[#F6F2E9] hover:bg-[#ECE5D5] dark:bg-white/10 dark:hover:bg-white/20 text-[#1A1A1A] dark:text-white font-black text-xs flex items-center justify-center gap-1.5 border border-[#D8D0C0] dark:border-white/15 transition-all cursor-pointer active:scale-95"
+                className="py-2 px-3 rounded-xl bg-[#f1f5f9] hover:bg-[#e2e8f0] dark:bg-[#1a202c] dark:hover:bg-[#242a36] text-[#0f172a] dark:text-[#dde2f3] font-bold text-xs flex items-center justify-center gap-1.5 border border-[#e2e8f0] dark:border-[#24324a] transition-all cursor-pointer active:scale-95"
                 title="แสดงชื่อสถานที่ตัวใหญ่ให้คนขับแท็กซี่หรือนายสถานีดู"
               >
-                <Eye className="h-3.5 w-3.5 text-[#C83E2D] dark:text-amber-300 shrink-0" />
+                <Eye className="h-3.5 w-3.5 text-[#0284c7] dark:text-[#4cd7f6] shrink-0" />
                 <span className="truncate">โชว์ถามทาง 🚕</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleCheckIn(nextUpActivity)}
-                className={`col-span-2 sm:col-span-1 py-2 px-3 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-95 ${
+                className={`col-span-2 sm:col-span-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-95 ${
                   isCheckedIn
-                    ? 'bg-[#FDF3F1] dark:bg-rose-500/20 text-[#C83E2D] dark:text-rose-300 border-[#F2C6BE] dark:border-rose-500/40 hover:bg-[#F9E3DF]'
-                    : 'bg-[#C83E2D] hover:bg-[#B03222] text-white border-[#C83E2D] shadow-2xs'
+                    ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/35 hover:bg-emerald-100'
+                    : 'bg-[#e0f2fe] hover:bg-[#bae6fd] dark:bg-[#03b5d3]/20 dark:hover:bg-[#03b5d3]/30 text-[#0369a1] dark:text-[#4cd7f6] border-[#bae6fd] dark:border-[#4cd7f6]/35 shadow-2xs'
                 }`}
               >
                 <Stamp className="h-3.5 w-3.5 shrink-0" />
@@ -945,7 +947,7 @@ function LiveTripCard({
             </div>
           </div>
         ) : (
-          <div className="relative z-10 p-4 text-center rounded-xl bg-white dark:bg-white/5 border border-[#DFD7C7] dark:border-white/10 text-xs text-[#6E675F] dark:text-slate-300">
+          <div className="relative z-10 p-4 text-center rounded-xl bg-white dark:bg-[#080e19]/80 border border-[#dbeafe] dark:border-[#24324a] text-xs text-[#475569] dark:text-[#94a3b8]">
             <span>วันนี้ยังไม่มีกิจกรรมในแพลน แตะปุ่ม &ldquo;+ เพิ่มกิจกรรม&rdquo; เพื่อเริ่มวางแผนได้เลยครับ</span>
           </div>
         )}

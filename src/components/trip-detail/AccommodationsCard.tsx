@@ -866,11 +866,11 @@ export function AccommodationsCard({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] card-elevation overflow-hidden transition-all">
+    <div className="rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] card-elevation overflow-hidden transition-all">
       {/* Accordion Trigger Header */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1e2027]/60 transition-colors"
+        className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1a202c]/60 transition-colors"
       >
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <div className="w-9 h-9 rounded-2xl bg-emerald-600 dark:bg-emerald-600 flex items-center justify-center text-white shadow-xs shrink-0">
@@ -911,7 +911,7 @@ export function AccommodationsCard({
             <span className="hidden sm:inline">เพิ่มที่พัก</span>
           </button>
 
-          <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#1e2027] text-slate-500 dark:text-slate-300 border border-slate-200/80 dark:border-[#262932]">
+          <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#1a202c] text-slate-500 dark:text-slate-300 border border-slate-200/80 dark:border-[#24324a]">
             {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
         </div>
@@ -919,7 +919,7 @@ export function AccommodationsCard({
 
       {/* Expanded Content */}
       {isOpen && (
-        <div className="p-3.5 sm:p-5 pt-0 border-t border-slate-100 dark:border-[#262932] space-y-3.5 animate-in slide-in-from-top-2 duration-200">
+        <div className="p-3.5 sm:p-5 pt-0 border-t border-slate-100 dark:border-[#24324a] space-y-3.5 animate-in slide-in-from-top-2 duration-200">
           {/* Top Bar: Financial Summary & Quick Add */}
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 text-xs">
             <div className="flex items-center gap-2">
@@ -949,7 +949,7 @@ export function AccommodationsCard({
 
           {/* Accommodation Cards List */}
           {stays.length === 0 ? (
-            <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#262932] bg-slate-50/50 dark:bg-[#181a20]/50 space-y-2">
+            <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#161c27]/50 space-y-2">
               <Building className="h-9 w-9 text-emerald-500 mx-auto opacity-80" />
               <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                 ยังไม่มีข้อมูลที่พักในทริปนี้
@@ -974,20 +974,20 @@ export function AccommodationsCard({
                 return (
                   <div
                     key={stay.id}
-                    className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#121316] shadow-xs hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3 relative group"
+                    className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#0d131f] shadow-xs hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3 relative group"
                   >
                     {/* Top Header: Real Hotel Photo Banner, Stay Index & Hotel Name */}
                     <div className="space-y-2.5">
                       <StayPhotoBanner stay={stay} idx={idx} mapsUrl={mapsUrl} tripId={tripId} />
                       <div className="flex items-center justify-between gap-1.5">
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 font-mono">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 font-mono">
                           ที่พัก {idx + 1}
                         </span>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(stay)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+                            className="p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
                             title="แก้ไขข้อมูลที่พัก"
                           >
                             <Edit3 className="h-3.5 w-3.5" />
@@ -995,7 +995,7 @@ export function AccommodationsCard({
                           <button
                             type="button"
                             onClick={() => handleDelete(stay.id, stay.name)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
                             title="ลบที่พัก"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -1013,7 +1013,7 @@ export function AccommodationsCard({
                           </h4>
                           <div className="flex flex-wrap items-center gap-1.5 mt-1 text-left">
                             {stay.city && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1a202c] text-slate-600 dark:text-slate-300">
                                 📍 {stay.city}
                               </span>
                             )}
@@ -1028,7 +1028,7 @@ export function AccommodationsCard({
                     </div>
 
                     {/* Timeline: Check-in / Nights / Check-out with friendly formatted dates */}
-                    <div className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#171f30] border border-slate-100 dark:border-[#262932] space-y-1.5 text-xs">
+                    <div className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#171f30] border border-slate-100 dark:border-[#24324a] space-y-1.5 text-xs">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="text-slate-500 dark:text-slate-400 font-medium">เข้าพัก:</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -1041,7 +1041,7 @@ export function AccommodationsCard({
                           {formatStayDateDisplay(stay.checkOutDate)}
                         </span>
                       </div>
-                      <div className="pt-1 border-t border-slate-200/50 dark:border-[#262932] flex items-center justify-between text-[10px] font-bold">
+                      <div className="pt-1 border-t border-slate-200/50 dark:border-[#24324a] flex items-center justify-between text-[10px] font-bold">
                         <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                           <Moon className="h-3 w-3" /> จำนวนคืน:
                         </span>
@@ -1061,7 +1061,7 @@ export function AccommodationsCard({
                         <button
                           type="button"
                           onClick={() => handleCopyRef(stay.id, stay.bookingRef!)}
-                          className="px-2 py-0.5 rounded-lg bg-white dark:bg-[#181a20] text-[10px] font-bold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-2xs hover:bg-blue-50 transition-colors shrink-0 cursor-pointer flex items-center gap-1"
+                          className="px-2 py-0.5 rounded-lg bg-white dark:bg-[#161c27] text-[10px] font-bold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-2xs hover:bg-blue-50 transition-colors shrink-0 cursor-pointer flex items-center gap-1"
                           title="คัดลอกรหัสจอง"
                         >
                           {copiedId === stay.id ? (
@@ -1088,7 +1088,7 @@ export function AccommodationsCard({
 
                     {/* Hotel Voucher Document Card (PDF / Image) */}
                     {stay.voucherFile && (
-                      <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-[#161c2c] border border-slate-200/80 dark:border-[#262932] flex items-center justify-between gap-2 text-xs">
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-[#161c2c] border border-slate-200/80 dark:border-[#24324a] flex items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className={`p-1.5 rounded-lg shrink-0 ${
                             stay.voucherFile.type?.includes('pdf') || stay.voucherFile.name?.toLowerCase().endsWith('.pdf')
@@ -1140,7 +1140,7 @@ export function AccommodationsCard({
                     )}
 
                     {/* Price & Actions Bottom Section */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-[#262932] flex flex-col gap-2">
+                    <div className="pt-2 border-t border-slate-100 dark:border-[#24324a] flex flex-col gap-2">
                       {/* Payment Status Checklist & Price Display */}
                       <div className="flex items-center justify-between text-xs gap-2">
                         <button
@@ -1183,7 +1183,7 @@ export function AccommodationsCard({
                           href={mapsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] hover:border-emerald-400 text-slate-700 dark:text-slate-300 hover:text-emerald-600 text-[11px] font-bold transition-all text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
+                          className="flex-1 py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] hover:border-emerald-400 text-slate-700 dark:text-slate-300 hover:text-emerald-600 text-[11px] font-bold transition-all text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
                         >
                           <MapPin className="h-3 w-3 text-rose-500" />
                           <span>Google Maps</span>
@@ -1218,9 +1218,9 @@ export function AccommodationsCard({
       {/* ==================== ADD / EDIT MODAL ==================== */}
       {showModal && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ease-out">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#262932] shrink-0">
+            <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-100 dark:border-[#24324a] shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
                   <Building className="h-4 w-4" />
@@ -1238,7 +1238,7 @@ export function AccommodationsCard({
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1259,7 +1259,7 @@ export function AccommodationsCard({
                   placeholder="เช่น Shinjuku Granbell Hotel หรือ Hakone Ryokan"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -1274,7 +1274,7 @@ export function AccommodationsCard({
                     placeholder="เช่น Tokyo, Shinjuku"
                     value={formCity}
                     onChange={(e) => setFormCity(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -1286,7 +1286,7 @@ export function AccommodationsCard({
                     placeholder="เช่น Deluxe Twin, Tatami"
                     value={formRoomType}
                     onChange={(e) => setFormRoomType(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -1302,7 +1302,7 @@ export function AccommodationsCard({
                     required
                     value={formCheckIn}
                     onChange={(e) => handleCheckInChange(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -1318,7 +1318,7 @@ export function AccommodationsCard({
                     className={`w-full p-2.5 rounded-xl border text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${
                       formCheckIn && formCheckOut && calculateDaysDifference(formCheckIn, formCheckOut) <= 0
                         ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300'
-                        : 'border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027]'
+                        : 'border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c]'
                     }`}
                   />
                 </div>
@@ -1333,7 +1333,7 @@ export function AccommodationsCard({
                       required
                       value={formNights}
                       onChange={(e) => handleNightsChange(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">คืน</span>
                   </div>
@@ -1371,7 +1371,7 @@ export function AccommodationsCard({
                     className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       formPaymentStatus === 'paid'
                         ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-xs ring-1 ring-emerald-500'
-                        : 'bg-slate-50 dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                        : 'bg-slate-50 dark:bg-[#1a202c] border-slate-200 dark:border-[#24324a] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
                     }`}
                   >
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -1386,7 +1386,7 @@ export function AccommodationsCard({
                     className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       formPaymentStatus === 'unpaid'
                         ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 text-amber-700 dark:text-amber-300 shadow-xs ring-1 ring-amber-500'
-                        : 'bg-slate-50 dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                        : 'bg-slate-50 dark:bg-[#1a202c] border-slate-200 dark:border-[#24324a] text-slate-600 dark:text-slate-400 hover:bg-slate-100'
                     }`}
                   >
                     <Clock className="h-4 w-4 text-amber-500" />
@@ -1410,7 +1410,7 @@ export function AccommodationsCard({
                     placeholder="เช่น 45000"
                     value={formPrice}
                     onChange={(e) => setFormPrice(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                   {formPrice && parseFloat(formPrice) > 0 && formCurrency !== 'THB' && (
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 block font-bold">
@@ -1425,7 +1425,7 @@ export function AccommodationsCard({
                   <select
                     value={formCurrency}
                     onChange={(e) => setFormCurrency(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   >
                     <option value="JPY">JPY (¥)</option>
                     <option value="THB">THB (฿)</option>
@@ -1448,7 +1448,7 @@ export function AccommodationsCard({
                     placeholder="เช่น Agoda: #81923019"
                     value={formBookingRef}
                     onChange={(e) => setFormBookingRef(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -1460,7 +1460,7 @@ export function AccommodationsCard({
                     placeholder="เช่น +81 3-1234-5678"
                     value={formPhone}
                     onChange={(e) => setFormPhone(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -1475,7 +1475,7 @@ export function AccommodationsCard({
                   placeholder="https://maps.app.goo.gl/... (ไม่ใส่ก็ได้ ระบบจะค้นหาให้อัตโนมัติ)"
                   value={formGoogleMapsUrl}
                   onChange={(e) => setFormGoogleMapsUrl(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -1489,12 +1489,12 @@ export function AccommodationsCard({
                   placeholder="เช่น เช็คอินได้หลัง 15:00 น., รวมอาหารเช้า, ฝากกระเป๋าได้ก่อนเวลา"
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                 />
               </div>
 
               {/* Hotel Voucher Upload Section (PDF or Image) */}
-              <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50/80 dark:bg-[#171f30] border border-slate-200/80 dark:border-[#262932]">
+              <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50/80 dark:bg-[#171f30] border border-slate-200/80 dark:border-[#24324a]">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
                     📄 แนบใบจองที่พัก / Hotel Voucher (PDF หรือ รูปภาพ)
@@ -1547,7 +1547,7 @@ export function AccommodationsCard({
                             <span>ดูตัวอย่าง</span>
                           </button>
                           <label 
-                            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-[#2b354d] hover:bg-slate-100 dark:hover:bg-[#1e2027] text-slate-700 dark:text-slate-300 text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer touch-manipulation min-h-[36px]"
+                            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-[#2b354d] hover:bg-slate-100 dark:hover:bg-[#1a202c] text-slate-700 dark:text-slate-300 text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer touch-manipulation min-h-[36px]"
                             title="เปลี่ยนไฟล์ใบจองใหม่"
                           >
                             <Upload className="h-3 w-3" />
@@ -1628,7 +1628,7 @@ export function AccommodationsCard({
                     id="autoExpense"
                     checked={formAutoCreateExpense}
                     onChange={(e) => setFormAutoCreateExpense(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 text-emerald-600 rounded border-slate-300 dark:border-[#262932] cursor-pointer"
+                    className="mt-0.5 h-4 w-4 text-emerald-600 rounded border-slate-300 dark:border-[#24324a] cursor-pointer"
                   />
                   <label htmlFor="autoExpense" className="text-xs text-slate-800 dark:text-slate-200 cursor-pointer">
                     <span className="font-bold block">⚡ บันทึกเป็นรายจ่ายลงในแท็บ &ldquo;รายการ&rdquo; ทันที</span>
@@ -1642,11 +1642,11 @@ export function AccommodationsCard({
               </div>
 
               {/* Sticky Submit Footer (Always accessible above mobile navigation) */}
-              <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-100 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 backdrop-blur-md shrink-0 flex items-center justify-end gap-2.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
+              <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-100 dark:border-[#24324a] bg-white/95 dark:bg-[#161c27]/95 backdrop-blur-md shrink-0 flex items-center justify-end gap-2.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer transition-colors touch-manipulation"
+                  className="px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer transition-colors touch-manipulation"
                 >
                   ยกเลิก
                 </button>

@@ -30,7 +30,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
 }: TripMembersTabProps) {
   return (
     <div className="space-y-4">
-      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 card-elevation space-y-4 text-left">
+      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white/95 dark:bg-[#161c27]/95 card-elevation space-y-4 text-left">
         <div className="flex flex-wrap justify-between items-center gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -73,7 +73,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
         </div>
 
         {/* Roles explainer banner (Clean Corporate Style) */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0d131f] border border-slate-200/70 dark:border-[#24324a] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
           <div className="flex items-center gap-2">
             <Edit3 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             <span className="font-bold text-slate-800 dark:text-slate-200">Editor:</span>
@@ -110,7 +110,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
             return (
               <div 
                 key={m.id} 
-                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1a202c] border border-slate-200/80 dark:border-[#24324a] hover:border-blue-400 dark:hover:border-blue-600/70 transition-all duration-200 shadow-xs hover:shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 {/* Member Info (Avatar, Name, Badges, Role Description) */}
                 <div className="flex items-center gap-3 min-w-0">
@@ -147,13 +147,13 @@ export const TripMembersTab = React.memo(function TripMembersTab({
                 </div>
 
                 {/* Member Actions (Role Selector, Transfer, Delete) */}
-                <div className="flex items-center gap-2 pt-2.5 sm:pt-0 border-t border-slate-200/60 dark:border-[#262932] sm:border-t-0 shrink-0">
+                <div className="flex items-center gap-2 pt-2.5 sm:pt-0 border-t border-slate-200/60 dark:border-[#24324a] sm:border-t-0 shrink-0">
                   {isOwner && !isTripOwner ? (
                     <div className="flex items-center gap-1.5 w-full sm:w-auto">
                       <select
                         value={m.role || 'viewer'}
                         onChange={(e) => handleUpdateMemberRole(m.id, e.target.value as TripRole)}
-                        className="flex-1 sm:flex-initial px-3 py-2 min-h-[44px] rounded-xl text-xs font-bold border border-slate-300 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-500 shadow-2xs transition-colors touch-manipulation"
+                        className="flex-1 sm:flex-initial px-3 py-2 min-h-[44px] rounded-xl text-xs font-bold border border-slate-300 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-blue-500 shadow-2xs transition-colors touch-manipulation"
                       >
                         <option value="editor">Editor — แก้ไขแผนและรายจ่าย</option>
                         <option value="contributor">Contributor — ดูแผนและรายจ่าย</option>
@@ -182,7 +182,7 @@ export const TripMembersTab = React.memo(function TripMembersTab({
                       </button>
                     </div>
                   ) : (
-                    <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 shadow-2xs font-mono ml-auto sm:ml-0">
+                    <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#161c27] border border-slate-200/90 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 shadow-2xs font-mono ml-auto sm:ml-0">
                       {isTripOwner ? (
                         <>
                           <Crown className="h-3.5 w-3.5 text-amber-500" />

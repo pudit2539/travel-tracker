@@ -264,10 +264,10 @@ export default function PackingChecklistModal({
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none modal-safe-overlay" role="dialog" aria-modal="true">
-        <div className="my-auto w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-4 modal-safe-card">
+        <div className="my-auto w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#24324a] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-4 modal-safe-card">
         
         {/* Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#262932] shrink-0">
+        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-[#24324a] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 dark:bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Luggage className="h-5 w-5" strokeWidth={2} />
@@ -288,14 +288,14 @@ export default function PackingChecklistModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Feature 4: Weather Intelligence Section Banner */}
-        <div className="rounded-2xl border border-blue-100 dark:border-[#262932] bg-blue-50/50 dark:bg-[#1e2027]/80 p-3.5 space-y-3 shrink-0">
+        <div className="rounded-2xl border border-blue-100 dark:border-[#24324a] bg-blue-50/50 dark:bg-[#1a202c]/80 p-3.5 space-y-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
@@ -314,7 +314,7 @@ export default function PackingChecklistModal({
             <button
               type="button"
               onClick={() => setShowAiAdvisor(!showAiAdvisor)}
-              className="px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900 bg-white dark:bg-[#181a20] text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900 bg-white dark:bg-[#161c27] text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 transition-colors flex items-center gap-1 cursor-pointer"
             >
               <Sparkles className="h-3 w-3" />
               <span>{showAiAdvisor ? 'ซ่อนคำแนะนำ' : 'วิเคราะห์สภาพอากาศ AI'}</span>
@@ -323,7 +323,7 @@ export default function PackingChecklistModal({
 
           {/* Expandable Weather Detail & AI Recommendation */}
           {showAiAdvisor && (
-            <div className="pt-2 border-t border-blue-200/50 dark:border-[#262932] space-y-2.5 animate-in fade-in duration-200">
+            <div className="pt-2 border-t border-blue-200/50 dark:border-[#24324a] space-y-2.5 animate-in fade-in duration-200">
               {/* Weather Profile Selectors */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
                 {(Object.keys(WEATHER_PRESETS) as WeatherProfile[]).map((pKey) => {
@@ -338,7 +338,7 @@ export default function PackingChecklistModal({
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-blue-600 text-white shadow-2xs'
-                          : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#262932]'
+                          : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#24324a]'
                       }`}
                     >
                       <Icon className="h-3 w-3" />
@@ -349,7 +349,7 @@ export default function PackingChecklistModal({
               </div>
 
               {/* Advice Box */}
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#181a20]/90 border border-blue-200/60 dark:border-[#262932] text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#161c27]/90 border border-blue-200/60 dark:border-[#24324a] text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block mb-0.5">💡 คำแนะนำการแต่งกาย:</span>
                 {currentPreset.advice}
               </div>
@@ -387,7 +387,7 @@ export default function PackingChecklistModal({
             <span>เตรียมของแล้ว {completedCount} จาก {items.length} รายการ</span>
             <span className="text-blue-600 dark:text-blue-400 font-bold">{progressPercent}%</span>
           </div>
-          <div className="w-full bg-slate-100 dark:bg-[#1e2027] rounded-full h-2 overflow-hidden border border-slate-200/50 dark:border-transparent">
+          <div className="w-full bg-slate-100 dark:bg-[#1a202c] rounded-full h-2 overflow-hidden border border-slate-200/50 dark:border-transparent">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 progressPercent === 100
@@ -406,7 +406,7 @@ export default function PackingChecklistModal({
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer ${
               activeCategory === 'all'
                 ? 'bg-blue-600 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
+                : 'bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
             }`}
           >
             ทั้งหมด ({items.length})
@@ -416,7 +416,7 @@ export default function PackingChecklistModal({
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
               activeCategory === 'docs'
                 ? 'bg-blue-600 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
+                : 'bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
             }`}
           >
             <ShieldCheck className="h-3.5 w-3.5" />
@@ -427,7 +427,7 @@ export default function PackingChecklistModal({
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
               activeCategory === 'tech'
                 ? 'bg-blue-600 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
+                : 'bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
             }`}
           >
             <Smartphone className="h-3.5 w-3.5" />
@@ -438,7 +438,7 @@ export default function PackingChecklistModal({
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
               activeCategory === 'health'
                 ? 'bg-blue-600 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
+                : 'bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
             }`}
           >
             <Pill className="h-3.5 w-3.5" />
@@ -449,7 +449,7 @@ export default function PackingChecklistModal({
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
               activeCategory === 'cloth'
                 ? 'bg-blue-600 text-white shadow-2xs'
-                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
+                : 'bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#252f48]'
             }`}
           >
             <Shirt className="h-3.5 w-3.5" />
@@ -466,7 +466,7 @@ export default function PackingChecklistModal({
               className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer group select-none ${
                 item.checked
                   ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50 text-slate-500 dark:text-slate-400'
-                  : 'bg-slate-50/70 dark:bg-[#1e2027]/60 border-slate-200 dark:border-[#262932] text-slate-900 dark:text-white hover:border-blue-400 dark:hover:border-blue-500'
+                  : 'bg-slate-50/70 dark:bg-[#1a202c]/60 border-slate-200 dark:border-[#24324a] text-slate-900 dark:text-white hover:border-blue-400 dark:hover:border-blue-500'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -475,7 +475,7 @@ export default function PackingChecklistModal({
                   className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all shrink-0 ${
                     item.checked
                       ? 'bg-emerald-500 text-white shadow-2xs'
-                      : 'border-2 border-slate-300 dark:border-[#262932]'
+                      : 'border-2 border-slate-300 dark:border-[#24324a]'
                   }`}
                 >
                   {item.checked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
@@ -518,13 +518,13 @@ export default function PackingChecklistModal({
         </div>
 
         {/* Add Custom Item Input */}
-        <form onSubmit={handleAddItem} className="flex gap-2 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] border-t border-slate-100 dark:border-[#262932] shrink-0">
+        <form onSubmit={handleAddItem} className="flex gap-2 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] border-t border-slate-100 dark:border-[#24324a] shrink-0">
           <input
             type="text"
             placeholder="เพิ่มของที่ต้องเตรียม เช่น แว่นกันแดด, บัตร Suica..."
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="flex-1 min-w-0 p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-base sm:text-xs outline-none focus:border-blue-500 font-medium"
+            className="flex-1 min-w-0 p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-slate-900 dark:text-white text-base sm:text-xs outline-none focus:border-blue-500 font-medium"
           />
           <button
             type="submit"

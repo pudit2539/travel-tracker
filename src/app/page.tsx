@@ -909,14 +909,14 @@ export default function HomePage() {
       />
 
       {/* ==================== TOP NAVIGATION ==================== */}
-      <nav className="sticky top-0 z-40 border-b border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7]/95 dark:bg-[#121316]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
+      <nav className="sticky top-0 z-40 border-b border-[#e2e8f0] dark:border-[#24324a] bg-[#ffffff]/95 dark:bg-[#0d131f]/95 backdrop-blur-xl shadow-xs transition-colors safe-top-nav">
         <div className="max-w-5xl mx-auto safe-nav-container px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5 group">
               <img
                 src="/app-logo.png"
                 alt="Travel Tracker Logo"
-                className="w-9 h-9 rounded-xl object-cover shadow-sm border border-slate-200/80 dark:border-[#262932] group-hover:scale-105 transition-transform"
+                className="w-9 h-9 rounded-xl object-cover shadow-sm border border-slate-200/80 dark:border-[#24324a] group-hover:scale-105 transition-transform"
               />
               <div>
                 <span className="text-base font-black text-slate-900 dark:text-white tracking-tight">
@@ -948,7 +948,7 @@ export default function HomePage() {
             {/* Profile Avatar Button */}
             <button
               onClick={() => setShowProfileModal(true)}
-              className="flex items-center gap-2 p-1.5 pr-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 hover:scale-105 shadow-2xs transition-all cursor-pointer group"
+              className="flex items-center gap-2 p-1.5 pr-3 rounded-2xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] hover:border-blue-500 hover:scale-105 shadow-2xs transition-all cursor-pointer group"
               title="ตั้งค่าโปรไฟล์"
             >
               <div className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${userCat.bgGradient} flex items-center justify-center text-xs shadow-2xs overflow-hidden`}>
@@ -966,7 +966,7 @@ export default function HomePage() {
             {/* Dark/Light Switcher */}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:rotate-45 shadow-2xs transition-all duration-300 cursor-pointer min-w-8 min-h-8 flex items-center justify-center"
+              className="p-2 rounded-xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:rotate-45 shadow-2xs transition-all duration-300 cursor-pointer min-w-8 min-h-8 flex items-center justify-center"
               title="สลับโหมด มืด/สว่าง"
               aria-label="Toggle theme"
             >
@@ -977,7 +977,7 @@ export default function HomePage() {
             {/* Quick Logout Button */}
             <button
               onClick={handleQuickLogout}
-              className="p-2 rounded-xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-400 hover:text-rose-500 hover:border-rose-300 shadow-2xs transition-all cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-400 hover:text-rose-500 hover:border-rose-300 shadow-2xs transition-all cursor-pointer"
               title="ออกจากระบบ (Sign Out)"
             >
               <LogOut className="h-4 w-4" />
@@ -990,15 +990,15 @@ export default function HomePage() {
       <main className="relative z-10 max-w-5xl mx-auto px-4 safe-area-x pt-6 space-y-6">
 
         {/* ==================== 1. EDITORIAL WELCOME BAR & TABULAR STATS ==================== */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] shadow-[0_8px_24px_-14px_rgba(35,28,20,0.1)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl border border-[#e2e8f0] dark:border-[#24324a] bg-[#ffffff] dark:bg-[#161c27] shadow-[0_8px_24px_-14px_rgba(35,28,20,0.1)]">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#C83E2D]" />
-              <span className="text-[10px] font-bold tracking-widest uppercase text-[#C83E2D] dark:text-amber-400">
+              <span className="w-2 h-2 rounded-full bg-[#2563eb]" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#2563eb] dark:text-amber-400">
                 TRAVEL JOURNAL & CO-PILOT
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-serif font-black text-[#1C2630] dark:text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-serif font-black text-[#1e3a8a] dark:text-white tracking-tight">
               สวัสดี, {userDisplayName}
             </h1>
             <p className="text-xs text-[#6B6254] dark:text-slate-400 font-medium">
@@ -1007,31 +1007,31 @@ export default function HomePage() {
           </div>
 
           {/* Travo Tabular Stats Deck */}
-          <div className="flex items-center gap-4 sm:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 sm:border-l border-[#DFD7C7] dark:border-[#262932] sm:pl-6 shrink-0">
+          <div className="flex items-center gap-4 sm:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 sm:border-l border-[#e2e8f0] dark:border-[#24324a] sm:pl-6 shrink-0">
             <div>
               <span className="text-[10px] font-bold tracking-wider uppercase text-[#7A7061] dark:text-slate-500 block mb-0.5">
                 TRIPS
               </span>
-              <span className="text-lg sm:text-xl font-black text-[#1C2630] dark:text-white">
-                {loading && trips.length === 0 ? <span className="inline-block w-5 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : trips.length}
+              <span className="text-lg sm:text-xl font-black text-[#1e3a8a] dark:text-white">
+                {loading && trips.length === 0 ? <span className="inline-block w-5 h-5 rounded bg-slate-200 dark:bg-[#24324a] animate-pulse" /> : trips.length}
               </span>
             </div>
-            <div className="h-8 w-px bg-[#DFD7C7] dark:bg-[#262932]" />
+            <div className="h-8 w-px bg-[#e2e8f0] dark:bg-[#24324a]" />
             <div>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-[#C83E2D] dark:text-blue-400 block mb-0.5">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-[#2563eb] dark:text-blue-400 block mb-0.5">
                 UPCOMING
               </span>
-              <span className="text-lg sm:text-xl font-black text-[#C83E2D] dark:text-blue-400">
-                {loading && trips.length === 0 ? <span className="inline-block w-5 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : tripStats.upcomingCount}
+              <span className="text-lg sm:text-xl font-black text-[#2563eb] dark:text-blue-400">
+                {loading && trips.length === 0 ? <span className="inline-block w-5 h-5 rounded bg-slate-200 dark:bg-[#24324a] animate-pulse" /> : tripStats.upcomingCount}
               </span>
             </div>
-            <div className="h-8 w-px bg-[#DFD7C7] dark:bg-[#262932]" />
+            <div className="h-8 w-px bg-[#e2e8f0] dark:bg-[#24324a]" />
             <div>
               <span className="text-[10px] font-bold tracking-wider uppercase text-[#7A7061] dark:text-slate-500 block mb-0.5">
                 TOTAL BUDGET
               </span>
-              <span className="text-lg sm:text-xl font-black text-[#1C2630] dark:text-white">
-                {loading && trips.length === 0 ? <span className="inline-block w-12 h-5 rounded bg-slate-200 dark:bg-[#262932] animate-pulse" /> : `฿${Math.round(totalCombinedBudgetInThb).toLocaleString()}`}
+              <span className="text-lg sm:text-xl font-black text-[#1e3a8a] dark:text-white">
+                {loading && trips.length === 0 ? <span className="inline-block w-12 h-5 rounded bg-slate-200 dark:bg-[#24324a] animate-pulse" /> : `฿${Math.round(totalCombinedBudgetInThb).toLocaleString()}`}
               </span>
             </div>
           </div>
@@ -1043,15 +1043,15 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative rounded-3xl border border-[#DFD7C7] border-l-4 border-l-[#C83E2D] dark:border-[#262932] dark:border-l-[#C83E2D] bg-[#FDFBF7] dark:bg-[#181a20] text-[#1C2630] dark:text-white overflow-hidden shadow-[0_12px_30px_-16px_rgba(35,28,20,0.14)] group"
+            className="relative rounded-3xl border border-[#e2e8f0] border-l-4 border-l-[#2563eb] dark:border-[#24324a] dark:border-l-[#2563eb] bg-[#ffffff] dark:bg-[#161c27] text-[#1e3a8a] dark:text-white overflow-hidden shadow-[0_12px_30px_-16px_rgba(35,28,20,0.14)] group"
           >
             {/* Subtle Warm Paper Wash Accent */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#F6F1E7]/75 via-transparent to-[#F6F1E7]/40 dark:from-[#121316]/60 dark:via-transparent dark:to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#f1f5f9]/75 via-transparent to-[#f1f5f9]/40 dark:from-[#0d131f]/60 dark:via-transparent dark:to-transparent pointer-events-none" />
 
             <div className="relative z-10 p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 text-left">
               {/* Architectural Destination Thumbnail Preview (Desktop / Tablet) */}
               <div
-                className="hidden sm:block w-36 md:w-44 aspect-[16/10] rounded-2xl overflow-hidden border border-[#DFD7C7] dark:border-[#262932] shrink-0 shadow-xs relative"
+                className="hidden sm:block w-36 md:w-44 aspect-[16/10] rounded-2xl overflow-hidden border border-[#e2e8f0] dark:border-[#24324a] shrink-0 shadow-xs relative"
                 style={{ aspectRatio: '16 / 10' }}
               >
                 <TripCoverMedia
@@ -1067,8 +1067,8 @@ export default function HomePage() {
 
               <div className="space-y-2 text-left flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#C83E2D]/10 text-[#C83E2D] border border-[#C83E2D]/25 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#C83E2D] animate-pulse" />
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/25 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb] animate-pulse" />
                     <span>ทริปถัดไปที่กำลังจะถึง</span>
                   </span>
 
@@ -1076,7 +1076,7 @@ export default function HomePage() {
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 border ${
                       daysUntilTrip <= 0
                         ? 'bg-emerald-600/10 text-emerald-800 border-emerald-600/25 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30'
-                        : 'bg-[#EFE9DC] text-[#1C2630] border-[#DFD7C7] dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30'
+                        : 'bg-[#eff6ff] text-[#1e3a8a] border-[#e2e8f0] dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30'
                     }`}>
                       <Clock className="h-3 w-3" />
                       {daysUntilTrip > 0
@@ -1087,27 +1087,27 @@ export default function HomePage() {
                     </span>
                   )}
 
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F6F1E7] dark:bg-white/10 text-[#5C5346] dark:text-white/90 border border-[#DFD7C7] dark:border-white/15">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#f1f5f9] dark:bg-white/10 text-[#475569] dark:text-white/90 border border-[#e2e8f0] dark:border-white/15">
                     {upcomingTrip.currency || 'JPY'}
                   </span>
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1C2630] dark:text-white tracking-tight leading-snug break-words">
+                <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1e3a8a] dark:text-white tracking-tight leading-snug break-words">
                   {upcomingTrip.name || upcomingTrip.title}
                 </h2>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs text-[#5C5346] dark:text-slate-300 font-medium">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-[#475569] dark:text-slate-300 font-medium">
                   {upcomingTrip.start_date && (
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-[#C83E2D] dark:text-blue-400" />
+                      <Calendar className="h-3.5 w-3.5 text-[#2563eb] dark:text-blue-400" />
                       <span>
                         {new Date(upcomingTrip.start_date).toLocaleDateString('th-TH')} - {upcomingTrip.end_date ? new Date(upcomingTrip.end_date).toLocaleDateString('th-TH') : 'ไม่ระบุวันกลับ'}
                       </span>
                     </span>
                   )}
-                  <span className="text-[#CFC6B4] dark:text-slate-600">•</span>
+                  <span className="text-[#cbd5e1] dark:text-slate-600">•</span>
                   <span className="flex items-center gap-1.5">
-                    <Compass className="h-3.5 w-3.5 text-[#1C2630] dark:text-blue-400" />
+                    <Compass className="h-3.5 w-3.5 text-[#1e3a8a] dark:text-blue-400" />
                     <span>
                       งบ {Number(upcomingTrip.total_budget ?? upcomingTrip.budget ?? 0).toLocaleString()} {upcomingTrip.currency || 'JPY'}
                     </span>
@@ -1118,7 +1118,7 @@ export default function HomePage() {
               <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
                 <Link
                   href={`/trips/${upcomingTrip.id}`}
-                  className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-[#1C2630] hover:bg-[#C83E2D] dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-[#1e3a8a] hover:bg-[#2563eb] dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>เข้าสู่ทริป</span>
                   <ArrowUpRight className="h-4 w-4" />
@@ -1129,7 +1129,7 @@ export default function HomePage() {
         )}
 
         {/* ==================== 3. UTILITIES DOCK: LIVE FX QUICK BAR & TRAVEL NOTE ==================== */}
-        <div className="p-3.5 sm:p-4 rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] shadow-2xs space-y-3">
+        <div className="p-3.5 sm:p-4 rounded-2xl border border-[#e2e8f0] dark:border-[#24324a] bg-[#ffffff] dark:bg-[#161c27] shadow-2xs space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             
             {/* Left: Quick FX Pill & Join Trip Button */}
@@ -1140,7 +1140,7 @@ export default function HomePage() {
                 className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                   showFxCalculator
                     ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-800'
-                    : 'bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-blue-400'
+                    : 'bg-slate-50 dark:bg-[#0d131f] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:border-blue-400'
                 }`}
               >
                 <Coins className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
@@ -1152,7 +1152,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setShowJoinModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#262932] hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 dark:bg-[#0d131f] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#24324a] hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer"
               >
                 <KeyRound className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                 <span>เข้าร่วมด้วยรหัสทริป</span>
@@ -1186,9 +1186,9 @@ export default function HomePage() {
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden pt-3 border-t border-slate-200/80 dark:border-[#262932]"
+                className="overflow-hidden pt-3 border-t border-slate-200/80 dark:border-[#24324a]"
               >
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-[#121316] border border-slate-200/70 dark:border-[#262932] space-y-3">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-[#0d131f] border border-slate-200/70 dark:border-[#24324a] space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <Calculator className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
@@ -1213,7 +1213,7 @@ export default function HomePage() {
                             className={`px-3 py-1 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                               isSelected
                                 ? 'bg-blue-600 text-white border-blue-500 shadow-2xs'
-                                : 'bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-blue-400'
+                                : 'bg-white dark:bg-[#161c27] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:border-blue-400'
                             }`}
                           >
                             {info.flag} {info.label}
@@ -1223,14 +1223,14 @@ export default function HomePage() {
                     </div>
 
                     {/* Amount input & result */}
-                    <div className="flex items-center gap-3 bg-white dark:bg-[#181a20] p-2 rounded-xl border border-slate-200 dark:border-[#262932]">
+                    <div className="flex items-center gap-3 bg-white dark:bg-[#161c27] p-2 rounded-xl border border-slate-200 dark:border-[#24324a]">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-semibold text-slate-400 font-mono">{quickCalcCurr}:</span>
                         <input
                           type="number"
                           value={quickCalcAmount}
                           onChange={(e) => setQuickCalcAmount(e.target.value)}
-                          className="w-24 text-right font-mono font-bold text-xs p-1 rounded border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                          className="w-24 text-right font-mono font-bold text-xs p-1 rounded border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-slate-900 dark:text-white outline-none focus:border-blue-500"
                           placeholder="10000"
                         />
                       </div>
@@ -1270,7 +1270,7 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
-              <div className="flex items-center p-1 rounded-2xl bg-white/80 dark:bg-[#121316] border border-amber-500/30">
+              <div className="flex items-center p-1 rounded-2xl bg-white/80 dark:bg-[#0d131f] border border-amber-500/30">
                 <button
                   type="button"
                   onClick={() => {
@@ -1319,20 +1319,20 @@ export default function HomePage() {
             <input
               type="text"
               placeholder="ค้นหาชื่อทริป หรือจุดหมายปลายทาง..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 transition-all font-medium"
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 transition-all font-medium"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
           {/* Status Filter Segment Pills */}
-          <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#181a20] border border-slate-200/80 dark:border-[#262932]">
+          <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#161c27] border border-slate-200/80 dark:border-[#24324a]">
             <button
               type="button"
               onClick={() => setTripFilterStatus('all')}
               className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 tripFilterStatus === 'all'
-                  ? 'bg-white dark:bg-[#121316] text-slate-900 dark:text-white shadow-2xs'
+                  ? 'bg-white dark:bg-[#0d131f] text-slate-900 dark:text-white shadow-2xs'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
             >
@@ -1343,7 +1343,7 @@ export default function HomePage() {
               onClick={() => setTripFilterStatus('upcoming')}
               className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 tripFilterStatus === 'upcoming'
-                  ? 'bg-white dark:bg-[#121316] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  ? 'bg-white dark:bg-[#0d131f] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
             >
@@ -1354,7 +1354,7 @@ export default function HomePage() {
               onClick={() => setTripFilterStatus('past')}
               className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 tripFilterStatus === 'past'
-                  ? 'bg-white dark:bg-[#121316] text-slate-900 dark:text-white shadow-2xs'
+                  ? 'bg-white dark:bg-[#0d131f] text-slate-900 dark:text-white shadow-2xs'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
             >
@@ -1366,14 +1366,14 @@ export default function HomePage() {
           <div
             role="group"
             aria-label="สลับมุมมองรายการทริป"
-            className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#181a20] border border-slate-200/80 dark:border-[#262932]"
+            className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#161c27] border border-slate-200/80 dark:border-[#24324a]"
           >
             <button
               type="button"
               onClick={() => handleSwitchHomeTripView('thumbnail')}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 homeTripViewMode === 'thumbnail'
-                  ? 'bg-white dark:bg-[#121316] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  ? 'bg-white dark:bg-[#0d131f] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
               title="มุมมองการ์ดปกภาพสถานที่"
@@ -1386,7 +1386,7 @@ export default function HomePage() {
               onClick={() => handleSwitchHomeTripView('list')}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 homeTripViewMode === 'list'
-                  ? 'bg-white dark:bg-[#121316] text-blue-600 dark:text-blue-400 shadow-2xs'
+                  ? 'bg-white dark:bg-[#0d131f] text-blue-600 dark:text-blue-400 shadow-2xs'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
               title="มุมมองรายการตั๋วย่อ"
@@ -1413,7 +1413,7 @@ export default function HomePage() {
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">กำลังโหลดรายการทริป...</span>
           </div>
         ) : filteredTrips.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-slate-300 dark:border-[#262932] rounded-3xl p-8 bg-white dark:bg-[#181a20]">
+          <div className="text-center py-16 border border-dashed border-slate-300 dark:border-[#24324a] rounded-3xl p-8 bg-white dark:bg-[#161c27]">
             <Compass className="h-10 w-10 text-blue-600 dark:text-blue-400 mx-auto mb-3 opacity-80" />
             <h3 className="font-bold text-base text-slate-900 dark:text-white mb-1">ยังไม่มีทริปตามเงื่อนไข</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 max-w-sm mx-auto font-medium">
@@ -1440,7 +1440,7 @@ export default function HomePage() {
                   : statusBadge.status === 'upcoming'
                   ? 'bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/30'
                   : statusBadge.status === 'completed'
-                  ? 'bg-slate-100 dark:bg-[#121316] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-[#262932]'
+                  ? 'bg-slate-100 dark:bg-[#0d131f] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-[#24324a]'
                   : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25';
 
               return (
@@ -1449,7 +1449,7 @@ export default function HomePage() {
                   onClick={() => {
                     router.push(`/trips/${t.id}`);
                   }}
-                  className="group relative rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] hover:border-blue-500 dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-2xs hover:shadow-md"
+                  className="group relative rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] hover:border-blue-500 dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-2xs hover:shadow-md"
                 >
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     <div
@@ -1470,7 +1470,7 @@ export default function HomePage() {
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black border ${badgeColorClass}`}>
                           {statusBadge.badgeText}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#0d131f] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#24324a]">
                           {t.currency || 'JPY'}
                         </span>
                         {t.isOwner ? (
@@ -1493,7 +1493,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-dashed border-slate-200 dark:border-[#262932] shrink-0">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-dashed border-slate-200 dark:border-[#24324a] shrink-0">
                     <div className="text-left sm:text-right">
                       <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 block">
                         TRIP BUDGET
@@ -1573,7 +1573,7 @@ export default function HomePage() {
                   onClick={() => {
                     router.push(`/trips/${t.id}`);
                   }}
-                  className="group relative rounded-3xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] hover:border-[#C83E2D] dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-[0_8px_22px_-12px_rgba(35,28,20,0.12)] hover:shadow-lg"
+                  className="group relative rounded-3xl border border-[#e2e8f0] dark:border-[#24324a] bg-[#ffffff] dark:bg-[#161c27] hover:border-[#2563eb] dark:hover:border-blue-500/70 transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden shadow-[0_8px_22px_-12px_rgba(35,28,20,0.12)] hover:shadow-lg"
                 >
                   {/* Top Destination Cover Photo Banner (Polarsteps / Trip.com style) */}
                   <div
@@ -1660,7 +1660,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Perforated Boarding Pass Stub Row */}
-                    <div className="relative pt-3 border-t-2 border-dashed border-slate-200/80 dark:border-[#262932] flex items-center justify-between gap-2">
+                    <div className="relative pt-3 border-t-2 border-dashed border-slate-200/80 dark:border-[#24324a] flex items-center justify-between gap-2">
                       <div>
                         <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 block">
                           TRIP BUDGET
@@ -1692,10 +1692,10 @@ export default function HomePage() {
             <section aria-labelledby="next-trip-ideas-heading" className="pt-2 space-y-3">
               <div className="flex items-center justify-between gap-2 px-1">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="w-1.5 h-4 rounded-full bg-[#C83E2D] shrink-0" aria-hidden="true" />
+                  <span className="w-1.5 h-4 rounded-full bg-[#2563eb] shrink-0" aria-hidden="true" />
                   <h2
                     id="next-trip-ideas-heading"
-                    className="text-sm font-serif font-black text-[#1C2630] dark:text-white tracking-tight truncate"
+                    className="text-sm font-serif font-black text-[#1e3a8a] dark:text-white tracking-tight truncate"
                   >
                     ไอเดียทริปถัดไปที่แนะนำ
                   </h2>
@@ -1707,10 +1707,10 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => setIdeaPage((prev) => (prev + 1) % totalIdeaPages)}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-[#FDFBF7] hover:bg-[#F6F1E7] text-[#1C2630] border border-[#DFD7C7] hover:border-[#C83E2D] dark:bg-[#181a20] dark:hover:bg-[#22252e] dark:text-slate-200 dark:border-[#262932] transition-colors cursor-pointer"
+                  className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-[#ffffff] hover:bg-[#f1f5f9] text-[#1e3a8a] border border-[#e2e8f0] hover:border-[#2563eb] dark:bg-[#161c27] dark:hover:bg-[#1a202c] dark:text-slate-200 dark:border-[#24324a] transition-colors cursor-pointer"
                   title="สลับดูเส้นทางแนะนำชุดถัดไป"
                 >
-                  <Shuffle className="h-3 w-3 text-[#C83E2D] dark:text-blue-400" />
+                  <Shuffle className="h-3 w-3 text-[#2563eb] dark:text-blue-400" />
                   <span>สลับไอเดีย</span>
                   <span className="text-[10px] font-mono text-[#7A7061] dark:text-slate-400">
                     {safeIdeaPage + 1}/{totalIdeaPages}
@@ -1722,9 +1722,9 @@ export default function HomePage() {
                 {visibleIdeas.map((idea, idx) => (
                   <div
                     key={idea.title}
-                    className="group rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] overflow-hidden flex flex-col justify-between transition-all hover:border-[#C83E2D] dark:hover:border-blue-500/60 shadow-[0_6px_18px_-12px_rgba(35,28,20,0.12)]"
+                    className="group rounded-2xl border border-[#e2e8f0] dark:border-[#24324a] bg-[#ffffff] dark:bg-[#161c27] overflow-hidden flex flex-col justify-between transition-all hover:border-[#2563eb] dark:hover:border-blue-500/60 shadow-[0_6px_18px_-12px_rgba(35,28,20,0.12)]"
                   >
-                    <div className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-[#2C4A3E] via-[#4A3B2C] to-[#1C2630]">
+                    <div className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-[#2C4A3E] via-[#4A3B2C] to-[#1e3a8a]">
                       <TripCoverMedia
                         tripName={idea.title}
                         highlightPlace={idea.placeQuery}
@@ -1740,7 +1740,7 @@ export default function HomePage() {
 
                     <div className="p-3.5 flex-1 flex flex-col justify-between gap-2.5">
                       <div className="space-y-1 text-left">
-                        <h3 className="text-xs font-serif font-black text-[#1C2630] dark:text-white leading-snug">
+                        <h3 className="text-xs font-serif font-black text-[#1e3a8a] dark:text-white leading-snug">
                           {idea.title}
                         </h3>
                         <p className="text-[11px] text-[#6B6254] dark:text-slate-400 leading-relaxed line-clamp-2">
@@ -1751,7 +1751,7 @@ export default function HomePage() {
                       <button
                         type="button"
                         onClick={() => openCreateModalWithIdea(idea.title, idea.currency)}
-                        className="w-full py-1.5 px-3 rounded-xl text-[11px] font-bold bg-[#F6F1E7] hover:bg-[#1C2630] text-[#1C2630] hover:text-white border border-[#DFD7C7] dark:bg-[#121316] dark:hover:bg-blue-600 dark:text-slate-200 dark:border-[#262932] transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        className="w-full py-1.5 px-3 rounded-xl text-[11px] font-bold bg-[#f1f5f9] hover:bg-[#1e3a8a] text-[#1e3a8a] hover:text-white border border-[#e2e8f0] dark:bg-[#0d131f] dark:hover:bg-blue-600 dark:text-slate-200 dark:border-[#24324a] transition-colors flex items-center justify-center gap-1 cursor-pointer"
                       >
                         <Plus className="h-3 w-3" />
                         <span>เริ่มวางแผนทริปนี้</span>
@@ -1786,9 +1786,9 @@ export default function HomePage() {
       {/* ==================== CREATE TRIP MODAL ==================== */}
       {showCreateModal && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
             {/* Modal Header */}
-            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#262932] shrink-0">
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#24324a] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
                   ✈️
@@ -1805,7 +1805,7 @@ export default function HomePage() {
               <button 
                 type="button"
                 onClick={() => setShowCreateModal(false)} 
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1821,7 +1821,7 @@ export default function HomePage() {
                   type="text"
                   required
                   placeholder="เช่น Japan Osaka & Tokyo Trip (04-15 Dec 2026)"
-                  className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold shadow-2xs transition-all"
+                  className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold shadow-2xs transition-all"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
@@ -1838,7 +1838,7 @@ export default function HomePage() {
                       type="number"
                       required
                       placeholder="100000"
-                      className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black shadow-2xs transition-all"
+                      className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black shadow-2xs transition-all"
                       value={formData.budget}
                       onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
                     />
@@ -1853,7 +1853,7 @@ export default function HomePage() {
                     สกุลเงินหลัก
                   </label>
                   <select
-                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 font-bold shadow-2xs cursor-pointer transition-all"
+                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 font-bold shadow-2xs cursor-pointer transition-all"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   >
@@ -1880,7 +1880,7 @@ export default function HomePage() {
                     className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
                       formData.budget === preset
                         ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-[#262932] border border-slate-200 dark:border-[#262932]'
+                        : 'bg-slate-100 dark:bg-[#1a202c] text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-[#24324a] border border-slate-200 dark:border-[#24324a]'
                     }`}
                   >
                     {Number(preset).toLocaleString()} {formData.currency}
@@ -1896,7 +1896,7 @@ export default function HomePage() {
                   </label>
                   <input
                     type="date"
-                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all"
+                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                   />
@@ -1907,7 +1907,7 @@ export default function HomePage() {
                   </label>
                   <input
                     type="date"
-                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all"
+                    className="w-full p-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   />
@@ -1920,16 +1920,16 @@ export default function HomePage() {
                 const templateStops = matchedTitle ? findStarterTemplate(matchedTitle) : null;
                 if (!matchedTitle || !templateStops) return null;
                 return (
-                  <label className="flex items-start gap-2.5 p-3 rounded-2xl border border-[#DFD7C7] dark:border-[#2d3240] bg-[#FDFBF7] dark:bg-[#1e2027]/80 cursor-pointer hover:border-[#C83E2D]/50 transition-colors">
+                  <label className="flex items-start gap-2.5 p-3 rounded-2xl border border-[#e2e8f0] dark:border-[#2d3240] bg-[#ffffff] dark:bg-[#1a202c]/80 cursor-pointer hover:border-[#2563eb]/50 transition-colors">
                     <input
                       type="checkbox"
                       checked={seedStarterPlan}
                       onChange={(e) => setSeedStarterPlan(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#C83E2D] focus:ring-[#C83E2D] cursor-pointer"
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#2563eb] focus:ring-[#2563eb] cursor-pointer"
                     />
                     <div className="min-w-0">
                       <p className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-[#C83E2D]" />
+                        <Sparkles className="h-3.5 w-3.5 text-[#2563eb]" />
                         <span>เติมแผนเที่ยวแนะนำตั้งต้น ({templateStops.length} จุดไฮไลท์)</span>
                       </p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
@@ -1942,11 +1942,11 @@ export default function HomePage() {
             </form>
 
             {/* Sticky Action Footer */}
-            <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#262932] flex gap-2.5 bg-slate-50/90 dark:bg-[#1e2027]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+            <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#24324a] flex gap-2.5 bg-slate-50/90 dark:bg-[#1a202c]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
               >
                 ยกเลิก
               </button>
@@ -1975,7 +1975,7 @@ export default function HomePage() {
       {/* ==================== CREATE SUCCESS MODAL TOAST ==================== */}
       {createdTripSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-blue-400/50 glow-blue p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-blue-400/50 glow-blue p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
             <div className="w-16 h-16 rounded-3xl bg-blue-600 text-white text-3xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/30 animate-bounce">
               🎉
             </div>
@@ -1992,7 +1992,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] text-xs font-medium text-slate-600 dark:text-slate-300">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1a202c] border border-slate-200 dark:border-[#24324a] text-xs font-medium text-slate-600 dark:text-slate-300">
               กำลังนำคุณเข้าสู่หน้าแผนการเดินทาง...
               <div className="w-full bg-slate-200 dark:bg-[#111622] rounded-full h-1.5 overflow-hidden mt-2">
                 <div className="h-full bg-blue-600 rounded-full animate-pulse w-full" />
@@ -2016,8 +2016,8 @@ export default function HomePage() {
       {/* ==================== EDIT TRIP MODAL ==================== */}
       {showEditModal && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
-            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#262932] shrink-0">
+          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#24324a] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
                   ✏️
@@ -2034,7 +2034,7 @@ export default function HomePage() {
               <button 
                 type="button"
                 onClick={() => setShowEditModal(false)} 
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -2046,7 +2046,7 @@ export default function HomePage() {
                 <input
                   type="text"
                   required
-                  className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold shadow-2xs transition-all touch-manipulation"
+                  className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold shadow-2xs transition-all touch-manipulation"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
@@ -2058,7 +2058,7 @@ export default function HomePage() {
                   <input
                     type="number"
                     required
-                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black shadow-2xs transition-all touch-manipulation"
+                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black shadow-2xs transition-all touch-manipulation"
                     value={formData.budget}
                     onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
                   />
@@ -2066,7 +2066,7 @@ export default function HomePage() {
                 <div>
                   <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">สกุลเงินหลัก</label>
                   <select
-                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 font-bold shadow-2xs cursor-pointer transition-all touch-manipulation"
+                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 font-bold shadow-2xs cursor-pointer transition-all touch-manipulation"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   >
@@ -2087,7 +2087,7 @@ export default function HomePage() {
                   <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">วันเริ่มเดินทาง</label>
                   <input
                     type="date"
-                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all touch-manipulation"
+                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all touch-manipulation"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                   />
@@ -2096,7 +2096,7 @@ export default function HomePage() {
                   <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">วันเดินทางกลับ</label>
                   <input
                     type="date"
-                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all touch-manipulation"
+                    className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 shadow-2xs font-medium transition-all touch-manipulation"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   />
@@ -2105,12 +2105,12 @@ export default function HomePage() {
             </form>
 
             {/* Sticky Action Footer */}
-            <div className="p-4 sm:p-5 border-t border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+            <div className="p-4 sm:p-5 border-t border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
               <div className="flex gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer touch-manipulation"
+                  className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer touch-manipulation"
                 >
                   ยกเลิก
                 </button>
@@ -2132,8 +2132,8 @@ export default function HomePage() {
       {/* ==================== JOIN TRIP MODAL ==================== */}
       {showJoinModal && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
-            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#262932] shrink-0">
+          <div className="w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 glow-blue">
+            <div className="p-4 sm:p-6 pb-4 flex justify-between items-center border-b border-slate-200/90 dark:border-[#24324a] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/25">
                   🔑
@@ -2150,7 +2150,7 @@ export default function HomePage() {
               <button 
                 type="button"
                 onClick={() => setShowJoinModal(false)} 
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -2165,7 +2165,7 @@ export default function HomePage() {
                   type="text"
                   required
                   placeholder="เช่น 123e4567-e89b-12d3-a456-426614174000"
-                  className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50/60 dark:bg-[#1e2027] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-mono shadow-2xs transition-all touch-manipulation"
+                  className="w-full p-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/60 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-mono shadow-2xs transition-all touch-manipulation"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value)}
                 />
@@ -2179,12 +2179,12 @@ export default function HomePage() {
               )}
             </form>
 
-            <div className="p-4 sm:p-5 border-t border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+            <div className="p-4 sm:p-5 border-t border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
               <div className="flex gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowJoinModal(false)}
-                  className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer touch-manipulation"
+                  className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer touch-manipulation"
                 >
                   ยกเลิก
                 </button>
@@ -2214,7 +2214,7 @@ export default function HomePage() {
       {/* ==================== DELETE TRIP MODAL ==================== */}
       {showDeleteModal && selectedTrip && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-4 overscroll-contain animate-in fade-in duration-200" role="dialog" aria-modal="true">
-          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-rose-500/40 glow-rose p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-rose-500/40 glow-rose p-6 text-center space-y-4 animate-in zoom-in-95 duration-200">
             <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 flex items-center justify-center text-2xl mx-auto shadow-md">
               <Trash2 className="h-7 w-7" />
             </div>
@@ -2232,7 +2232,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer touch-manipulation"
+                className="flex-1 py-3 min-h-[44px] rounded-2xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer touch-manipulation"
               >
                 ยกเลิก
               </button>

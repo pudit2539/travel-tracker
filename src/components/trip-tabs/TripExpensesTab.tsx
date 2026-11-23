@@ -314,15 +314,16 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
 
   return (
     <div className="space-y-4">
-      {/* HERO BUDGET & QUICK ACTION CARD (Option A: Modern Japanese Editorial) */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#DFD7C7] dark:border-[#262932] border-l-4 border-l-[#C83E2D] bg-[#FDFBF7] dark:bg-[#181a20] shadow-[0_3px_14px_rgba(35,30,20,0.05)] p-4 sm:p-6 md:p-7 space-y-4">
+      {/* HERO BUDGET & QUICK ACTION CARD (Oceanic Glacial Fintech) */}
+      <div className="relative overflow-hidden rounded-2xl border border-[#dbeafe] dark:border-[#4cd7f6]/20 border-l-4 border-l-[#2563eb] dark:border-l-[#4cd7f6] bg-white dark:bg-gradient-to-br dark:from-[#1c2434] dark:via-[#161c27] dark:to-[#080e19] shadow-[0_6px_24px_rgba(15,23,42,0.06)] dark:shadow-[0_12px_36px_rgba(4,9,20,0.65)] p-4 sm:p-6 md:p-7 space-y-4">
+        <div className="hidden dark:block absolute -top-20 -right-16 w-52 h-52 bg-[#4cd7f6]/10 rounded-full blur-3xl pointer-events-none" />
         {/* Row 1: Badges & Quick Tool Pills */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#FDF3F1] text-[#C83E2D] dark:bg-blue-950/60 dark:text-blue-400 border border-[#F2C6BE] dark:border-blue-900/50 shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#eff6ff] text-[#1d4ed8] dark:bg-[#2563eb]/20 dark:text-[#b4c5ff] border border-[#bfdbfe] dark:border-[#3b82f6]/35 shadow-2xs">
               {tripBaseCurrency} Workspace
             </span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-[#4A443B] dark:text-slate-300 bg-[#F3EFE6] dark:bg-[#1e2027] px-2.5 py-0.5 rounded-md border border-[#DFD7C7] dark:border-[#262932] font-mono">
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#0369a1] dark:text-[#4cd7f6] bg-[#e0f2fe] dark:bg-[#080e19] px-2.5 py-0.5 rounded-full border border-[#bae6fd] dark:border-[#4cd7f6]/25 font-mono">
               {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
             </span>
           </div>
@@ -331,10 +332,10 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             <button
               type="button"
               onClick={() => setShowTravelHubModal(true)}
-              className="inline-flex items-center gap-1.5 text-[11px] font-black text-white bg-[#1C2630] hover:bg-[#2A3744] dark:bg-blue-600 dark:hover:bg-blue-700 px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold text-white bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] hover:from-[#1e40af] hover:to-[#1d4ed8] px-3.5 py-1.5 rounded-full shadow-[0_4px_14px_rgba(37,99,235,0.3)] cursor-pointer active:scale-95 transition-all"
             >
               <span>🧭 Travel Hub</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C83E2D] dark:bg-white/80 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#4cd7f6] animate-pulse" />
             </button>
           </div>
         </div>
@@ -353,24 +354,24 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           return (
             <>
               <div className="relative z-10 pt-1">
-                <div className="text-[11px] sm:text-xs font-bold text-[#6E675F] dark:text-slate-400 flex items-center justify-between">
+                <div className="text-[11px] sm:text-xs font-bold text-[#475569] dark:text-[#94a3b8] flex items-center justify-between">
                   <span>{heroDisplayData.title}</span>
                   {heroDisplayData.isOver && (
-                    <span className="text-[10px] sm:text-[11px] font-black text-[#C83E2D] dark:text-rose-400 bg-[#FDF3F1] dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-[#F2C6BE] dark:border-rose-900/50">
+                    <span className="text-[10px] sm:text-[11px] font-bold text-rose-700 dark:text-[#ffb4ab] bg-rose-50 dark:bg-rose-950/50 px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800/60">
                       ⚠️ เกินงบ +<AnimatedNumber value={diffDisplay.primaryAmount} /> {diffDisplay.primaryCurrency}
                     </span>
                   )}
                 </div>
 
                 <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 mt-0.5">
-                  <span className="font-sans tabular-nums lining-nums text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#1A1A1A] dark:text-white">
+                  <span className="font-mono tabular-nums lining-nums text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc]">
                     <AnimatedNumber value={spentDisplay.primaryAmount} />
                   </span>
-                  <span className="text-base sm:text-xl font-bold text-[#C83E2D] dark:text-blue-400">
+                  <span className="text-base sm:text-xl font-mono font-bold text-[#2563eb] dark:text-[#4cd7f6]">
                     {spentDisplay.primaryCurrency}
                   </span>
                   {spentDisplay.secondaryText && (
-                    <span className="text-xs sm:text-sm font-bold text-[#6E675F] dark:text-slate-400 ml-1">
+                    <span className="text-xs sm:text-sm font-mono font-semibold text-[#64748b] dark:text-[#94a3b8] ml-1">
                       {spentDisplay.secondaryText}
                     </span>
                   )}
@@ -379,13 +380,13 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
 
               {/* Row 3: Progress Bar */}
               <div className="relative z-10 space-y-1.5">
-                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-[#4A443B] dark:text-slate-300">
+                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-[#334155] dark:text-[#c3c6d7]">
                   <span>
                     {heroDisplayData.targetBudget > 0 
                       ? `ใช้ไปแล้ว ${heroDisplayData.progress}% ของเป้าหมาย` 
                       : 'ยังไม่ได้ตั้งเป้างบประมาณ'}
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 font-mono">
                     {heroDisplayData.budgetLabel}: {heroDisplayData.targetBudget > 0 ? (
                       <>
                         <AnimatedNumber value={targetDisplay.primaryAmount} /> {targetDisplay.primaryCurrency}
@@ -393,7 +394,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                     ) : 'ไม่ระบุ'}
                     <button
                       onClick={() => setShowBudgetCategoryModal(true)}
-                      className="p-0.5 text-[#8C8275] hover:text-[#C83E2D] dark:hover:text-blue-400 transition-colors cursor-pointer"
+                      className="p-0.5 text-[#64748b] hover:text-[#2563eb] dark:hover:text-[#4cd7f6] transition-colors cursor-pointer"
                       title="ตั้งค่าเป้าหมายงบประมาณ"
                     >
                       <Edit3 className="h-3 w-3" />
@@ -401,12 +402,12 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                   </span>
                 </div>
 
-                <div className="w-full bg-[#EAE3D5] dark:bg-slate-800 rounded-full h-2.5 sm:h-3 p-0.5 overflow-hidden shadow-inner relative">
+                <div className="w-full bg-[#e2e8f0] dark:bg-[#080e19] rounded-full h-2.5 sm:h-3 p-0.5 overflow-hidden shadow-inner relative">
                   <div
                     className={`h-full rounded-full transition-all duration-700 relative overflow-hidden ${
                       heroDisplayData.isOver
-                        ? 'bg-[#C83E2D]'
-                        : 'bg-[#1C2630] dark:bg-blue-600'
+                        ? 'bg-gradient-to-r from-rose-500 to-rose-600'
+                        : 'bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#06b6d4]'
                     }`}
                     style={{ width: `${Math.max(heroDisplayData.progress, 3)}%` }}
                   >
@@ -420,20 +421,20 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 {heroDisplayData.targetBudget > 0 && (
                   <div className={`p-2.5 sm:p-3 rounded-xl border text-xs font-bold flex items-center justify-between shadow-2xs ${
                     heroDisplayData.isOver
-                      ? 'bg-[#FDF3F1] dark:bg-rose-950/40 border-[#F2C6BE] dark:border-rose-900/50 text-[#C83E2D] dark:text-rose-300'
-                      : 'bg-[#EBF5EE] dark:bg-emerald-950/40 border-[#C5E3CE] dark:border-emerald-900/50 text-[#1F6E43] dark:text-emerald-300'
+                      ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-[#ffb4ab]'
+                      : 'bg-[#eff6ff] dark:bg-[#080e19]/80 border-[#bfdbfe] dark:border-[#4cd7f6]/25 text-[#1e3a8a] dark:text-[#4cd7f6]'
                   }`}>
                     <div className="flex items-center gap-1.5">
                       {heroDisplayData.isOver ? (
-                        <AlertCircle className="h-4 w-4 text-[#C83E2D] shrink-0" />
+                        <AlertCircle className="h-4 w-4 text-rose-600 dark:text-[#ffb4ab] shrink-0" />
                       ) : (
-                        <CheckCircle2 className="h-4 w-4 text-[#1F6E43] shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-[#0284c7] dark:text-[#4cd7f6] shrink-0" />
                       )}
                       <span>
                         {heroDisplayData.isOver ? 'ยอดเงินที่ใช้เกินงบประมาณ:' : 'ยอดเงินคงเหลือ:'}
                       </span>
                     </div>
-                    <div className="font-black text-right font-mono">
+                    <div className="font-bold text-right font-mono">
                       <span>
                         <AnimatedNumber value={remainOrDiffDisplay.primaryAmount} /> {remainOrDiffDisplay.primaryCurrency}
                       </span>
@@ -454,7 +455,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                       setShowScanModal(true);
                     }}
                     disabled={!canAddExpense}
-                    className="py-3 px-3 rounded-xl bg-[#C83E2D] hover:bg-[#B03222] text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-all disabled:opacity-50"
+                    className="py-3 px-3 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-all disabled:opacity-50"
                   >
                     <Camera className="h-4 w-4 shrink-0" />
                     <span className="truncate">บันทึกรายจ่าย AI OCR</span>
@@ -462,9 +463,9 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
 
                   <button
                     onClick={() => setShowSettlementModal(true)}
-                    className="py-3 px-3 rounded-xl bg-[#F6F2E9] hover:bg-[#ECE5D5] dark:bg-[#1e2027] dark:hover:bg-[#262932] border border-[#D8D0C0] dark:border-[#262932] font-black text-xs sm:text-sm text-[#1A1A1A] dark:text-slate-100 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all"
+                    className="py-3 px-3 rounded-xl bg-[#f1f5f9] hover:bg-[#e2e8f0] dark:bg-[#1a202c] dark:hover:bg-[#24324a] border border-[#cbd5e1] dark:border-[#24324a] font-black text-xs sm:text-sm text-[#0f172a] dark:text-slate-100 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all"
                   >
-                    <Calculator className="h-4 w-4 text-[#1C2630] dark:text-blue-500 shrink-0" />
+                    <Calculator className="h-4 w-4 text-[#1e3a8a] dark:text-blue-500 shrink-0" />
                     <span className="truncate">เคลียร์บิลหารเงิน</span>
                   </button>
 
@@ -486,7 +487,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
 
                   <button
                     onClick={exportExpensesToExcel}
-                    className="py-3 px-3 rounded-xl bg-[#1C2630] hover:bg-[#2A3744] dark:bg-emerald-600 dark:hover:bg-emerald-700 font-black text-xs sm:text-sm text-white flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-all"
+                    className="py-3 px-3 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] dark:bg-emerald-600 dark:hover:bg-emerald-700 font-black text-xs sm:text-sm text-white flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-all"
                     title="ส่งออกรายการค่าใช้จ่ายทั้งหมดเป็นไฟล์ Excel (.xlsx)"
                   >
                     <Download className="h-4 w-4 shrink-0" />
@@ -509,11 +510,11 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
       />
 
       {/* Unified Filter & 3-Mode View Switcher Toolbar */}
-      <div className="p-3.5 sm:p-4 rounded-2xl border border-[#DFD7C7] dark:border-[#262932] bg-[#FDFBF7] dark:bg-[#181a20] shadow-[0_2px_10px_rgba(35,30,20,0.04)] space-y-3">
+      <div className="p-3.5 sm:p-4 rounded-2xl border border-[#e2e8f0] dark:border-[#24324a] bg-[#ffffff] dark:bg-[#161c27] shadow-[0_2px_10px_rgba(35,30,20,0.04)] space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="text-xs font-black text-[#1A1A1A] dark:text-slate-200 flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-[#C83E2D] dark:text-blue-500" />
+            <div className="text-xs font-black text-[#0f172a] dark:text-slate-200 flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-[#2563eb] dark:text-blue-500" />
               <span>มุมมองตามสมาชิก:</span>
             </div>
           </div>
@@ -523,7 +524,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             const fullBillDisplay = resolveDisplayCurrency(fullTripAmount, tripBaseCurrency, fxRate, currencyView);
             return (
               <div className="text-right font-mono">
-                <div className="text-xs font-black text-[#C83E2D] dark:text-blue-400">
+                <div className="text-xs font-black text-[#2563eb] dark:text-blue-400">
                   {expensePayerFilter === 'all' ? (
                     <>
                       <span>ยอดรวม: {filteredTotalDisplay.primaryText}</span>
@@ -565,7 +566,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
               expensePayerFilter === 'all'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
+                : 'bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#24324a]'
             }`}
           >
             📋 รวมทุกคน ({expenses.length})
@@ -580,7 +581,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
               expensePayerFilter === 'me'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
+                : 'bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#24324a]'
             }`}
           >
             <CatAvatarBadge cat={userCat} size="xs" />
@@ -602,7 +603,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#262932]'
+                    : 'bg-slate-100 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#24324a]'
                 }`}
               >
                 <CatAvatarBadge cat={pCat} size="xs" />
@@ -619,7 +620,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             <input
               type="text"
               placeholder="ค้นหารายการ, ร้านค้า..."
-              className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
+              className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
               value={expenseSearchQuery}
               onChange={(e) => setExpenseSearchQuery(e.target.value)}
             />
@@ -628,7 +629,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           <select
             value={expenseCategoryFilter}
             onChange={(e) => setExpenseCategoryFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold cursor-pointer md:w-44"
+            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-bold cursor-pointer md:w-44"
           >
             <option value="all">📁 ทุกหมวดหมู่</option>
             {categories.map((c) => (
@@ -642,14 +643,14 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
           <div
             role="group"
             aria-label="สลับมุมมองรายการค่าใช้จ่าย"
-            className="inline-flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] shrink-0 self-start md:self-auto"
+            className="inline-flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#0d131f] border border-slate-200/80 dark:border-[#24324a] shrink-0 self-start md:self-auto"
           >
             <button
               type="button"
               onClick={() => handleSwitchExpenseView('grouped')}
               className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                 expenseViewMode === 'grouped'
-                  ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-xs'
+                  ? 'bg-white dark:bg-[#1a202c] text-blue-600 dark:text-blue-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="จัดกลุ่มตามวันที่"
@@ -662,7 +663,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               onClick={() => handleSwitchExpenseView('thumbnail')}
               className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                 expenseViewMode === 'thumbnail'
-                  ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-xs'
+                  ? 'bg-white dark:bg-[#1a202c] text-blue-600 dark:text-blue-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="มุมมองการ์ดใบเสร็จ Thumbnail"
@@ -675,7 +676,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               onClick={() => handleSwitchExpenseView('compact')}
               className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                 expenseViewMode === 'compact'
-                  ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-xs'
+                  ? 'bg-white dark:bg-[#1a202c] text-blue-600 dark:text-blue-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="มุมมองตารางรายการย่อ"
@@ -690,7 +691,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
       {/* Expenses List Container */}
       <div id="expenses-view-container" tabIndex={-1} className="outline-none">
         {filteredExpenses.length === 0 ? (
-          <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl p-6 bg-white dark:bg-[#181a20]">
+          <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-[#24324a] rounded-3xl p-6 bg-white dark:bg-[#161c27]">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">ยังไม่มีรายการค่าใช้จ่ายที่ตรงกับเงื่อนไข</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
               กดปุ่มถ่ายรูปใบเสร็จเพื่อใช้ AI สแกน และบันทึกรายจ่าย หรือล้างตัวกรอง
@@ -703,7 +704,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                     setExpensePayerFilter('all');
                     setExpenseCategoryFilter('all');
                   }}
-                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer"
                 >
                   ล้างตัวกรองทั้งหมด
                 </button>
@@ -742,7 +743,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             ))}
           </div>
         ) : expenseViewMode === 'compact' ? (
-          <div className="divide-y divide-slate-100 dark:divide-[#262932] rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] overflow-hidden card-elevation">
+          <div className="divide-y divide-slate-100 dark:divide-[#24324a] rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] overflow-hidden card-elevation">
             {filteredExpenses.map((exp, idx) => (
               <ExpenseCompactRow
                 key={exp.id || idx}
@@ -768,16 +769,16 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
               return (
                 <div
                   key={group.dateKey}
-                  className="rounded-3xl border border-[#DFD7C7] dark:border-[#262932] border-l-4 border-l-[#C83E2D] bg-[#FDFBF7] dark:bg-[#181a20] overflow-hidden shadow-[0_8px_22px_-12px_rgba(35,28,20,0.12)]"
+                  className="rounded-3xl border border-[#e2e8f0] dark:border-[#24324a] border-l-4 border-l-[#2563eb] bg-[#ffffff] dark:bg-[#161c27] overflow-hidden shadow-[0_8px_22px_-12px_rgba(35,28,20,0.12)]"
                 >
-                  <div className="px-4 py-2.5 bg-[#F6F1E7] dark:bg-[#121316] border-b border-[#DFD7C7]/70 dark:border-[#262932] flex items-center justify-between gap-2 text-xs">
-                    <div className="font-serif font-black text-[#1C2630] dark:text-slate-200 flex items-center gap-1.5">
+                  <div className="px-4 py-2.5 bg-[#f1f5f9] dark:bg-[#0d131f] border-b border-[#e2e8f0]/70 dark:border-[#24324a] flex items-center justify-between gap-2 text-xs">
+                    <div className="font-serif font-black text-[#1e3a8a] dark:text-slate-200 flex items-center gap-1.5">
                       <span>📅 {group.label}</span>
-                      <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-full bg-[#EFE9DC] dark:bg-blue-950/60 text-[#5C5346] dark:text-blue-400 border border-[#DFD7C7] dark:border-transparent">
+                      <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-full bg-[#eff6ff] dark:bg-blue-950/60 text-[#475569] dark:text-blue-400 border border-[#e2e8f0] dark:border-transparent">
                         {group.items.length} รายการ
                       </span>
                     </div>
-                    <div className="font-mono font-black text-[#1C2630] dark:text-white">
+                    <div className="font-mono font-black text-[#1e3a8a] dark:text-white">
                       รวม {dayDisp.primaryText}
                       {dayDisp.secondaryText && (
                         <span className="text-[10px] font-normal text-[#6B6254] dark:text-slate-400 ml-1">
@@ -786,7 +787,7 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
                       )}
                     </div>
                   </div>
-                  <div className="divide-y divide-slate-100 dark:divide-[#262932]">
+                  <div className="divide-y divide-slate-100 dark:divide-[#24324a]">
                     {group.items.map((exp, idx) => (
                       <ExpenseCard
                         key={exp.id || idx}

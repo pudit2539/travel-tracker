@@ -207,7 +207,7 @@ export function CustomPlacePhotoModal({
         aria-modal="true"
         aria-label="เปลี่ยนรูปภาพสถานที่"
         onClick={(e) => e.stopPropagation()}
-        className="my-auto w-full max-w-xl max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] shadow-2xl p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 text-left modal-safe-card"
+        className="my-auto w-full max-w-xl max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#24324a] shadow-2xl p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 text-left modal-safe-card"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
@@ -236,7 +236,7 @@ export function CustomPlacePhotoModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-[#1e2027] text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer shrink-0"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-[#1a202c] text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer shrink-0"
             aria-label="ปิดหน้าต่าง"
           >
             <X className="h-4 w-4" />
@@ -284,7 +284,7 @@ export function CustomPlacePhotoModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="พิมพ์ชื่อโรงแรม / สถานที่เที่ยว เช่น Quintessa Hotel Osaka..."
-              className="flex-1 min-w-0 px-3 py-2 sm:py-1.5 rounded-xl text-base sm:text-xs bg-white dark:bg-[#121316] border border-slate-200 dark:border-[#262932] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              className="flex-1 min-w-0 px-3 py-2 sm:py-1.5 rounded-xl text-base sm:text-xs bg-white dark:bg-[#0d131f] border border-slate-200 dark:border-[#24324a] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
             />
             <button
               type="submit"
@@ -384,7 +384,7 @@ export function CustomPlacePhotoModal({
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://..."
-              className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1e2027] border border-slate-200 dark:border-[#262932] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1a202c] border border-slate-200 dark:border-[#24324a] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
             />
             <button
               type="button"
@@ -403,7 +403,7 @@ export function CustomPlacePhotoModal({
         )}
 
         {/* Footer Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#262932]">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#24324a]">
           {hasCustomOverride || previewUrl ? (
             <button
               type="button"
@@ -423,7 +423,7 @@ export function CustomPlacePhotoModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer"
             >
               ยกเลิก
             </button>

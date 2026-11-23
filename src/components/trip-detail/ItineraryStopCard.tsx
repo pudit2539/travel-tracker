@@ -406,28 +406,28 @@ function ItineraryStopCardComponent({
             ? { contentVisibility: 'auto', containIntrinsicSize: '0 320px' }
             : undefined
         }
-        className={`group rounded-xl border transition-all duration-300 relative ${
+        className={`group rounded-2xl border transition-all duration-300 relative ${
           showAdminMenu ? 'overflow-visible z-30' : 'overflow-hidden'
         } ${
           isSkipped
-            ? 'border-dashed border-[#D6CEC0] dark:border-slate-700 bg-[#FDFCF9]/70 dark:bg-[#14161b]/70 opacity-65'
+            ? 'border-dashed border-[#cbd5e1] dark:border-[#334155] bg-white/70 dark:bg-[#161c27]/60 opacity-65'
             : visited
-            ? 'border-[#DFD7C7] dark:border-emerald-800/60 border-l-4 border-l-[#C83E2D] bg-white dark:bg-[#181a20] shadow-[0_2px_10px_rgba(35,30,20,0.04)]'
-            : 'border-[#DFD7C7] dark:border-[#2C2A26] border-l-4 border-l-[#C83E2D] bg-white dark:bg-[#181a20] shadow-[0_3px_14px_rgba(35,30,20,0.05)] hover:shadow-[0_6px_20px_rgba(35,30,20,0.09)]'
+            ? 'border-[#bae6fd] dark:border-emerald-700/50 border-l-4 border-l-[#0284c7] dark:border-l-emerald-400 bg-white dark:bg-[#161c27] shadow-[0_4px_16px_-4px_rgba(15,23,42,0.06)] dark:shadow-[0_8px_24px_-4px_rgba(4,9,20,0.55)]'
+            : 'border-[#e2e8f0] dark:border-[#24324a] border-l-4 border-l-[#2563eb] dark:border-l-[#4cd7f6] bg-white dark:bg-[#161c27] shadow-[0_4px_18px_-4px_rgba(15,23,42,0.06)] hover:shadow-[0_10px_28px_-6px_rgba(37,99,235,0.14)] dark:shadow-[0_8px_28px_-4px_rgba(4,9,20,0.55)] dark:hover:border-[#4cd7f6]/40'
         }`}
       >
-        <div className="relative z-10 bg-white dark:bg-[#181a20] rounded-xl">
+        <div className="relative z-10 bg-white dark:bg-[#161c27] rounded-2xl">
           {/* Skipped Stop Banner */}
           {isSkipped && (
-            <div className="px-4 py-2 bg-[#F4EFE6] dark:bg-slate-800/80 border-b border-[#E5DEC9] dark:border-slate-700 rounded-t-xl flex items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-[#4A4640] dark:text-slate-300 flex items-center gap-1.5">
-                <SkipForward className="h-3.5 w-3.5 text-[#C83E2D]" />
+            <div className="px-4 py-2 bg-[#f1f5f9] dark:bg-[#080e19]/80 border-b border-[#e2e8f0] dark:border-[#24324a] rounded-t-2xl flex items-center justify-between gap-2 text-xs">
+              <span className="font-bold text-[#475569] dark:text-[#94a3b8] flex items-center gap-1.5">
+                <SkipForward className="h-3.5 w-3.5 text-[#2563eb] dark:text-[#4cd7f6]" />
                 <span>ข้ามจุดแวะนี้ชั่วคราว (ไม่นับรวมในเวลาและเส้นทางนำทาง)</span>
               </span>
               <button
                 type="button"
                 onClick={handleToggleSkip}
-                className="px-2.5 py-1 rounded bg-[#1C2630] hover:bg-[#2B3947] text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer shrink-0"
+                className="px-2.5 py-1 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer shrink-0"
               >
                 <RotateCcw className="h-3 w-3" />
                 <span>คืนค่าเข้าแผน</span>
@@ -438,21 +438,21 @@ function ItineraryStopCardComponent({
           {/* Clean Editorial 16:9 Media Strip (Photography stays clean; title moves to solid card surface below) */}
           <div
             onClick={() => setShowLightbox(true)}
-            className={`relative w-full h-32 sm:h-40 bg-gradient-to-br from-[#1C2630] to-[#35475A] flex flex-col justify-between p-3 sm:p-3.5 cursor-zoom-in ${
-              isSkipped ? '' : 'rounded-t-xl'
+            className={`relative w-full h-32 sm:h-40 bg-gradient-to-br from-[#081326] to-[#1e3a8a] flex flex-col justify-between p-3 sm:p-3.5 cursor-zoom-in ${
+              isSkipped ? '' : 'rounded-t-2xl'
             }`}
             title="แตะเพื่อขยายดูรูปสถานที่จริง / ดูหน้าร้าน Street View"
           >
             {/* Background Media Layer (clipped cleanly while dropdowns remain unclipped) */}
-            <div className={`absolute inset-0 overflow-hidden pointer-events-none ${isSkipped ? '' : 'rounded-t-xl'}`}>
-              {/* Decorative Japanese wave fallback background */}
+            <div className={`absolute inset-0 overflow-hidden pointer-events-none ${isSkipped ? '' : 'rounded-t-2xl'}`}>
+              {/* Decorative oceanic wave fallback background */}
               <svg
                 className="absolute inset-0 w-full h-full opacity-25 pointer-events-none"
                 viewBox="0 0 400 200"
                 preserveAspectRatio="none"
               >
-                <path d="M0,80 C120,40 220,120 400,60 L400,200 L0,200 Z" fill="#4B627A" />
-                <path d="M0,130 C150,90 260,170 400,110 L400,200 L0,200 Z" fill="#243342" />
+                <path d="M0,80 C120,40 220,120 400,60 L400,200 L0,200 Z" fill="#1d4ed8" />
+                <path d="M0,130 C150,90 260,170 400,110 L400,200 L0,200 Z" fill="#080e19" />
               </svg>
 
               {activeSrc && (
@@ -466,8 +466,8 @@ function ItineraryStopCardComponent({
                 />
               )}
 
-              {/* Light Editorial Vignette for corner badge legibility without muddy contrast */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#141C24]/75 via-transparent to-black/35 pointer-events-none" />
+              {/* Oceanic Glacial Vignette for badge legibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080e19]/80 via-transparent to-[#080e19]/40 pointer-events-none" />
             </div>
 
             {/* Top Row Overlay: Editorial Tag (Left) + Stamp Check-in & Menu (Right) */}
@@ -476,25 +476,25 @@ function ItineraryStopCardComponent({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
-                <span className="px-2 py-0.5 rounded-[3px] bg-white/95 text-[#1A1A1A] text-[10px] font-bold tracking-wider uppercase shadow-2xs">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#080e19]/80 backdrop-blur-md border border-[#4cd7f6]/25 text-[#acedff] font-mono text-[10px] font-bold tracking-wider uppercase shadow-2xs">
                   STOP {String(idx + 1).padStart(2, '0')} / {visual.tagLabel}
                 </span>
                 {visual.isCustomPhoto && !isUsingFallback && (
-                  <span className="px-1.5 py-0.5 rounded-[3px] bg-emerald-600/90 text-white text-[9px] font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[9px] font-bold backdrop-blur-xs">
                     ✨ รูปของฉัน
                   </span>
                 )}
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0 relative">
-                {/* Editorial Stamp / Live Badge Check-in Button */}
+                {/* Oceanic Stamp / Check-in Button */}
                 <button
                   type="button"
                   onClick={toggleVisited}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-95 ${
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-95 ${
                     visited
-                      ? 'bg-[#FFF5F2]/95 text-[#C83E2D] border border-[#C83E2D] -rotate-2 shadow-xs'
-                      : 'bg-[#C83E2D] hover:bg-[#B33324] text-white shadow-xs'
+                      ? 'bg-[#e0f2fe]/95 dark:bg-[#080e19]/90 text-[#0369a1] dark:text-[#4cd7f6] border border-[#0284c7] dark:border-[#4cd7f6] shadow-xs'
+                      : 'bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] hover:from-[#1e40af] hover:to-[#1d4ed8] text-white border border-white/20 shadow-xs'
                   }`}
                   title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน (คืนค่าเดิม)' : 'ประทับตราเช็กอิน ⛩️'}
                 >
@@ -528,7 +528,7 @@ function ItineraryStopCardComponent({
                   </button>
 
                   {showAdminMenu && (
-                    <div className="absolute right-0 top-9 z-30 w-56 rounded-xl bg-white dark:bg-[#1e2027] border border-[#DFD7C7] dark:border-[#262932] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-9 z-30 w-56 rounded-xl bg-white dark:bg-[#1a202c] border border-[#e2e8f0] dark:border-[#24324a] shadow-xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
                       <button
                         type="button"
                         onClick={() => {
@@ -711,25 +711,25 @@ function ItineraryStopCardComponent({
                 href={mainPlaceMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="font-serif text-base sm:text-xl font-bold text-[#1A1A1A] dark:text-white hover:text-[#C83E2D] dark:hover:text-[#FF8575] inline-flex items-baseline gap-1.5 transition-colors cursor-pointer leading-snug break-words max-w-full"
+                className="font-serif text-base sm:text-xl font-bold text-[#0f172a] dark:text-[#f8fafc] hover:text-[#2563eb] dark:hover:text-[#4cd7f6] inline-flex items-baseline gap-1.5 transition-colors cursor-pointer leading-snug break-words max-w-full"
               >
                 <span className="min-w-0 break-words">{item.main_place}</span>
-                <ExternalLink className="h-3.5 w-3.5 text-[#8C8275] dark:text-slate-400 shrink-0 self-center" />
+                <ExternalLink className="h-3.5 w-3.5 text-[#64748b] dark:text-[#7bd0ff] shrink-0 self-center" />
               </a>
               {visited && meta?.by && (
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 font-semibold text-[10px]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 font-semibold text-[10px]">
                     ✓ เช็กอินโดย {meta.by}
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Editorial Timing & Schedule Row */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#F0ECE3] dark:border-[#262932]">
+            {/* Oceanic Timing & Schedule Row */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#e2e8f0] dark:border-[#24324a]">
               <div className="flex items-center gap-2 flex-wrap">
                 {item.time_slot && (
-                  <span className="font-sans tabular-nums lining-nums text-base sm:text-lg font-black text-[#181818] dark:text-white tracking-tight">
+                  <span className="font-mono tabular-nums lining-nums text-base sm:text-lg font-bold text-[#1d4ed8] dark:text-[#4cd7f6] tracking-tight">
                     {item.time_slot.replace('-', ' — ')}
                   </span>
                 )}
@@ -738,7 +738,7 @@ function ItineraryStopCardComponent({
                   <button
                     type="button"
                     onClick={() => setShowTimeTuner((v) => !v)}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#685E50] dark:text-slate-300 bg-[#F4EFE6] dark:bg-[#22252E] px-2.5 py-0.5 rounded-[4px] border border-[#E5DEC9] dark:border-[#323642] hover:border-[#C83E2D] transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[#475569] dark:text-[#c3c6d7] bg-[#f1f5f9] dark:bg-[#080e19] px-2.5 py-0.5 rounded-full border border-[#e2e8f0] dark:border-[#24324a] hover:border-[#2563eb] dark:hover:border-[#4cd7f6] transition-colors cursor-pointer"
                     title="แตะเพื่อปรับเวลาแวะพัก / เวลานัดหมาย / เวลาเปิด-ปิดร้าน (คำนวณไหลอัตโนมัติ)"
                   >
                     <span>
@@ -751,13 +751,13 @@ function ItineraryStopCardComponent({
                 )}
 
                 {!isSkipped && computedSchedule && computedSchedule.waitMin > 0 && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#685E50] dark:text-amber-300 bg-[#F4EFE6] dark:bg-amber-950/50 px-2 py-0.5 rounded-[4px]">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/60">
                     ⏱️ รอคิว/รอเปิด ~{computedSchedule.waitMin} น.
                   </span>
                 )}
 
                 {!isSkipped && computedSchedule && computedSchedule.lateMin > 0 && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#B52F1E] bg-[#FFF5F2] px-2 py-0.5 rounded-[4px] border border-[#F8D3CB] animate-pulse">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-[#ffb4ab] bg-rose-50 dark:bg-rose-950/50 px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800/60 animate-pulse">
                     ⚠️ {computedSchedule.lateReason || `สาย ${computedSchedule.lateMin} นาที!`}
                   </span>
                 )}
@@ -771,7 +771,7 @@ function ItineraryStopCardComponent({
                   )}&travelmode=transit`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#F4EFE6] dark:bg-[#22252E] text-[#403B33] dark:text-amber-300 text-[11px] font-semibold hover:bg-[#EAE2D3] transition-colors shrink-0"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#eff6ff] dark:bg-[#080e19] text-[#1d4ed8] dark:text-[#4cd7f6] border border-[#bfdbfe] dark:border-[#4cd7f6]/25 text-[11px] font-semibold hover:bg-[#dbeafe] dark:hover:bg-[#1a202c] transition-colors shrink-0"
                 >
                   <span>🚉 {transitGuide.platform ? `ชานชาลา ${transitGuide.platform}` : 'เช็กชานชาลาสด'}</span>
                   <ExternalLink className="h-2.5 w-2.5 opacity-75" />
@@ -779,7 +779,7 @@ function ItineraryStopCardComponent({
               )}
             </div>
 
-            {/* Editorial Pills Container (Amenities, Elevator, Last Train & Smart Badges) */}
+            {/* Oceanic Pills Container (Amenities, Elevator, Last Train & Smart Badges) */}
             {(amenities.length > 0 ||
               elevatorTip ||
               lastTrainTip ||
@@ -794,7 +794,7 @@ function ItineraryStopCardComponent({
               <div className="space-y-2 text-left">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {transitGuide.bestTip && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-semibold bg-[#FFF5F2] dark:bg-rose-950/40 border border-[#F8D3CB] dark:border-rose-800/50 text-[#B52F1E] dark:text-rose-300">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#eff6ff] dark:bg-[#2563eb]/20 border border-[#bfdbfe] dark:border-[#3b82f6]/35 text-[#1d4ed8] dark:text-[#b4c5ff]">
                       <span>✨ {transitGuide.bestTip}</span>
                     </span>
                   )}
@@ -802,7 +802,7 @@ function ItineraryStopCardComponent({
                   {amenities.map((tag) => (
                     <span
                       key={tag.id}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-medium bg-[#F6F3EB] dark:bg-[#22242B] border border-[#EAE2D3] dark:border-[#323540] text-[#403B33] dark:text-slate-200"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#f1f5f9] dark:bg-[#080e19]/80 border border-[#e2e8f0] dark:border-[#24324a] text-[#334155] dark:text-[#c3c6d7]"
                     >
                       <span>{tag.emoji}</span>
                       <span>{tag.label}</span>
@@ -813,10 +813,10 @@ function ItineraryStopCardComponent({
                     <button
                       type="button"
                       onClick={() => setShowTimeTuner((v) => !v)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-semibold border transition-all cursor-pointer ${
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
                         showTimeTuner
-                          ? 'bg-[#1C2630] text-white border-[#1C2630]'
-                          : 'bg-[#F6F3EB] dark:bg-[#22242B] text-[#403B33] dark:text-slate-200 border-[#EAE2D3] dark:border-[#323540]'
+                          ? 'bg-[#2563eb] text-white border-[#2563eb]'
+                          : 'bg-[#f1f5f9] dark:bg-[#080e19] text-[#334155] dark:text-[#c3c6d7] border-[#e2e8f0] dark:border-[#24324a]'
                       }`}
                     >
                       <Clock className="h-3 w-3" />
@@ -830,7 +830,7 @@ function ItineraryStopCardComponent({
                     <button
                       type="button"
                       onClick={() => setShowStopShopping((v) => !v)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-semibold border transition-all cursor-pointer bg-[#FFF5F2] dark:bg-rose-950/40 text-[#B52F1E] dark:text-rose-300 border-[#F8D3CB] dark:border-rose-800/50"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer bg-[#e0f2fe] dark:bg-[#03b5d3]/20 text-[#0369a1] dark:text-[#4cd7f6] border-[#bae6fd] dark:border-[#4cd7f6]/30"
                     >
                       <ShoppingBag className="h-3 w-3" />
                       <span>
@@ -843,7 +843,7 @@ function ItineraryStopCardComponent({
                     <button
                       type="button"
                       onClick={() => setShowStopNotes((v) => !v)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] text-[11px] font-semibold border transition-all cursor-pointer bg-[#F6F3EB] dark:bg-[#22242B] text-[#403B33] dark:text-slate-200 border-[#EAE2D3] dark:border-[#323540]"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer bg-[#f1f5f9] dark:bg-[#080e19] text-[#334155] dark:text-[#c3c6d7] border-[#e2e8f0] dark:border-[#24324a]"
                     >
                       <MessageSquare className="h-3 w-3" />
                       <span>โน้ตกลุ่ม ({pinnedNotesCount})</span>
@@ -852,37 +852,37 @@ function ItineraryStopCardComponent({
                 </div>
 
                 {elevatorTip && (
-                  <div className="px-3 py-2 rounded-[4px] bg-[#F6F3EB] dark:bg-teal-950/35 border border-[#EAE2D3] dark:border-teal-800/60 text-[11px] font-medium text-[#403B33] dark:text-teal-200 leading-relaxed">
+                  <div className="px-3 py-2 rounded-xl bg-[#f0f9ff] dark:bg-sky-950/35 border border-[#bae6fd] dark:border-[#38bdf8]/25 text-[11px] font-medium text-[#0c4a6e] dark:text-[#bae6fd] leading-relaxed">
                     {elevatorTip}
                   </div>
                 )}
 
                 {lastTrainTip && (
-                  <div className="px-3 py-2 rounded-[4px] bg-[#FFF5F2] dark:bg-indigo-950/35 border border-[#F8D3CB] dark:border-indigo-800/60 text-[11px] font-semibold text-[#B52F1E] dark:text-indigo-200 leading-relaxed">
+                  <div className="px-3 py-2 rounded-xl bg-[#eff6ff] dark:bg-indigo-950/40 border border-[#bfdbfe] dark:border-indigo-700/50 text-[11px] font-semibold text-[#1e3a8a] dark:text-[#b4c5ff] leading-relaxed">
                     {lastTrainTip}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Editorial Traveler's Note Box (Transit Details + Food Recommendation) */}
+            {/* Recessed Oceanic Telemetry Note Box (Transit Details + Food Recommendation) */}
             {(hasTransitNote || hasFoodNote) && (
-              <div className="bg-[#FAF7F2] dark:bg-[#1D1F26] border-l-2 border-l-[#C83E2D] rounded-r-md p-3 space-y-2.5 text-left">
+              <div className="bg-[#f8fafc] dark:bg-[#080e19]/80 border border-[#e2e8f0] dark:border-[#24324a] border-l-2 border-l-[#2563eb] dark:border-l-[#4cd7f6] rounded-xl p-3.5 space-y-2.5 text-left">
                 {hasTransitNote && (
                   <div>
-                    <div className="text-[10px] font-bold tracking-widest text-[#C83E2D] dark:text-[#E05A47] uppercase mb-0.5">
+                    <div className="text-[10px] font-mono font-bold tracking-widest text-[#1d4ed8] dark:text-[#4cd7f6] uppercase mb-0.5">
                       Transit & Route Note
                     </div>
-                    <p className="text-xs text-[#443E36] dark:text-slate-200 leading-relaxed selectable-text">
+                    <p className="text-xs text-[#334155] dark:text-[#dde2f3] leading-relaxed selectable-text">
                       {transitGuide.details}
                     </p>
                   </div>
                 )}
 
                 {hasFoodNote && (
-                  <div className={hasTransitNote ? 'pt-2 border-t border-[#EBE4D8] dark:border-[#2C2F3A]' : ''}>
+                  <div className={hasTransitNote ? 'pt-2.5 border-t border-[#e2e8f0] dark:border-[#24324a]' : ''}>
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <span className="text-[10px] font-bold tracking-widest text-[#C83E2D] dark:text-[#E05A47] uppercase">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#0284c7] dark:text-[#7bd0ff] uppercase">
                         Traveler’s Note · ร้านแนะนำ
                       </span>
                       {foodSearchUrl && (
@@ -890,14 +890,14 @@ function ItineraryStopCardComponent({
                           href={foodSearchUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-[3px] bg-[#1C2630] hover:bg-[#2D3B4A] text-white transition-all shrink-0 cursor-pointer"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#1e3a8a] hover:bg-[#1d4ed8] dark:bg-[#2563eb] dark:hover:bg-[#3b82f6] text-white transition-all shrink-0 cursor-pointer"
                         >
                           <span>แผนที่ร้าน 📍</span>
                           <ExternalLink className="h-2.5 w-2.5 opacity-80" />
                         </a>
                       )}
                     </div>
-                    <p className="text-xs text-[#443E36] dark:text-slate-200 leading-relaxed selectable-text">
+                    <p className="text-xs text-[#334155] dark:text-[#dde2f3] leading-relaxed selectable-text">
                       {item.food_recommendation}
                     </p>
                   </div>
@@ -911,17 +911,17 @@ function ItineraryStopCardComponent({
                 <button
                   type="button"
                   onClick={() => onTogglePlanB(item.id)}
-                  className="text-xs font-bold text-[#403B33] dark:text-slate-300 inline-flex items-center gap-1.5 hover:text-[#C83E2D] dark:hover:text-rose-400 transition-colors cursor-pointer"
+                  className="text-xs font-bold text-[#334155] dark:text-[#c3c6d7] inline-flex items-center gap-1.5 hover:text-[#2563eb] dark:hover:text-[#4cd7f6] transition-colors cursor-pointer"
                 >
-                  <div className="w-5 h-5 rounded-[4px] bg-[#FFF5F2] dark:bg-rose-500/20 border border-[#F8D3CB] dark:border-rose-800 flex items-center justify-center text-[#C83E2D] dark:text-rose-400">
+                  <div className="w-5 h-5 rounded-md bg-[#eff6ff] dark:bg-[#080e19] border border-[#bfdbfe] dark:border-[#4cd7f6]/30 flex items-center justify-center text-[#2563eb] dark:text-[#4cd7f6]">
                     <Shield className="h-3 w-3" />
                   </div>
                   <span>แผนสำรอง (Plan B)</span>
                   {isPlanBOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                 </button>
                 {isPlanBOpen && (
-                  <div className="p-3.5 mt-2 rounded-lg bg-[#FAF7F2] dark:bg-[#121316] text-xs text-[#443E36] dark:text-slate-200 space-y-2 border border-[#EAE2D3] dark:border-[#262932] text-left">
-                    <div className="text-[10px] font-bold tracking-widest uppercase text-[#8C8275] dark:text-slate-400 text-left">
+                  <div className="p-3.5 mt-2 rounded-xl bg-[#f8fafc] dark:bg-[#080e19]/90 text-xs text-[#334155] dark:text-[#dde2f3] space-y-2 border border-[#dbeafe] dark:border-[#24324a] text-left">
+                    <div className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#0284c7] dark:text-[#7bd0ff] text-left">
                       Backup Spots & Dining
                     </div>
                     <div className="space-y-1.5">
@@ -946,16 +946,16 @@ function ItineraryStopCardComponent({
                           return (
                             <div
                               key={lineIdx}
-                              className="p-2.5 rounded-md bg-white dark:bg-[#1e2027] border border-[#EAE2D3] dark:border-[#262932] flex items-center justify-between gap-3 hover:border-[#C83E2D] transition-all text-left"
+                              className="p-2.5 rounded-lg bg-white dark:bg-[#161c27] border border-[#e2e8f0] dark:border-[#24324a] flex items-center justify-between gap-3 hover:border-[#2563eb] dark:hover:border-[#4cd7f6]/50 transition-all text-left"
                             >
-                              <span className="font-medium text-[#2D2820] dark:text-slate-200 leading-relaxed text-left flex-1">
+                              <span className="font-medium text-[#0f172a] dark:text-[#dde2f3] leading-relaxed text-left flex-1">
                                 {line}
                               </span>
                               <a
                                 href={lineMapsUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-[4px] bg-[#F6F3EB] dark:bg-slate-800 text-[#2D2820] dark:text-slate-200 hover:bg-[#1C2630] hover:text-white transition-all shrink-0 cursor-pointer"
+                                className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#eff6ff] dark:bg-[#080e19] text-[#1d4ed8] dark:text-[#4cd7f6] border border-[#bfdbfe] dark:border-[#4cd7f6]/25 hover:bg-[#2563eb] hover:text-white transition-all shrink-0 cursor-pointer"
                               >
                                 <span>แผนที่ 📍</span>
                                 <ExternalLink className="h-2.5 w-2.5" />
@@ -971,7 +971,7 @@ function ItineraryStopCardComponent({
 
             {/* Interactive Drawers (Time Tuner, Shopping, Group Notes) */}
             {(showTimeTuner || showStopShopping || showStopNotes) && (
-              <div className="pt-2 border-t border-[#F0ECE3] dark:border-[#22252e] space-y-2 text-left">
+              <div className="pt-2 border-t border-[#e2e8f0] dark:border-[#1a202c] space-y-2 text-left">
 
             {/* 1. Smart Cascade Time Tuner Drawer */}
             {showTimeTuner && (
@@ -1005,7 +1005,7 @@ function ItineraryStopCardComponent({
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-black border cursor-pointer transition-all ${
                             activeDur === mins
                               ? 'bg-indigo-600 text-white border-indigo-600'
-                              : 'bg-white dark:bg-[#1e2027] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                              : 'bg-white dark:bg-[#1a202c] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                           }`}
                         >
                           {mins} นาที
@@ -1026,7 +1026,7 @@ function ItineraryStopCardComponent({
                       onChange={(e) =>
                         handlePatchMeta({ fixedStartTime: e.target.value || undefined })
                       }
-                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
+                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
                     />
                   </div>
                   <div>
@@ -1037,7 +1037,7 @@ function ItineraryStopCardComponent({
                       type="time"
                       value={activeStopMeta.openTime || ''}
                       onChange={(e) => handlePatchMeta({ openTime: e.target.value || undefined })}
-                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
+                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
                     />
                   </div>
                   <div>
@@ -1048,7 +1048,7 @@ function ItineraryStopCardComponent({
                       type="time"
                       value={activeStopMeta.closeTime || ''}
                       onChange={(e) => handlePatchMeta({ closeTime: e.target.value || undefined })}
-                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
+                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
                     />
                   </div>
                   <div>
@@ -1064,7 +1064,7 @@ function ItineraryStopCardComponent({
                           fareToNext: e.target.value ? parseInt(e.target.value, 10) : undefined,
                         })
                       }
-                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
+                      className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
                     />
                   </div>
                 </div>
@@ -1103,7 +1103,7 @@ function ItineraryStopCardComponent({
                           className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
                             isBought
                               ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60'
-                              : 'bg-white dark:bg-[#1e2027] border-slate-200/80 dark:border-[#262932]'
+                              : 'bg-white dark:bg-[#1a202c] border-slate-200/80 dark:border-[#24324a]'
                           }`}
                         >
                           <div className="min-w-0 flex-1">
@@ -1156,14 +1156,14 @@ function ItineraryStopCardComponent({
                     placeholder="เพิ่มของต้องซื้อที่จุดนี้..."
                     value={quickShopName}
                     onChange={(e) => setQuickShopName(e.target.value)}
-                    className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                    className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
                   />
                   <input
                     type="number"
                     placeholder="¥ ราคา"
                     value={quickShopPrice}
                     onChange={(e) => setQuickShopPrice(e.target.value)}
-                    className="w-20 px-2 py-1.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                    className="w-20 px-2 py-1.5 rounded-xl bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
                   />
                   <button
                     type="submit"
@@ -1198,7 +1198,7 @@ function ItineraryStopCardComponent({
                   {(activeStopMeta.pinnedNotes || []).map((note) => (
                     <div
                       key={note.id}
-                      className="p-2.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] flex items-start justify-between gap-2"
+                      className="p-2.5 rounded-xl bg-white dark:bg-[#1a202c] border border-slate-200/80 dark:border-[#24324a] flex items-start justify-between gap-2"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
@@ -1229,7 +1229,7 @@ function ItineraryStopCardComponent({
                     placeholder="ฝากโน้ต/จุดนัดพบไว้ที่สถานที่นี้..."
                     value={newNoteText}
                     onChange={(e) => setNewNoteText(e.target.value)}
-                    className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#1e2027] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                    className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
                   />
                   <button
                     type="submit"
@@ -1244,13 +1244,13 @@ function ItineraryStopCardComponent({
           </div>
           )}
 
-            {/* Editorial Action Grid (2-Button default, or 2+1 / 3-Button with 1-Tap Quick Expense) */}
+            {/* Oceanic Action Grid (2-Button default, or 2+1 / 3-Button with 1-Tap Quick Expense) */}
             <div className={`grid gap-2 pt-1 ${onLogExpenseForStop ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
               <a
                 href={mainPlaceDirectionsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className={`${onLogExpenseForStop ? 'col-span-2 sm:col-span-1' : ''} min-h-10 py-2.5 px-3 rounded-md bg-[#1C2630] hover:bg-[#293847] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation shadow-2xs`}
+                className={`${onLogExpenseForStop ? 'col-span-2 sm:col-span-1' : ''} min-h-10 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] hover:from-[#1e40af] hover:to-[#1d4ed8] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center touch-manipulation shadow-[0_4px_14px_rgba(37,99,235,0.28)] active:scale-95`}
               >
                 <Navigation className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">นำทาง Google Maps</span>
@@ -1259,10 +1259,10 @@ function ItineraryStopCardComponent({
               <button
                 type="button"
                 onClick={() => setShowStaffModal(true)}
-                className="min-h-10 py-2.5 px-3 rounded-md bg-white hover:bg-[#F8F6F0] dark:bg-[#22252E] dark:hover:bg-[#2B2F3A] text-[#2D2820] dark:text-slate-100 border border-[#D8D0C2] dark:border-[#363A45] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation"
+                className="min-h-10 py-2.5 px-3 rounded-xl bg-[#f1f5f9] hover:bg-[#e2e8f0] dark:bg-[#1a202c] dark:hover:bg-[#242a36] text-[#0f172a] dark:text-[#dde2f3] border border-[#e2e8f0] dark:border-[#24324a] text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation active:scale-95"
                 title="แสดงชื่อสถานที่ภาษาญี่ปุ่นตัวใหญ่ให้คนขับแท็กซี่หรือพนักงานสถานีรถไฟดู"
               >
-                <MessageSquare className="h-3.5 w-3.5 text-[#C83E2D] dark:text-rose-400 shrink-0" />
+                <MessageSquare className="h-3.5 w-3.5 text-[#0284c7] dark:text-[#4cd7f6] shrink-0" />
                 <span className="truncate">โชว์ชื่อภาษาญี่ปุ่น</span>
               </button>
 
@@ -1274,10 +1274,10 @@ function ItineraryStopCardComponent({
                     onLogExpenseForStop(item);
                   }}
                   aria-label="จดรายจ่ายจุดนี้"
-                  className="min-h-10 py-2.5 px-3 rounded-md bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation active:scale-95"
+                  className="min-h-10 py-2.5 px-3 rounded-xl bg-[#e0f2fe] hover:bg-[#bae6fd] dark:bg-[#080e19] dark:hover:bg-[#1a202c] text-[#0369a1] dark:text-[#4cd7f6] border border-[#bae6fd] dark:border-[#4cd7f6]/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center touch-manipulation active:scale-95"
                   title="จดรายจ่ายที่จุดแวะนี้ทันที"
                 >
-                  <Receipt className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <Receipt className="h-3.5 w-3.5 text-[#0284c7] dark:text-[#4cd7f6] shrink-0" />
                   <span className="truncate">จดจ่ายจุดนี้</span>
                 </button>
               )}
@@ -1365,14 +1365,14 @@ function ItineraryThumbnailCardComponent({
   return (
     <>
       <div
-        className={`group rounded-xl border border-[#DFD7C7] dark:border-[#2C2A26] border-l-4 border-l-[#C83E2D] overflow-hidden flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#181a20] shadow-[0_3px_14px_rgba(35,30,20,0.05)] hover:-translate-y-0.5`}
+        className={`group rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] border-l-4 border-l-[#2563eb] overflow-hidden flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#161c27] shadow-[0_3px_14px_rgba(35,30,20,0.05)] hover:-translate-y-0.5`}
       >
         {/* Top Visual Thumbnail (Clean media strip — title lives cleanly below image) */}
         <div>
           <div
             onClick={() => setShowLightbox(true)}
             style={{ aspectRatio: '16 / 10' }}
-            className="relative w-full aspect-[16/10] flex flex-col justify-between p-2.5 sm:p-3 bg-gradient-to-br from-[#1C2630] to-[#35475A] cursor-zoom-in overflow-hidden"
+            className="relative w-full aspect-[16/10] flex flex-col justify-between p-2.5 sm:p-3 bg-gradient-to-br from-[#1e3a8a] to-[#1e3a8a] cursor-zoom-in overflow-hidden"
             title="แตะที่รูปเพื่อขยายเต็มจอ / ดูหน้าร้าน Street View"
           >
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -1386,7 +1386,7 @@ function ItineraryThumbnailCardComponent({
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#141C24]/70 via-transparent to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080e19]/70 via-transparent to-black/30" />
             </div>
 
             {/* Top Badges */}
@@ -1395,11 +1395,11 @@ function ItineraryThumbnailCardComponent({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-1 flex-wrap min-w-0 flex-1">
-                <span className="px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase bg-white/95 text-[#1A1A1A]">
+                <span className="px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase bg-white/95 text-[#0f172a]">
                   STOP {String(idx + 1).padStart(2, '0')}
                 </span>
                 {item.time_slot && (
-                  <span className="px-2 py-0.5 rounded-[3px] text-[10px] font-bold bg-[#1C2630]/90 text-white">
+                  <span className="px-2 py-0.5 rounded-[3px] text-[10px] font-bold bg-[#1e3a8a]/90 text-white">
                     {item.time_slot}
                   </span>
                 )}
@@ -1410,8 +1410,8 @@ function ItineraryThumbnailCardComponent({
                 onClick={toggleVisited}
                 className={`px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-95 shrink-0 ${
                   visited
-                    ? 'bg-[#FFF5F2]/95 text-[#C83E2D] border border-[#C83E2D] -rotate-2'
-                    : 'bg-[#C83E2D] text-white hover:bg-[#B23222]'
+                    ? 'bg-[#eff6ff]/95 text-[#2563eb] border border-[#2563eb] -rotate-2'
+                    : 'bg-[#2563eb] text-white hover:bg-[#1d4ed8]'
                 }`}
               >
                 {visited ? `VISITED ${meta?.at || '済'}` : 'CHECK-IN'}
@@ -1470,27 +1470,27 @@ function ItineraryThumbnailCardComponent({
               href={mainPlaceMapsUrl}
               target="_blank"
               rel="noreferrer"
-              className="block font-serif text-sm sm:text-base font-bold text-[#1A1A1A] dark:text-white hover:text-[#C83E2D] dark:hover:text-[#FF8575] leading-snug break-words transition-colors"
+              className="block font-serif text-sm sm:text-base font-bold text-[#0f172a] dark:text-white hover:text-[#2563eb] dark:hover:text-[#4cd7f6] leading-snug break-words transition-colors"
             >
               {item.main_place}
             </a>
 
             {hasTransitNote ? (
-              <p className="text-[11px] text-[#443E36] dark:text-slate-300 line-clamp-1 flex items-center gap-1.5 font-medium">
-                <Bus className="h-3 w-3 text-[#C83E2D] shrink-0" />
+              <p className="text-[11px] text-[#334155] dark:text-slate-300 line-clamp-1 flex items-center gap-1.5 font-medium">
+                <Bus className="h-3 w-3 text-[#2563eb] shrink-0" />
                 <span className="truncate">{transitGuide.details}</span>
               </p>
             ) : null}
 
             {hasFoodNote ? (
-              <p className="text-[11px] text-[#B52F1E] dark:text-amber-300 line-clamp-1 flex items-center gap-1.5 font-semibold">
-                <Utensils className="h-3 w-3 text-[#C83E2D] shrink-0" />
+              <p className="text-[11px] text-[#1d4ed8] dark:text-amber-300 line-clamp-1 flex items-center gap-1.5 font-semibold">
+                <Utensils className="h-3 w-3 text-[#2563eb] shrink-0" />
                 <span className="truncate">{item.food_recommendation}</span>
               </p>
             ) : null}
 
             {!hasTransitNote && !hasFoodNote && (
-              <p className="text-[11px] text-[#8C8275] dark:text-slate-500 font-medium">
+              <p className="text-[11px] text-[#64748b] dark:text-slate-500 font-medium">
                 {item.date_label || `Day ${idx + 1}`} · แตะที่รูปเพื่อขยายเต็มจอ
               </p>
             )}
@@ -1503,7 +1503,7 @@ function ItineraryThumbnailCardComponent({
             href={mainPlaceDirectionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="min-h-9 py-1.5 px-2 rounded bg-[#1C2630] hover:bg-[#293847] text-white text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer touch-manipulation"
+            className="min-h-9 py-1.5 px-2 rounded bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer touch-manipulation"
           >
             <Navigation className="h-3 w-3 shrink-0" />
             <span className="truncate">นำทาง</span>
@@ -1511,9 +1511,9 @@ function ItineraryThumbnailCardComponent({
           <button
             type="button"
             onClick={() => setShowStaffModal(true)}
-            className="min-h-9 py-1.5 px-2 rounded bg-white hover:bg-[#F8F6F0] dark:bg-[#22252E] text-[#2D2820] dark:text-slate-200 border border-[#D8D0C2] dark:border-[#363A45] text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer touch-manipulation"
+            className="min-h-9 py-1.5 px-2 rounded bg-white hover:bg-[#f8fafd] dark:bg-[#1a202c] text-[#1e293b] dark:text-slate-200 border border-[#cbd5e1] dark:border-[#24324a] text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer touch-manipulation"
           >
-            <MessageSquare className="h-3 w-3 text-[#C83E2D] shrink-0" />
+            <MessageSquare className="h-3 w-3 text-[#2563eb] shrink-0" />
             <span className="truncate">โชว์ชื่อญี่ปุ่น</span>
           </button>
           {onLogExpenseForStop && (
@@ -1611,8 +1611,8 @@ function ItineraryCompactRowComponent({
       <div
         className={`group flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-lg border transition-all ${
           visited
-            ? 'border-[#EAE3D6] dark:border-emerald-800/60 bg-white dark:bg-[#181a20] shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
-            : 'border-[#EAE3D6] dark:border-[#262932] border-l-3 border-l-[#C83E2D] bg-white dark:bg-[#181a20] hover:border-[#C83E2D]/60 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
+            ? 'border-[#e2e8f0] dark:border-emerald-800/60 bg-white dark:bg-[#161c27] shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
+            : 'border-[#e2e8f0] dark:border-[#24324a] border-l-3 border-l-[#2563eb] bg-white dark:bg-[#161c27] hover:border-[#2563eb]/60 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
         }`}
       >
         {/* Left: Mini Thumbnail + Editorial Time & Serif Title */}
@@ -1621,7 +1621,7 @@ function ItineraryCompactRowComponent({
             type="button"
             onClick={() => setShowLightbox(true)}
             style={{ aspectRatio: '1 / 1' }}
-            className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-[#1C2630] border border-[#EAE3D6] dark:border-[#262932] block cursor-zoom-in"
+            className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-[#1e3a8a] border border-[#e2e8f0] dark:border-[#24324a] block cursor-zoom-in"
             title="แตะเพื่อขยายดูรูปสถานที่จริง"
           >
             {activeSrc && (
@@ -1637,7 +1637,7 @@ function ItineraryCompactRowComponent({
           </button>
 
           <div className="min-w-0 flex-1 text-left">
-            <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-semibold text-[#7D7467] dark:text-slate-400">
+            <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-semibold text-[#475569] dark:text-slate-400">
               <span>{item.time_slot || item.date_label || `STOP ${idx + 1}`}</span>
               {item.city && <span>· {item.city}</span>}
             </div>
@@ -1647,8 +1647,8 @@ function ItineraryCompactRowComponent({
                 href={mainPlaceMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className={`font-serif text-sm font-semibold line-clamp-2 sm:truncate break-words hover:text-[#C83E2D] transition-colors ${
-                  visited ? 'text-[#4A4640] dark:text-slate-400' : 'text-[#1A1A1A] dark:text-white'
+                className={`font-serif text-sm font-semibold line-clamp-2 sm:truncate break-words hover:text-[#2563eb] transition-colors ${
+                  visited ? 'text-[#334155] dark:text-slate-400' : 'text-[#0f172a] dark:text-white'
                 }`}
               >
                 {idx + 1}. {item.main_place}
@@ -1664,8 +1664,8 @@ function ItineraryCompactRowComponent({
             onClick={toggleVisited}
             className={`px-2 py-0.5 rounded-[3px] text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer ${
               visited
-                ? 'border border-[#C83E2D] text-[#C83E2D] -rotate-2 bg-[#FFF5F2]/60'
-                : 'border border-[#D8CFC0] dark:border-slate-700 text-[#7A7062] dark:text-slate-300 hover:border-[#C83E2D] hover:text-[#C83E2D]'
+                ? 'border border-[#2563eb] text-[#2563eb] -rotate-2 bg-[#eff6ff]/60'
+                : 'border border-[#cbd5e1] dark:border-slate-700 text-[#475569] dark:text-slate-300 hover:border-[#2563eb] hover:text-[#2563eb]'
             }`}
             title={visited ? 'แวะแล้ว (済)' : 'กดเพื่อเช็กอิน'}
           >
@@ -1676,7 +1676,7 @@ function ItineraryCompactRowComponent({
             href={mainPlaceDirectionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="p-2 rounded-md bg-[#1C2630] text-white hover:bg-[#2B3A48] transition-colors cursor-pointer"
+            className="p-2 rounded-md bg-[#1e3a8a] text-white hover:bg-[#1d4ed8] transition-colors cursor-pointer"
             title="นำทาง Google Maps"
           >
             <Navigation className="h-3.5 w-3.5" />
@@ -1685,7 +1685,7 @@ function ItineraryCompactRowComponent({
           <button
             type="button"
             onClick={() => setShowStaffModal(true)}
-            className="p-2 rounded-md bg-[#F8F6F0] dark:bg-[#22252E] text-[#2D2820] dark:text-slate-200 border border-[#D8D0C2] dark:border-[#363A45] hover:border-[#C83E2D] transition-colors cursor-pointer"
+            className="p-2 rounded-md bg-[#f8fafd] dark:bg-[#1a202c] text-[#1e293b] dark:text-slate-200 border border-[#cbd5e1] dark:border-[#24324a] hover:border-[#2563eb] transition-colors cursor-pointer"
             title="โชว์ถามทาง / แท็กซี่"
           >
             <Eye className="h-3.5 w-3.5" />
@@ -1710,7 +1710,7 @@ function ItineraryCompactRowComponent({
             <button
               type="button"
               onClick={() => onOpenEditActivity(item)}
-              className="p-2 rounded-md text-[#8C8275] hover:text-[#1A1A1A] dark:hover:text-white hover:bg-[#F4EFE6] dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+              className="p-2 rounded-md text-[#64748b] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
               title="แก้ไข"
             >
               <Edit3 className="h-3.5 w-3.5" />

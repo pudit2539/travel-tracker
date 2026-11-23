@@ -363,7 +363,7 @@ export default function NotificationBell({
             ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-400 text-blue-600 dark:text-blue-400 scale-105 shadow-md shadow-blue-500/20'
             : isMuted
             ? 'bg-slate-100 dark:bg-[#1a2030] border-slate-300 dark:border-[#2b354f] text-slate-400 hover:text-slate-600'
-            : 'bg-white/90 dark:bg-[#181a20]/90 border-slate-200/90 dark:border-[#262932] text-slate-700 dark:text-slate-200 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 active:scale-95'
+            : 'bg-white/90 dark:bg-[#161c27]/90 border-slate-200/90 dark:border-[#24324a] text-slate-700 dark:text-slate-200 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 active:scale-95'
         }`}
         title={isMuted ? 'การแจ้งเตือน (โหมดเงียบเปิดอยู่)' : 'การแจ้งเตือนจากเพื่อนร่วมทริป'}
       >
@@ -374,7 +374,7 @@ export default function NotificationBell({
         )}
         
         {unreadCount > 0 && !isMuted && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white shadow-xs ring-2 ring-white dark:ring-[#181a20]">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white shadow-xs ring-2 ring-white dark:ring-[#161c27]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -388,10 +388,10 @@ export default function NotificationBell({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.97 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 z-50 w-auto sm:w-96 rounded-3xl bg-white/98 dark:bg-[#181a20]/98 backdrop-blur-2xl border border-slate-200/90 dark:border-[#262932] shadow-2xl shadow-blue-950/20 overflow-hidden"
+            className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 z-50 w-auto sm:w-96 rounded-3xl bg-white/98 dark:bg-[#161c27]/98 backdrop-blur-2xl border border-slate-200/90 dark:border-[#24324a] shadow-2xl shadow-blue-950/20 overflow-hidden"
           >
             {/* Header */}
-            <div className="p-4 pb-3 border-b border-slate-100 dark:border-[#262932] flex items-center justify-between">
+            <div className="p-4 pb-3 border-b border-slate-100 dark:border-[#24324a] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                   {isMuted ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
@@ -400,7 +400,7 @@ export default function NotificationBell({
                   <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                     <span>การแจ้งเตือน</span>
                     {isMuted && (
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1e2027] px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1a202c] px-2 py-0.5 rounded-full">
                         🔕 โหมดเงียบ
                       </span>
                     )}
@@ -424,7 +424,7 @@ export default function NotificationBell({
                   className={`p-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                     isMuted
                       ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800'
-                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-[#1e2027]'
+                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-[#1a202c]'
                   }`}
                   title={isMuted ? 'ปิดโหมดเงียบ' : 'เปิดโหมดเงียบ (ไม่รบกวน)'}
                 >
@@ -455,7 +455,7 @@ export default function NotificationBell({
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] rounded-xl transition-colors cursor-pointer"
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] rounded-xl transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -463,14 +463,14 @@ export default function NotificationBell({
             </div>
 
             {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 px-4 py-2 bg-slate-50/70 dark:bg-[#121316]/60 border-b border-slate-100 dark:border-[#262932] overflow-x-auto custom-scrollbar">
+            <div className="flex items-center gap-1.5 px-4 py-2 bg-slate-50/70 dark:bg-[#0d131f]/60 border-b border-slate-100 dark:border-[#24324a] overflow-x-auto custom-scrollbar">
               <button
                 type="button"
                 onClick={() => setActiveFilter('all')}
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-black shrink-0 transition-all cursor-pointer ${
                   activeFilter === 'all'
                     ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1a202c]'
                 }`}
               >
                 ทั้งหมด ({notifications.length})
@@ -481,7 +481,7 @@ export default function NotificationBell({
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                   activeFilter === 'system'
                     ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1a202c]'
                 }`}
               >
                 📅 แจ้งเตือนทริป
@@ -492,7 +492,7 @@ export default function NotificationBell({
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                   activeFilter === 'expense'
                     ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1a202c]'
                 }`}
               >
                 🧾 รายจ่ายเพื่อน
@@ -503,7 +503,7 @@ export default function NotificationBell({
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                   activeFilter === 'member'
                     ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1e2027]'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-[#1a202c]'
                 }`}
               >
                 👥 สมาชิก
@@ -511,10 +511,10 @@ export default function NotificationBell({
             </div>
 
             {/* Notifications List */}
-            <div className="max-h-[60dvh] sm:max-h-96 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-[#262932]">
+            <div className="max-h-[60dvh] sm:max-h-96 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-[#24324a]">
               {filteredNotifications.length === 0 ? (
                 <div className="p-8 text-center space-y-2">
-                  <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#1e2027] flex items-center justify-center text-slate-400 mx-auto">
+                  <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#1a202c] flex items-center justify-center text-slate-400 mx-auto">
                     <ShieldCheck className="h-5 w-5 text-emerald-500" />
                   </div>
                   <p className="text-xs font-bold text-slate-800 dark:text-white">
@@ -534,10 +534,10 @@ export default function NotificationBell({
                     className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer group ${
                       !notif.read
                         ? 'bg-blue-50/40 dark:bg-blue-950/30 border-l-2 border-blue-500 hover:bg-blue-50/70 dark:hover:bg-blue-950/50'
-                        : 'hover:bg-slate-50 dark:hover:bg-[#1e2027]/50'
+                        : 'hover:bg-slate-50 dark:hover:bg-[#1a202c]/50'
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#0d131f] border border-slate-200/80 dark:border-[#24324a] flex items-center justify-center shrink-0 shadow-2xs">
                       {getIcon(notif.type)}
                     </div>
 
@@ -566,7 +566,7 @@ export default function NotificationBell({
             </div>
 
             {/* Quiet Mode Footnote */}
-            <div className="px-4 py-2.5 bg-slate-50/70 dark:bg-[#121316]/60 border-t border-slate-100 dark:border-[#262932] flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+            <div className="px-4 py-2.5 bg-slate-50/70 dark:bg-[#0d131f]/60 border-t border-slate-100 dark:border-[#24324a] flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1">
                 <span>🔔 แจ้งเฉพาะข้อมูลจริงจากเพื่อน</span>
               </span>

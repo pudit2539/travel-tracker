@@ -472,11 +472,11 @@ export default function TicketPassLockerModal({
         />
 
         <div 
-          className="my-auto w-full sm:max-w-2xl rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card"
+          className="my-auto w-full sm:max-w-2xl rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card"
         >
         
         {/* Header - safe area protected from iOS status bar & notch */}
-        <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-[#262932] flex items-center justify-between shrink-0 bg-white/70 dark:bg-[#181a20]/70 backdrop-blur-md">
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-[#24324a] flex items-center justify-between shrink-0 bg-white/70 dark:bg-[#161c27]/70 backdrop-blur-md">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-700 flex items-center justify-center text-white shadow-md shadow-blue-500/25 shrink-0">
               <QrCode className="h-5 w-5" />
@@ -510,7 +510,7 @@ export default function TicketPassLockerModal({
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -518,14 +518,14 @@ export default function TicketPassLockerModal({
         </div>
 
         {/* Category Filter Pills */}
-        <div className="px-3 py-2 border-b border-slate-100 dark:border-[#262932] bg-slate-50/70 dark:bg-[#121316]/60 flex items-center gap-1.5 overflow-x-auto pb-2 custom-scrollbar shrink-0">
+        <div className="px-3 py-2 border-b border-slate-100 dark:border-[#24324a] bg-slate-50/70 dark:bg-[#0d131f]/60 flex items-center gap-1.5 overflow-x-auto pb-2 custom-scrollbar shrink-0">
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
             className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
               selectedCategory === 'all'
                 ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:bg-slate-100'
             }`}
           >
             ทั้งหมด ({passes.length})
@@ -541,7 +541,7 @@ export default function TicketPassLockerModal({
                 className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border flex items-center gap-1 ${
                   selectedCategory === catKey
                     ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                    : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:bg-slate-100'
                 }`}
               >
                 <span>{meta.icon}</span>
@@ -560,7 +560,7 @@ export default function TicketPassLockerModal({
 
         {/* Secondary Traveler Filter Bar (Appears when passes have multiple travelers tagged) */}
         {existingTravelers.length > 1 && (
-          <div className="px-3 py-1.5 border-b border-slate-100 dark:border-[#262932] bg-slate-50/50 dark:bg-[#121316]/40 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shrink-0">
+          <div className="px-3 py-1.5 border-b border-slate-100 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#0d131f]/40 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shrink-0">
             <span className="text-[10px] font-bold text-slate-400 shrink-0 flex items-center gap-1 pl-1">
               <Users className="h-3 w-3 text-blue-500" />
               <span>ผู้เดินทาง:</span>
@@ -571,7 +571,7 @@ export default function TicketPassLockerModal({
               className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold shrink-0 transition-all cursor-pointer border ${
                 selectedTravelerFilter === 'all'
                   ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                  : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
+                  : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a]'
               }`}
             >
               ทุกคน ({passes.length})
@@ -586,7 +586,7 @@ export default function TicketPassLockerModal({
                   className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold shrink-0 transition-all cursor-pointer border flex items-center gap-1 ${
                     selectedTravelerFilter === t
                       ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                      : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
+                      : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a]'
                   }`}
                 >
                   <span>👤</span>
@@ -658,35 +658,35 @@ export default function TicketPassLockerModal({
                   <button
                     type="button"
                     onClick={() => handleApplyPresetTemplate('vjw')}
-                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#181a20] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#161c27] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
                   >
                     🇯🇵 Visit Japan Web (ตม.)
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyPresetTemplate('keta')}
-                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#181a20] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#161c27] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
                   >
                     🇰🇷 K-ETA เกาหลี
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyPresetTemplate('usj')}
-                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#181a20] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#161c27] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
                   >
                     🎟️ บัตร USJ Pass
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyPresetTemplate('train')}
-                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#181a20] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#161c27] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
                   >
                     🚆 ตั๋วรถไฟ / Pass
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyPresetTemplate('flight')}
-                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#181a20] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#161c27] hover:bg-blue-100 text-[11px] font-bold text-slate-700 dark:text-slate-200 border border-blue-200 dark:border-blue-800 transition-all cursor-pointer"
                   >
                     ✈️ Boarding Pass
                   </button>
@@ -694,7 +694,7 @@ export default function TicketPassLockerModal({
               </div>
 
               {/* Multi-Person Traveler Tagging Section */}
-              <div className="p-3 rounded-2xl bg-white/90 dark:bg-[#181a20]/90 border border-blue-200/80 dark:border-blue-900/60 space-y-2">
+              <div className="p-3 rounded-2xl bg-white/90 dark:bg-[#161c27]/90 border border-blue-200/80 dark:border-blue-900/60 space-y-2">
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
                   <span className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
                     <User className="h-3.5 w-3.5" />
@@ -715,7 +715,7 @@ export default function TicketPassLockerModal({
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer flex items-center gap-1 ${
                         newHolderName === tName
                           ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-white dark:bg-[#181a20] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                          : 'bg-white dark:bg-[#161c27] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:bg-slate-100'
                       }`}
                     >
                       <span>👤</span>
@@ -729,7 +729,7 @@ export default function TicketPassLockerModal({
                       key={extra}
                       type="button"
                       onClick={() => setNewHolderName(extra)}
-                      className={`px-2 py-0.5 rounded-lg text-[10px] font-medium border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-[#181a20]/60 text-slate-600 dark:text-slate-400 hover:text-blue-600 hover:border-blue-400 cursor-pointer`}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-medium border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-[#161c27]/60 text-slate-600 dark:text-slate-400 hover:text-blue-600 hover:border-blue-400 cursor-pointer`}
                     >
                       + {extra}
                     </button>
@@ -741,7 +741,7 @@ export default function TicketPassLockerModal({
                   value={newHolderName}
                   onChange={(e) => setNewHolderName(e.target.value)}
                   placeholder="เช่น ปูดิท (ฉัน), คุณแม่, แฟน, น้องพอล (ตั้งชื่อผู้เดินทางได้อิสระ)"
-                  className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
 
@@ -754,7 +754,7 @@ export default function TicketPassLockerModal({
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder="เช่น Visit Japan Web QR, K-ETA, ตั๋ว USJ"
-                    className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
 
@@ -763,7 +763,7 @@ export default function TicketPassLockerModal({
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value as any)}
-                    className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none"
+                    className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white outline-none"
                   >
                     {Object.entries(categoryMeta).map(([k, meta]) => (
                       <option key={k} value={k}>{meta.icon} {meta.label}</option>
@@ -778,7 +778,7 @@ export default function TicketPassLockerModal({
                     value={newRef}
                     onChange={(e) => setNewRef(e.target.value)}
                     placeholder="เช่น VJW-QR-ENTRY, K-ETA-123456"
-                    className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none"
+                    className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white outline-none"
                   />
                 </div>
 
@@ -789,7 +789,7 @@ export default function TicketPassLockerModal({
                     value={newValidDate}
                     onChange={(e) => setNewValidDate(e.target.value)}
                     placeholder="เช่น 10 ธ.ค. 2026 หรือ ใช้ได้ตลอดทริป"
-                    className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none"
+                    className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white outline-none"
                   />
                 </div>
               </div>
@@ -801,7 +801,7 @@ export default function TicketPassLockerModal({
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   placeholder="เช่น สแกนที่ช่องตรวจ 3 หรือ ต้องแลกบัตรจริงที่ตู้เขียว"
-                  className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none"
+                  className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white outline-none"
                 />
               </div>
 
@@ -822,14 +822,14 @@ export default function TicketPassLockerModal({
                     type="button"
                     onClick={() => newFileInputRef.current?.click()}
                     disabled={isCompressing}
-                    className="px-3.5 py-2 rounded-xl border border-dashed border-blue-400 dark:border-blue-700 bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-blue-50 transition-all disabled:opacity-50"
+                    className="px-3.5 py-2 rounded-xl border border-dashed border-blue-400 dark:border-blue-700 bg-white dark:bg-[#161c27] text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-blue-50 transition-all disabled:opacity-50"
                   >
                     <Upload className="h-3.5 w-3.5" />
                     <span>{isCompressing ? 'กำลังบีบอัดภาพ...' : newQrImage ? 'เปลี่ยนรูปภาพ' : '📸 แนบรูปภาพตั๋ว / แคปหน้าจอ QR'}</span>
                   </button>
 
                   {newQrImage && (
-                    <div className="flex items-center gap-2 bg-white dark:bg-[#181a20] px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#262932]">
+                    <div className="flex items-center gap-2 bg-white dark:bg-[#161c27] px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24324a]">
                       <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-200 shrink-0">
                         <img src={newQrImage} alt="preview" className="w-full h-full object-cover" />
                       </div>
@@ -894,17 +894,17 @@ export default function TicketPassLockerModal({
                 return (
                   <div
                     key={pass.id}
-                    className={`p-4 rounded-3xl bg-white dark:bg-[#181a20] border shadow-sm transition-all flex flex-col justify-between gap-3 relative overflow-hidden ${
+                    className={`p-4 rounded-3xl bg-white dark:bg-[#161c27] border shadow-sm transition-all flex flex-col justify-between gap-3 relative overflow-hidden ${
                       isCurrentlyEditing 
                         ? 'border-amber-400 ring-2 ring-amber-400/40 bg-amber-50/20' 
-                        : 'border-slate-200 dark:border-[#262932] hover:border-blue-400 dark:hover:border-blue-500/50'
+                        : 'border-slate-200 dark:border-[#24324a] hover:border-blue-400 dark:hover:border-blue-500/50'
                     }`}
                   >
                     {/* Header Row: Category Badge & Multi-Traveler Name Tag */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1.5 flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#262932]">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#0d131f] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#24324a]">
                             <span>{meta.icon}</span>
                             <span>{meta.label}</span>
                           </span>
@@ -966,7 +966,7 @@ export default function TicketPassLockerModal({
 
                     {/* Booking Reference Box */}
                     {pass.bookingRef && (
-                      <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-[#121316] border border-slate-200/80 dark:border-[#262932] flex items-center justify-between">
+                      <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-[#0d131f] border border-slate-200/80 dark:border-[#24324a] flex items-center justify-between">
                         <div className="min-w-0 pr-2">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                             รหัสจอง / Booking Ref:
@@ -979,7 +979,7 @@ export default function TicketPassLockerModal({
                         <button
                           type="button"
                           onClick={() => handleCopy(pass.bookingRef!, pass.id)}
-                          className="p-1.5 rounded-xl bg-white dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 hover:text-blue-600 border border-slate-200 dark:border-[#262932] shadow-2xs transition-all cursor-pointer shrink-0"
+                          className="p-1.5 rounded-xl bg-white dark:bg-[#1a202c] text-slate-600 dark:text-slate-300 hover:text-blue-600 border border-slate-200 dark:border-[#24324a] shadow-2xs transition-all cursor-pointer shrink-0"
                           title="คัดลอกรหัสจอง"
                         >
                           {copiedId === pass.id ? (
@@ -993,7 +993,7 @@ export default function TicketPassLockerModal({
 
                     {/* Image Attachment / Thumbnail Section */}
                     {pass.qrCodeUrl ? (
-                      <div className="rounded-2xl border border-slate-200/80 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] p-2 flex items-center justify-between gap-2.5">
+                      <div className="rounded-2xl border border-slate-200/80 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] p-2 flex items-center justify-between gap-2.5">
                         <div 
                           onClick={() => {
                             setActiveViewingPass(pass);
@@ -1023,7 +1023,7 @@ export default function TicketPassLockerModal({
                           <button
                             type="button"
                             onClick={() => triggerCardImageUpload(pass.id)}
-                            className="p-1.5 rounded-lg bg-white dark:bg-[#1e2027] text-slate-500 hover:text-blue-600 border border-slate-200 dark:border-[#262932] text-[10px] font-bold cursor-pointer transition-all"
+                            className="p-1.5 rounded-lg bg-white dark:bg-[#1a202c] text-slate-500 hover:text-blue-600 border border-slate-200 dark:border-[#24324a] text-[10px] font-bold cursor-pointer transition-all"
                             title="เปลี่ยนรูปภาพ"
                           >
                             <RefreshCw className="h-3 w-3" />
@@ -1031,7 +1031,7 @@ export default function TicketPassLockerModal({
                           <button
                             type="button"
                             onClick={() => handleRemovePassImage(pass.id)}
-                            className="p-1.5 rounded-lg bg-white dark:bg-[#1e2027] text-slate-400 hover:text-rose-500 border border-slate-200 dark:border-[#262932] text-[10px] font-bold cursor-pointer transition-all"
+                            className="p-1.5 rounded-lg bg-white dark:bg-[#1a202c] text-slate-400 hover:text-rose-500 border border-slate-200 dark:border-[#24324a] text-[10px] font-bold cursor-pointer transition-all"
                             title="ลบรูปภาพ"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -1076,7 +1076,7 @@ export default function TicketPassLockerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-3.5 sm:p-4 border-t border-slate-100 dark:border-[#262932] bg-slate-50/80 dark:bg-[#121316]/80 flex items-center justify-between shrink-0">
+        <div className="p-3.5 sm:p-4 border-t border-slate-100 dark:border-[#24324a] bg-slate-50/80 dark:bg-[#0d131f]/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 min-w-0 pr-2">
             <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
             <span className="truncate text-[11px] sm:text-xs">เข้าถึงได้ตลอดเวลา แม้ไม่มีเน็ตในตู้รถไฟใต้ดิน</span>
@@ -1084,7 +1084,7 @@ export default function TicketPassLockerModal({
 
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-slate-300 dark:border-[#262932] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer shrink-0"
+            className="px-4 py-2 rounded-xl border border-slate-300 dark:border-[#24324a] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer shrink-0"
           >
             ปิด
           </button>

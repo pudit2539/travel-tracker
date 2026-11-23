@@ -95,9 +95,9 @@ export default function PrintableItineraryModal({
         `}</style>
 
         {/* Modal Container */}
-        <div className="my-auto w-full max-w-6xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200 dark:border-[#262932] max-h-[92dvh] flex flex-col overflow-hidden modal-safe-card print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in zoom-in-95 duration-200">
+        <div className="my-auto w-full max-w-6xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200 dark:border-[#24324a] max-h-[92dvh] flex flex-col overflow-hidden modal-safe-card print:border-none print:shadow-none print:max-h-none print:w-full print:rounded-none print:bg-white print:text-black animate-in zoom-in-95 duration-200">
         {/* Screen Header & TabiPlan Print Controls (Hidden on print) */}
-        <div className="p-4 sm:p-5 flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 dark:border-[#262932] bg-slate-50 dark:bg-[#181a20] print:hidden">
+        <div className="p-4 sm:p-5 flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 dark:border-[#24324a] bg-slate-50 dark:bg-[#161c27] print:hidden">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
               <Printer className="h-5 w-5" />
@@ -115,13 +115,13 @@ export default function PrintableItineraryModal({
           {/* Controls Bar */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Layout Switcher */}
-            <div className="inline-flex p-1 rounded-xl bg-slate-200/70 dark:bg-[#121316] border border-slate-300/60 dark:border-[#262932]">
+            <div className="inline-flex p-1 rounded-xl bg-slate-200/70 dark:bg-[#0d131f] border border-slate-300/60 dark:border-[#24324a]">
               <button
                 type="button"
                 onClick={() => setLayoutMode('poster')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1 cursor-pointer transition-all ${
                   layoutMode === 'poster'
-                    ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-2xs'
+                    ? 'bg-white dark:bg-[#1a202c] text-blue-600 dark:text-blue-400 shadow-2xs'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -133,7 +133,7 @@ export default function PrintableItineraryModal({
                 onClick={() => setLayoutMode('booklet')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1 cursor-pointer transition-all ${
                   layoutMode === 'booklet'
-                    ? 'bg-white dark:bg-[#1e2027] text-blue-600 dark:text-blue-400 shadow-2xs'
+                    ? 'bg-white dark:bg-[#1a202c] text-blue-600 dark:text-blue-400 shadow-2xs'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -143,7 +143,7 @@ export default function PrintableItineraryModal({
             </div>
 
             {/* Zoom Controls */}
-            <div className="inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300">
+            <div className="inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-white dark:bg-[#0d131f] border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300">
               <button
                 type="button"
                 onClick={() => setPrintZoom((z) => Math.max(60, z - 5))}
@@ -170,7 +170,7 @@ export default function PrintableItineraryModal({
               className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1 cursor-pointer transition-all ${
                 inkSaver
                   ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-white dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#262932]'
+                  : 'bg-white dark:bg-[#0d131f] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#24324a]'
               }`}
               title="สลับโหมดสีสันสดใส หรือ โหมดขาว-ดำประหยัดหมึกพิมพ์"
             >

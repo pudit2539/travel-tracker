@@ -292,7 +292,7 @@ function LoginForm() {
   const isInviteFlow = returnUrl.startsWith('/trips/');
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full items-center justify-center px-4 py-8 safe-area-x overflow-y-auto bg-grid-pattern bg-[#f8f9fb] dark:bg-[#121316] text-slate-900 dark:text-white transition-colors duration-300">
+    <div className="relative flex min-h-[100dvh] w-full items-center justify-center px-4 py-8 safe-area-x overflow-y-auto bg-grid-pattern bg-[#f8f9fb] dark:bg-[#0d131f] text-slate-900 dark:text-white transition-colors duration-300">
       
       {/* Theme Toggle - Positioned with safe-area insets for iPhone notch/Dynamic Island */}
       <button
@@ -301,7 +301,7 @@ function LoginForm() {
           top: 'max(env(safe-area-inset-top, 0px) + 0.75rem, 1rem)',
           right: 'max(env(safe-area-inset-right, 0px) + 0.75rem, 1rem)',
         }}
-        className="fixed z-30 p-2.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white/90 dark:bg-[#181a20]/90 backdrop-blur-md shadow-xs hover:border-blue-500 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer min-w-10 min-h-10 flex items-center justify-center"
+        className="fixed z-30 p-2.5 rounded-2xl border border-slate-200/90 dark:border-[#24324a] bg-white/90 dark:bg-[#161c27]/90 backdrop-blur-md shadow-xs hover:border-blue-500 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer min-w-10 min-h-10 flex items-center justify-center"
         title="สลับธีม สว่าง/มืด"
         aria-label="Toggle theme"
       >
@@ -309,11 +309,11 @@ function LoginForm() {
       </button>
 
       {/* Main Login Card - Compact max-w-[400px], perfectly fitted for iPhone Portrait (375-390px) without overlapping text */}
-      <div className="w-full max-w-[400px] rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#181a20] p-6 sm:p-7 shadow-xl z-10 space-y-5 my-auto">
+      <div className="w-full max-w-[400px] rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] p-6 sm:p-7 shadow-xl z-10 space-y-5 my-auto">
         
         {/* App Logo & Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-1 rounded-2xl border border-slate-200/80 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] shadow-xs">
+          <div className="inline-flex p-1 rounded-2xl border border-slate-200/80 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] shadow-xs">
             <img
               src="/app-logo.png"
               alt="Travel Tracker Logo"
@@ -381,7 +381,7 @@ function LoginForm() {
                 <input
                   type="text"
                   placeholder="เช่น Popcornz, Alex"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-base sm:text-sm outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#181a20] transition-all font-medium min-h-12"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-slate-900 dark:text-white text-base sm:text-sm outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#161c27] transition-all font-medium min-h-12"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                 />
@@ -399,7 +399,7 @@ function LoginForm() {
                 type="email"
                 required
                 placeholder="name@example.com"
-                className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-base sm:text-sm outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#181a20] transition-all font-medium min-h-12"
+                className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-slate-900 dark:text-white text-base sm:text-sm outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#161c27] transition-all font-medium min-h-12"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -431,7 +431,7 @@ function LoginForm() {
                 type={showPassword ? 'text' : 'password'}
                 required
                 placeholder="••••••••"
-                className="w-full pl-10 pr-11 py-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-slate-900 dark:text-white text-base sm:text-sm outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#181a20] transition-all font-medium min-h-12"
+                className="w-full pl-10 pr-11 py-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-slate-900 dark:text-white text-base sm:text-sm outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#161c27] transition-all font-medium min-h-12"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -453,7 +453,7 @@ function LoginForm() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded-md border-slate-300 dark:border-[#262932] text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
+                className="w-4 h-4 rounded-md border-slate-300 dark:border-[#24324a] text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
               />
               <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
                 จดจำการเข้าสู่ระบบ
@@ -510,7 +510,7 @@ function LoginForm() {
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-sm max-h-[90dvh] overflow-y-auto rounded-3xl bg-white dark:bg-[#181a20] p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl border border-slate-200/90 dark:border-[#262932] space-y-4 my-auto modal-safe-card">
+          <div className="w-full max-w-sm max-h-[90dvh] overflow-y-auto rounded-3xl bg-white dark:bg-[#161c27] p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl border border-slate-200/90 dark:border-[#24324a] space-y-4 my-auto modal-safe-card">
             <div className="flex items-center justify-between text-slate-900 dark:text-white">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
@@ -563,7 +563,7 @@ function LoginForm() {
                     type="email"
                     required
                     placeholder="name@example.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium min-h-11"
+                    className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium min-h-11"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                   />
@@ -577,7 +577,7 @@ function LoginForm() {
                     setShowForgotModal(false);
                     setForgotMsg(null);
                   }}
-                  className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#121316] transition-all cursor-pointer min-h-11"
+                  className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0d131f] transition-all cursor-pointer min-h-11"
                 >
                   ปิด
                 </button>
@@ -610,7 +610,7 @@ function LoginForm() {
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-sm max-h-[92dvh] overflow-y-auto rounded-3xl bg-white dark:bg-[#181a20] p-6 sm:p-7 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-7 shadow-2xl border border-slate-200/90 dark:border-[#262932] space-y-4 my-auto modal-safe-card">
+          <div className="w-full max-w-sm max-h-[92dvh] overflow-y-auto rounded-3xl bg-white dark:bg-[#161c27] p-6 sm:p-7 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-7 shadow-2xl border border-slate-200/90 dark:border-[#24324a] space-y-4 my-auto modal-safe-card">
             <div className="text-center space-y-1">
               <div className="w-11 h-11 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
                 <ShieldCheck className="h-6 w-6" />
@@ -649,7 +649,7 @@ function LoginForm() {
                     type={showNewPassword ? 'text' : 'password'}
                     required
                     placeholder="รหัสผ่านใหม่..."
-                    className="w-full pl-10 pr-10 py-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium min-h-11"
+                    className="w-full pl-10 pr-10 py-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium min-h-11"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
@@ -674,7 +674,7 @@ function LoginForm() {
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
                     placeholder="พิมพ์รหัสผ่านใหม่อีกครั้ง..."
-                    className="w-full pl-10 pr-10 py-3 rounded-2xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#121316] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium min-h-11"
+                    className="w-full pl-10 pr-10 py-3 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#0d131f] text-base sm:text-xs outline-none focus:border-blue-500 text-slate-900 dark:text-white font-medium min-h-11"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
@@ -696,7 +696,7 @@ function LoginForm() {
                     setShowResetPasswordModal(false);
                     setResetPasswordMsg(null);
                   }}
-                  className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-[#262932] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#121316] transition-all cursor-pointer min-h-11"
+                  className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0d131f] transition-all cursor-pointer min-h-11"
                 >
                   ยกเลิก
                 </button>
@@ -727,7 +727,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb] dark:bg-[#121316]">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb] dark:bg-[#0d131f]">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
       </div>
     }>

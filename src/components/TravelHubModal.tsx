@@ -570,9 +570,9 @@ export default function TravelHubModal({
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-5 md:p-6 overflow-y-auto overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none text-left modal-safe-overlay" role="dialog" aria-modal="true">
-        <div className="my-auto relative w-full max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] max-h-[92dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-left modal-safe-card">
+        <div className="my-auto relative w-full max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] max-h-[92dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-left modal-safe-card">
         {/* Modal Top Header */}
-        <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#262932] bg-white/80 dark:bg-[#181a20]/80 backdrop-blur-md">
+        <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-[#24324a] bg-white/80 dark:bg-[#161c27]/80 backdrop-blur-md">
           <div className="flex items-center gap-3 text-left">
             <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-lg shadow-sm shadow-blue-500/20 shrink-0">
               🧭
@@ -594,7 +594,7 @@ export default function TravelHubModal({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#262932] transition-colors cursor-pointer shrink-0"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#24324a] transition-colors cursor-pointer shrink-0"
             title="ปิดหน้าต่าง"
           >
             <X className="h-5 w-5" />
@@ -602,7 +602,7 @@ export default function TravelHubModal({
         </div>
 
         {/* Super-App Pill Tab Navigation Bar */}
-        <div className="flex items-center gap-1.5 px-4 sm:px-6 py-2 border-b border-slate-100 dark:border-[#262932] bg-slate-50/70 dark:bg-[#15171e]/70 overflow-x-auto custom-scrollbar shrink-0">
+        <div className="flex items-center gap-1.5 px-4 sm:px-6 py-2 border-b border-slate-100 dark:border-[#24324a] bg-slate-50/70 dark:bg-[#15171e]/70 overflow-x-auto custom-scrollbar shrink-0">
           <button
             onClick={() => setActiveTab('calculator')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
@@ -691,11 +691,11 @@ export default function TravelHubModal({
             <div className="space-y-4">
               
               {/* Main Interactive Shopping Calculator Card */}
-              <div className="p-4 sm:p-5 rounded-3xl bg-slate-50/80 dark:bg-[#1f222e] border border-slate-200/90 dark:border-[#262932] space-y-4 shadow-sm">
+              <div className="p-4 sm:p-5 rounded-3xl bg-slate-50/80 dark:bg-[#1f222e] border border-slate-200/90 dark:border-[#24324a] space-y-4 shadow-sm">
                 
                 {/* Mode Selectors */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-1 bg-white dark:bg-[#181a20] p-1 rounded-2xl border border-slate-200 dark:border-[#2b2f3d]">
+                  <div className="flex items-center gap-1 bg-white dark:bg-[#161c27] p-1 rounded-2xl border border-slate-200 dark:border-[#2b2f3d]">
                     <button
                       type="button"
                       onClick={() => setPriceMode('tax_included')}
@@ -720,7 +720,7 @@ export default function TravelHubModal({
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-1 bg-white dark:bg-[#181a20] p-1 rounded-2xl border border-slate-200 dark:border-[#2b2f3d]">
+                  <div className="flex items-center gap-1 bg-white dark:bg-[#161c27] p-1 rounded-2xl border border-slate-200 dark:border-[#2b2f3d]">
                     <button
                       type="button"
                       onClick={() => setTaxRateType('10')}
@@ -765,7 +765,7 @@ export default function TravelHubModal({
                       value={calcInput}
                       onChange={(e) => setCalcInput(e.target.value)}
                       placeholder="0"
-                      className="w-full pl-9 pr-4 py-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-300 dark:border-[#2b2f3d] text-slate-900 dark:text-white font-mono text-xl sm:text-2xl font-black outline-none focus:border-blue-500 transition-all shadow-inner"
+                      className="w-full pl-9 pr-4 py-3 rounded-2xl bg-white dark:bg-[#161c27] border border-slate-300 dark:border-[#2b2f3d] text-slate-900 dark:text-white font-mono text-xl sm:text-2xl font-black outline-none focus:border-blue-500 transition-all shadow-inner"
                     />
                     {calcInput && (
                       <button
@@ -796,7 +796,7 @@ export default function TravelHubModal({
                       className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 ${
                         btn.highlight
                           ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/40 hover:bg-blue-600/25'
-                          : 'bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#2b2f3d] text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          : 'bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#2b2f3d] text-slate-700 dark:text-slate-300 hover:border-slate-400'
                       }`}
                     >
                       {btn.label}
@@ -846,7 +846,7 @@ export default function TravelHubModal({
                 <div className="grid grid-cols-2 gap-2.5 pt-1">
                   
                   {/* Left: Net Tax-Free Price in THB & JPY */}
-                  <div className="p-3.5 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200/90 dark:border-[#262932] space-y-1">
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-[#161c27] border border-slate-200/90 dark:border-[#24324a] space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                       จ่ายจริงแบบ Tax-Free
                     </span>
@@ -950,12 +950,12 @@ export default function TravelHubModal({
                     placeholder="ชื่อตั๋ว เช่น Visit Japan Web QR"
                     value={ticketTitle}
                     onChange={(e) => setTicketTitle(e.target.value)}
-                    className="sm:col-span-2 p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-xs font-bold outline-none focus:border-blue-500"
+                    className="sm:col-span-2 p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#161c27] text-xs font-bold outline-none focus:border-blue-500"
                   />
                   <select
                     value={ticketCategory}
                     onChange={(e) => setTicketCategory(e.target.value as any)}
-                    className="p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-xs font-bold cursor-pointer"
+                    className="p-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#161c27] text-xs font-bold cursor-pointer"
                   >
                     <option value="vjw">Visit Japan Web (ตม.)</option>
                     <option value="flight">ตั๋วเครื่องบิน (Flight Ticket)</option>
@@ -978,7 +978,7 @@ export default function TravelHubModal({
               {/* Tickets List */}
               <div className="space-y-2.5 max-h-[50dvh] overflow-y-auto custom-scrollbar pr-1">
                 {tickets.length === 0 ? (
-                  <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-[#262932] rounded-3xl space-y-2">
+                  <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-[#24324a] rounded-3xl space-y-2">
                     <QrCode className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto" />
                     <p className="text-xs font-bold text-slate-700 dark:text-slate-300">ยังไม่มีตั๋วหรือ QR Code ในทริปนี้</p>
                     <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm mx-auto">
@@ -989,7 +989,7 @@ export default function TravelHubModal({
                   tickets.map((t) => (
                     <div
                       key={t.id}
-                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] flex items-center justify-between gap-3 shadow-2xs hover:border-blue-500 transition-all group"
+                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#1f222e] flex items-center justify-between gap-3 shadow-2xs hover:border-blue-500 transition-all group"
                     >
                       <div
                         onClick={() => {
@@ -1002,7 +1002,7 @@ export default function TravelHubModal({
                         }}
                         className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
                       >
-                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#181a20] flex items-center justify-center overflow-hidden border border-slate-200 dark:border-[#2b2f3d] shrink-0 group-hover:scale-105 transition-transform">
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#161c27] flex items-center justify-center overflow-hidden border border-slate-200 dark:border-[#2b2f3d] shrink-0 group-hover:scale-105 transition-transform">
                           {t.qrCodeUrl ? (
                             <img src={t.qrCodeUrl} alt={t.title} className="w-full h-full object-cover" />
                           ) : (
@@ -1080,7 +1080,7 @@ export default function TravelHubModal({
                 {showAddTrainForm && (
                   <form
                     onSubmit={handleAddTrainBooking}
-                    className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#2b2f3d] space-y-2.5 text-xs"
+                    className="p-3 rounded-2xl bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#2b2f3d] space-y-2.5 text-xs"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <input
@@ -1156,7 +1156,7 @@ export default function TravelHubModal({
                   {trainBookings.map((tb) => (
                     <div
                       key={tb.id}
-                      className="p-3.5 rounded-2xl bg-white dark:bg-[#1f222e] border border-slate-200/90 dark:border-[#262932] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs"
+                      className="p-3.5 rounded-2xl bg-white dark:bg-[#1f222e] border border-slate-200/90 dark:border-[#24324a] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs"
                     >
                       <div className="space-y-1 text-left">
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -1257,7 +1257,7 @@ export default function TravelHubModal({
                     placeholder="ค้นหา เช่น รับถุง, อุ่น, 1 ชิ้น, 2 คน, เอาอันนี้, เช็คบิล, คืนภาษี, ห้องน้ำ..."
                     value={phraseSearch}
                     onChange={(e) => setPhraseSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
+                    className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#2b2f3d] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-500 font-medium"
                   />
                 </div>
               </div>
@@ -1271,7 +1271,7 @@ export default function TravelHubModal({
                   return (
                     <div
                       key={p.id}
-                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] space-y-2 hover:border-blue-500 transition-all shadow-2xs group"
+                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#1f222e] space-y-2 hover:border-blue-500 transition-all shadow-2xs group"
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div className="space-y-1 min-w-0">
@@ -1376,7 +1376,7 @@ export default function TravelHubModal({
                   <span>🙏 2. มารยาทสำคัญในคันไซ (Osaka vs Kyoto Etiquette)</span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                  <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-amber-200/60 dark:border-[#2b2f3d]">
+                  <div className="p-3 rounded-2xl bg-white dark:bg-[#161c27] border border-amber-200/60 dark:border-[#2b2f3d]">
                     <span className="font-black text-amber-700 dark:text-amber-400 block mb-1">
                       🚶 บันไดเลื่อน: โอซาก้ายืนชิดขวา!
                     </span>
@@ -1384,7 +1384,7 @@ export default function TravelHubModal({
                       ใน <strong>โอซาก้า (Osaka)</strong> คนจะยืนชิดขวาและเว้นช่องซ้ายให้คนรีบเดิน ส่วนใน <strong>เกียวโต (Kyoto)</strong> มักยืนชิดซ้าย แนะนำให้สังเกตคนข้างหน้าเป็นหลัก
                     </p>
                   </div>
-                  <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-amber-200/60 dark:border-[#2b2f3d]">
+                  <div className="p-3 rounded-2xl bg-white dark:bg-[#161c27] border border-amber-200/60 dark:border-[#2b2f3d]">
                     <span className="font-black text-amber-700 dark:text-amber-400 block mb-1">
                       🚃 มารยาทบนรถไฟญี่ปุ่น
                     </span>
@@ -1392,7 +1392,7 @@ export default function TravelHubModal({
                       เปิดโหมดสั่น (Manner Mode) งดคุยโทรศัพท์บนรถไฟ และสะพายกระเป๋าเป้ไว้ด้านหน้าเมื่อคนแน่น
                     </p>
                   </div>
-                  <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-amber-200/60 dark:border-[#2b2f3d]">
+                  <div className="p-3 rounded-2xl bg-white dark:bg-[#161c27] border border-amber-200/60 dark:border-[#2b2f3d]">
                     <span className="font-black text-amber-700 dark:text-amber-400 block mb-1">
                       🍵 ร้านอาหาร & ไม่ต้องให้ทิป
                     </span>
@@ -1400,7 +1400,7 @@ export default function TravelHubModal({
                       ญี่ปุ่นไม่มีวัฒนธรรมการให้ทิป (พนักงานจะวิ่งนำเงินมาคืน) ผ้าเปียก Oshibori ใช้เช็ดมือเท่านั้น และนำบิลไปจ่ายที่แคชเชียร์หน้าร้าน
                     </p>
                   </div>
-                  <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-amber-200/60 dark:border-[#2b2f3d]">
+                  <div className="p-3 rounded-2xl bg-white dark:bg-[#161c27] border border-amber-200/60 dark:border-[#2b2f3d]">
                     <span className="font-black text-amber-700 dark:text-amber-400 block mb-1">
                       ⛩️ เขตวัดและย่านกิออน (Gion)
                     </span>
@@ -1446,7 +1446,7 @@ export default function TravelHubModal({
                     href="https://services.digital.go.jp/en/visit-japan-web/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 font-bold text-[11px] border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#161c27] text-blue-600 dark:text-blue-400 font-bold text-[11px] border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1"
                   >
                     <span>Visit Japan Web</span>
                     <ExternalLink className="h-3 w-3" />
@@ -1455,7 +1455,7 @@ export default function TravelHubModal({
                     href="https://www.japan.travel/th/plan/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#181a20] text-blue-600 dark:text-blue-400 font-bold text-[11px] border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#161c27] text-blue-600 dark:text-blue-400 font-bold text-[11px] border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1"
                   >
                     <span>JNTO คู่มือเที่ยวญี่ปุ่น</span>
                     <ExternalLink className="h-3 w-3" />
@@ -1511,7 +1511,7 @@ export default function TravelHubModal({
                     <a
                       key={c.id}
                       href={`tel:${c.tel.replace(/[^0-9+]/g, '')}`}
-                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] hover:border-rose-400 hover:bg-rose-50/20 dark:hover:bg-rose-950/20 transition-all flex items-center justify-between gap-2 shadow-2xs group"
+                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#1f222e] hover:border-rose-400 hover:bg-rose-50/20 dark:hover:bg-rose-950/20 transition-all flex items-center justify-between gap-2 shadow-2xs group"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -1537,7 +1537,7 @@ export default function TravelHubModal({
               </div>
 
               {/* 1-Tap Google Maps Radar Presets */}
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#262932]">
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#24324a]">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Compass className="h-4 w-4 text-blue-600" />
@@ -1550,7 +1550,7 @@ export default function TravelHubModal({
                     <div
                       key={item.id}
                       onClick={() => openNearbyGoogleMaps(item.query)}
-                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-[#262932] bg-white dark:bg-[#1f222e] hover:border-blue-500 hover:bg-blue-600/5 transition-all cursor-pointer group shadow-2xs flex items-center justify-between gap-2"
+                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#1f222e] hover:border-blue-500 hover:bg-blue-600/5 transition-all cursor-pointer group shadow-2xs flex items-center justify-between gap-2"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -1566,7 +1566,7 @@ export default function TravelHubModal({
                         </div>
                       </div>
 
-                      <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#262932] text-slate-500 group-hover:text-blue-600 group-hover:scale-110 transition-transform shrink-0">
+                      <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#24324a] text-slate-500 group-hover:text-blue-600 group-hover:scale-110 transition-transform shrink-0">
                         <ExternalLink className="h-3.5 w-3.5" />
                       </div>
                     </div>
@@ -1709,7 +1709,7 @@ export default function TravelHubModal({
                         onClose();
                         onOpenPacking();
                       }}
-                      className="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#262932] bg-slate-50 dark:bg-[#1f222e] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 hover:border-blue-500 transition-all cursor-pointer"
+                      className="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1f222e] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 hover:border-blue-500 transition-all cursor-pointer"
                     >
                       <Luggage className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
                       <span>เปิดเช็คลิสต์จัดกระเป๋า (Packing)</span>
@@ -1733,7 +1733,7 @@ export default function TravelHubModal({
           onClick={() => setBigCardPhrase(null)}
         >
           <div 
-            className="w-full max-w-lg bg-white dark:bg-[#181a20] rounded-3xl p-6 sm:p-8 text-center space-y-6 border border-blue-500/50 shadow-2xl animate-in zoom-in-95"
+            className="w-full max-w-lg bg-white dark:bg-[#161c27] rounded-3xl p-6 sm:p-8 text-center space-y-6 border border-blue-500/50 shadow-2xl animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center">
@@ -1755,7 +1755,7 @@ export default function TravelHubModal({
               <p className="text-base sm:text-lg font-mono font-bold text-blue-600 dark:text-blue-400">
                 {bigCardPhrase.romaji}
               </p>
-              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#262932] text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#24324a] text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">TH</span>
                 <span>{bigCardPhrase.thai}</span>
               </div>
@@ -1783,10 +1783,10 @@ export default function TravelHubModal({
           aria-modal="true"
         >
           <div 
-            className="my-auto relative max-w-md w-full max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#181a20] p-4 rounded-3xl border border-slate-200 dark:border-[#262932] shadow-2xl space-y-3"
+            className="my-auto relative max-w-md w-full max-h-[90dvh] overflow-y-auto overscroll-contain bg-white dark:bg-[#161c27] p-4 rounded-3xl border border-slate-200 dark:border-[#24324a] shadow-2xl space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#262932]">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-[#24324a]">
               <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <QrCode className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span>โหมดสแกน QR Code / ตั๋วคมชัดสูง</span>

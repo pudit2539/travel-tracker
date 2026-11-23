@@ -4,36 +4,52 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #F8F6F0;
-  --foreground: #181a20;
+  /* Oceanic Glacial Light Mode (Cool Pearl & Ice Mist) */
+  --background: #f8fafd;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #181a20;
-  --border: #DFD7C7;
-  --primary-terracotta: #C83E2D;
-  --primary-terracotta-hover: #B03222;
-  --primary-terracotta-subtle: rgba(200, 62, 45, 0.10);
-  --primary-blue: #1C2630;
-  --primary-blue-hover: #2A3744;
-  --primary-pink: #C83E2D;
-  --primary-pink-subtle: #FDF3F1;
-  --primary-purple: #1C2630;
-  --primary-black: #121316;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --surface-dim: #f1f5f9;
+  --surface-container-low: #ffffff;
+  --surface-container: #ffffff;
+  --surface-container-high: #f1f5f9;
+  --surface-container-highest: #e2e8f0;
+  --primary-terracotta: #2563eb;
+  --primary-terracotta-hover: #1d4ed8;
+  --primary-terracotta-subtle: rgba(37, 99, 235, 0.10);
+  --primary-blue: #1e3a8a;
+  --primary-blue-hover: #1d4ed8;
+  --primary-cyan: #0284c7;
+  --primary-cyan-subtle: #e0f2fe;
+  --primary-pink: #2563eb;
+  --primary-pink-subtle: #eff6ff;
+  --primary-purple: #1e3a8a;
+  --primary-black: #0f172a;
 }
 
 .dark {
-  --background: #121316;
-  --foreground: #f4f5f7;
-  --card: #181a20;
-  --card-foreground: #f8fafc;
-  --border: #262932;
-  --primary-terracotta: #e79b71;
-  --primary-terracotta-hover: #f2a278;
-  --primary-terracotta-subtle: rgba(231, 155, 113, 0.15);
-  --primary-blue: #3b82f6;
-  --primary-blue-hover: #60a5fa;
-  --primary-pink: #fb7185;
-  --primary-pink-subtle: rgba(244, 63, 94, 0.12);
-  --primary-purple: #3b82f6;
+  /* Oceanic Glacial Dark Mode (Abyss Midnight & Arctic Cyan) */
+  --background: #0d131f;
+  --foreground: #dde2f3;
+  --card: #161c27;
+  --card-foreground: #dde2f3;
+  --border: #24324a;
+  --surface-dim: #080e19;
+  --surface-container-low: #161c27;
+  --surface-container: #1a202c;
+  --surface-container-high: #242a36;
+  --surface-container-highest: #2f3541;
+  --primary-terracotta: #4cd7f6;
+  --primary-terracotta-hover: #7bd0ff;
+  --primary-terracotta-subtle: rgba(76, 215, 246, 0.14);
+  --primary-blue: #2563eb;
+  --primary-blue-hover: #3b82f6;
+  --primary-cyan: #4cd7f6;
+  --primary-cyan-subtle: rgba(6, 182, 212, 0.14);
+  --primary-pink: #7bd0ff;
+  --primary-pink-subtle: rgba(56, 189, 248, 0.12);
+  --primary-purple: #b4c5ff;
 }
 
 @theme inline {
@@ -42,7 +58,9 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
-  --font-serif: Cambria, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-sans: var(--font-manrope), var(--font-noto-thai), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: var(--font-noto-serif), var(--font-noto-serif-thai), Cambria, "Hiragino Mincho ProN", serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 html {
@@ -55,7 +73,7 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-manrope), var(--font-noto-thai), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-variant-numeric: lining-nums tabular-nums;
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -160,14 +178,22 @@ nav a,
   -webkit-overflow-scrolling: touch;
 }
 
-/* Background Subtle Dot-Grid Pattern */
+/* Background Subtle Glacial Dot-Grid + Oceanic Ambient Glow */
 .bg-grid-pattern {
-  background-image: radial-gradient(rgba(140, 125, 105, 0.09) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-color: #f8fafd;
+  background-image:
+    radial-gradient(circle at 12% 0%, rgba(37, 99, 235, 0.055), transparent 42%),
+    radial-gradient(circle at 88% 10%, rgba(2, 132, 199, 0.05), transparent 40%),
+    radial-gradient(rgba(30, 58, 138, 0.075) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 24px 24px;
 }
 .dark .bg-grid-pattern {
-  background-image: radial-gradient(rgba(59, 130, 246, 0.07) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-color: #0d131f;
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(37, 99, 235, 0.14), transparent 42%),
+    radial-gradient(circle at 85% 8%, rgba(76, 215, 246, 0.09), transparent 38%),
+    radial-gradient(rgba(76, 215, 246, 0.06) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 24px 24px;
 }
 
 /* Hide native Edge/IE password reveal and clear icons */
@@ -324,53 +350,53 @@ input::-ms-clear {
   animation: bellShake 0.6s ease-in-out;
 }
 
-/* Ultra-Smooth Clean Travel Elevation (Trip.com / Apple Style) */
+/* Oceanic Glacial Glass Elevation */
 .card-elevation {
-  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.05), 0 1px 4px -1px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 18px -4px rgba(15, 23, 42, 0.06), 0 1px 4px -1px rgba(37, 99, 235, 0.04);
 }
 
 .card-elevation:hover {
-  box-shadow: 0 6px 20px -3px rgba(0, 102, 246, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 28px -6px rgba(37, 99, 235, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.05);
 }
 
 .dark .card-elevation {
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 28px -4px rgba(4, 9, 20, 0.55), 0 0 0 1px rgba(76, 215, 246, 0.08);
 }
 
 .dark .card-elevation:hover {
-  box-shadow: 0 8px 24px -3px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 102, 246, 0.3);
+  box-shadow: 0 12px 34px -4px rgba(6, 182, 212, 0.14), 0 0 0 1px rgba(76, 215, 246, 0.28);
 }
 
 .glow-pink-purple {
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 102, 246, 0.25);
+  box-shadow: 0 4px 16px -2px rgba(4, 9, 20, 0.35), 0 0 0 1px rgba(76, 215, 246, 0.25);
 }
 
 .glow-purple {
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 4px 16px -2px rgba(4, 9, 20, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.25);
 }
 
 .glow-pink {
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(244, 63, 94, 0.2);
+  box-shadow: 0 4px 16px -2px rgba(4, 9, 20, 0.25), 0 0 0 1px rgba(76, 215, 246, 0.22);
 }
 
 /* ======================================================
-   💎 LUXURY DESIGN SYSTEM (APPLE & REVOLUT STYLE)
+   💎 OCEANIC GLACIAL DESIGN SYSTEM
    ====================================================== */
 
 .btn-luxury-primary {
-  background: linear-gradient(135deg, #0066f6 0%, #3b82f6 50%, #2563eb 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #0284c7 100%);
   color: #ffffff;
-  box-shadow: 0 4px 14px 0 rgba(0, 102, 246, 0.35), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px 0 rgba(37, 99, 235, 0.34), inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .btn-luxury-primary:hover {
   transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 6px 20px 0 rgba(0, 102, 246, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 24px 0 rgba(6, 182, 212, 0.35), inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
 }
 .btn-luxury-primary:active {
   transform: translateY(0px) scale(0.97);
-  box-shadow: 0 2px 8px 0 rgba(0, 102, 246, 0.25);
+  box-shadow: 0 2px 8px 0 rgba(37, 99, 235, 0.25);
 }
 
 .btn-luxury-emerald {
@@ -389,22 +415,22 @@ input::-ms-clear {
 }
 
 .btn-luxury-glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(219, 234, 254, 0.95);
+  box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.05);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .dark .btn-luxury-glass {
-  background: rgba(21, 27, 43, 0.85);
-  border: 1px solid rgba(34, 44, 66, 0.9);
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  background: rgba(22, 28, 39, 0.82);
+  border: 1px solid rgba(76, 215, 246, 0.16);
+  box-shadow: 0 4px 14px -2px rgba(4, 9, 20, 0.45);
 }
 .btn-luxury-glass:hover {
   transform: translateY(-1px);
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 4px 14px -2px rgba(59, 130, 246, 0.15);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 6px 18px -2px rgba(6, 182, 212, 0.16);
 }
 .btn-luxury-glass:active {
   transform: translateY(0px) scale(0.97);

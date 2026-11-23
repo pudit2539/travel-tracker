@@ -424,10 +424,10 @@ export default function DiningDecisionPickerModal({
         role="dialog" 
         aria-modal="true"
       >
-        <div className="my-auto w-full sm:max-w-xl rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] flex flex-col max-h-[92dvh] overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
+        <div className="my-auto w-full sm:max-w-xl rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] flex flex-col max-h-[92dvh] overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-[#262932] flex items-center justify-between shrink-0 bg-white/50 dark:bg-[#181a20]/50 backdrop-blur-md">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-[#24324a] flex items-center justify-between shrink-0 bg-white/50 dark:bg-[#161c27]/50 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
               <Dices className="h-5 w-5" />
@@ -447,7 +447,7 @@ export default function DiningDecisionPickerModal({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-2xl hover:bg-slate-100 dark:hover:bg-[#1e2027] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+            className="p-2 rounded-2xl hover:bg-slate-100 dark:hover:bg-[#1a202c] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
             title="ปิดหน้าต่าง"
           >
             <X className="h-5 w-5" />
@@ -501,7 +501,7 @@ export default function DiningDecisionPickerModal({
                 className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                   selectedScope === 'all'
                     ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-800 shadow-2xs'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#262932] hover:border-slate-300'
+                    : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#24324a] hover:border-slate-300'
                 }`}
               >
                 ✨ รวมทั้งหมด
@@ -512,7 +512,7 @@ export default function DiningDecisionPickerModal({
                 className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                   selectedScope === 'curated'
                     ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-800 shadow-2xs'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#262932] hover:border-slate-300'
+                    : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#24324a] hover:border-slate-300'
                 }`}
                 title="สุ่มเฉพาะร้านดัง/ที่เที่ยวนอกแพลน เช่น Yodobashi, Kiji Okonomiyaki, Harbs"
               >
@@ -524,7 +524,7 @@ export default function DiningDecisionPickerModal({
                 className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                   selectedScope === 'itinerary'
                     ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-800 shadow-2xs'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#262932] hover:border-slate-300'
+                    : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#24324a] hover:border-slate-300'
                 }`}
                 title="สุ่มเฉพาะร้านและที่เที่ยวในแพลน 42 รายการ & แผนสำรอง"
               >
@@ -546,7 +546,7 @@ export default function DiningDecisionPickerModal({
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer border ${
                   onlyUnvisited
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-emerald-400'
+                    : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:border-emerald-400'
                 }`}
               >
                 <Sparkles className="h-3 w-3" />
@@ -560,7 +560,7 @@ export default function DiningDecisionPickerModal({
                 className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
                   selectedCity === 'all'
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
+                    : 'bg-slate-100 dark:bg-[#1a202c] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#24324a]'
                 }`}
               >
                 ทุกเมือง
@@ -573,7 +573,7 @@ export default function DiningDecisionPickerModal({
                   className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
                     selectedCity === c.id
                       ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#262932]'
+                      : 'bg-slate-100 dark:bg-[#1a202c] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#24324a]'
                   }`}
                 >
                   {c.emoji} {c.id}
@@ -596,7 +596,7 @@ export default function DiningDecisionPickerModal({
                   className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                     selectedCategory === cat.key
                       ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-                      : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#262932]'
+                      : 'bg-slate-100 dark:bg-[#1a202c] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#24324a]'
                   }`}
                 >
                   <span>{cat.icon}</span>
@@ -617,7 +617,7 @@ export default function DiningDecisionPickerModal({
                 กำลังสุ่มเลือกอย่างยุติธรรม...
               </p>
               {currentFlashing && (
-                <div className="p-3 rounded-2xl bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] shadow-sm max-w-sm mx-auto">
+                <div className="p-3 rounded-2xl bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#24324a] shadow-sm max-w-sm mx-auto">
                   <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
                     {currentFlashing.name}
                   </span>
@@ -679,7 +679,7 @@ export default function DiningDecisionPickerModal({
                 </div>
 
                 {pickedItem.highlight && (
-                  <p className="text-xs text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-[#181a20]/70 p-3 rounded-2xl border border-slate-200/60 dark:border-[#262932] leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-[#161c27]/70 p-3 rounded-2xl border border-slate-200/60 dark:border-[#24324a] leading-relaxed">
                     {pickedItem.highlight}
                   </p>
                 )}
@@ -700,9 +700,9 @@ export default function DiningDecisionPickerModal({
                     <button
                       type="button"
                       onClick={() => setStaffModalSpot(pickedItem)}
-                      className="min-h-[44px] py-2.5 px-4 rounded-2xl bg-white dark:bg-[#181a20] hover:bg-slate-50 dark:hover:bg-[#22252E] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-[#323642] font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+                      className="min-h-[44px] py-2.5 px-4 rounded-2xl bg-white dark:bg-[#161c27] hover:bg-slate-50 dark:hover:bg-[#1a202c] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-[#24324a] font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
                     >
-                      <MessageSquare className="h-4 w-4 text-[#C83E2D] shrink-0" />
+                      <MessageSquare className="h-4 w-4 text-[#2563eb] shrink-0" />
                       <span>โชว์พนักงาน / แท็กซี่</span>
                     </button>
                   </div>
@@ -714,7 +714,7 @@ export default function DiningDecisionPickerModal({
                           value={targetDay}
                           onChange={(e) => setCustomTargetDay(e.target.value)}
                           aria-label="เลือกวันที่จะเพิ่มลงแพลน"
-                          className="min-h-[44px] px-3 py-2 rounded-2xl border border-amber-300/80 dark:border-amber-800 bg-white dark:bg-[#181a20] text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+                          className="min-h-[44px] px-3 py-2 rounded-2xl border border-amber-300/80 dark:border-amber-800 bg-white dark:bg-[#161c27] text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
                         >
                           {availableDays.map((d) => (
                             <option key={d} value={d}>
@@ -760,7 +760,7 @@ export default function DiningDecisionPickerModal({
                     {backupItems.map((b, idx) => (
                       <div 
                         key={b.id || idx}
-                        className="p-3 rounded-2xl bg-slate-50 dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] flex flex-col justify-between space-y-1.5"
+                        className="p-3 rounded-2xl bg-slate-50 dark:bg-[#161c27] border border-slate-200 dark:border-[#24324a] flex flex-col justify-between space-y-1.5"
                       >
                         <div>
                           <div className="flex items-center justify-between text-[10px]">
@@ -792,7 +792,7 @@ export default function DiningDecisionPickerModal({
             </div>
           ) : (
             /* Standby Card */
-            <div className="p-8 rounded-3xl bg-slate-50 dark:bg-[#121316] border border-dashed border-slate-300 dark:border-[#262932] text-center space-y-2">
+            <div className="p-8 rounded-3xl bg-slate-50 dark:bg-[#0d131f] border border-dashed border-slate-300 dark:border-[#24324a] text-center space-y-2">
               <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
                 {activeKind === 'dining' ? <Utensils className="h-6 w-6" /> : <Compass className="h-6 w-6" />}
               </div>
@@ -808,7 +808,7 @@ export default function DiningDecisionPickerModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-100 dark:border-[#262932] bg-slate-50/80 dark:bg-[#121316]/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-100 dark:border-[#24324a] bg-slate-50/80 dark:bg-[#0d131f]/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
           {onOpenRadar && (
             <button
               type="button"
@@ -816,7 +816,7 @@ export default function DiningDecisionPickerModal({
                 onClose();
                 onOpenRadar();
               }}
-              className="min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+              className="min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
             >
               ดูเรดาร์ของกิน
             </button>
@@ -842,7 +842,7 @@ export default function DiningDecisionPickerModal({
 
             <button
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#262932] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24324a] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer"
             >
               ปิด
             </button>

@@ -327,10 +327,10 @@ export default function GourmetRadarModal({
         role="dialog" 
         aria-modal="true"
       >
-        <div className="my-auto w-full sm:max-w-3xl rounded-3xl bg-white dark:bg-[#181a20] shadow-2xl border border-slate-200/90 dark:border-[#262932] flex flex-col max-h-[92dvh] overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
+        <div className="my-auto w-full sm:max-w-3xl rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] flex flex-col max-h-[92dvh] overflow-hidden animate-in zoom-in-95 duration-200 modal-safe-card">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-[#262932] flex items-center justify-between shrink-0 bg-white/50 dark:bg-[#181a20]/50 backdrop-blur-md">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-[#24324a] flex items-center justify-between shrink-0 bg-white/50 dark:bg-[#161c27]/50 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md shadow-orange-500/25">
               <Utensils className="h-5 w-5" />
@@ -366,7 +366,7 @@ export default function GourmetRadarModal({
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1e2027] transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -374,7 +374,7 @@ export default function GourmetRadarModal({
         </div>
 
         {/* Filter & Search Bar */}
-        <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-[#262932] bg-slate-50/70 dark:bg-[#121316]/60 space-y-2.5 shrink-0">
+        <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-[#24324a] bg-slate-50/70 dark:bg-[#0d131f]/60 space-y-2.5 shrink-0">
           
           {/* Search Input */}
           <div className="relative">
@@ -384,7 +384,7 @@ export default function GourmetRadarModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาร้านอาหาร, คาเฟ่, ราเมง, ชาเขียว, ย่านช้อปปิ้ง..."
-              className="w-full pl-9 pr-4 py-2.5 text-base sm:text-xs font-bold rounded-xl border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full pl-9 pr-4 py-2.5 text-base sm:text-xs font-bold rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
             />
             {searchQuery && (
               <button
@@ -406,7 +406,7 @@ export default function GourmetRadarModal({
                 className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
                   selectedCity === 'all'
                     ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                    : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:bg-slate-100'
                 }`}
               >
                 ทั้งหมด
@@ -419,7 +419,7 @@ export default function GourmetRadarModal({
                   className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
                     selectedCity === c.id
                       ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                      : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                      : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:bg-slate-100'
                   }`}
                 >
                   {c.emoji} {c.label}
@@ -433,7 +433,7 @@ export default function GourmetRadarModal({
                 <select
                   value={targetDay}
                   onChange={(e) => setTargetDay(e.target.value)}
-                  className="px-2 py-1 rounded-lg border border-slate-200 dark:border-[#262932] bg-white dark:bg-[#181a20] text-[11px] font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
+                  className="px-2 py-1 rounded-lg border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-[11px] font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
                   aria-label="เลือกวันที่จะเพิ่มร้านอาหารลงแผน"
                 >
                   {availableDays.map((d) => (
@@ -455,7 +455,7 @@ export default function GourmetRadarModal({
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shrink-0 transition-all cursor-pointer border ${
                 onlyOpenLate
                   ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                  : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-indigo-400'
+                  : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:border-indigo-400'
               }`}
             >
               <Moon className="h-3 w-3" />
@@ -469,14 +469,14 @@ export default function GourmetRadarModal({
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shrink-0 transition-all cursor-pointer border ${
                 onlyWalkIn
                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                  : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:border-emerald-400'
+                  : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:border-emerald-400'
               }`}
             >
               <Sparkles className="h-3 w-3" />
               <span>วอล์กอินได้</span>
             </button>
 
-            <span className="h-4 w-px bg-slate-200 dark:bg-[#262932] mx-0.5 shrink-0" />
+            <span className="h-4 w-px bg-slate-200 dark:bg-[#24324a] mx-0.5 shrink-0" />
 
             {[
               { id: 'all', label: 'ทุกงบ' },
@@ -491,7 +491,7 @@ export default function GourmetRadarModal({
                 className={`px-2.5 py-1 rounded-xl text-[11px] font-bold shrink-0 transition-all cursor-pointer border ${
                   budgetFilter === b.id
                     ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                    : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:bg-slate-100'
                 }`}
               >
                 {b.label}
@@ -517,7 +517,7 @@ export default function GourmetRadarModal({
                 className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer border ${
                   selectedCategory === cat.id
                     ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                    : 'bg-white dark:bg-[#181a20] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#262932] hover:bg-slate-100'
+                    : 'bg-white dark:bg-[#161c27] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:bg-slate-100'
                 }`}
               >
                 {cat.label}
@@ -594,7 +594,7 @@ export default function GourmetRadarModal({
                   className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
                     isChecked
                       ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/80 shadow-xs'
-                      : 'bg-white dark:bg-[#1e2027] border-slate-200 dark:border-[#262932] hover:border-blue-400 dark:hover:border-blue-500/50'
+                      : 'bg-white dark:bg-[#1a202c] border-slate-200 dark:border-[#24324a] hover:border-blue-400 dark:hover:border-blue-500/50'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2.5">
@@ -602,7 +602,7 @@ export default function GourmetRadarModal({
                       
                       {/* Badge Row */}
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#262932]">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-[#0d131f] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#24324a]">
                           {spot.categoryIcon} {spot.categoryLabel}
                         </span>
 
@@ -668,7 +668,7 @@ export default function GourmetRadarModal({
                       className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 border flex flex-col items-center gap-0.5 ${
                         isChecked
                           ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
-                          : 'bg-slate-50 dark:bg-[#121316] text-slate-400 hover:text-amber-500 border-slate-200 dark:border-[#262932]'
+                          : 'bg-slate-50 dark:bg-[#0d131f] text-slate-400 hover:text-amber-500 border-slate-200 dark:border-[#24324a]'
                       }`}
                       title={isChecked ? 'แวะกินแล้ว (คลิกเพื่อยกเลิก)' : 'คลิกเพื่อบันทึกว่าแวะกินแล้ว'}
                     >
@@ -680,7 +680,7 @@ export default function GourmetRadarModal({
                   </div>
 
                   {/* Action Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#262932]/80">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#24324a]/80">
                     <span className="text-[10px] text-slate-400 font-medium">
                       {spot.type === 'main' ? 'เมนูแนะนำประจำมื้อ' : spot.type === 'curated' ? 'ร้านแนะนำคัดสรร (เพิ่มเข้าแผนได้)' : 'ร้านสำรองคุณภาพสูงเมื่อคิวยาว'}
                     </span>
@@ -689,10 +689,10 @@ export default function GourmetRadarModal({
                       <button
                         type="button"
                         onClick={() => setStaffModalSpot(spot)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#181a20] hover:bg-slate-100 dark:hover:bg-[#22252E] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#323642] text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#161c27] hover:bg-slate-100 dark:hover:bg-[#1a202c] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#24324a] text-xs font-bold transition-all shadow-2xs cursor-pointer"
                         title="แสดงชื่อร้านภาษาญี่ปุ่นตัวใหญ่ให้คนขับแท็กซี่หรือพนักงานดู"
                       >
-                        <MessageSquare className="h-3.5 w-3.5 text-[#C83E2D]" />
+                        <MessageSquare className="h-3.5 w-3.5 text-[#2563eb]" />
                         <span>โชว์พนักงาน</span>
                       </button>
 
@@ -739,7 +739,7 @@ export default function GourmetRadarModal({
             <button
               type="button"
               onClick={() => setLimitState({ key: filterKey, limit: displayLimit + 30 })}
-              className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1e2027] dark:hover:bg-[#262932] text-slate-700 dark:text-slate-300 font-bold text-xs transition-all border border-slate-200 dark:border-[#262932] cursor-pointer"
+              className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1a202c] dark:hover:bg-[#24324a] text-slate-700 dark:text-slate-300 font-bold text-xs transition-all border border-slate-200 dark:border-[#24324a] cursor-pointer"
             >
               โหลดร้านอาหารเพิ่มเติม (+30 ร้าน) • เหลืออีก {filteredSpots.length - displayLimit} ร้าน
             </button>
@@ -747,7 +747,7 @@ export default function GourmetRadarModal({
         </div>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-slate-100 dark:border-[#262932] bg-slate-50/80 dark:bg-[#121316]/80 flex items-center justify-between gap-2 shrink-0">
+        <div className="p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-slate-100 dark:border-[#24324a] bg-slate-50/80 dark:bg-[#0d131f]/80 flex items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
             <Award className="h-4 w-4 text-amber-500" />
             <span>เช็คอินแล้ว {checkedCount} จาก {allSpots.length} ร้าน</span>
@@ -769,7 +769,7 @@ export default function GourmetRadarModal({
             )}
             <button
               onClick={onClose}
-              className="min-h-[40px] px-4 py-1.5 rounded-xl border border-slate-300 dark:border-[#262932] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1e2027] cursor-pointer"
+              className="min-h-[40px] px-4 py-1.5 rounded-xl border border-slate-300 dark:border-[#24324a] text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer"
             >
               ปิด
             </button>

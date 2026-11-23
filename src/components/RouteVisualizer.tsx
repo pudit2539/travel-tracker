@@ -42,7 +42,7 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
   };
 
   return (
-    <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 backdrop-blur-xl card-elevation transition-all space-y-4">
+    <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white/95 dark:bg-[#161c27]/95 backdrop-blur-xl card-elevation transition-all space-y-4">
       
       {/* Header with Day Label & Multi-Stop Button */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -92,7 +92,7 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
                 href={directMapUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="group p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#262932] bg-slate-50/90 dark:bg-[#1e2027] hover:border-blue-500 dark:hover:border-blue-400 transition-all cursor-pointer flex items-center gap-3 min-w-[170px] max-w-[220px] shadow-2xs"
+                className="group p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#24324a] bg-slate-50/90 dark:bg-[#1a202c] hover:border-blue-500 dark:hover:border-blue-400 transition-all cursor-pointer flex items-center gap-3 min-w-[170px] max-w-[220px] shadow-2xs"
                 title="เปิดดูใน Google Maps"
               >
                 <div className="px-2 py-1 rounded-xl flex flex-col items-center justify-center text-white shrink-0 bg-blue-600 shadow-xs min-w-[36px]">

@@ -171,7 +171,7 @@ export function TripToolsSheet({
             label: 'เรดาร์ร้านอร่อย',
             subtitle: 'ร้านเด็ดในแผน & นอกแผน',
             icon: <Utensils className="h-4 w-4" />,
-            accent: 'bg-rose-500/10 text-[#C83E2D] dark:text-rose-400',
+            accent: 'bg-sky-500/12 text-[#0284c7] dark:bg-[#4cd7f6]/15 dark:text-[#4cd7f6]',
             onClick: () => runAction(onOpenGourmetRadar),
           },
         ]
@@ -223,7 +223,7 @@ export function TripToolsSheet({
             label: 'สมุดตราปั๊ม & Wrapped',
             subtitle: 'Goshuin + การ์ดแชร์ Story',
             icon: <Stamp className="h-4 w-4" />,
-            accent: 'bg-rose-500/10 text-[#C83E2D] dark:text-rose-400',
+            accent: 'bg-indigo-500/12 text-[#2563eb] dark:bg-[#b4c5ff]/15 dark:text-[#b4c5ff]',
             onClick: () => runAction(() => onOpenPassport('passport')),
           },
         ]
@@ -281,10 +281,12 @@ export function TripToolsSheet({
     { title: 'วางแผน & ความทรงจำ', items: planAndMemoryTools },
   ].filter((sec) => sec.items.length > 0);
 
+  const totalToolsCount = sections.reduce((sum, sec) => sum + sec.items.length, 0);
+
   return (
     <ModalPortal lockScroll>
       <div
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto overscroll-contain modal-safe-overlay animate-in fade-in duration-150"
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#040914]/75 backdrop-blur-md p-0 sm:p-4 overflow-y-auto overscroll-contain modal-safe-overlay animate-in fade-in duration-150"
         role="dialog"
         aria-modal="true"
         aria-label="ศูนย์รวมเครื่องมือทริป"
@@ -292,22 +294,28 @@ export function TripToolsSheet({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-[#FDFBF7] dark:bg-[#181a20] border-t sm:border border-[#DFD7C7] dark:border-[#262932] shadow-2xl max-h-[88dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 modal-safe-card"
+          className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-[#f8fafd] dark:bg-[#0d131f] border-t sm:border border-[#dbeafe] dark:border-[#4cd7f6]/20 shadow-[0_24px_48px_-12px_rgba(4,9,20,0.6)] max-h-[88dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 modal-safe-card"
         >
-          {/* Mobile Pull Handle + Header */}
-          <div className="pt-2.5 px-4 pb-3 border-b border-[#EAE2D3] dark:border-[#262932] shrink-0">
-            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto mb-2.5 sm:hidden" />
+          {/* Mobile Pull Handle + Oceanic Header */}
+          <div className="pt-2.5 px-4 pb-3.5 border-b border-[#e2e8f0] dark:border-[#24324a] bg-white/90 dark:bg-[#161c27]/90 backdrop-blur-xl shrink-0">
+            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-[#334155] mx-auto mb-2.5 sm:hidden" />
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-[#1C2630] dark:bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                  <Wrench className="h-4 w-4" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#0284c7] text-white flex items-center justify-center shadow-[0_4px_14px_rgba(37,99,235,0.35)] shrink-0">
+                  <Wrench className="h-4.5 w-4.5" />
                 </div>
-                <div>
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-[#0284c7] dark:text-[#4cd7f6]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb] dark:bg-[#4cd7f6] animate-pulse" />
+                      QUICK LAUNCHER · {totalToolsCount} TOOLS
+                    </span>
+                  </div>
+                  <h2 className="font-serif text-base sm:text-lg font-bold text-[#0f172a] dark:text-[#f8fafc] leading-tight">
                     เครื่องมือทริปทั้งหมด
                   </h2>
-                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                    รวมทุกฟีเจอร์ไว้เป็นหมวดหมู่ เลือกใช้งานได้ใน 1 แตะ
+                  <p className="text-[11px] font-medium text-[#475569] dark:text-[#94a3b8]">
+                    รวมทุกฟีเจอร์ไว้เป็นหมวดหมู่ ใช้งานได้ใน 1 แตะ
                   </p>
                 </div>
               </div>
@@ -315,46 +323,52 @@ export function TripToolsSheet({
                 type="button"
                 onClick={onClose}
                 aria-label="ปิดหน้าต่างเครื่องมือ"
-                className="min-w-[40px] min-h-[40px] rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#22252E] flex items-center justify-center transition-colors cursor-pointer"
+                className="min-w-[40px] min-h-[40px] rounded-full bg-[#f1f5f9] dark:bg-[#1a202c] border border-[#e2e8f0] dark:border-[#24324a] text-[#475569] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:border-[#2563eb] dark:hover:border-[#4cd7f6]/50 flex items-center justify-center transition-colors cursor-pointer shrink-0"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4.5 w-4.5" />
               </button>
             </div>
           </div>
 
           {/* Categorized Tool Tiles */}
-          <div className="p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain space-y-4 custom-scrollbar">
+          <div className="p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain space-y-5 custom-scrollbar">
             {sections.map((section) => (
-              <div key={section.title} className="space-y-2">
-                <h3 className="text-[11px] font-black uppercase tracking-wider text-[#8C8275] dark:text-slate-400 px-0.5">
-                  {section.title}
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div key={section.title} className="space-y-2.5">
+                <div className="flex items-center justify-between px-0.5">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#0f172a] dark:text-[#dde2f3] flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb] dark:bg-[#4cd7f6]" />
+                    <span>{section.title}</span>
+                  </h3>
+                  <span className="text-[10px] font-mono font-semibold text-[#64748b] dark:text-[#8d90a0]">
+                    {section.items.length} ITEMS
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {section.items.map((tool) => (
                     <button
                       key={tool.id}
                       type="button"
                       onClick={tool.onClick}
-                      className={`min-h-[64px] p-3 rounded-2xl border text-left transition-all cursor-pointer active:scale-[0.98] flex flex-col justify-between gap-1.5 ${
+                      className={`min-h-[72px] p-3 rounded-2xl border text-left transition-all cursor-pointer active:scale-[0.98] flex flex-col justify-between gap-2 ${
                         tool.active
-                          ? 'bg-[#1C2630] dark:bg-blue-600/20 border-[#1C2630] dark:border-blue-500 text-white dark:text-blue-200 shadow-sm'
-                          : 'bg-white dark:bg-[#121316] border-[#E5DEC9] dark:border-[#262932] hover:border-[#C83E2D] dark:hover:border-blue-500/60 text-slate-900 dark:text-white'
+                          ? 'bg-gradient-to-br from-[#1d4ed8] to-[#2563eb] border-[#3b82f6] text-white shadow-[0_6px_18px_rgba(37,99,235,0.32)]'
+                          : 'bg-white dark:bg-[#161c27] border-[#e2e8f0] dark:border-[#24324a] hover:border-[#2563eb] dark:hover:border-[#4cd7f6]/50 hover:shadow-[0_6px_18px_-4px_rgba(6,182,212,0.16)] text-[#0f172a] dark:text-[#dde2f3]'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-1.5">
                         <span
                           className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                            tool.active ? 'bg-white/15 text-white' : tool.accent
+                            tool.active ? 'bg-white/20 text-white' : tool.accent
                           }`}
                         >
                           {tool.icon}
                         </span>
                         {tool.badge && (
                           <span
-                            className={`text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full ${
+                            className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                               tool.active
                                 ? 'bg-white/20 text-white'
-                                : 'bg-slate-100 dark:bg-[#1e2027] text-slate-600 dark:text-slate-300'
+                                : 'bg-[#eff6ff] dark:bg-[#080e19] text-[#1d4ed8] dark:text-[#4cd7f6] border border-[#dbeafe] dark:border-[#4cd7f6]/20'
                             }`}
                           >
                             {tool.badge}
@@ -362,12 +376,12 @@ export function TripToolsSheet({
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-black truncate">{tool.label}</div>
+                        <div className="text-xs font-bold truncate">{tool.label}</div>
                         <div
                           className={`text-[10px] font-medium truncate ${
                             tool.active
-                              ? 'text-white/75'
-                              : 'text-slate-500 dark:text-slate-400'
+                              ? 'text-blue-100'
+                              : 'text-[#64748b] dark:text-[#94a3b8]'
                           }`}
                         >
                           {tool.subtitle}

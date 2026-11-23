@@ -24,7 +24,7 @@ export default function PullToRefreshIndicator({
         transform: `translateY(${Math.min(pullDistance * 0.7, 48)}px)`,
       }}
     >
-      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-[#181a20] border border-slate-200 dark:border-[#262932] shadow-xl animate-in fade-in zoom-in-90 duration-150">
+      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#24324a] shadow-xl animate-in fade-in zoom-in-90 duration-150">
         {isRefreshing ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />

@@ -1,9 +1,45 @@
 import type { Viewport } from 'next';
+import { Manrope, Noto_Sans_Thai, Noto_Serif, Noto_Serif_Thai, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import PWAHandler from '@/components/PWAHandler';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Toaster } from 'sonner';
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-manrope',
+  display: 'swap',
+});
+
+const notoSansThai = Noto_Sans_Thai({
+  subsets: ['thai', 'latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-noto-thai',
+  display: 'swap',
+});
+
+const notoSerif = Noto_Serif({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-noto-serif',
+  display: 'swap',
+});
+
+const notoSerifThai = Noto_Serif_Thai({
+  subsets: ['thai', 'latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-noto-serif-thai',
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -12,8 +48,8 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#faf8fd' },
-    { media: '(prefers-color-scheme: dark)', color: '#121316' },
+    { media: '(prefers-color-scheme: light)', color: '#f8fafd' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d131f' },
   ],
 };
 
@@ -35,7 +71,11 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="th" suppressHydrationWarning>
+    <html
+      lang="th"
+      suppressHydrationWarning
+      className={`${manrope.variable} ${notoSansThai.variable} ${notoSerif.variable} ${notoSerifThai.variable} ${jetbrainsMono.variable}`}
+    >
       <head>
         {/* Anti-FOUC Theme Script: runs synchronously before browser paints body */}
         <script
@@ -64,7 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
-      <body className="min-h-screen antialiased bg-[#F8F6F0] text-[#181a20] dark:bg-[#121316] dark:text-[#f1f5f9] selection:bg-[#C83E2D] selection:text-white">
+      <body className="min-h-screen antialiased bg-[#f8fafd] text-[#0f172a] dark:bg-[#0d131f] dark:text-[#dde2f3] selection:bg-[#2563eb] selection:text-white dark:selection:bg-[#4cd7f6] dark:selection:text-[#003640]">
         <ThemeProvider>
           <PWAHandler />
           <ErrorBoundary>

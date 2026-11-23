@@ -31,16 +31,16 @@ export default function CurrencyPillSwitcher({
           : 'translate-y-0 opacity-100'
       }`}
     >
-      <div className="p-0.5 sm:p-1 rounded-xl sm:rounded-2xl bg-[#FDFBF7]/95 dark:bg-[#181a20]/95 backdrop-blur-xl border border-[#DFD7C7] dark:border-[#262932] shadow-lg shadow-black/10 flex items-center gap-0.5 sm:gap-1">
+      <div className="p-0.5 sm:p-1 rounded-full bg-white/95 dark:bg-[#161c27]/95 backdrop-blur-xl border border-[#dbeafe] dark:border-[#4cd7f6]/25 shadow-[0_8px_28px_rgba(15,23,42,0.12)] dark:shadow-[0_8px_28px_rgba(4,9,20,0.65)] flex items-center gap-0.5 sm:gap-1">
         {!isThbBase && (
           <>
             <button
               type="button"
               onClick={() => onToggle('foreign')}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer active:scale-95 ${
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold transition-all cursor-pointer active:scale-95 ${
                 activeView === 'foreign'
-                  ? 'bg-[#C83E2D] text-white shadow-xs scale-[1.02]'
-                  : 'text-[#6E675F] dark:text-slate-400 hover:text-[#1A1A1A] dark:hover:text-white'
+                  ? 'bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] text-white shadow-[0_4px_12px_rgba(37,99,235,0.35)] scale-[1.02]'
+                  : 'text-[#475569] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#4cd7f6]'
               }`}
               title={`สลับตัวเลขหลักทั้งแอปเป็น ${primaryCurrency}`}
             >
@@ -51,10 +51,10 @@ export default function CurrencyPillSwitcher({
             <button
               type="button"
               onClick={() => onToggle('thb')}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer active:scale-95 ${
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold transition-all cursor-pointer active:scale-95 ${
                 activeView === 'thb'
-                  ? 'bg-[#1C2630] dark:bg-blue-600 text-white shadow-xs scale-[1.02]'
-                  : 'text-[#6E675F] dark:text-slate-400 hover:text-[#1A1A1A] dark:hover:text-white'
+                  ? 'bg-gradient-to-r from-[#0284c7] to-[#2563eb] text-white shadow-[0_4px_12px_rgba(6,182,212,0.3)] scale-[1.02]'
+                  : 'text-[#475569] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#4cd7f6]'
               }`}
               title="สลับตัวเลขหลักทั้งแอปเป็นเงินบาทไทย (THB)"
             >
@@ -68,8 +68,8 @@ export default function CurrencyPillSwitcher({
           <button
             type="button"
             onClick={onOpenCalculator}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-black bg-[#F3EFE6] dark:bg-[#222836] hover:bg-[#EAE3D5] dark:hover:bg-blue-950/50 text-[#1C2630] dark:text-blue-400 transition-all cursor-pointer active:scale-95 ${
-              !isThbBase ? 'border-l border-[#DFD7C7] dark:border-[#262932] ml-0.5' : ''
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-[#eff6ff] dark:bg-[#080e19] hover:bg-[#dbeafe] dark:hover:bg-[#242a36] text-[#1d4ed8] dark:text-[#4cd7f6] transition-all cursor-pointer active:scale-95 ${
+              !isThbBase ? 'border-l border-[#dbeafe] dark:border-[#24324a] ml-0.5' : ''
             }`}
             title={`เปิดเครื่องคิดเลขแปลงค่าเงินด่วน (เรท ≈ ${fxRate})`}
           >

@@ -58,13 +58,13 @@ export default function WeatherWidget({ defaultCity = 'osaka', tripCities = [] }
   }, [city, loadWeather]);
 
   return (
-    <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#262932] bg-white/95 dark:bg-[#181a20]/95 backdrop-blur-xl card-elevation transition-all duration-300 group space-y-3.5">
+    <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white/95 dark:bg-[#161c27]/95 backdrop-blur-xl card-elevation transition-all duration-300 group space-y-3.5">
       {/* Background ambient glow */}
       <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-700" />
       
       {/* Top row: City selector & Refresh */}
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#1e2027] border border-slate-200/80 dark:border-[#262932] shadow-2xs">
+        <div className="flex flex-wrap items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#1a202c] border border-slate-200/80 dark:border-[#24324a] shadow-2xs">
           {quickCityKeys.map((key) => {
             const meta = CITY_COORDINATES[key];
             if (!meta) return null;
@@ -84,7 +84,7 @@ export default function WeatherWidget({ defaultCity = 'osaka', tripCities = [] }
               </button>
             );
           })}
-          <div className="relative flex items-center pl-1 border-l border-slate-200 dark:border-[#262932]">
+          <div className="relative flex items-center pl-1 border-l border-slate-200 dark:border-[#24324a]">
             <MapPin className="h-3 w-3 text-slate-400 ml-1 shrink-0" />
             <select
               value={city}
@@ -93,7 +93,7 @@ export default function WeatherWidget({ defaultCity = 'osaka', tripCities = [] }
               className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 px-1.5 py-1 outline-none cursor-pointer"
             >
               {ALL_CITY_KEYS.map((key) => (
-                <option key={key} value={key} className="bg-white dark:bg-[#181a20] text-slate-900 dark:text-white">
+                <option key={key} value={key} className="bg-white dark:bg-[#161c27] text-slate-900 dark:text-white">
                   {CITY_COORDINATES[key].nameTh}
                 </option>
               ))}
@@ -104,7 +104,7 @@ export default function WeatherWidget({ defaultCity = 'osaka', tripCities = [] }
         <button
           onClick={() => loadWeather(city)}
           disabled={loading}
-          className="p-2 rounded-xl text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-[#1e2027] hover:rotate-180 transition-all duration-500 cursor-pointer shadow-2xs"
+          className="p-2 rounded-xl text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-[#1a202c] hover:rotate-180 transition-all duration-500 cursor-pointer shadow-2xs"
           title="อัปเดตสภาพอากาศล่าสุด"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
@@ -115,7 +115,7 @@ export default function WeatherWidget({ defaultCity = 'osaka', tripCities = [] }
       {weather && (
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="shrink-0 w-13 h-13 sm:w-15 sm:h-15 flex items-center justify-center text-3xl sm:text-4xl rounded-2xl bg-blue-50/50 dark:bg-[#1e2027] border border-blue-100 dark:border-[#262932] shadow-xs">
+            <div className="shrink-0 w-13 h-13 sm:w-15 sm:h-15 flex items-center justify-center text-3xl sm:text-4xl rounded-2xl bg-blue-50/50 dark:bg-[#1a202c] border border-blue-100 dark:border-[#24324a] shadow-xs">
               {weather.weatherEmoji}
             </div>
             <div className="min-w-0 flex-1">
@@ -147,7 +147,7 @@ export default function WeatherWidget({ defaultCity = 'osaka', tripCities = [] }
 
       {/* Smart Travel Advice Banner */}
       {weather && (
-        <div className="relative z-10 p-3.5 rounded-2xl bg-blue-50/40 dark:bg-[#1e2027]/90 border border-blue-100 dark:border-[#262932] text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium flex items-center gap-2.5">
+        <div className="relative z-10 p-3.5 rounded-2xl bg-blue-50/40 dark:bg-[#1a202c]/90 border border-blue-100 dark:border-[#24324a] text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium flex items-center gap-2.5">
           <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
           <span className="flex-1 leading-snug">{weather.travelAdvice}</span>
         </div>
