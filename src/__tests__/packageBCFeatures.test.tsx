@@ -379,5 +379,54 @@ describe('Package B & C: Nationwide Gourmet Radar, Smart Dining Picker, Day Pace
       expect(img.getAttribute('src')).toBeTruthy();
       expect(container.textContent).not.toContain('รูปของฉัน');
     });
+
+    it('ItineraryStopCard hides dense route/food notes by default and reveals them on tapping ดูรายละเอียด', async () => {
+      const stop = {
+        id: 'stop-clean-1',
+        trip_id: 'trip-clean-1',
+        date_label: '6 ธ.ค.',
+        time_slot: '06:00 - 07:30 น.',
+        city: 'Kyoto (Higashiyama)',
+        main_place: 'วัดน้ำใส Kiyomizu-dera',
+        transport_info: 'นั่ง Kyoto City Bus สาย 206 ลงป้าย Gojozaka เดินขึ้นเนิน 10 นาที',
+        food_recommendation: '% Arabica Kyoto Higashiyama กาแฟดริปวิวเจดีย์',
+      };
+
+      await act(async () => {
+        root.render(
+          <ItineraryStopCard
+            item={stop}
+            idx={0}
+            totalItems={3}
+            canEditPlan={true}
+            reordering={false}
+            isPlanBOpen={false}
+            onTogglePlanB={vi.fn()}
+            onMoveActivity={vi.fn()}
+            onOpenEditActivity={vi.fn()}
+            onDeleteActivity={vi.fn()}
+          />
+        );
+      });
+
+      // Default clean mode hides long note text behind 1-tap disclosure button
+      expect(container.textContent).toContain('วัดน้ำใส Kiyomizu-dera');
+      expect(container.textContent).toContain('ดูรายละเอียด');
+      expect(container.textContent).not.toContain('ลงป้าย Gojozaka เดินขึ้นเนิน 10 นาที');
+      expect(container.textContent).not.toContain('กาแฟดริปวิวเจดีย์');
+
+      const toggleBtn = Array.from(container.querySelectorAll('button')).find((b) =>
+        b.textContent?.includes('ดูรายละเอียด')
+      ) as HTMLButtonElement;
+      expect(toggleBtn).toBeDefined();
+
+      await act(async () => {
+        toggleBtn.click();
+      });
+
+      expect(container.textContent).toContain('ซ่อนรายละเอียด');
+      expect(container.textContent).toContain('ลงป้าย Gojozaka เดินขึ้นเนิน 10 นาที');
+      expect(container.textContent).toContain('กาแฟดริปวิวเจดีย์');
+    });
   });
 });

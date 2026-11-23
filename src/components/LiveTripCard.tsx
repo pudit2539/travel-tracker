@@ -227,7 +227,8 @@ function LiveTripCard({
   const [showStampAnimation, setShowStampAnimation] = useState<string | null>(null);
   const [showStaffModal, setShowStaffModal] = useState(false);
 
-  // TabiPlan Companion & GPS State
+  // TabiPlan Companion & GPS State (collapsed by default to reduce text clutter)
+  const [showCompanionDrawer, setShowCompanionDrawer] = useState(false);
   const [companionStyle, setCompanionStyle] = useState<CompanionStyle>('feminine');
   const [privacyLevel, setPrivacyLevel] = useState<PresencePrivacyLevel>('progress');
   const [gpsActive, setGpsActive] = useState(false);
@@ -559,6 +560,19 @@ function LiveTripCard({
             <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-white/80 dark:bg-[#080e19]/80 text-[#334155] dark:text-[#c3c6d7] border border-[#cbd5e1] dark:border-[#24324a] max-w-[140px] truncate">
               {activeDayLabel}
             </span>
+            <button
+              type="button"
+              onClick={() => setShowCompanionDrawer((v) => !v)}
+              aria-expanded={showCompanionDrawer}
+              className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                showCompanionDrawer || gpsActive || simulatingWalk
+                  ? 'bg-[#2563eb] text-white border-[#2563eb]'
+                  : 'bg-white/90 dark:bg-[#080e19]/80 text-[#1d4ed8] dark:text-[#4cd7f6] border-[#bfdbfe] dark:border-[#4cd7f6]/30 hover:bg-[#dbeafe] dark:hover:bg-[#1a202c]'
+              }`}
+              title="เปิด/ซ่อนผู้ช่วย Chibi, เสียงพูด และ GPS นำทาง"
+            >
+              {showCompanionDrawer ? 'ซ่อนผู้ช่วย ▴' : 'ผู้ช่วย & GPS ▾'}
+            </button>
           </div>
         </div>
 
@@ -590,8 +604,9 @@ function LiveTripCard({
           </div>
         )}
 
-        {/* TabiPlan Interactive Chibi Companion + Speech Bubble Banner */}
-        <div className="relative z-10 p-2.5 sm:p-3 rounded-xl bg-white/85 dark:bg-[#080e19]/75 border border-[#dbeafe] dark:border-[#24324a] flex flex-row items-start sm:items-center gap-2.5 sm:gap-3 backdrop-blur-md">
+        {/* TabiPlan Interactive Chibi Companion + Speech Bubble Banner (Collapsible to keep screen clean) */}
+        {(showCompanionDrawer || gpsActive || simulatingWalk) && (
+        <div className="relative z-10 p-2.5 sm:p-3 rounded-xl bg-white/85 dark:bg-[#080e19]/75 border border-[#dbeafe] dark:border-[#24324a] flex flex-row items-start sm:items-center gap-2.5 sm:gap-3 backdrop-blur-md animate-in fade-in slide-in-from-top-1 duration-150">
           {/* Layered City-Reactive Chibi Avatar SVG */}
           <div className="relative shrink-0 flex flex-col items-center">
             <div
@@ -861,6 +876,7 @@ function LiveTripCard({
             </div>
           </div>
         </div>
+        )}
 
         {/* Next Destination Spotlight Card (Recessed Telemetry Panel) */}
         {nextUpActivity ? (

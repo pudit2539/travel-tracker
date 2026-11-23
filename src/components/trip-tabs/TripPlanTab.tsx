@@ -8,7 +8,7 @@ import {
   LayoutGrid, Rows3, Plane, FolderDown, Sparkles, ExternalLink,
   Clock, ArrowUpToLine, ArrowDownToLine,
   Search, X, Shield, Calendar, Copy, Users,
-  SlidersHorizontal, Zap, Receipt, CheckCircle2, CloudRain
+  SlidersHorizontal, Zap, Receipt, CheckCircle2, CloudRain, Eye, EyeOff
 } from 'lucide-react';
 import { copyToClipboard } from '@/lib/clipboard';
 import { toast } from 'sonner';
@@ -166,6 +166,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const [showToolsSheet, setShowToolsSheet] = useState(false);
   const [onTripFocusMode, setOnTripFocusMode] = useState(false);
   const [rainyDayMode, setRainyDayMode] = useState(false);
+  const [showCardDetails, setShowCardDetails] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [groupViewFilter, setGroupViewFilter] = useState<'all' | 'mine'>('all');
   const [showScrollJump, setShowScrollJump] = useState(false);
@@ -197,6 +198,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
       try {
         const saved = localStorage.getItem(`travel_tracker_focus_mode_${tripId}`);
         if (saved === '1') setOnTripFocusMode(true);
+        const savedDetails = localStorage.getItem(`travel_tracker_card_details_${tripId}`);
+        if (savedDetails === '1') setShowCardDetails(true);
       } catch {}
     });
     return () => {
@@ -1157,6 +1160,31 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             </button>
           )}
 
+          {/* 1-Tap Clean/Full Card Details Toggle */}
+          {displayLayout === 'card' && (
+            <button
+              type="button"
+              onClick={() => {
+                const next = !showCardDetails;
+                triggerHaptic('light');
+                setShowCardDetails(next);
+                try {
+                  if (tripId) localStorage.setItem(`travel_tracker_card_details_${tripId}`, next ? '1' : '0');
+                } catch {}
+              }}
+              aria-pressed={showCardDetails}
+              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold border shrink-0 transition-all cursor-pointer active:scale-95 ${
+                showCardDetails
+                  ? 'bg-[#2563eb] text-white border-[#2563eb] shadow-2xs'
+                  : 'bg-[#eff6ff] dark:bg-[#080e19] text-[#1d4ed8] dark:text-[#4cd7f6] border-[#bfdbfe] dark:border-[#4cd7f6]/30 hover:border-[#2563eb]'
+              }`}
+              title={showCardDetails ? 'ซ่อนรายละเอียดย่อยบนการ์ดให้อ่านง่ายขึ้น' : 'กางรายละเอียดและโน้ตทั้งหมดบนทุกการ์ด'}
+            >
+              {showCardDetails ? <Eye className="h-3.5 w-3.5 shrink-0" /> : <EyeOff className="h-3.5 w-3.5 shrink-0" />}
+              <span>{showCardDetails ? 'แสดงครบ' : 'แบบโปร่ง'}</span>
+            </button>
+          )}
+
           {/* 1-Tap Rainy Day Plan B Mode Toggle */}
           <button
             type="button"
@@ -1624,6 +1652,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                         memberNames={memberNames}
                         onLogExpenseForStop={onLogExpenseForStop}
                         focusMode={onTripFocusMode}
+                        defaultShowDetails={showCardDetails}
                       />
                       {nextItem && (
                         <TransitConnector

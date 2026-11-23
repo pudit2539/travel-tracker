@@ -99,6 +99,7 @@ export interface ItineraryStopCardProps {
   memberNames?: string[];
   onLogExpenseForStop?: (item: any) => void;
   focusMode?: boolean;
+  defaultShowDetails?: boolean;
 }
 
 function useStopVisitedState(item: any, canEditPlan: boolean = true, currentUser?: any) {
@@ -217,6 +218,7 @@ function ItineraryStopCardComponent({
   onToggleShoppingItemStatus,
   onLogExpenseForStop,
   focusMode = false,
+  defaultShowDetails = false,
 }: ItineraryStopCardProps) {
   const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
@@ -224,6 +226,16 @@ function ItineraryStopCardComponent({
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [showAdminMenu, setShowAdminMenu] = React.useState(false);
   const [showMoveDayList, setShowMoveDayList] = React.useState(false);
+  const [detailsOverride, setDetailsOverride] = React.useState<{
+    base: boolean;
+    value: boolean;
+  } | null>(null);
+  const isDetailsOpen =
+    detailsOverride && detailsOverride.base === defaultShowDetails
+      ? detailsOverride.value
+      : defaultShowDetails;
+  const setLocalShowDetails = (next: boolean) =>
+    setDetailsOverride({ base: defaultShowDetails, value: next });
 
   // TabiPlan Interactive Panels
   const [showTimeTuner, setShowTimeTuner] = React.useState(false);
@@ -779,134 +791,198 @@ function ItineraryStopCardComponent({
               )}
             </div>
 
-            {/* Oceanic Pills Container (Amenities, Elevator, Last Train & Smart Badges) */}
-            {(amenities.length > 0 ||
-              elevatorTip ||
-              lastTrainTip ||
-              transitGuide.bestTip ||
-              hasCustomTime ||
-              isSkipped ||
-              activeShoppingItems.length > 0 ||
-              pinnedNotesCount > 0 ||
-              showTimeTuner ||
-              showStopShopping ||
-              showStopNotes) && (
-              <div className="space-y-2 text-left">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {transitGuide.bestTip && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#eff6ff] dark:bg-[#2563eb]/20 border border-[#bfdbfe] dark:border-[#3b82f6]/35 text-[#1d4ed8] dark:text-[#b4c5ff]">
-                      <span>✨ {transitGuide.bestTip}</span>
-                    </span>
-                  )}
+            {/* Progressive Disclosure Summary Bar (keeps cards airy & scannable; tap to reveal notes/tips/amenities) */}
+            {(() => {
+              const hasCollapsibleInfo = Boolean(
+                hasTransitNote ||
+                  hasFoodNote ||
+                  amenities.length > 0 ||
+                  elevatorTip ||
+                  lastTrainTip ||
+                  transitGuide.bestTip ||
+                  hasCustomTime ||
+                  activeShoppingItems.length > 0 ||
+                  pinnedNotesCount > 0 ||
+                  hasBackupPlan
+              );
+              if (!hasCollapsibleInfo) return null;
 
-                  {amenities.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#f1f5f9] dark:bg-[#080e19]/80 border border-[#e2e8f0] dark:border-[#24324a] text-[#334155] dark:text-[#c3c6d7]"
-                    >
-                      <span>{tag.emoji}</span>
-                      <span>{tag.label}</span>
-                    </span>
-                  ))}
+              const detailChips: string[] = [];
+              if (hasTransitNote) detailChips.push('🚌 เส้นทาง');
+              if (hasFoodNote) detailChips.push('🍜 ร้านแนะนำ');
+              if (amenities.length > 0) detailChips.push(`✨ ${amenities.length} แท็ก`);
+              if (elevatorTip || lastTrainTip) detailChips.push('🚇 ทิปสถานี');
+              if (activeShoppingItems.length > 0) detailChips.push(`🛍️ ช้อป ${boughtShopCount}/${activeShoppingItems.length}`);
+              if (hasBackupPlan) detailChips.push('🛡️ Plan B');
 
-                  {(hasCustomTime || showTimeTuner) && (
-                    <button
-                      type="button"
-                      onClick={() => setShowTimeTuner((v) => !v)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
-                        showTimeTuner
-                          ? 'bg-[#2563eb] text-white border-[#2563eb]'
-                          : 'bg-[#f1f5f9] dark:bg-[#080e19] text-[#334155] dark:text-[#c3c6d7] border-[#e2e8f0] dark:border-[#24324a]'
-                      }`}
-                    >
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        เวลาแวะ ({activeStopMeta.durationMin ?? computedSchedule?.durationMin ?? 90}น.)
-                      </span>
-                    </button>
-                  )}
-
-                  {(activeShoppingItems.length > 0 || showStopShopping) && (
-                    <button
-                      type="button"
-                      onClick={() => setShowStopShopping((v) => !v)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer bg-[#e0f2fe] dark:bg-[#03b5d3]/20 text-[#0369a1] dark:text-[#4cd7f6] border-[#bae6fd] dark:border-[#4cd7f6]/30"
-                    >
-                      <ShoppingBag className="h-3 w-3" />
-                      <span>
-                        ของต้องซื้อ ({boughtShopCount}/{activeShoppingItems.length})
-                      </span>
-                    </button>
-                  )}
-
-                  {(pinnedNotesCount > 0 || showStopNotes) && (
-                    <button
-                      type="button"
-                      onClick={() => setShowStopNotes((v) => !v)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer bg-[#f1f5f9] dark:bg-[#080e19] text-[#334155] dark:text-[#c3c6d7] border-[#e2e8f0] dark:border-[#24324a]"
-                    >
-                      <MessageSquare className="h-3 w-3" />
-                      <span>โน้ตกลุ่ม ({pinnedNotesCount})</span>
-                    </button>
-                  )}
-                </div>
-
-                {elevatorTip && (
-                  <div className="px-3 py-2 rounded-xl bg-[#f0f9ff] dark:bg-sky-950/35 border border-[#bae6fd] dark:border-[#38bdf8]/25 text-[11px] font-medium text-[#0c4a6e] dark:text-[#bae6fd] leading-relaxed">
-                    {elevatorTip}
-                  </div>
-                )}
-
-                {lastTrainTip && (
-                  <div className="px-3 py-2 rounded-xl bg-[#eff6ff] dark:bg-indigo-950/40 border border-[#bfdbfe] dark:border-indigo-700/50 text-[11px] font-semibold text-[#1e3a8a] dark:text-[#b4c5ff] leading-relaxed">
-                    {lastTrainTip}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Recessed Oceanic Telemetry Note Box (Transit Details + Food Recommendation) */}
-            {(hasTransitNote || hasFoodNote) && (
-              <div className="bg-[#f8fafc] dark:bg-[#080e19]/80 border border-[#e2e8f0] dark:border-[#24324a] border-l-2 border-l-[#2563eb] dark:border-l-[#4cd7f6] rounded-xl p-3.5 space-y-2.5 text-left">
-                {hasTransitNote && (
-                  <div>
-                    <div className="text-[10px] font-mono font-bold tracking-widest text-[#1d4ed8] dark:text-[#4cd7f6] uppercase mb-0.5">
-                      Transit & Route Note
-                    </div>
-                    <p className="text-xs text-[#334155] dark:text-[#dde2f3] leading-relaxed selectable-text">
-                      {transitGuide.details}
-                    </p>
-                  </div>
-                )}
-
-                {hasFoodNote && (
-                  <div className={hasTransitNote ? 'pt-2.5 border-t border-[#e2e8f0] dark:border-[#24324a]' : ''}>
-                    <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#0284c7] dark:text-[#7bd0ff] uppercase">
-                        Traveler’s Note · ร้านแนะนำ
-                      </span>
-                      {foodSearchUrl && (
-                        <a
-                          href={foodSearchUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#1e3a8a] hover:bg-[#1d4ed8] dark:bg-[#2563eb] dark:hover:bg-[#3b82f6] text-white transition-all shrink-0 cursor-pointer"
+              return (
+                <div className="space-y-2.5 text-left">
+                  <button
+                    type="button"
+                    onClick={() => setLocalShowDetails(!isDetailsOpen)}
+                    aria-expanded={isDetailsOpen}
+                    className={`w-full px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                      isDetailsOpen
+                        ? 'bg-[#eff6ff] dark:bg-[#080e19] border-[#bfdbfe] dark:border-[#4cd7f6]/35 text-[#1d4ed8] dark:text-[#4cd7f6]'
+                        : 'bg-[#f8fafc] dark:bg-[#080e19]/65 border-[#e2e8f0] dark:border-[#24324a] hover:border-[#2563eb]/50 dark:hover:border-[#4cd7f6]/40 text-[#475569] dark:text-[#94a3b8]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                      {detailChips.slice(0, 4).map((chip) => (
+                        <span
+                          key={chip}
+                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-[#161c27] border border-[#e2e8f0] dark:border-[#24324a] text-[#334155] dark:text-[#c3c6d7]"
                         >
-                          <span>แผนที่ร้าน 📍</span>
-                          <ExternalLink className="h-2.5 w-2.5 opacity-80" />
-                        </a>
+                          {chip}
+                        </span>
+                      ))}
+                      {detailChips.length > 4 && (
+                        <span className="text-[10px] font-mono font-bold text-[#64748b] dark:text-[#94a3b8]">
+                          +{detailChips.length - 4}
+                        </span>
                       )}
                     </div>
-                    <p className="text-xs text-[#334155] dark:text-[#dde2f3] leading-relaxed selectable-text">
-                      {item.food_recommendation}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold shrink-0 text-[#1d4ed8] dark:text-[#4cd7f6]">
+                      <span>{isDetailsOpen ? 'ซ่อนรายละเอียด' : 'ดูรายละเอียด'}</span>
+                      {isDetailsOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </span>
+                  </button>
 
-            {/* Backup Plan (Plan B) */}
-            {hasBackupPlan && (
+                  {isDetailsOpen && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-150">
+                      {/* Oceanic Pills Container (Amenities, Elevator, Last Train & Smart Badges) */}
+                      {(amenities.length > 0 ||
+                        elevatorTip ||
+                        lastTrainTip ||
+                        transitGuide.bestTip ||
+                        hasCustomTime ||
+                        isSkipped ||
+                        activeShoppingItems.length > 0 ||
+                        pinnedNotesCount > 0 ||
+                        showTimeTuner ||
+                        showStopShopping ||
+                        showStopNotes) && (
+                        <div className="space-y-2 text-left">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {transitGuide.bestTip && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#eff6ff] dark:bg-[#2563eb]/20 border border-[#bfdbfe] dark:border-[#3b82f6]/35 text-[#1d4ed8] dark:text-[#b4c5ff]">
+                                <span>✨ {transitGuide.bestTip}</span>
+                              </span>
+                            )}
+
+                            {amenities.map((tag) => (
+                              <span
+                                key={tag.id}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#f1f5f9] dark:bg-[#080e19]/80 border border-[#e2e8f0] dark:border-[#24324a] text-[#334155] dark:text-[#c3c6d7]"
+                              >
+                                <span>{tag.emoji}</span>
+                                <span>{tag.label}</span>
+                              </span>
+                            ))}
+
+                            {(hasCustomTime || showTimeTuner) && (
+                              <button
+                                type="button"
+                                onClick={() => setShowTimeTuner((v) => !v)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
+                                  showTimeTuner
+                                    ? 'bg-[#2563eb] text-white border-[#2563eb]'
+                                    : 'bg-[#f1f5f9] dark:bg-[#080e19] text-[#334155] dark:text-[#c3c6d7] border-[#e2e8f0] dark:border-[#24324a]'
+                                }`}
+                              >
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  เวลาแวะ ({activeStopMeta.durationMin ?? computedSchedule?.durationMin ?? 90}น.)
+                                </span>
+                              </button>
+                            )}
+
+                            {(activeShoppingItems.length > 0 || showStopShopping) && (
+                              <button
+                                type="button"
+                                onClick={() => setShowStopShopping((v) => !v)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer bg-[#e0f2fe] dark:bg-[#03b5d3]/20 text-[#0369a1] dark:text-[#4cd7f6] border-[#bae6fd] dark:border-[#4cd7f6]/30"
+                              >
+                                <ShoppingBag className="h-3 w-3" />
+                                <span>
+                                  ของต้องซื้อ ({boughtShopCount}/{activeShoppingItems.length})
+                                </span>
+                              </button>
+                            )}
+
+                            {(pinnedNotesCount > 0 || showStopNotes) && (
+                              <button
+                                type="button"
+                                onClick={() => setShowStopNotes((v) => !v)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer bg-[#f1f5f9] dark:bg-[#080e19] text-[#334155] dark:text-[#c3c6d7] border-[#e2e8f0] dark:border-[#24324a]"
+                              >
+                                <MessageSquare className="h-3 w-3" />
+                                <span>โน้ตกลุ่ม ({pinnedNotesCount})</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {elevatorTip && (
+                            <div className="px-3 py-2 rounded-xl bg-[#f0f9ff] dark:bg-sky-950/35 border border-[#bae6fd] dark:border-[#38bdf8]/25 text-[11px] font-medium text-[#0c4a6e] dark:text-[#bae6fd] leading-relaxed">
+                              {elevatorTip}
+                            </div>
+                          )}
+
+                          {lastTrainTip && (
+                            <div className="px-3 py-2 rounded-xl bg-[#eff6ff] dark:bg-indigo-950/40 border border-[#bfdbfe] dark:border-indigo-700/50 text-[11px] font-semibold text-[#1e3a8a] dark:text-[#b4c5ff] leading-relaxed">
+                              {lastTrainTip}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Recessed Oceanic Telemetry Note Box (Transit Details + Food Recommendation) */}
+                      {(hasTransitNote || hasFoodNote) && (
+                        <div className="bg-[#f8fafc] dark:bg-[#080e19]/80 border border-[#e2e8f0] dark:border-[#24324a] border-l-2 border-l-[#2563eb] dark:border-l-[#4cd7f6] rounded-xl p-3.5 space-y-2.5 text-left">
+                          {hasTransitNote && (
+                            <div>
+                              <div className="text-[10px] font-mono font-bold tracking-widest text-[#1d4ed8] dark:text-[#4cd7f6] uppercase mb-0.5">
+                                Transit & Route Note
+                              </div>
+                              <p className="text-xs text-[#334155] dark:text-[#dde2f3] leading-relaxed selectable-text">
+                                {transitGuide.details}
+                              </p>
+                            </div>
+                          )}
+
+                          {hasFoodNote && (
+                            <div className={hasTransitNote ? 'pt-2.5 border-t border-[#e2e8f0] dark:border-[#24324a]' : ''}>
+                              <div className="flex items-center justify-between gap-2 mb-0.5">
+                                <span className="text-[10px] font-mono font-bold tracking-widest text-[#0284c7] dark:text-[#7bd0ff] uppercase">
+                                  Traveler’s Note · ร้านแนะนำ
+                                </span>
+                                {foodSearchUrl && (
+                                  <a
+                                    href={foodSearchUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#1e3a8a] hover:bg-[#1d4ed8] dark:bg-[#2563eb] dark:hover:bg-[#3b82f6] text-white transition-all shrink-0 cursor-pointer"
+                                  >
+                                    <span>แผนที่ร้าน 📍</span>
+                                    <ExternalLink className="h-2.5 w-2.5 opacity-80" />
+                                  </a>
+                                )}
+                              </div>
+                              <p className="text-xs text-[#334155] dark:text-[#dde2f3] leading-relaxed selectable-text">
+                                {item.food_recommendation}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Backup Plan (Plan B) — Shown when details expanded OR when Rainy Day Mode / Plan B toggled open */}
+            {hasBackupPlan && (isDetailsOpen || isPlanBOpen) && (
               <div className="pt-0.5 text-left">
                 <button
                   type="button"
