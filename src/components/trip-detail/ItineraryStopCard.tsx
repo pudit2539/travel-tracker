@@ -47,98 +47,6 @@ function hasMeaningfulText(val?: string | null): boolean {
 }
 
 /**
- * One-hand mobile horizontal swipe gesture hook (Swipe Right -> Check-in 済, Swipe Left -> Quick Expense / Navigate).
- * Ignores vertical page scrolling and taps on interactive controls.
- */
-function useStopSwipeGesture({
-  onSwipeRight,
-  onSwipeLeft,
-}: {
-  onSwipeRight: () => void;
-  onSwipeLeft: () => void;
-}) {
-  const [swipeDx, setSwipeDx] = React.useState(0);
-  const touchRef = React.useRef<{ startX: number; startY: number; active: boolean; lockedAxis: 'x' | 'y' | null }>({
-    startX: 0,
-    startY: 0,
-    active: false,
-    lockedAxis: null,
-  });
-
-  const onTouchStart = React.useCallback((e: React.TouchEvent) => {
-    const target = e.target as HTMLElement | null;
-    if (target && target.closest('button, a, input, textarea, select')) {
-      touchRef.current.active = false;
-      return;
-    }
-    const t = e.touches?.[0];
-    if (!t) return;
-    touchRef.current = {
-      startX: t.clientX,
-      startY: t.clientY,
-      active: true,
-      lockedAxis: null,
-    };
-  }, []);
-
-  const onTouchMove = React.useCallback((e: React.TouchEvent) => {
-    if (!touchRef.current.active) return;
-    const t = e.touches?.[0];
-    if (!t) return;
-    const dx = t.clientX - touchRef.current.startX;
-    const dy = t.clientY - touchRef.current.startY;
-
-    if (!touchRef.current.lockedAxis) {
-      if (Math.abs(dx) < 14 && Math.abs(dy) < 14) return;
-      touchRef.current.lockedAxis = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y';
-    }
-    if (touchRef.current.lockedAxis !== 'x') return;
-
-    const clamped = Math.max(-88, Math.min(88, Math.round(dx * 0.75)));
-    setSwipeDx(clamped);
-  }, []);
-
-  const onTouchEnd = React.useCallback(
-    (e: React.TouchEvent) => {
-      if (!touchRef.current.active) return;
-      const t = e.changedTouches?.[0];
-      const dx = t ? t.clientX - touchRef.current.startX : swipeDx;
-      const axis = touchRef.current.lockedAxis;
-      touchRef.current.active = false;
-      touchRef.current.lockedAxis = null;
-      setSwipeDx(0);
-
-      if (axis === 'x' || Math.abs(dx) >= 64) {
-        if (dx >= 64) {
-          triggerHaptic('medium');
-          onSwipeRight();
-        } else if (dx <= -64) {
-          triggerHaptic('light');
-          onSwipeLeft();
-        }
-      }
-    },
-    [onSwipeLeft, onSwipeRight, swipeDx]
-  );
-
-  const onTouchCancel = React.useCallback(() => {
-    touchRef.current.active = false;
-    touchRef.current.lockedAxis = null;
-    setSwipeDx(0);
-  }, []);
-
-  return {
-    swipeDx,
-    swipeHandlers: {
-      onTouchStart,
-      onTouchMove,
-      onTouchEnd,
-      onTouchCancel,
-    },
-  };
-}
-
-/**
  * Resilient place image selector: tries visual.imageUrl first, and if it fails
  * (e.g., expired Google Places photoUri or 403 hotlink block), automatically falls
  * back to visual.fallbackImageUrl instead of leaving a blank placeholder banner.
@@ -518,26 +426,11 @@ function ItineraryStopCardComponent({
     [tripId, stopKey, voterName]
   );
 
-  const { swipeDx, swipeHandlers } = useStopSwipeGesture({
-    onSwipeRight: toggleVisited,
-    onSwipeLeft: () => {
-      if (onLogExpenseForStop) {
-        onLogExpenseForStop(item);
-      } else if (typeof window !== 'undefined' && mainPlaceDirectionsUrl) {
-        window.open(mainPlaceDirectionsUrl, '_blank', 'noopener,noreferrer');
-      }
-    },
-  });
-
   return (
     <>
       <div
-        data-swipeable-card="true"
-        {...swipeHandlers}
         style={
-          swipeDx !== 0
-            ? { transform: `translate3d(${swipeDx}px, 0, 0)` }
-            : idx > 2 && !showAdminMenu
+          idx > 2 && !showAdminMenu
             ? { contentVisibility: 'auto', containIntrinsicSize: '0 320px' }
             : undefined
         }
@@ -1897,23 +1790,10 @@ function ItineraryCompactRowComponent({
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
   const isDraggable = Boolean(canEditPlan && item?.id && onDragStartStop);
-  const { swipeDx: compactSwipeDx, swipeHandlers: compactSwipeHandlers } = useStopSwipeGesture({
-    onSwipeRight: toggleVisited,
-    onSwipeLeft: () => {
-      if (onLogExpenseForStop) {
-        onLogExpenseForStop(item);
-      } else if (typeof window !== 'undefined' && mainPlaceDirectionsUrl) {
-        window.open(mainPlaceDirectionsUrl, '_blank', 'noopener,noreferrer');
-      }
-    },
-  });
 
   return (
     <>
       <div
-        data-swipeable-card="true"
-        {...compactSwipeHandlers}
-        style={compactSwipeDx !== 0 ? { transform: `translate3d(${compactSwipeDx}px, 0, 0)` } : undefined}
         draggable={isDraggable}
         onDragStart={
           isDraggable

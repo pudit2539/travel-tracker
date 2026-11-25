@@ -30,7 +30,6 @@ import {
   ScanExpenseModal,
   findPotentialDuplicateExpenses,
   getRecentUniqueExpenseTemplates,
-  pickRandomGashaponPayer,
 } from '@/components/trip-detail/modals/ScanExpenseModal';
 import { DailyStoryCardModal, buildDailyStorySummaryText } from '@/components/trip-detail/modals/DailyStoryCardModal';
 import { ShareTripModal } from '@/components/trip-detail/modals/ShareTripModal';
@@ -518,46 +517,7 @@ describe('System Review Packs 1–3 Verification', () => {
       expect(v3).toEqual(['Mint']);
     });
 
-    it('triggers swipe-right check-in and swipe-left quick expense on ItineraryCompactRow (Item 1)', async () => {
-      const onLogExpense = vi.fn();
-      await act(async () => {
-        root.render(
-          <ItineraryCompactRow
-            item={{
-              id: 'stop-swipe-1',
-              trip_id: 'kyoto-2026',
-              main_place: 'Fushimi Inari Taisha',
-              city: 'Kyoto',
-            }}
-            idx={0}
-            canEditPlan={true}
-            onOpenEditActivity={() => {}}
-            onLogExpenseForStop={onLogExpense}
-          />
-        );
-      });
-
-      const cardEl = container.querySelector('[data-swipeable-card="true"]') as HTMLElement;
-      expect(cardEl).toBeTruthy();
-
-      // Simulate horizontal swipe left (deltaX = -90) -> triggers onLogExpenseForStop
-      await act(async () => {
-        const startEvt = new Event('touchstart', { bubbles: true }) as any;
-        startEvt.touches = [{ clientX: 220, clientY: 50 }];
-        cardEl.dispatchEvent(startEvt);
-
-        const moveEvt = new Event('touchmove', { bubbles: true }) as any;
-        moveEvt.touches = [{ clientX: 130, clientY: 52 }];
-        cardEl.dispatchEvent(moveEvt);
-
-        const endEvt = new Event('touchend', { bubbles: true }) as any;
-        endEvt.changedTouches = [{ clientX: 130, clientY: 52 }];
-        cardEl.dispatchEvent(endEvt);
-      });
-      expect(onLogExpense).toHaveBeenCalledTimes(1);
-    });
-
-    it('renders 1-Tap Repeat Bill templates (Item 13) and spins Gashapon Payer Roulette (Item 6) in ScanExpenseModal', async () => {
+    it('renders 1-Tap Repeat Bill templates (Item 13) in ScanExpenseModal', async () => {
       const existing = [
         {
           id: 'e1',
@@ -579,15 +539,6 @@ describe('System Review Packs 1–3 Verification', () => {
       const templates = getRecentUniqueExpenseTemplates(existing);
       expect(templates).toHaveLength(1);
       expect(templates[0].count).toBe(2);
-
-      const picked = pickRandomGashaponPayer(
-        [
-          { id: 'u1', name: 'Pudit', avatar: 'cat_pink' },
-          { id: 'u2', name: 'Bank', avatar: 'cat_blue' },
-        ],
-        () => 0.85
-      );
-      expect(picked?.id).toBe('u2');
 
       let currentData: any = {
         title: '',
@@ -645,15 +596,6 @@ describe('System Review Packs 1–3 Verification', () => {
         repeatBtn.click();
       });
       expect(currentData.title).toBe('7-Eleven Onigiri & Coffee');
-
-      const gashaponBtn = document.body.querySelector(
-        'button[aria-label="สุ่มกาชาปองคนจ่าย"]'
-      ) as HTMLButtonElement;
-      expect(gashaponBtn).toBeTruthy();
-      await act(async () => {
-        gashaponBtn.click();
-      });
-      expect(document.body.querySelector('[data-testid="gashapon-payer-winner"]')).toBeTruthy();
     });
 
     it('renders 9:16 Daily Story Card preview and builds share caption (Item 5)', async () => {

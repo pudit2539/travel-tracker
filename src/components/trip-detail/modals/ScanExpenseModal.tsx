@@ -7,7 +7,6 @@ import {
   AlertCircle,
   Camera,
   CheckCircle2,
-  Dices,
   Loader2,
   Plus,
   RotateCcw,
@@ -148,18 +147,6 @@ export function getRecentUniqueExpenseTemplates(
     .slice(0, limit);
 }
 
-/**
- * Gashapon Payer Roulette helper: picks a member to front the bill at restaurants that don't split checks.
- */
-export function pickRandomGashaponPayer(
-  members: Array<{ id: string; name: string; avatar: string }>,
-  randomFn: () => number = Math.random
-): { id: string; name: string; avatar: string } | null {
-  if (!Array.isArray(members) || members.length === 0) return null;
-  const idx = Math.min(members.length - 1, Math.max(0, Math.floor(randomFn() * members.length)));
-  return members[idx];
-}
-
 interface ScanExpenseModalProps {
   isOpen: boolean;
   mounted: boolean;
@@ -214,7 +201,6 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
   existingExpenses = [],
 }: ScanExpenseModalProps) {
   const [confirmedDupSig, setConfirmedDupSig] = React.useState<string | null>(null);
-  const [gashaponWinnerName, setGashaponWinnerName] = React.useState<string | null>(null);
 
   const numericAmount = Number(scannedData?.amount) || 0;
   const duplicateMatches = React.useMemo(
@@ -232,20 +218,6 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
 
   const isJpy = (scannedData.currency || '').toUpperCase() === 'JPY';
   const taxFree = isJpy && numericAmount > 0 ? calculateJapanTaxFree(numericAmount) : null;
-
-  const handleSpinGashaponPayer = () => {
-    const winner = pickRandomGashaponPayer(allMembersForSplit);
-    if (!winner) return;
-    triggerHaptic('medium');
-    setGashaponWinnerName(winner.name);
-    setScannedData((prev: any) => ({
-      ...prev,
-      payer_id: winner.id,
-    }));
-    setAddSplitMode('all');
-    setAddSplitWith(allMembersForSplit.map((m) => m.id));
-    toast.success(`🎰 กาชาปองเลือก: "${winner.name}" เป็นคนออกหน้าจ่ายบิลนี้!`);
-  };
 
   const handleConfirmOrSave = () => {
     if (duplicateMatches.length > 0 && !isDuplicateAcknowledged) {
@@ -682,32 +654,11 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
               </div>
             </div>
 
-            {/* Payer + Gashapon Payer Roulette */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                  💳 ใครเป็นคนสำรองจ่ายเงินไปก่อน?
-                </label>
-                <button
-                  type="button"
-                  onClick={handleSpinGashaponPayer}
-                  aria-label="สุ่มกาชาปองคนจ่าย"
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] hover:from-[#1e40af] hover:to-[#1d4ed8] text-white text-[10px] font-black shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0"
-                  title="สุ่มกาชาปองว่ามื้อนี้ใครออกหน้าจ่ายบิลไปก่อน (สำหรับร้านที่ไม่รับแยกบิล)"
-                >
-                  <Dices className="h-3 w-3" />
-                  <span>🎰 สุ่มกาชาปองคนจ่าย</span>
-                </button>
-              </div>
-              {gashaponWinnerName && (
-                <div
-                  data-testid="gashapon-payer-winner"
-                  className="px-3 py-1.5 rounded-xl bg-[#eff6ff] dark:bg-[#080e19] border border-[#bfdbfe] dark:border-[#4cd7f6]/35 text-[11px] font-bold text-[#1e3a8a] dark:text-[#4cd7f6] flex items-center justify-between gap-2 animate-in fade-in duration-150"
-                >
-                  <span>🎰 กาชาปองเลือก: &ldquo;{gashaponWinnerName}&rdquo; ออกหน้าจ่ายก่อน!</span>
-                  <span className="text-[10px] font-mono opacity-80">หารทุกคนอัตโนมัติ</span>
-                </div>
-              )}
+            {/* Payer */}
+            <div>
+              <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
+                💳 ใครเป็นคนสำรองจ่ายเงินไปก่อน?
+              </label>
               <select
                 className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
                 value={scannedData.payer_id || 'me'}
