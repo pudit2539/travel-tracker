@@ -7,8 +7,10 @@ import {
   AlertCircle,
   Camera,
   CheckCircle2,
+  Dices,
   Loader2,
   Plus,
+  RotateCcw,
   Sparkles,
   Utensils,
   X,
@@ -96,6 +98,68 @@ export function findPotentialDuplicateExpenses(
   return matches;
 }
 
+export interface RecentExpenseTemplate {
+  id: string;
+  title: string;
+  amount: number;
+  currency: string;
+  category: string;
+  payment_method: string;
+  count: number;
+}
+
+/**
+ * Extracts up to `limit` unique frequent/recent expense templates so users can re-log
+ * recurring items (e.g., subway ticket, morning coffee, coin locker) in 1 tap.
+ */
+export function getRecentUniqueExpenseTemplates(
+  existingExpenses: Array<Record<string, any>> = [],
+  limit: number = 6
+): RecentExpenseTemplate[] {
+  if (!Array.isArray(existingExpenses) || existingExpenses.length === 0) return [];
+  const map = new Map<string, RecentExpenseTemplate>();
+
+  for (const exp of existingExpenses) {
+    if (!exp || !exp.title) continue;
+    const title = String(exp.title).trim();
+    const amount = Math.round(Number(exp.amount) || 0);
+    if (!title || amount <= 0) continue;
+    const category = String(exp.category || 'shopping').trim();
+    const key = `${title.toLowerCase()}::${category.toLowerCase()}`;
+
+    const existing = map.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      map.set(key, {
+        id: String(exp.id || key),
+        title,
+        amount,
+        currency: String(exp.currency || 'JPY').toUpperCase(),
+        category,
+        payment_method: String(exp.payment_method || 'cash'),
+        count: 1,
+      });
+    }
+  }
+
+  return Array.from(map.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+}
+
+/**
+ * Gashapon Payer Roulette helper: picks a member to front the bill at restaurants that don't split checks.
+ */
+export function pickRandomGashaponPayer(
+  members: Array<{ id: string; name: string; avatar: string }>,
+  randomFn: () => number = Math.random
+): { id: string; name: string; avatar: string } | null {
+  if (!Array.isArray(members) || members.length === 0) return null;
+  const idx = Math.min(members.length - 1, Math.max(0, Math.floor(randomFn() * members.length)));
+  return members[idx];
+}
+
 interface ScanExpenseModalProps {
   isOpen: boolean;
   mounted: boolean;
@@ -150,11 +214,16 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
   existingExpenses = [],
 }: ScanExpenseModalProps) {
   const [confirmedDupSig, setConfirmedDupSig] = React.useState<string | null>(null);
+  const [gashaponWinnerName, setGashaponWinnerName] = React.useState<string | null>(null);
 
   const numericAmount = Number(scannedData?.amount) || 0;
   const duplicateMatches = React.useMemo(
     () => findPotentialDuplicateExpenses(scannedData || {}, existingExpenses),
     [scannedData, existingExpenses]
+  );
+  const recentTemplates = React.useMemo(
+    () => getRecentUniqueExpenseTemplates(existingExpenses, 6),
+    [existingExpenses]
   );
   const currentDupSig = `${Math.round(numericAmount)}:${scannedData?.currency || 'JPY'}:${(scannedData?.spent_at || '').slice(0, 10)}:${(scannedData?.title || '').trim()}`;
   const isDuplicateAcknowledged = confirmedDupSig === currentDupSig;
@@ -163,6 +232,20 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
 
   const isJpy = (scannedData.currency || '').toUpperCase() === 'JPY';
   const taxFree = isJpy && numericAmount > 0 ? calculateJapanTaxFree(numericAmount) : null;
+
+  const handleSpinGashaponPayer = () => {
+    const winner = pickRandomGashaponPayer(allMembersForSplit);
+    if (!winner) return;
+    triggerHaptic('medium');
+    setGashaponWinnerName(winner.name);
+    setScannedData((prev: any) => ({
+      ...prev,
+      payer_id: winner.id,
+    }));
+    setAddSplitMode('all');
+    setAddSplitWith(allMembersForSplit.map((m) => m.id));
+    toast.success(`🎰 กาชาปองเลือก: "${winner.name}" เป็นคนออกหน้าจ่ายบิลนี้!`);
+  };
 
   const handleConfirmOrSave = () => {
     if (duplicateMatches.length > 0 && !isDuplicateAcknowledged) {
@@ -295,6 +378,52 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
 
           {/* 2. Main Expense Fields Card */}
           <div className="space-y-3 p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 dark:bg-[#1a202c] border border-slate-200/80 dark:border-[#24324a]">
+            {/* 1-Tap Repeat Recent / Frequent Bill (1-Second Re-Log) */}
+            {recentTemplates.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-black text-[#1d4ed8] dark:text-[#4cd7f6] flex items-center gap-1">
+                    <RotateCcw className="h-3 w-3" />
+                    <span>จดซ้ำจากบิลล่าสุดใน 1 วิ (Repeat Bill):</span>
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-400">แตะเพื่อดึงยอด</span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar overscroll-x-contain">
+                  {recentTemplates.map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      aria-label={`จดซ้ำ ${tpl.title}`}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setScannedData((prev: any) => ({
+                          ...prev,
+                          title: tpl.title,
+                          amount: String(tpl.amount),
+                          currency: tpl.currency,
+                          category: tpl.category,
+                          payment_method: tpl.payment_method,
+                        }));
+                        toast.success(`⚡ ดึงบิล "${tpl.title}" (${tpl.amount.toLocaleString()} ${tpl.currency}) แล้ว`);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold shrink-0 border bg-[#eff6ff] dark:bg-[#080e19] text-[#1e3a8a] dark:text-[#dde2f3] border-[#bfdbfe] dark:border-[#4cd7f6]/30 hover:border-[#2563eb] cursor-pointer active:scale-95 transition-all"
+                    >
+                      <span className="truncate max-w-[130px]">{tpl.title}</span>
+                      <span className="font-mono text-[10px] text-[#2563eb] dark:text-[#4cd7f6]">
+                        {tpl.currency === 'JPY' ? '¥' : '฿'}
+                        {tpl.amount.toLocaleString()}
+                      </span>
+                      {tpl.count > 1 && (
+                        <span className="px-1.5 py-0.2 rounded-full bg-[#2563eb]/15 text-[#2563eb] dark:text-[#4cd7f6] text-[9px] font-mono">
+                          {tpl.count}x
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 1-Tap Quick Expense Presets */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -553,11 +682,32 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
               </div>
             </div>
 
-            {/* Payer */}
-            <div>
-              <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
-                💳 ใครเป็นคนสำรองจ่ายเงินไปก่อน?
-              </label>
+            {/* Payer + Gashapon Payer Roulette */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  💳 ใครเป็นคนสำรองจ่ายเงินไปก่อน?
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSpinGashaponPayer}
+                  aria-label="สุ่มกาชาปองคนจ่าย"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] hover:from-[#1e40af] hover:to-[#1d4ed8] text-white text-[10px] font-black shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0"
+                  title="สุ่มกาชาปองว่ามื้อนี้ใครออกหน้าจ่ายบิลไปก่อน (สำหรับร้านที่ไม่รับแยกบิล)"
+                >
+                  <Dices className="h-3 w-3" />
+                  <span>🎰 สุ่มกาชาปองคนจ่าย</span>
+                </button>
+              </div>
+              {gashaponWinnerName && (
+                <div
+                  data-testid="gashapon-payer-winner"
+                  className="px-3 py-1.5 rounded-xl bg-[#eff6ff] dark:bg-[#080e19] border border-[#bfdbfe] dark:border-[#4cd7f6]/35 text-[11px] font-bold text-[#1e3a8a] dark:text-[#4cd7f6] flex items-center justify-between gap-2 animate-in fade-in duration-150"
+                >
+                  <span>🎰 กาชาปองเลือก: &ldquo;{gashaponWinnerName}&rdquo; ออกหน้าจ่ายก่อน!</span>
+                  <span className="text-[10px] font-mono opacity-80">หารทุกคนอัตโนมัติ</span>
+                </div>
+              )}
               <select
                 className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
                 value={scannedData.payer_id || 'me'}

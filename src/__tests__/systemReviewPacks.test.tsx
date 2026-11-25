@@ -29,9 +29,18 @@ import {
 import {
   ScanExpenseModal,
   findPotentialDuplicateExpenses,
+  getRecentUniqueExpenseTemplates,
+  pickRandomGashaponPayer,
 } from '@/components/trip-detail/modals/ScanExpenseModal';
+import { DailyStoryCardModal, buildDailyStorySummaryText } from '@/components/trip-detail/modals/DailyStoryCardModal';
 import { ShareTripModal } from '@/components/trip-detail/modals/ShareTripModal';
 import { ItineraryCompactRow } from '@/components/trip-detail/ItineraryStopCard';
+import {
+  getJapanGoldenHourInfo,
+  findOutdoorStopsAfterSunset,
+  toggleStopOptionVote,
+  getTripStopMetaMap,
+} from '@/lib/smartTimeline';
 import {
   enqueueOfflineExpense,
   getOfflineExpenseQueue,
@@ -472,6 +481,221 @@ describe('System Review Packs 1–3 Verification', () => {
         saveBtn.click();
       });
       expect(onSaveExpense).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Mobile Features Pack (Items 1, 4, 5, 6, 7, 13, 14)', () => {
+    it('computes Japan Golden Hour & Sunset (Item 7) and flags outdoor temples scheduled after sunset', () => {
+      const decKyoto = getJapanGoldenHourInfo('07-Dec', 'Kyoto', '2026-12-04');
+      expect(decKyoto.month).toBe(12);
+      expect(decKyoto.goldenHourStart).toBe('15:55');
+      expect(decKyoto.sunsetTime).toBe('16:48');
+
+      const warnings = findOutdoorStopsAfterSunset(
+        [
+          { id: 's1', main_place: 'วัดคิโยมิสึเดระ (Kiyomizu-dera)', time_slot: '17:30 - 19:00' },
+          { id: 's2', main_place: 'AEON MALL KYOTO', time_slot: '19:30 - 21:00' },
+        ],
+        {},
+        decKyoto.sunsetTime
+      );
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].placeName).toContain('Kiyomizu-dera');
+    });
+
+    it('toggles group thumbs-up votes on stop dining/Plan B options (Item 14)', () => {
+      const v1 = toggleStopOptionVote('trip-vote-1', 'stop-1', 'food:0', 'Pudit');
+      expect(v1).toEqual(['Pudit']);
+      const v2 = toggleStopOptionVote('trip-vote-1', 'stop-1', 'food:0', 'Mint');
+      expect(v2).toEqual(['Pudit', 'Mint']);
+      expect(getTripStopMetaMap('trip-vote-1')['stop-1']?.optionVotes?.['food:0']).toEqual([
+        'Pudit',
+        'Mint',
+      ]);
+
+      // Toggling again removes the voter
+      const v3 = toggleStopOptionVote('trip-vote-1', 'stop-1', 'food:0', 'Pudit');
+      expect(v3).toEqual(['Mint']);
+    });
+
+    it('triggers swipe-right check-in and swipe-left quick expense on ItineraryCompactRow (Item 1)', async () => {
+      const onLogExpense = vi.fn();
+      await act(async () => {
+        root.render(
+          <ItineraryCompactRow
+            item={{
+              id: 'stop-swipe-1',
+              trip_id: 'kyoto-2026',
+              main_place: 'Fushimi Inari Taisha',
+              city: 'Kyoto',
+            }}
+            idx={0}
+            canEditPlan={true}
+            onOpenEditActivity={() => {}}
+            onLogExpenseForStop={onLogExpense}
+          />
+        );
+      });
+
+      const cardEl = container.querySelector('[data-swipeable-card="true"]') as HTMLElement;
+      expect(cardEl).toBeTruthy();
+
+      // Simulate horizontal swipe left (deltaX = -90) -> triggers onLogExpenseForStop
+      await act(async () => {
+        const startEvt = new Event('touchstart', { bubbles: true }) as any;
+        startEvt.touches = [{ clientX: 220, clientY: 50 }];
+        cardEl.dispatchEvent(startEvt);
+
+        const moveEvt = new Event('touchmove', { bubbles: true }) as any;
+        moveEvt.touches = [{ clientX: 130, clientY: 52 }];
+        cardEl.dispatchEvent(moveEvt);
+
+        const endEvt = new Event('touchend', { bubbles: true }) as any;
+        endEvt.changedTouches = [{ clientX: 130, clientY: 52 }];
+        cardEl.dispatchEvent(endEvt);
+      });
+      expect(onLogExpense).toHaveBeenCalledTimes(1);
+    });
+
+    it('renders 1-Tap Repeat Bill templates (Item 13) and spins Gashapon Payer Roulette (Item 6) in ScanExpenseModal', async () => {
+      const existing = [
+        {
+          id: 'e1',
+          title: '7-Eleven Onigiri & Coffee',
+          amount: 480,
+          currency: 'JPY',
+          category: 'food',
+          payment_method: 'cash',
+        },
+        {
+          id: 'e2',
+          title: '7-Eleven Onigiri & Coffee',
+          amount: 520,
+          currency: 'JPY',
+          category: 'food',
+          payment_method: 'cash',
+        },
+      ];
+      const templates = getRecentUniqueExpenseTemplates(existing);
+      expect(templates).toHaveLength(1);
+      expect(templates[0].count).toBe(2);
+
+      const picked = pickRandomGashaponPayer(
+        [
+          { id: 'u1', name: 'Pudit', avatar: 'cat_pink' },
+          { id: 'u2', name: 'Bank', avatar: 'cat_blue' },
+        ],
+        () => 0.85
+      );
+      expect(picked?.id).toBe('u2');
+
+      let currentData: any = {
+        title: '',
+        amount: '',
+        currency: 'JPY',
+        category: 'food',
+        spent_at: '2026-12-08',
+        payer_id: 'u1',
+        payment_method: 'cash',
+        items: [],
+      };
+      const setScannedData = vi.fn((updater: any) => {
+        currentData = typeof updater === 'function' ? updater(currentData) : updater;
+      });
+
+      await act(async () => {
+        root.render(
+          <ScanExpenseModal
+            isOpen={true}
+            mounted={true}
+            onClose={() => {}}
+            userCat={getCatAvatar('cat_pink')}
+            scanning={false}
+            savingExpense={false}
+            hasSavedGeminiKey={true}
+            onOpenAiKeyModal={() => {}}
+            onReceiptImageChange={() => {}}
+            ocrErrorToast={null}
+            ocrSuccessToast={null}
+            scannedData={currentData}
+            setScannedData={setScannedData}
+            fxRate={0.235}
+            categories={[{ id: 'food', label: 'อาหาร', icon: '🍱', color: 'amber' }]}
+            allMembersForSplit={[
+              { id: 'u1', name: 'Pudit', avatar: 'cat_pink' },
+              { id: 'u2', name: 'Bank', avatar: 'cat_blue' },
+            ]}
+            addSplitMode="all"
+            setAddSplitMode={() => {}}
+            addSplitWith={['u1', 'u2']}
+            setAddSplitWith={() => {}}
+            splitAsSeparateExpenses={false}
+            setSplitAsSeparateExpenses={() => {}}
+            onSaveExpense={() => {}}
+            existingExpenses={existing}
+          />
+        );
+      });
+
+      const repeatBtn = document.body.querySelector(
+        'button[aria-label="จดซ้ำ 7-Eleven Onigiri & Coffee"]'
+      ) as HTMLButtonElement;
+      expect(repeatBtn).toBeTruthy();
+      await act(async () => {
+        repeatBtn.click();
+      });
+      expect(currentData.title).toBe('7-Eleven Onigiri & Coffee');
+
+      const gashaponBtn = document.body.querySelector(
+        'button[aria-label="สุ่มกาชาปองคนจ่าย"]'
+      ) as HTMLButtonElement;
+      expect(gashaponBtn).toBeTruthy();
+      await act(async () => {
+        gashaponBtn.click();
+      });
+      expect(document.body.querySelector('[data-testid="gashapon-payer-winner"]')).toBeTruthy();
+    });
+
+    it('renders 9:16 Daily Story Card preview and builds share caption (Item 5)', async () => {
+      const caption = buildDailyStorySummaryText({
+        tripTitle: 'Kyoto Winter 2026',
+        dayLabel: '07-Dec',
+        dayNumber: 3,
+        primaryCity: 'Kyoto',
+        totalStops: 2,
+        visitedStops: 1,
+        sightseeingHours: '5.5',
+        sunsetTime: '16:48',
+        activeStayName: 'Hotel The M’s Kyoto',
+        highlights: [
+          { name: 'Fushimi Inari Taisha', timeSlot: '09:00', visited: true },
+          { name: 'AEON MALL KYOTO', timeSlot: '18:00', visited: false },
+        ],
+      });
+      expect(caption).toContain('DAY 3 • 07-Dec (Kyoto)');
+      expect(caption).toContain('済 Fushimi Inari Taisha');
+      expect(caption).toContain('🏨 ที่พักคืนนี้: Hotel The M’s Kyoto');
+
+      await act(async () => {
+        root.render(
+          <DailyStoryCardModal
+            isOpen={true}
+            mounted={true}
+            onClose={() => {}}
+            trip={{ name: 'Kyoto Winter 2026' }}
+            dayLabel="07-Dec"
+            dayNumber={3}
+            dayStops={[{ id: 's1', main_place: 'AEON MALL KYOTO', city: 'Kyoto', time_slot: '18:00' }]}
+            visitedStamps={{ s1: true }}
+            dayCascadeSchedule={{ totalSightseeingMin: 330, dayStartTime: '09:00', dayEndTime: '20:30' }}
+            activeStayName="Hotel The M’s Kyoto"
+          />
+        );
+      });
+
+      const preview = document.body.querySelector('[data-testid="daily-story-card-preview"]');
+      expect(preview?.textContent).toContain('AEON MALL KYOTO');
+      expect(preview?.textContent).toContain('Hotel The M’s Kyoto');
     });
   });
 });

@@ -45,7 +45,11 @@ import {
   subscribeStopMeta,
   calculateDayCascadeSchedule,
   analyzeDayPace,
+  getJapanGoldenHourInfo,
+  findOutdoorStopsAfterSunset,
 } from '@/lib/smartTimeline';
+import { DailyStoryCardModal } from '@/components/trip-detail/modals/DailyStoryCardModal';
+import { useIsMounted } from '@/lib/useIsMounted';
 import {
   ShoppingBagItem,
   EMPTY_SHOPPING_ITEMS,
@@ -166,6 +170,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   hideHotels = false,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
+  const [showDailyStoryModal, setShowDailyStoryModal] = useState(false);
+  const isMounted = useIsMounted();
   const [draggedStopId, setDraggedStopId] = useState<string | null>(null);
   const [dragOverStopId, setDragOverStopId] = useState<string | null>(null);
   const [reorderAnnouncement, setReorderAnnouncement] = useState('');
@@ -1349,9 +1355,9 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         )}
       </div>
 
-      {/* Active Stay Banner for selected day if applicable */}
+      {/* Active Stay Banner for selected day if applicable (with Last Train Home Transit Radar) */}
       {activeStayForSelectedDay && !hideHotels && (
-        <div className="p-3 sm:p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 flex items-center justify-between gap-3 text-xs">
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <Building2 className="h-4 w-4" />
@@ -1366,15 +1372,33 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               </span>
             </div>
           </div>
-          <a
-            href={getGoogleMapsUrl(activeStayForSelectedDay)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#161c27] text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:bg-emerald-50 flex items-center gap-1 shrink-0 cursor-pointer"
-          >
-            <MapPin className="h-3 w-3 text-rose-500" />
-            <span>นำทางกลับที่พัก</span>
-          </a>
+          <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
+                ((displayedItinerary[displayedItinerary.length - 1]?.main_place || '') +
+                  ' ' +
+                  (displayedItinerary[displayedItinerary.length - 1]?.city || 'Japan')).trim()
+              )}&destination=${encodeURIComponent(
+                `${activeStayForSelectedDay.name} ${activeStayForSelectedDay.address || activeStayForSelectedDay.city || 'Japan'}`.trim()
+              )}&travelmode=transit`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="เช็กรถไฟขบวนสุดท้ายกลับที่พัก"
+              className="px-3 py-1.5 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white text-[11px] font-bold border border-[#3b82f6]/40 shadow-2xs flex items-center gap-1 shrink-0 cursor-pointer"
+              title="เปิด Google Maps เช็กเส้นทางรถไฟจากจุดแวะสุดท้ายของวันกลับโรงแรมคืนนี้ (ระวังขบวนสุดท้าย ~23:45)"
+            >
+              <span>🚃 รถไฟขบวนสุดท้ายกลับที่พัก</span>
+            </a>
+            <a
+              href={getGoogleMapsUrl(activeStayForSelectedDay)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#161c27] text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:bg-emerald-50 flex items-center gap-1 shrink-0 cursor-pointer"
+            >
+              <MapPin className="h-3 w-3 text-rose-500" />
+              <span>นำทางกลับที่พัก</span>
+            </a>
+          </div>
         </div>
       )}
 
@@ -1410,7 +1434,28 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           {reorderAnnouncement}
         </p>
         {/* 4.5 TabiPlan Smart Cascade Summary (Shown when a specific day is selected) */}
-        {displayedItinerary.length > 0 && selectedDayFilter !== 'all' && (
+        {displayedItinerary.length > 0 && selectedDayFilter !== 'all' && (() => {
+          const goldenHour = getJapanGoldenHourInfo(
+            selectedDayFilter,
+            displayedItinerary[0]?.city,
+            trip?.start_date
+          );
+          const afterSunsetWarnings = findOutdoorStopsAfterSunset(
+            displayedItinerary,
+            dayCascadeSchedule.byStopKey,
+            goldenHour.sunsetTime
+          );
+          const tonightStay = activeStayForSelectedDay || (stays.length > 0 ? stays[0] : null);
+          const lastStopOfDay = displayedItinerary[displayedItinerary.length - 1];
+          const lastTrainUrl = tonightStay
+            ? `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
+                `${lastStopOfDay?.main_place || ''} ${lastStopOfDay?.city || 'Japan'}`.trim()
+              )}&destination=${encodeURIComponent(
+                `${tonightStay.name} ${tonightStay.address || tonightStay.city || 'Japan'}`.trim()
+              )}&travelmode=transit`
+            : null;
+
+          return (
           <div className="mb-3.5 p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#161c27] border border-slate-200/90 dark:border-[#24324a] shadow-2xs space-y-3">
             {/* Top Row: Smart Cascade Schedule Summary Pills */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-[#24324a]">
@@ -1435,6 +1480,13 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                     {dayPace.emoji} {dayPace.badgeLabel}
                   </span>
                 )}
+                <span
+                  data-testid="golden-hour-pill"
+                  title={`ช่วงแสงทองถ่ายรูปสวย ${goldenHour.goldenHourStart}–${goldenHour.sunsetTime} (Blue Hour ถึง ${goldenHour.blueHourEnd})`}
+                  className="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60"
+                >
+                  {goldenHour.badgeText}
+                </span>
                 <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/50">
                   🎯 เวลาเที่ยว {(dayCascadeSchedule.totalSightseeingMin / 60).toFixed(1)} ชม.
                 </span>
@@ -1461,6 +1513,30 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                 <button
                   type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowDailyStoryModal(true);
+                  }}
+                  aria-label="เปิดการ์ดสรุปวัน 9:16"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#eff6ff] hover:bg-blue-100 dark:bg-[#080e19] dark:hover:bg-[#1a202c] text-[#1d4ed8] dark:text-[#4cd7f6] border border-[#bfdbfe] dark:border-[#4cd7f6]/35 text-[11px] font-bold shadow-2xs active:scale-95 transition-all cursor-pointer"
+                  title="สร้างการ์ดสรุปวัน 9:16 สำหรับแชร์ลง IG Story หรือ LINE"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span>📸 Story 9:16</span>
+                </button>
+                {lastTrainUrl && !hideHotels && (
+                  <a
+                    href={lastTrainUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold shadow-2xs active:scale-95 transition-all cursor-pointer"
+                    title="เช็กเส้นทางรถไฟจากจุดสุดท้ายกลับที่พักคืนนี้"
+                  >
+                    <span>🚃 รถไฟกลับที่พัก</span>
+                  </a>
+                )}
+                <button
+                  type="button"
                   onClick={() => void handleCopyDaySummary(selectedDayFilter, displayedItinerary)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold shadow-2xs active:scale-95 transition-all cursor-pointer"
                   title="คัดลอกสรุปแผนทั้งวันสำหรับวางใน LINE"
@@ -1482,6 +1558,15 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 )}
               </div>
             </div>
+
+            {afterSunsetWarnings.length > 0 && (
+              <div
+                data-testid="after-sunset-warning"
+                className="px-3 py-2 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800/60 text-[11px] font-bold text-amber-800 dark:text-amber-200 flex items-center justify-between gap-2"
+              >
+                <span>{afterSunsetWarnings[0].tip}</span>
+              </div>
+            )}
 
             {/* Sequential Route Trail Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar text-xs">
@@ -1526,7 +1611,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               })}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {displayedItinerary.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-[#24324a] rounded-3xl p-6 bg-white dark:bg-[#161c27]">
@@ -1820,6 +1906,29 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         onOpenTravelHub={() => setShowTravelHubModal(true)}
         onOpenPrintable={() => setShowPrintableModal(true)}
         onOpenPassport={onOpenPassport}
+      />
+
+      {/* 9:16 Daily Story Card Modal (IG Story / LINE Share) */}
+      <DailyStoryCardModal
+        isOpen={showDailyStoryModal}
+        mounted={isMounted}
+        onClose={() => setShowDailyStoryModal(false)}
+        trip={trip}
+        dayLabel={selectedDayFilter === 'all' ? availableDays[0] || 'All Days' : selectedDayFilter}
+        dayNumber={
+          selectedDayFilter === 'all'
+            ? 1
+            : Math.max(1, availableDays.indexOf(selectedDayFilter) + 1)
+        }
+        dayStops={displayedItinerary}
+        visitedStamps={visitedStamps}
+        dayCascadeSchedule={dayCascadeSchedule}
+        goldenHour={getJapanGoldenHourInfo(
+          selectedDayFilter === 'all' ? availableDays[0] : selectedDayFilter,
+          displayedItinerary[0]?.city,
+          trip?.start_date
+        )}
+        activeStayName={activeStayForSelectedDay?.name || stays[0]?.name}
       />
 
       {/* Wishlist & Shopping Bag Drawer Modal */}

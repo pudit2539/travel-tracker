@@ -3,7 +3,7 @@ import {
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
   Navigation, Eye, MoreHorizontal, Camera, ZoomIn,
-  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send, Receipt, GripVertical
+  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send, Receipt, GripVertical, ThumbsUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseTransitInfo } from '@/lib/transitGuide';
@@ -23,6 +23,7 @@ import {
   subscribeStopMeta,
   detectStopAmenities,
   detectStationElevatorAndLastTrain,
+  toggleStopOptionVote,
 } from '@/lib/smartTimeline';
 import {
   ShoppingBagItem,
@@ -43,6 +44,98 @@ import { triggerHaptic } from '@/lib/haptics';
 function hasMeaningfulText(val?: string | null): boolean {
   const trimmed = (val || '').trim();
   return trimmed.length > 0 && !/^[-–—_•]+$/.test(trimmed);
+}
+
+/**
+ * One-hand mobile horizontal swipe gesture hook (Swipe Right -> Check-in 済, Swipe Left -> Quick Expense / Navigate).
+ * Ignores vertical page scrolling and taps on interactive controls.
+ */
+function useStopSwipeGesture({
+  onSwipeRight,
+  onSwipeLeft,
+}: {
+  onSwipeRight: () => void;
+  onSwipeLeft: () => void;
+}) {
+  const [swipeDx, setSwipeDx] = React.useState(0);
+  const touchRef = React.useRef<{ startX: number; startY: number; active: boolean; lockedAxis: 'x' | 'y' | null }>({
+    startX: 0,
+    startY: 0,
+    active: false,
+    lockedAxis: null,
+  });
+
+  const onTouchStart = React.useCallback((e: React.TouchEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest('button, a, input, textarea, select')) {
+      touchRef.current.active = false;
+      return;
+    }
+    const t = e.touches?.[0];
+    if (!t) return;
+    touchRef.current = {
+      startX: t.clientX,
+      startY: t.clientY,
+      active: true,
+      lockedAxis: null,
+    };
+  }, []);
+
+  const onTouchMove = React.useCallback((e: React.TouchEvent) => {
+    if (!touchRef.current.active) return;
+    const t = e.touches?.[0];
+    if (!t) return;
+    const dx = t.clientX - touchRef.current.startX;
+    const dy = t.clientY - touchRef.current.startY;
+
+    if (!touchRef.current.lockedAxis) {
+      if (Math.abs(dx) < 14 && Math.abs(dy) < 14) return;
+      touchRef.current.lockedAxis = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y';
+    }
+    if (touchRef.current.lockedAxis !== 'x') return;
+
+    const clamped = Math.max(-88, Math.min(88, Math.round(dx * 0.75)));
+    setSwipeDx(clamped);
+  }, []);
+
+  const onTouchEnd = React.useCallback(
+    (e: React.TouchEvent) => {
+      if (!touchRef.current.active) return;
+      const t = e.changedTouches?.[0];
+      const dx = t ? t.clientX - touchRef.current.startX : swipeDx;
+      const axis = touchRef.current.lockedAxis;
+      touchRef.current.active = false;
+      touchRef.current.lockedAxis = null;
+      setSwipeDx(0);
+
+      if (axis === 'x' || Math.abs(dx) >= 64) {
+        if (dx >= 64) {
+          triggerHaptic('medium');
+          onSwipeRight();
+        } else if (dx <= -64) {
+          triggerHaptic('light');
+          onSwipeLeft();
+        }
+      }
+    },
+    [onSwipeLeft, onSwipeRight, swipeDx]
+  );
+
+  const onTouchCancel = React.useCallback(() => {
+    touchRef.current.active = false;
+    touchRef.current.lockedAxis = null;
+    setSwipeDx(0);
+  }, []);
+
+  return {
+    swipeDx,
+    swipeHandlers: {
+      onTouchStart,
+      onTouchMove,
+      onTouchEnd,
+      onTouchCancel,
+    },
+  };
 }
 
 /**
@@ -409,12 +502,42 @@ function ItineraryStopCardComponent({
 
   const boughtShopCount = activeShoppingItems.filter((s) => s.status === 'bought').length;
   const pinnedNotesCount = activeStopMeta.pinnedNotes?.length || 0;
+  const voterName =
+    currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'ฉัน';
+  const optionVotes = activeStopMeta.optionVotes || {};
+
+  const handleVoteOption = React.useCallback(
+    (optionKey: string, label: string) => {
+      if (!tripId) return;
+      triggerHaptic('light');
+      const nextList = toggleStopOptionVote(tripId, stopKey, optionKey, voterName);
+      if (nextList.includes(voterName)) {
+        toast.success(`👍 โหวต "${label}" แล้ว (${nextList.length} เสียง)`);
+      }
+    },
+    [tripId, stopKey, voterName]
+  );
+
+  const { swipeDx, swipeHandlers } = useStopSwipeGesture({
+    onSwipeRight: toggleVisited,
+    onSwipeLeft: () => {
+      if (onLogExpenseForStop) {
+        onLogExpenseForStop(item);
+      } else if (typeof window !== 'undefined' && mainPlaceDirectionsUrl) {
+        window.open(mainPlaceDirectionsUrl, '_blank', 'noopener,noreferrer');
+      }
+    },
+  });
 
   return (
     <>
       <div
+        data-swipeable-card="true"
+        {...swipeHandlers}
         style={
-          idx > 2 && !showAdminMenu
+          swipeDx !== 0
+            ? { transform: `translate3d(${swipeDx}px, 0, 0)` }
+            : idx > 2 && !showAdminMenu
             ? { contentVisibility: 'auto', containIntrinsicSize: '0 320px' }
             : undefined
         }
@@ -950,29 +1073,74 @@ function ItineraryStopCardComponent({
                             </div>
                           )}
 
-                          {hasFoodNote && (
-                            <div className={hasTransitNote ? 'pt-2.5 border-t border-[#e2e8f0] dark:border-[#24324a]' : ''}>
-                              <div className="flex items-center justify-between gap-2 mb-0.5">
-                                <span className="text-[10px] font-mono font-bold tracking-widest text-[#0284c7] dark:text-[#7bd0ff] uppercase">
-                                  Traveler’s Note · ร้านแนะนำ
-                                </span>
-                                {foodSearchUrl && (
-                                  <a
-                                    href={foodSearchUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#1e3a8a] hover:bg-[#1d4ed8] dark:bg-[#2563eb] dark:hover:bg-[#3b82f6] text-white transition-all shrink-0 cursor-pointer"
-                                  >
-                                    <span>แผนที่ร้าน 📍</span>
-                                    <ExternalLink className="h-2.5 w-2.5 opacity-80" />
-                                  </a>
+                          {hasFoodNote && (() => {
+                            const foodOptions = String(item.food_recommendation || '')
+                              .split(/[,/\n•]+/)
+                              .map((s) => s.trim())
+                              .filter((s) => s.length > 1);
+                            const maxFoodVotes = Math.max(
+                              0,
+                              ...foodOptions.map((_, fIdx) => (optionVotes[`food:${fIdx}`] || []).length)
+                            );
+                            return (
+                              <div className={hasTransitNote ? 'pt-2.5 border-t border-[#e2e8f0] dark:border-[#24324a]' : ''}>
+                                <div className="flex items-center justify-between gap-2 mb-0.5">
+                                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#0284c7] dark:text-[#7bd0ff] uppercase">
+                                    Traveler’s Note · ร้านแนะนำ
+                                  </span>
+                                  {foodSearchUrl && (
+                                    <a
+                                      href={foodSearchUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#1e3a8a] hover:bg-[#1d4ed8] dark:bg-[#2563eb] dark:hover:bg-[#3b82f6] text-white transition-all shrink-0 cursor-pointer"
+                                    >
+                                      <span>แผนที่ร้าน 📍</span>
+                                      <ExternalLink className="h-2.5 w-2.5 opacity-80" />
+                                    </a>
+                                  )}
+                                </div>
+                                <p className="text-xs text-[#334155] dark:text-[#dde2f3] leading-relaxed selectable-text">
+                                  {item.food_recommendation}
+                                </p>
+                                {foodOptions.length > 0 && (
+                                  <div className="flex items-center gap-1.5 flex-wrap pt-2">
+                                    {foodOptions.map((opt, fIdx) => {
+                                      const optKey = `food:${fIdx}`;
+                                      const votes = optionVotes[optKey] || [];
+                                      const votedByMe = votes.includes(voterName);
+                                      const isTopChoice =
+                                        votes.length > 0 &&
+                                        votes.length === maxFoodVotes &&
+                                        foodOptions.length > 1;
+                                      return (
+                                        <button
+                                          key={optKey}
+                                          type="button"
+                                          aria-label={`โหวตร้าน ${opt}`}
+                                          onClick={() => handleVoteOption(optKey, opt)}
+                                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all cursor-pointer active:scale-95 ${
+                                            votedByMe
+                                              ? 'bg-[#2563eb] text-white border-[#2563eb] shadow-2xs'
+                                              : 'bg-white dark:bg-[#161c27] text-[#334155] dark:text-[#c3c6d7] border-[#cbd5e1] dark:border-[#24324a] hover:border-[#2563eb]'
+                                          }`}
+                                        >
+                                          <ThumbsUp className="h-2.5 w-2.5" />
+                                          <span className="truncate max-w-[140px]">{opt}</span>
+                                          <span className="font-mono">({votes.length})</span>
+                                          {isTopChoice && (
+                                            <span className="px-1.5 py-0.2 rounded-full bg-amber-400/20 text-amber-300 text-[9px] font-black">
+                                              🏆 อันดับ 1
+                                            </span>
+                                          )}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 )}
                               </div>
-                              <p className="text-xs text-[#334155] dark:text-[#dde2f3] leading-relaxed selectable-text">
-                                {item.food_recommendation}
-                              </p>
-                            </div>
-                          )}
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
@@ -1001,10 +1169,15 @@ function ItineraryStopCardComponent({
                       Backup Spots & Dining
                     </div>
                     <div className="space-y-1.5">
-                      {item.backup_plan
-                        .split('\n')
-                        .filter((line: string) => line.trim().length > 0)
-                        .map((line: string, lineIdx: number) => {
+                      {(() => {
+                        const backupLines = item.backup_plan
+                          .split('\n')
+                          .filter((line: string) => line.trim().length > 0);
+                        const maxPlanBVotes = Math.max(
+                          0,
+                          ...backupLines.map((_: string, bIdx: number) => (optionVotes[`planb:${bIdx}`] || []).length)
+                        );
+                        return backupLines.map((line: string, lineIdx: number) => {
                           let cleanName = line
                             .replace(/^(ร้านอาหารสำรอง|สถานที่สำรอง|จุดเที่ยวสำรอง|แผนสำรอง|\d+[\).:-]|\*|•)\s*/i, '')
                             .trim();
@@ -1018,27 +1191,57 @@ function ItineraryStopCardComponent({
                               : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                                   cleanName + ' ' + (item.city || 'Japan')
                                 )}`;
+                          const optKey = `planb:${lineIdx}`;
+                          const votes = optionVotes[optKey] || [];
+                          const votedByMe = votes.includes(voterName);
+                          const isTopPlanB =
+                            votes.length > 0 &&
+                            votes.length === maxPlanBVotes &&
+                            backupLines.length > 1;
 
                           return (
                             <div
                               key={lineIdx}
-                              className="p-2.5 rounded-lg bg-white dark:bg-[#161c27] border border-[#e2e8f0] dark:border-[#24324a] flex items-center justify-between gap-3 hover:border-[#2563eb] dark:hover:border-[#4cd7f6]/50 transition-all text-left"
+                              className="p-2.5 rounded-lg bg-white dark:bg-[#161c27] border border-[#e2e8f0] dark:border-[#24324a] flex flex-wrap items-center justify-between gap-2 hover:border-[#2563eb] dark:hover:border-[#4cd7f6]/50 transition-all text-left"
                             >
-                              <span className="font-medium text-[#0f172a] dark:text-[#dde2f3] leading-relaxed text-left flex-1">
-                                {line}
-                              </span>
-                              <a
-                                href={lineMapsUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#eff6ff] dark:bg-[#080e19] text-[#1d4ed8] dark:text-[#4cd7f6] border border-[#bfdbfe] dark:border-[#4cd7f6]/25 hover:bg-[#2563eb] hover:text-white transition-all shrink-0 cursor-pointer"
-                              >
-                                <span>แผนที่ 📍</span>
-                                <ExternalLink className="h-2.5 w-2.5" />
-                              </a>
+                              <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
+                                <span className="font-medium text-[#0f172a] dark:text-[#dde2f3] leading-relaxed text-left">
+                                  {line}
+                                </span>
+                                {isTopPlanB && (
+                                  <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-400/30 text-[10px] font-black">
+                                    🏆 เพื่อนโหวตอันดับ 1
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  aria-label={`โหวตแผนสำรอง ${cleanName || line}`}
+                                  onClick={() => handleVoteOption(optKey, cleanName || line)}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all cursor-pointer active:scale-95 ${
+                                    votedByMe
+                                      ? 'bg-[#2563eb] text-white border-[#2563eb]'
+                                      : 'bg-[#f8fafc] dark:bg-[#080e19] text-[#334155] dark:text-[#c3c6d7] border-[#cbd5e1] dark:border-[#24324a] hover:border-[#2563eb]'
+                                  }`}
+                                >
+                                  <ThumbsUp className="h-3 w-3" />
+                                  <span className="font-mono">{votes.length}</span>
+                                </button>
+                                <a
+                                  href={lineMapsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#eff6ff] dark:bg-[#080e19] text-[#1d4ed8] dark:text-[#4cd7f6] border border-[#bfdbfe] dark:border-[#4cd7f6]/25 hover:bg-[#2563eb] hover:text-white transition-all shrink-0 cursor-pointer"
+                                >
+                                  <span>แผนที่ 📍</span>
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
+                              </div>
                             </div>
                           );
-                        })}
+                        });
+                      })()}
                     </div>
                   </div>
                 )}
@@ -1694,10 +1897,23 @@ function ItineraryCompactRowComponent({
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
   const isDraggable = Boolean(canEditPlan && item?.id && onDragStartStop);
+  const { swipeDx: compactSwipeDx, swipeHandlers: compactSwipeHandlers } = useStopSwipeGesture({
+    onSwipeRight: toggleVisited,
+    onSwipeLeft: () => {
+      if (onLogExpenseForStop) {
+        onLogExpenseForStop(item);
+      } else if (typeof window !== 'undefined' && mainPlaceDirectionsUrl) {
+        window.open(mainPlaceDirectionsUrl, '_blank', 'noopener,noreferrer');
+      }
+    },
+  });
 
   return (
     <>
       <div
+        data-swipeable-card="true"
+        {...compactSwipeHandlers}
+        style={compactSwipeDx !== 0 ? { transform: `translate3d(${compactSwipeDx}px, 0, 0)` } : undefined}
         draggable={isDraggable}
         onDragStart={
           isDraggable

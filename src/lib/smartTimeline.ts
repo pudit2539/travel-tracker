@@ -88,6 +88,7 @@ export interface StopSmartMeta {
   goers?: string[]; // Member names attending this stop (empty/undefined = everyone)
   pinnedNotes?: StopPinnedNote[];
   amenityTags?: AmenityTagId[];
+  optionVotes?: Record<string, string[]>; // optionKey (e.g. "food:0", "planb:1") -> array of voter names
 }
 
 const STORAGE_PREFIX = 'travel_stop_smart_meta_v1_';
@@ -913,3 +914,175 @@ export function analyzeDayPace(
     hasConflict: false,
   };
 }
+
+/**
+ * Toggles a member's thumbs-up vote on a stop's multi-option choice (e.g., recommended restaurants or Plan B spots).
+ */
+export function toggleStopOptionVote(
+  tripId: string,
+  stopKey: string,
+  optionKey: string,
+  voterName: string
+): string[] {
+  if (!tripId || !stopKey || !optionKey) return [];
+  const cleanVoter = (voterName || 'ฉัน').trim();
+  const map = getTripStopMetaMap(tripId);
+  const currentMeta = map[stopKey] || {};
+  const existingVotes = currentMeta.optionVotes || {};
+  const list = Array.isArray(existingVotes[optionKey]) ? existingVotes[optionKey] : [];
+  const hasVoted = list.includes(cleanVoter);
+  const nextList = hasVoted ? list.filter((v) => v !== cleanVoter) : [...list, cleanVoter];
+
+  updateStopMeta(tripId, stopKey, {
+    optionVotes: {
+      ...existingVotes,
+      [optionKey]: nextList,
+    },
+  });
+  return nextList;
+}
+
+export interface JapanGoldenHourInfo {
+  month: number;
+  goldenHourStart: string; // HH:MM
+  sunsetTime: string; // HH:MM
+  blueHourEnd: string; // HH:MM
+  seasonLabel: string;
+  badgeText: string;
+}
+
+const MONTH_SUNSET_TABLE_KANSAI: Record<
+  number,
+  { goldenStart: string; sunset: string; blueEnd: string; season: string }
+> = {
+  1: { goldenStart: '16:15', sunset: '17:08', blueEnd: '17:36', season: 'ฤดูหนาว (มืดเร็ว)' },
+  2: { goldenStart: '16:50', sunset: '17:42', blueEnd: '18:08', season: 'ปลายฤดูหนาว' },
+  3: { goldenStart: '17:20', sunset: '18:08', blueEnd: '18:35', season: 'ฤดูใบไม้ผลิ' },
+  4: { goldenStart: '17:45', sunset: '18:34', blueEnd: '19:02', season: 'ซากุระ / ใบไม้ผลิ' },
+  5: { goldenStart: '18:10', sunset: '18:58', blueEnd: '19:28', season: 'ปลายใบไม้ผลิ' },
+  6: { goldenStart: '18:25', sunset: '19:15', blueEnd: '19:46', season: 'ต้นฤดูร้อน' },
+  7: { goldenStart: '18:22', sunset: '19:12', blueEnd: '19:42', season: 'ฤดูร้อน' },
+  8: { goldenStart: '17:55', sunset: '18:45', blueEnd: '19:14', season: 'ปลายฤดูร้อน' },
+  9: { goldenStart: '17:15', sunset: '18:04', blueEnd: '18:31', season: 'ต้นฤดูใบไม้ร่วง' },
+  10: { goldenStart: '16:35', sunset: '17:24', blueEnd: '17:51', season: 'ใบไม้เปลี่ยนสี' },
+  11: { goldenStart: '16:02', sunset: '16:54', blueEnd: '17:22', season: 'ใบไม้แดง (มืดเร็ว)' },
+  12: { goldenStart: '15:55', sunset: '16:48', blueEnd: '17:18', season: 'ฤดูหนาว (มืดเร็ว)' },
+};
+
+function parseMonthFromLabelOrDate(dateLabel?: string, tripStartDate?: string): number {
+  const text = `${dateLabel || ''} ${tripStartDate || ''}`.toLowerCase();
+  if (/dec|ธ\.ค\.|ธันวา|-12-/.test(text)) return 12;
+  if (/nov|พ\.ย\.|พฤศจิกา|-11-/.test(text)) return 11;
+  if (/jan|ม\.ค\.|มกรา|-01-/.test(text)) return 1;
+  if (/feb|ก\.พ\.|กุมภา|-02-/.test(text)) return 2;
+  if (/mar|มี\.ค\.|มีนา|-03-/.test(text)) return 3;
+  if (/apr|เม\.ย\.|เมษา|-04-/.test(text)) return 4;
+  if (/may|พ\.ค\.|พฤษภา|-05-/.test(text)) return 5;
+  if (/jun|มิ\.ย\.|มิถุนา|-06-/.test(text)) return 6;
+  if (/jul|ก\.ค\.|กรกฎา|-07-/.test(text)) return 7;
+  if (/aug|ส\.ค\.|สิงหา|-08-/.test(text)) return 8;
+  if (/sep|ก\.ย\.|กันยา|-09-/.test(text)) return 9;
+  if (/oct|ต\.ค\.|ตุลา|-10-/.test(text)) return 10;
+  return 12;
+}
+
+/**
+ * Computes Golden Hour photography window and Sunset time for Japan cities by month.
+ */
+export function getJapanGoldenHourInfo(
+  dateLabel?: string,
+  city?: string,
+  tripStartDate?: string
+): JapanGoldenHourInfo {
+  const month = parseMonthFromLabelOrDate(dateLabel, tripStartDate);
+  const base = MONTH_SUNSET_TABLE_KANSAI[month] || MONTH_SUNSET_TABLE_KANSAI[12];
+  const isEastOrNorth = /tokyo|โตเกียว|sapporo|ซัปโปโร|hakodate|otaru|sendai/i.test(city || '');
+  const shiftMin = isEastOrNorth ? -16 : 0;
+
+  const shiftTimeStr = (hhmm: string, delta: number): string => {
+    if (!delta) return hhmm;
+    const [h, m] = hhmm.split(':').map((n) => parseInt(n, 10));
+    const total = Math.max(0, h * 60 + m + delta);
+    const nh = String(Math.floor(total / 60)).padStart(2, '0');
+    const nm = String(total % 60).padStart(2, '0');
+    return `${nh}:${nm}`;
+  };
+
+  const goldenHourStart = shiftTimeStr(base.goldenStart, shiftMin);
+  const sunsetTime = shiftTimeStr(base.sunset, shiftMin);
+  const blueHourEnd = shiftTimeStr(base.blueEnd, shiftMin);
+
+  return {
+    month,
+    goldenHourStart,
+    sunsetTime,
+    blueHourEnd,
+    seasonLabel: base.season,
+    badgeText: `🌅 แสงทอง ${goldenHourStart}–${sunsetTime} · อาทิตย์ตก ${sunsetTime}`,
+  };
+}
+
+const OUTDOOR_DAYLIGHT_PATTERN =
+  /วัด|ศาลเจ้า|สวน|ป่าไผ่|อาราชิยามะ|arashiyama|kiyomizu|น้ำใส|fushimi|ฟุชิมิ|โทไดจิ|todai|nara park|กวาง|kinkaku|วัดทอง|ginkaku|วัดเงิน|uji|อุจิ|เบียวโดอิน|byodoin|ปราสาท|castle|philosopher|สะพานโทเก็ตสึ|togetsukyo|minoh|มิโนะ/i;
+
+const INDOOR_OR_NIGHT_OK_PATTERN =
+  /illumination|ไฟประดับ|teamlab|aquarium|ไคยูคัง|aeon|mall|ห้าง|ดองกี้|donki|dotonbori|โดทงโบริ|shinsaibashi|ชินไซบาชิ|umeda sky|harukas|หอคอย|tower|ออนเซ็น|onsen|ซูชิ|ราเมง|อิซากายะ|คาเฟ่|สนามบิน|airport/i;
+
+export function isOutdoorDaylightSpot(placeName?: string): boolean {
+  const name = (placeName || '').trim();
+  if (!name) return false;
+  if (INDOOR_OR_NIGHT_OK_PATTERN.test(name)) return false;
+  return OUTDOOR_DAYLIGHT_PATTERN.test(name);
+}
+
+export interface AfterSunsetStopWarning {
+  stopKey: string;
+  placeName: string;
+  arriveTime: string;
+  sunsetTime: string;
+  tip: string;
+}
+
+/**
+ * Flags outdoor scenic spots (temples, parks, bamboo forest) whose scheduled arrival is after sunset.
+ */
+export function findOutdoorStopsAfterSunset(
+  stops: Array<Record<string, any>>,
+  cascadeByStopKey: Record<string, { arriveTime?: string; skipped?: boolean }> = {},
+  sunsetTime: string = '16:48'
+): AfterSunsetStopWarning[] {
+  const toMin = (hhmm?: string): number | null => {
+    if (!hhmm) return null;
+    const match = hhmm.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return null;
+    return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+  };
+
+  const sunsetMin = toMin(sunsetTime) ?? 16 * 60 + 48;
+  const warnings: AfterSunsetStopWarning[] = [];
+
+  for (const stop of stops || []) {
+    if (!stop) continue;
+    const placeName = getStopPlaceName(stop);
+    if (!isOutdoorDaylightSpot(placeName)) continue;
+    const stopKey = getStopKey(stop);
+    const sched = cascadeByStopKey[stopKey];
+    if (sched?.skipped) continue;
+
+    const arriveStr = sched?.arriveTime || stop.time_slot || '';
+    const arriveMin = toMin(arriveStr);
+    if (arriveMin !== null && arriveMin >= sunsetMin) {
+      const cleanArrive = arriveStr.match(/\d{1,2}:\d{2}/)?.[0] || arriveStr;
+      warnings.push({
+        stopKey,
+        placeName,
+        arriveTime: cleanArrive,
+        sunsetTime,
+        tip: `🌅 "${placeName}" จัดไว้เวลา ${cleanArrive} หลังพระอาทิตย์ตก (${sunsetTime}) แนะนำขยับมาช่วงแสงทองถ่ายรูปสวยกว่า`,
+      });
+    }
+  }
+
+  return warnings;
+}
+
