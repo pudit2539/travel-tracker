@@ -26,6 +26,8 @@ export interface TripMetadataPayload {
   sharePrivacy?: {
     hideDates?: boolean;
     hideLodging?: boolean;
+    hideHotels?: boolean;
+    allowPublicReadOnly?: boolean;
   };
 }
 

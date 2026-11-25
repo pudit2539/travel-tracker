@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
 export interface PlacePhotoCandidate {
   url: string;
@@ -17,6 +18,73 @@ interface CachedPlacePhoto {
 
 const MAX_SERVER_PHOTO_CACHE = 250;
 const serverPhotoCache = new Map<string, CachedPlacePhoto>();
+
+// Sliding-window per-IP rate limiter to protect Google Places API quota from bots
+const RATE_WINDOW_MS = 60_000;
+const MAX_SINGLE_REQ_PER_MIN = 60;
+const MAX_CANDIDATE_REQ_PER_MIN = 20;
+const MAX_TRACKED_IPS = 500;
+const ipRateBuckets = new Map<string, { single: number[]; candidates: number[] }>();
+
+export function resetPlacePhotoRateLimiterForTests(): void {
+  ipRateBuckets.clear();
+}
+
+export function checkPlacePhotoRateLimit(
+  ip: string,
+  isCandidates: boolean,
+  nowMs: number = Date.now()
+): { allowed: boolean; retryAfterSec: number } {
+  const key = (ip || 'unknown').trim().slice(0, 80);
+  if (!ipRateBuckets.has(key) && ipRateBuckets.size >= MAX_TRACKED_IPS) {
+    const oldestIp = ipRateBuckets.keys().next().value;
+    if (oldestIp !== undefined) ipRateBuckets.delete(oldestIp);
+  }
+  const bucket = ipRateBuckets.get(key) || { single: [], candidates: [] };
+  const cutoff = nowMs - RATE_WINDOW_MS;
+  bucket.single = bucket.single.filter((t) => t > cutoff);
+  bucket.candidates = bucket.candidates.filter((t) => t > cutoff);
+
+  const arr = isCandidates ? bucket.candidates : bucket.single;
+  const limit = isCandidates ? MAX_CANDIDATE_REQ_PER_MIN : MAX_SINGLE_REQ_PER_MIN;
+  if (arr.length >= limit) {
+    const retryMs = Math.max(1000, arr[0] + RATE_WINDOW_MS - nowMs);
+    ipRateBuckets.set(key, bucket);
+    return { allowed: false, retryAfterSec: Math.ceil(retryMs / 1000) };
+  }
+
+  arr.push(nowMs);
+  ipRateBuckets.set(key, bucket);
+  return { allowed: true, retryAfterSec: 0 };
+}
+
+export function isAllowedPlacePhotoOrigin(request: NextRequest): boolean {
+  const secFetchSite = (request.headers.get('sec-fetch-site') || '').toLowerCase();
+  if (secFetchSite === 'cross-site') return false;
+
+  const host = (request.headers.get('x-forwarded-host') || request.headers.get('host') || '').toLowerCase();
+  if (!host) return true;
+
+  const origin = request.headers.get('origin');
+  if (origin) {
+    try {
+      if (new URL(origin).host.toLowerCase() !== host) return false;
+    } catch {
+      return false;
+    }
+  }
+
+  const referer = request.headers.get('referer');
+  if (referer) {
+    try {
+      if (new URL(referer).host.toLowerCase() !== host) return false;
+    } catch {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 function getServerCachedPhoto(key: string): CachedPlacePhoto | undefined {
   const val = serverPhotoCache.get(key);
@@ -71,10 +139,59 @@ async function resolvePhotoMediaUri(photoName: string, apiKey: string): Promise<
  * 3. Supports `candidates=1` to return up to 5 angle options for the interactive Google Maps Photo Picker.
  */
 export async function GET(request: NextRequest) {
+  // 1. Cross-site hotlink & bot origin guard
+  if (!isAllowedPlacePhotoOrigin(request)) {
+    return NextResponse.json(
+      { photoUrl: null, error: 'Forbidden: Cross-origin access denied' },
+      { status: 403 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const query = (searchParams.get('q') || '').trim().slice(0, 120);
   const city = (searchParams.get('city') || '').trim().slice(0, 80);
   const wantCandidates = searchParams.get('candidates') === '1';
+
+  // 2. Validate Bearer token if provided; require same-origin or auth for candidates=1 in production
+  const authHeader = request.headers.get('authorization');
+  const bearerToken = authHeader?.replace(/^Bearer\s+/i, '').trim() || '';
+  if (bearerToken) {
+    const { data: authData, error: authErr } = await supabase.auth.getUser(bearerToken);
+    if (authErr || !authData?.user) {
+      return NextResponse.json(
+        { photoUrl: null, error: 'Unauthorized: Invalid session token' },
+        { status: 401 }
+      );
+    }
+  } else if (wantCandidates && process.env.NODE_ENV === 'production') {
+    const secFetchSite = (request.headers.get('sec-fetch-site') || '').toLowerCase();
+    const hasSameOriginSignal =
+      secFetchSite === 'same-origin' ||
+      secFetchSite === 'same-site' ||
+      Boolean(request.headers.get('referer'));
+    if (!hasSameOriginSignal) {
+      return NextResponse.json(
+        { photoUrl: null, error: 'Unauthorized: Authentication or same-origin browser session required' },
+        { status: 401 }
+      );
+    }
+  }
+
+  // 3. Per-IP sliding-window rate limit
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip')?.trim() ||
+    'local';
+  const rateCheck = checkPlacePhotoRateLimit(clientIp, wantCandidates);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { photoUrl: null, photos: [], error: 'Too many photo requests, please slow down' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(rateCheck.retryAfterSec) },
+      }
+    );
+  }
 
   if (!query) {
     return NextResponse.json({ photoUrl: null, error: 'Missing query parameter q' }, { status: 400 });

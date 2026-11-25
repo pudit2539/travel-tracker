@@ -3,7 +3,7 @@ import {
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
   Navigation, Eye, MoreHorizontal, Camera, ZoomIn,
-  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send, Receipt
+  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send, Receipt, GripVertical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseTransitInfo } from '@/lib/transitGuide';
@@ -1665,6 +1665,12 @@ function ItineraryCompactRowComponent({
   currentUser,
   onOpenEditActivity,
   onLogExpenseForStop,
+  isDragOver = false,
+  onDragStartStop,
+  onDragOverStop,
+  onDropOnStop,
+  onDragEndStop,
+  onKeyboardMoveStop,
 }: {
   item: any;
   idx: number;
@@ -1672,6 +1678,12 @@ function ItineraryCompactRowComponent({
   currentUser?: any;
   onOpenEditActivity: (item: any) => void;
   onLogExpenseForStop?: (item: any) => void;
+  isDragOver?: boolean;
+  onDragStartStop?: (id: string) => void;
+  onDragOverStop?: (e: React.DragEvent, id: string) => void;
+  onDropOnStop?: (e: React.DragEvent, targetId: string) => void;
+  onDragEndStop?: () => void;
+  onKeyboardMoveStop?: (id: string, direction: 'up' | 'down') => void;
 }) {
   const { visited, toggleVisited, meta } = useStopVisitedState(item, canEditPlan, currentUser);
   const [showStaffModal, setShowStaffModal] = React.useState(false);
@@ -1681,18 +1693,53 @@ function ItineraryCompactRowComponent({
   const { activeSrc, handleImgError } = useResilientPlaceImage(visual);
   const transitGuide = React.useMemo(() => parseTransitInfo(item.transport_info), [item.transport_info]);
   const { mainPlaceMapsUrl, mainPlaceDirectionsUrl } = buildStopUrls(item);
+  const isDraggable = Boolean(canEditPlan && item?.id && onDragStartStop);
 
   return (
     <>
       <div
+        draggable={isDraggable}
+        onDragStart={
+          isDraggable
+            ? (e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', String(item.id));
+                onDragStartStop?.(String(item.id));
+              }
+            : undefined
+        }
+        onDragOver={
+          isDraggable && onDragOverStop ? (e) => onDragOverStop(e, String(item.id)) : undefined
+        }
+        onDrop={isDraggable && onDropOnStop ? (e) => onDropOnStop(e, String(item.id)) : undefined}
+        onDragEnd={isDraggable ? onDragEndStop : undefined}
         className={`group flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-lg border transition-all ${
-          visited
+          isDragOver
+            ? 'border-[#2563eb] dark:border-[#4cd7f6] ring-2 ring-[#4cd7f6]/40 bg-[#eff6ff] dark:bg-[#080e19]'
+            : visited
             ? 'border-[#e2e8f0] dark:border-emerald-800/60 bg-white dark:bg-[#161c27] shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
             : 'border-[#e2e8f0] dark:border-[#24324a] border-l-3 border-l-[#2563eb] bg-white dark:bg-[#161c27] hover:border-[#2563eb]/60 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
         }`}
       >
-        {/* Left: Mini Thumbnail + Editorial Time & Serif Title */}
+        {/* Left: Drag Handle + Mini Thumbnail + Editorial Time & Serif Title */}
         <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+          {isDraggable && (
+            <button
+              type="button"
+              style={{ WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'none' }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  onKeyboardMoveStop?.(String(item.id), e.key === 'ArrowUp' ? 'up' : 'down');
+                }
+              }}
+              className="p-0.5 rounded text-[#94a3b8] dark:text-[#64748b] hover:text-[#2563eb] dark:hover:text-[#4cd7f6] focus-visible:bg-[#eff6ff] dark:focus-visible:bg-[#1a202c] focus-visible:text-[#2563eb] cursor-grab active:cursor-grabbing shrink-0 mt-1.5 sm:mt-0"
+              title="ลากหรือกดลูกศรขึ้น-ลงเพื่อสลับลำดับจุดแวะ"
+              aria-label={`ลากหรือกดลูกศรขึ้นลงเพื่อสลับลำดับ ${item.main_place || 'จุดแวะ'}`}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setShowLightbox(true)}

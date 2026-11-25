@@ -26,6 +26,63 @@ const DEFAULT_RATES: { [key: string]: number } = {
 };
 
 const STORAGE_KEY = 'travel_tracker_custom_fx_rate';
+const LOCK_STORAGE_KEY = 'travel_tracker_fx_rate_locked';
+const LAST_SYNC_STORAGE_KEY = 'travel_tracker_fx_last_synced';
+
+export interface JapanTaxFreeResult {
+  grossAmount: number;
+  netAmount10: number;
+  savedTax10: number;
+  netAmount8: number;
+  savedTax8: number;
+  isEligible: boolean;
+  shortfallJpy: number;
+}
+
+/**
+ * Computes Japan Tax-Free net amounts & eligibility (standard threshold: ¥5,500 tax-included / ¥5,000 pre-tax).
+ */
+export function calculateJapanTaxFree(amountJpy: number): JapanTaxFreeResult {
+  const gross = Math.max(0, Math.round(Number(amountJpy) || 0));
+  const netAmount10 = Math.round(gross / 1.1);
+  const netAmount8 = Math.round(gross / 1.08);
+  const isEligible = gross >= 5500;
+  return {
+    grossAmount: gross,
+    netAmount10,
+    savedTax10: Math.max(0, gross - netAmount10),
+    netAmount8,
+    savedTax8: Math.max(0, gross - netAmount8),
+    isEligible,
+    shortfallJpy: isEligible ? 0 : Math.max(0, 5500 - gross),
+  };
+}
+
+export function isFxRateLocked(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(LOCK_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function setFxRateLocked(locked: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LOCK_STORAGE_KEY, locked ? '1' : '0');
+    window.dispatchEvent(new Event('travel_tracker_fx_rate_updated'));
+  } catch {}
+}
+
+export function getLastFxSyncLabel(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(LAST_SYNC_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
 
 export async function fetchLiveExchangeRates(): Promise<{ [key: string]: number }> {
   try {
@@ -60,24 +117,65 @@ export function setCustomJpyToThbRate(rate: number): void {
 }
 
 /**
- * Fetch latest live JPY/THB rate from real-time API, update localStorage,
- * and dispatch an update event across the application.
+ * Fetch latest live JPY/THB rate from real-time market APIs (Frankfurter ECB primary + Open ER fallback),
+ * respecting manual rate lock unless `options.force` is true.
  */
-export async function syncLiveJpyToThb(): Promise<{ rate: number; success: boolean; date?: string }> {
+export async function syncLiveJpyToThb(options?: {
+  force?: boolean;
+}): Promise<{ rate: number; success: boolean; locked?: boolean; date?: string; source?: string }> {
+  if (!options?.force && isFxRateLocked()) {
+    return { rate: getCustomJpyToThbRate(), success: false, locked: true };
+  }
+
+  // 1. Primary: Frankfurter API (free, no key, fast CORS)
   try {
-    const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+    const res = await fetch('https://api.frankfurter.dev/v1/latest?base=JPY&symbols=THB', {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const rawThb = Number(data?.rates?.THB);
+      if (!isNaN(rawThb) && rawThb > 0) {
+        const liveRate = parseFloat(rawThb.toFixed(4));
+        setCustomJpyToThbRate(liveRate);
+        const dateStr = data?.date || new Date().toLocaleDateString('th-TH');
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(LAST_SYNC_STORAGE_KEY, dateStr);
+          } catch {}
+          window.dispatchEvent(new Event('travel_tracker_fx_rate_updated'));
+        }
+        return { rate: liveRate, success: true, date: dateStr, source: 'frankfurter' };
+      }
+    }
+  } catch {
+    // Fall through to secondary provider
+  }
+
+  // 2. Fallback: Open Exchange Rates API
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/JPY', {
+      signal: AbortSignal.timeout(5000),
+    });
     if (!res.ok) throw new Error('Live FX API error');
     const data = await res.json();
     if (data && data.rates && data.rates.THB) {
       const liveRate = parseFloat(Number(data.rates.THB).toFixed(4));
       setCustomJpyToThbRate(liveRate);
+      const dateStr = data.time_last_update_utc
+        ? new Date(data.time_last_update_utc).toLocaleDateString('th-TH')
+        : new Date().toLocaleDateString('th-TH');
       if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LAST_SYNC_STORAGE_KEY, dateStr);
+        } catch {}
         window.dispatchEvent(new Event('travel_tracker_fx_rate_updated'));
       }
-      return { 
-        rate: liveRate, 
-        success: true, 
-        date: data.time_last_update_utc ? new Date(data.time_last_update_utc).toLocaleDateString('th-TH') : undefined 
+      return {
+        rate: liveRate,
+        success: true,
+        date: dateStr,
+        source: 'open-er',
       };
     }
   } catch (err) {

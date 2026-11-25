@@ -114,6 +114,8 @@ interface TripPlanTabProps {
   ) => Promise<void> | void;
   onLogExpenseForStop?: (item?: any) => void;
   onOpenPassport?: (tab?: 'passport' | 'wrapped') => void;
+  onReorderActivity?: (draggedId: string, targetId: string) => void;
+  hideHotels?: boolean;
 }
 
 export const TripPlanTab = React.memo(function TripPlanTab({
@@ -160,8 +162,63 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   onSyncShoppingExpense,
   onLogExpenseForStop,
   onOpenPassport,
+  onReorderActivity,
+  hideHotels = false,
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
+  const [draggedStopId, setDraggedStopId] = useState<string | null>(null);
+  const [dragOverStopId, setDragOverStopId] = useState<string | null>(null);
+  const [reorderAnnouncement, setReorderAnnouncement] = useState('');
+
+  const handleDragStartStop = React.useCallback((id: string) => {
+    setDraggedStopId(id);
+  }, []);
+
+  const handleDragOverStop = React.useCallback((e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverStopId((prev) => (prev === id ? prev : id));
+  }, []);
+
+  const handleDropOnStop = React.useCallback(
+    (e: React.DragEvent, targetId: string) => {
+      e.preventDefault();
+      const sourceId = draggedStopId || e.dataTransfer.getData('text/plain');
+      setDraggedStopId(null);
+      setDragOverStopId(null);
+      if (!sourceId || !targetId || sourceId === targetId) return;
+      onReorderActivity?.(sourceId, targetId);
+      const movedItem = itinerary.find((it) => String(it.id) === String(sourceId));
+      if (movedItem) {
+        setReorderAnnouncement(
+          `สลับลำดับ ${movedItem.main_place || 'จุดแวะ'} เรียบร้อยแล้ว (${itinerary.length} รายการ)`
+        );
+      }
+    },
+    [draggedStopId, itinerary, onReorderActivity]
+  );
+
+  const handleDragEndStop = React.useCallback(() => {
+    setDraggedStopId(null);
+    setDragOverStopId(null);
+  }, []);
+
+  const handleKeyboardMoveCompactStop = React.useCallback(
+    (id: string, direction: 'up' | 'down') => {
+      const idxInFull = itinerary.findIndex((it) => String(it.id) === String(id));
+      if (idxInFull < 0) return;
+      const targetIdx = direction === 'up' ? idxInFull - 1 : idxInFull + 1;
+      if (targetIdx < 0 || targetIdx >= itinerary.length) return;
+      handleMoveActivity(idxInFull, direction);
+      const movedItem = itinerary[idxInFull];
+      if (movedItem) {
+        setReorderAnnouncement(
+          `ย้าย ${movedItem.main_place || 'จุดแวะ'} ไปลำดับที่ ${targetIdx + 1} จาก ${itinerary.length} รายการ`
+        );
+      }
+    },
+    [itinerary, handleMoveActivity]
+  );
   const [wishlistInitialTab, setWishlistInitialTab] = useState<'wishlist' | 'shopping'>('wishlist');
   const [showToolsSheet, setShowToolsSheet] = useState(false);
   const [onTripFocusMode, setOnTripFocusMode] = useState(false);
@@ -622,7 +679,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   }, [filteredItinerary]);
 
   const showFlights = openLogisticsPanel === 'flights' || openLogisticsPanel === 'all';
-  const showHotels = openLogisticsPanel === 'hotels' || openLogisticsPanel === 'all';
+  const showHotels = !hideHotels && (openLogisticsPanel === 'hotels' || openLogisticsPanel === 'all');
   const showBudget = openLogisticsPanel === 'budget' || openLogisticsPanel === 'all';
 
   return (
@@ -655,19 +712,21 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               {showFlights ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3 opacity-60" />}
             </button>
 
-            <button
-              type="button"
-              onClick={() => toggleLogisticsPanel('hotels')}
-              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
-                showHotels
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                  : 'bg-[#f1f5f9] dark:bg-[#080e19] text-[#1e293b] dark:text-[#dde2f3] border-[#e2e8f0] dark:border-[#24324a] hover:border-emerald-500'
-              }`}
-            >
-              <Building2 className="h-3.5 w-3.5 text-emerald-600 dark:text-[#7bd0ff] shrink-0" />
-              <span>ที่พัก ({stays.length})</span>
-              {showHotels ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3 opacity-60" />}
-            </button>
+            {!hideHotels && (
+              <button
+                type="button"
+                onClick={() => toggleLogisticsPanel('hotels')}
+                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer shrink-0 active:scale-95 ${
+                  showHotels
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                    : 'bg-[#f1f5f9] dark:bg-[#080e19] text-[#1e293b] dark:text-[#dde2f3] border-[#e2e8f0] dark:border-[#24324a] hover:border-emerald-500'
+                }`}
+              >
+                <Building2 className="h-3.5 w-3.5 text-emerald-600 dark:text-[#7bd0ff] shrink-0" />
+                <span>ที่พัก ({stays.length})</span>
+                {showHotels ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3 opacity-60" />}
+              </button>
+            )}
 
             {canSeeMoney && (
               <button
@@ -1291,7 +1350,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
       </div>
 
       {/* Active Stay Banner for selected day if applicable */}
-      {activeStayForSelectedDay && (
+      {activeStayForSelectedDay && !hideHotels && (
         <div className="p-3 sm:p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -1347,6 +1406,9 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 
       {/* 5. Main Itinerary Content Area (4 View Modes with Accessibility Focus Target) */}
       <div id="itinerary-view-container" tabIndex={-1} className="outline-none">
+        <p role="status" className="sr-only">
+          {reorderAnnouncement}
+        </p>
         {/* 4.5 TabiPlan Smart Cascade Summary (Shown when a specific day is selected) */}
         {displayedItinerary.length > 0 && selectedDayFilter !== 'all' && (
           <div className="mb-3.5 p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#161c27] border border-slate-200/90 dark:border-[#24324a] shadow-2xs space-y-3">
@@ -1499,6 +1561,12 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                   currentUser={currentUser}
                   onOpenEditActivity={handleOpenEditActivity}
                   onLogExpenseForStop={onLogExpenseForStop}
+                  isDragOver={dragOverStopId === String(item.id) && draggedStopId !== String(item.id)}
+                  onDragStartStop={onReorderActivity ? handleDragStartStop : undefined}
+                  onDragOverStop={onReorderActivity ? handleDragOverStop : undefined}
+                  onDropOnStop={onReorderActivity ? handleDropOnStop : undefined}
+                  onDragEndStop={handleDragEndStop}
+                  onKeyboardMoveStop={handleKeyboardMoveCompactStop}
                 />
               ))}
             </div>
@@ -1526,7 +1594,11 @@ export const TripPlanTab = React.memo(function TripPlanTab({
           <div className="p-3 sm:p-4 rounded-3xl border border-slate-200/90 dark:border-[#24324a] bg-white dark:bg-[#161c27] card-elevation space-y-2">
             <div className="flex items-center justify-between px-1 pb-1 border-b border-slate-100 dark:border-[#24324a] text-[11px] font-bold text-slate-500 dark:text-slate-400">
               <span>⚡ มุมมองตารางเวลาย่อ ({displayedItinerary.length} รายการ)</span>
-              <span>แตะไอคอนด้านซ้ายเพื่อเช็กอิน</span>
+              <span>
+                {canEditPlan && onReorderActivity
+                  ? 'ลาก ⠿ เพื่อสลับลำดับ · แตะเช็กอิน'
+                  : 'แตะไอคอนด้านซ้ายเพื่อเช็กอิน'}
+              </span>
             </div>
             {displayedItinerary.map((item, idx) => (
               <ItineraryCompactRow
@@ -1537,6 +1609,12 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 currentUser={currentUser}
                 onOpenEditActivity={handleOpenEditActivity}
                 onLogExpenseForStop={onLogExpenseForStop}
+                isDragOver={dragOverStopId === String(item.id) && draggedStopId !== String(item.id)}
+                onDragStartStop={onReorderActivity ? handleDragStartStop : undefined}
+                onDragOverStop={onReorderActivity ? handleDragOverStop : undefined}
+                onDropOnStop={onReorderActivity ? handleDropOnStop : undefined}
+                onDragEndStop={handleDragEndStop}
+                onKeyboardMoveStop={handleKeyboardMoveCompactStop}
               />
             ))}
           </div>

@@ -3,13 +3,19 @@
 import React from 'react';
 import { 
   Users, AlertCircle, CheckCircle2, Camera, Calculator, 
-  Search, Download, Edit3, Calendar, LayoutGrid, AlignJustify, Copy, Check 
+  Search, Download, Edit3, Calendar, LayoutGrid, AlignJustify, Copy, Check, RefreshCw, Lock, Unlock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExpenseCard, ExpenseThumbnailCard, ExpenseCompactRow } from '@/components/trip-detail/ExpenseCard';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { CategoryItem } from '@/lib/categories';
-import { convertCurrency, formatExchangeRateDisplay } from '@/lib/currency';
+import {
+  convertCurrency,
+  formatExchangeRateDisplay,
+  syncLiveJpyToThb,
+  isFxRateLocked,
+  setFxRateLocked,
+} from '@/lib/currency';
 import { calculateSettlement, formatSettlementSummaryText } from '@/lib/settlement';
 import { copyToClipboard } from '@/lib/clipboard';
 import { getCatAvatar } from '@/lib/avatars';
@@ -102,6 +108,29 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
   const [splitsVersion, setSplitsVersion] = React.useState(0);
   const [expenseViewMode, setExpenseViewMode] = React.useState<'grouped' | 'thumbnail' | 'compact'>('grouped');
   const [copiedSettlement, setCopiedSettlement] = React.useState(false);
+  const [syncingFx, setSyncingFx] = React.useState(false);
+  const [fxLocked, setFxLocked] = React.useState<boolean>(() => isFxRateLocked());
+
+  const handleQuickLiveFxSync = async () => {
+    setSyncingFx(true);
+    try {
+      const res = await syncLiveJpyToThb({ force: true });
+      if (res.success) {
+        toast.success(`ดึงเรทตลาดสดแล้ว: 1 JPY = ${res.rate.toFixed(3)} THB 🔄`);
+      } else {
+        toast.error('ไม่สามารถดึงเรทสดได้ในขณะนี้');
+      }
+    } finally {
+      setSyncingFx(false);
+    }
+  };
+
+  const handleToggleFxLock = () => {
+    const next = !fxLocked;
+    setFxLocked(next);
+    setFxRateLocked(next);
+    toast.info(next ? `🔒 ล็อกเรท ${fxRate.toFixed(3)} THB แล้ว` : '🔓 ปลดล็อกเรทแลกเปลี่ยนแล้ว');
+  };
 
   const handleSwitchExpenseView = (mode: 'grouped' | 'thumbnail' | 'compact') => {
     triggerViewTransition(() => {
@@ -326,6 +355,30 @@ export const TripExpensesTab = React.memo(function TripExpensesTab({
             <span className="text-[10px] sm:text-[11px] font-bold text-[#0369a1] dark:text-[#4cd7f6] bg-[#e0f2fe] dark:bg-[#080e19] px-2.5 py-0.5 rounded-full border border-[#bae6fd] dark:border-[#4cd7f6]/25 font-mono">
               {formatExchangeRateDisplay(tripBaseCurrency, fxRate)}
             </span>
+            <button
+              type="button"
+              onClick={handleQuickLiveFxSync}
+              disabled={syncingFx}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#eff6ff] hover:bg-[#dbeafe] dark:bg-[#1a202c] dark:hover:bg-[#242a36] border border-[#bfdbfe] dark:border-[#4cd7f6]/25 text-[10px] font-bold text-[#1d4ed8] dark:text-[#4cd7f6] cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+              title="ดึงเรท JPY/THB ตลาดสดทันที"
+            >
+              <RefreshCw className={`h-2.5 w-2.5 ${syncingFx ? 'animate-spin' : ''}`} />
+              <span>{syncingFx ? 'กำลังดึง...' : 'เรทสด'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleFxLock}
+              aria-pressed={fxLocked}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer active:scale-95 transition-all border ${
+                fxLocked
+                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-400/40'
+                  : 'bg-[#f1f5f9] dark:bg-[#080e19] text-[#475569] dark:text-[#94a3b8] border-[#e2e8f0] dark:border-[#24324a]'
+              }`}
+              title={fxLocked ? 'ปลดล็อกเรทแลกเปลี่ยน' : 'ล็อกเรทตามบัตร Travel Card ของคุณ'}
+            >
+              {fxLocked ? <Lock className="h-2.5 w-2.5" /> : <Unlock className="h-2.5 w-2.5" />}
+              <span>{fxLocked ? 'ล็อกเรท' : 'ล็อก'}</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-1.5">

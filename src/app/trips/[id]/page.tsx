@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -55,7 +54,7 @@ import { getTripPhotos } from '@/lib/photos';
 import { getLocalReceiptPhoto } from '@/lib/localReceipts';
 import { uploadTripMedia, deleteTripMedia } from '@/lib/mediaStorage';
 import { compressReceiptImage } from '@/lib/imageCompressor';
-import ItemizedReceiptSplitter, { ItemizedDish } from '@/components/ItemizedReceiptSplitter';
+import type { ItemizedDish } from '@/components/ItemizedReceiptSplitter';
 import { parseTransitInfo, formatTransitInfo } from '@/lib/transitGuide';
 import { getTripExpenseSplits, setExpenseSplitMembers, deleteExpenseSplit } from '@/lib/expenseSplits';
 import { getTripPaymentMethods, setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
@@ -63,15 +62,17 @@ import { syncExpenseToAccommodation } from '@/lib/accommodations';
 import { syncExpenseToFlight } from '@/lib/flights';
 import { calculateSettlement } from '@/lib/settlement';
 import CurrencyPillSwitcher from '@/components/CurrencyPillSwitcher';
-import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
-import { hydrateCustomPlacePhotosFromMap } from '@/lib/placeThumbnails';
+import { hydrateCustomPlacePhotosFromMap, triggerViewTransition } from '@/lib/placeThumbnails';
 import { hydrateVisitedStampsFromSupabase } from '@/lib/visitedStamps';
-import { hydrateStopMetaFromSupabase, KANSAI_TRANSIT_SUGGESTIONS } from '@/lib/smartTimeline';
+import { hydrateStopMetaFromSupabase } from '@/lib/smartTimeline';
 import { hydrateShoppingBagFromSupabase, updateShoppingBagItem, ShoppingBagItem, ShoppingItemStatus } from '@/lib/shoppingBag';
 import { hydrateTicketsVaultFromSupabase } from '@/lib/ticketsVault';
 import { hydratePackingChecklistFromSupabase } from '@/lib/packingChecklist';
-import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
 import { useTripModals } from '@/hooks/useTripModals';
+import { ScanExpenseModal } from '@/components/trip-detail/modals/ScanExpenseModal';
+import { ActivityFormModal } from '@/components/trip-detail/modals/ActivityFormModal';
+import { ShareTripModal } from '@/components/trip-detail/modals/ShareTripModal';
+import { ReceiptPreviewModal, AiKeySetupModal } from '@/components/trip-detail/modals/ReceiptAndAiKeyModals';
 import type { 
   TripRow, 
   ItineraryItemRow, 
@@ -98,15 +99,15 @@ const ExpenseDetailModal = dynamic(() => import('@/components/ExpenseDetailModal
 const TransferOwnershipModal = dynamic(() => import('@/components/TransferOwnershipModal'), { ssr: false });
 const AddMemberModal = dynamic(() => import('@/components/AddMemberModal'), { ssr: false });
 import { 
-  Camera, MapPin, Utensils, 
-  Plus, Moon, Sun, 
-  ArrowLeft, Trash2, Bus, Loader2, 
+  MapPin, 
+  Moon, Sun, 
+  ArrowLeft, Loader2, 
   Share2, Users, PieChart, Sparkles, 
-  Copy, Check, Image as ImageIcon, X, AlertCircle, 
+  X, AlertCircle, 
   CheckCircle2, DollarSign, 
   Bot, Wifi, WifiOff, 
-  LogOut, ChevronRight, HardDriveDownload, Receipt,
-  Compass
+  LogOut, Receipt,
+  Compass, Eye
 } from 'lucide-react';
 
 const getNowMs = () => Date.now();
@@ -124,6 +125,7 @@ export default function TripDetailPage() {
   const rawId = params?.id;
   const tripId = Array.isArray(rawId) ? rawId[0] : (typeof rawId === 'string' ? decodeURIComponent(rawId) : '');
   const inviteParam = searchParams?.get('invite') || searchParams?.get('code') || '';
+  const isReadOnlyParam = searchParams?.get('view') === 'readonly' || searchParams?.get('readonly') === '1';
   const [manualJoinCode, setManualJoinCode] = useState(inviteParam);
   const { theme, setTheme, mounted } = useTheme();
 
@@ -221,10 +223,25 @@ export default function TripDetailPage() {
 
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('');
   const [hasSavedGeminiKey, setHasSavedGeminiKey] = useState(false);
-  const [sharePrivacy, setSharePrivacy] = useState<{ hideDates?: boolean; hideHotels?: boolean }>({
+  const [sharePrivacy, setSharePrivacy] = useState<{
+    hideDates?: boolean;
+    hideHotels?: boolean;
+    allowPublicReadOnly?: boolean;
+  }>({
     hideDates: false,
     hideHotels: false,
+    allowPublicReadOnly: true,
   });
+
+  // Sync live FX updates triggered from QuickCurrencyCalculator or TripExpensesTab
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleFxUpdated = () => {
+      setFxRate(getCustomJpyToThbRate());
+    };
+    window.addEventListener('travel_tracker_fx_rate_updated', handleFxUpdated);
+    return () => window.removeEventListener('travel_tracker_fx_rate_updated', handleFxUpdated);
+  }, []);
 
   // Lock body scroll on mobile/iPad when any page modal is active
   useEffect(() => {
@@ -425,8 +442,39 @@ export default function TripDetailPage() {
       ]);
 
       const session = sessionRes.session;
+      const rawMetaItem = planData?.find((item: any) => item.date_label === '__meta_trip_data__');
+      let parsedMeta: any = null;
+      if (rawMetaItem?.backup_plan) {
+        try {
+          parsedMeta = JSON.parse(rawMetaItem.backup_plan);
+        } catch {}
+      }
+      const allowGuestReadOnly = isReadOnlyParam && parsedMeta?.sharePrivacy?.allowPublicReadOnly !== false;
+
       if (!session?.user) {
-        router.push(`/login?returnUrl=/trips/${tripId}`);
+        if (!allowGuestReadOnly) {
+          router.push(`/login?returnUrl=/trips/${tripId}`);
+          return;
+        }
+        setCurrentUser(null);
+        if (!tripData) {
+          setTrip(null);
+          setLoading(false);
+          return;
+        }
+        setUnauthorized(false);
+        setTrip(tripData);
+        setExpenses([]);
+        setMembers([]);
+        const guestPlan = (planData || []).filter((item: any) => item.date_label !== '__meta_trip_data__');
+        setItinerary(guestPlan);
+        if (parsedMeta?.sharePrivacy) {
+          setSharePrivacy(parsedMeta.sharePrivacy);
+        }
+        if (parsedMeta?.customPlacePhotos && typeof parsedMeta.customPlacePhotos === 'object' && typeof window !== 'undefined') {
+          hydrateCustomPlacePhotosFromMap(parsedMeta.customPlacePhotos, tripId);
+        }
+        setLoading(false);
         return;
       }
       setCurrentUser(session.user);
@@ -438,13 +486,26 @@ export default function TripDetailPage() {
         return;
       }
 
-      // ตรวจสอบสิทธิ์การเข้าถึงทริป (ต้องเป็นผู้สร้าง หรือเป็นสมาชิกในตาราง trip_members หรือ Super Admin)
+      // ตรวจสอบสิทธิ์การเข้าถึงทริป (ต้องเป็นผู้สร้าง หรือเป็นสมาชิกในตาราง trip_members หรือ Super Admin หรือเปิดลิงก์ Read-Only)
       const isSuper = isSuperAdmin(session.user, null);
       const isCreator = tripData.created_by === session.user.id;
       const matchedMember = memberData?.find((m: any) => m.user_id === session.user.id);
       const isMember = Boolean(matchedMember);
 
       if (!isCreator && !isMember && !isSuper) {
+        if (allowGuestReadOnly) {
+          setUnauthorized(false);
+          setTrip(tripData);
+          setExpenses([]);
+          setMembers([]);
+          const guestPlan = (planData || []).filter((item: any) => item.date_label !== '__meta_trip_data__');
+          setItinerary(guestPlan);
+          if (parsedMeta?.sharePrivacy) {
+            setSharePrivacy(parsedMeta.sharePrivacy);
+          }
+          setLoading(false);
+          return;
+        }
         setTrip(tripData);
         setItinerary([]);
         setExpenses([]);
@@ -637,7 +698,7 @@ export default function TripDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [tripId, cacheTripOffline, getOfflineTripCache, router]);
+  }, [tripId, cacheTripOffline, getOfflineTripCache, router, isReadOnlyParam]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1037,6 +1098,55 @@ export default function TripDetailPage() {
       setReordering(false);
     }
   };
+
+  // Drag & Drop สลับลำดับจุดแวะในมุมมองตารางเวลาย่อ (Compact View)
+  const handleReorderActivity = useCallback(
+    async (draggedId: string, targetId: string) => {
+      if (reordering || !draggedId || !targetId || draggedId === targetId) return;
+      const fromIdx = itinerary.findIndex((it) => String(it.id) === String(draggedId));
+      const toIdx = itinerary.findIndex((it) => String(it.id) === String(targetId));
+      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+
+      setReordering(true);
+      const targetDayLabel = itinerary[toIdx]?.date_label;
+      const reordered = [...itinerary];
+      const [moved] = reordered.splice(fromIdx, 1);
+      const updatedMoved =
+        targetDayLabel && moved.date_label !== targetDayLabel
+          ? { ...moved, date_label: targetDayLabel }
+          : moved;
+      reordered.splice(toIdx, 0, updatedMoved);
+
+      const normalized = reordered.map((it, idx) => ({ ...it, sort_order: idx }));
+      triggerViewTransition(() => {
+        setItinerary(normalized);
+      });
+      markLocalAction();
+
+      try {
+        const minIdx = Math.min(fromIdx, toIdx);
+        const maxIdx = Math.max(fromIdx, toIdx);
+        const affected = normalized.slice(minIdx, maxIdx + 1);
+        await Promise.all(
+          affected
+            .filter((it) => Boolean(it.id))
+            .map((it) =>
+              supabase
+                .from('itinerary_items')
+                .update({ sort_order: it.sort_order, date_label: it.date_label })
+                .eq('id', it.id)
+            )
+        );
+        toast.success(`สลับลำดับ "${moved.main_place}" เรียบร้อยแล้ว ✨`);
+      } catch (err) {
+        console.error('Failed to drag-reorder activity:', err);
+        fetchTripData();
+      } finally {
+        setReordering(false);
+      }
+    },
+    [reordering, itinerary, markLocalAction, fetchTripData]
+  );
 
   const handleOpenAddActivity = (
     afterOrderOrPrefill:
@@ -1933,13 +2043,14 @@ export default function TripDetailPage() {
     return (currentMember?.role as TripRole) || 'viewer';
   }, [currentUser, trip, members, isSuper]);
 
-  const canSeeMoney = isSuper || currentUserRole !== 'plan_only';
-  const canEditPlan = isSuper || currentUserRole === 'owner' || currentUserRole === 'editor';
+  const canSeeMoney = !isReadOnlyParam && (isSuper || currentUserRole !== 'plan_only');
+  const canEditPlan = !isReadOnlyParam && (isSuper || currentUserRole === 'owner' || currentUserRole === 'editor');
   const canAddExpense = canSeeMoney && (isSuper || currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'contributor');
   const checkCanModifyExpense = useCallback((exp: any) => {
+    if (isReadOnlyParam) return false;
     return canModifyExpense(currentUserRole, isSuper, exp, currentUser?.id);
-  }, [currentUserRole, isSuper, currentUser?.id]);
-  const canImportExcel = isOwner;
+  }, [isReadOnlyParam, currentUserRole, isSuper, currentUser?.id]);
+  const canImportExcel = !isReadOnlyParam && isOwner;
 
   const handleSwitchTab = useCallback((tab: 'plan' | 'expenses' | 'analytics' | 'members') => {
     if (!canSeeMoney && (tab === 'expenses' || tab === 'analytics')) {
@@ -2299,21 +2410,36 @@ export default function TripDetailPage() {
     });
   }, [expenses, expenseCategoryFilter, expensePayerFilter, deferredExpenseSearch, currentUser, userDisplayName, tripId]);
 
+  // Mask dates when viewing via Public Read-Only Share Link with hideDates enabled
+  const privacySafeItinerary = useMemo(() => {
+    if (!isReadOnlyParam || !sharePrivacy.hideDates) return itinerary;
+    const dayMap = new Map<string, string>();
+    let dayCounter = 1;
+    return itinerary.map((item) => {
+      const rawDay = (item.date_label || '').trim();
+      if (!rawDay) return item;
+      if (!dayMap.has(rawDay)) {
+        dayMap.set(rawDay, `Day ${dayCounter++}`);
+      }
+      return { ...item, date_label: dayMap.get(rawDay)! };
+    });
+  }, [itinerary, isReadOnlyParam, sharePrivacy.hideDates]);
+
   // วันทั้งหมดที่มีใน Itinerary
   const availableDays = useMemo(() => {
     const days = new Set<string>();
-    itinerary.forEach((item) => {
+    privacySafeItinerary.forEach((item) => {
       if (item.date_label && item.date_label.trim().length > 0) {
         days.add(item.date_label.trim());
       }
     });
     return Array.from(days);
-  }, [itinerary]);
+  }, [privacySafeItinerary]);
 
   const filteredItinerary = useMemo(() => {
-    if (selectedDayFilter === 'all') return itinerary;
-    return itinerary.filter((item) => item.date_label?.trim() === selectedDayFilter);
-  }, [itinerary, selectedDayFilter]);
+    if (selectedDayFilter === 'all') return privacySafeItinerary;
+    return privacySafeItinerary.filter((item) => item.date_label?.trim() === selectedDayFilter);
+  }, [privacySafeItinerary, selectedDayFilter]);
 
   const [showPassportModal, setShowPassportModal] = useState(false);
   const [passportInitialTab, setPassportInitialTab] = useState<'passport' | 'wrapped'>('passport');
@@ -2564,7 +2690,13 @@ export default function TripDetailPage() {
                   />
                   <span className="text-[#0284c7] dark:text-[#4cd7f6] font-mono font-bold">{trip?.currency || 'JPY'}</span>
                   <span>•</span>
-                  <span className="truncate font-mono text-[10px] sm:text-xs">{trip?.start_date ? new Date(trip.start_date).toLocaleDateString('th-TH') : 'ไม่ระบุวัน'}</span>
+                  <span className="truncate font-mono text-[10px] sm:text-xs">
+                    {isReadOnlyParam && sharePrivacy.hideDates
+                      ? `${availableDays.length || 1} วัน`
+                      : trip?.start_date
+                      ? new Date(trip.start_date).toLocaleDateString('th-TH')
+                      : 'ไม่ระบุวัน'}
+                  </span>
                   {isSuper && <span className="sm:hidden shrink-0" title="Super Admin">👑</span>}
                 </div>
               </div>
@@ -2767,8 +2899,39 @@ export default function TripDetailPage() {
       {/* ==================== MAIN CONTENT CONTAINER ==================== */}
       <main className="relative z-10 max-w-5xl mx-auto px-3.5 sm:px-4 safe-area-x pt-3 sm:pt-4 pb-48 sm:pb-28 space-y-3.5 sm:space-y-4">
 
-        {/* Guest Preview & Join Invitation Banner */}
-        {!currentUser && (
+        {/* Public Read-Only Share Banner & Guest Preview Invitation */}
+        {isReadOnlyParam ? (
+          <div className="p-3.5 sm:p-4 rounded-3xl bg-[#eff6ff]/95 dark:bg-[#161c27] border border-[#bfdbfe] dark:border-[#4cd7f6]/30 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm animate-in fade-in">
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#2563eb] flex items-center justify-center text-white shadow-xs shrink-0">
+                <Eye className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                  โหมดดูแพลนเที่ยวอย่างเดียว (Read-Only Share)
+                </h3>
+                <p className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                  เปิดดูแผนการเดินทางและกดนำทาง Google Maps ได้ทันที โดยซ่อนข้อมูลการเงินและปิดการแก้ไข
+                </p>
+              </div>
+            </div>
+            {currentUser ? (
+              <Link
+                href={`/trips/${tripId}`}
+                className="w-full sm:w-auto text-center px-4 py-2 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-black shadow-xs transition-all shrink-0 cursor-pointer"
+              >
+                กลับโหมดสมาชิกปกติ
+              </Link>
+            ) : (
+              <Link
+                href={`/login?returnUrl=/trips/${tripId}`}
+                className="w-full sm:w-auto text-center px-4 py-2 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-black shadow-xs transition-all shrink-0 cursor-pointer"
+              >
+                เข้าสู่ระบบ / เข้าร่วมทริป
+              </Link>
+            )}
+          </div>
+        ) : !currentUser ? (
           <div className="p-3.5 sm:p-4 rounded-3xl bg-blue-50/95 dark:bg-[#161c27] border border-blue-200/80 dark:border-blue-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md animate-in fade-in">
             <div className="flex items-center gap-3 text-left">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
@@ -2790,7 +2953,7 @@ export default function TripDetailPage() {
               เข้าสู่ระบบ / สมัครสมาชิก
             </Link>
           </div>
-        )}
+        ) : null}
 
         {/* Tab Content Panels - Keep-Alive for Zero-Latency Instant Switching */}
         <div className="tab-panels-wrapper">
@@ -2803,7 +2966,7 @@ export default function TripDetailPage() {
                 currencyView={currencyView}
                 heroDisplayData={heroDisplayData}
                 canSeeMoney={canSeeMoney}
-                itinerary={itinerary}
+                itinerary={privacySafeItinerary}
                 filteredItinerary={filteredItinerary}
                 availableDays={availableDays}
                 selectedDayFilter={selectedDayFilter}
@@ -2843,6 +3006,8 @@ export default function TripDetailPage() {
                 onSyncShoppingExpense={handleSyncShoppingExpense}
                 onLogExpenseForStop={canAddExpense ? handleLogExpenseForStop : undefined}
                 onOpenPassport={handleOpenPassport}
+                onReorderActivity={canEditPlan ? handleReorderActivity : undefined}
+                hideHotels={Boolean(isReadOnlyParam && sharePrivacy.hideHotels)}
               />
             </div>
           )}
@@ -3343,1073 +3508,81 @@ export default function TripDetailPage() {
         />
       )}
 
-      {/* 10. Scan / Add Expense Modal (Unified Single Clean Form) */}
-      {showScanModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#24324a] shrink-0">
-              <div className="flex items-center gap-2.5">
-                <CatAvatarBadge cat={userCat} size="lg" />
-                <div>
-                  <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                    บันทึกค่าใช้จ่าย 🧾
-                  </h2>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                    กรอกข้อมูลหรือสแกนใบเสร็จในหน้าเดียว
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowScanModal(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      {/* 10. Scan / Add Expense Modal (Extracted Component with 1-Tap Japan Tax-Free) */}
+      <ScanExpenseModal
+        isOpen={showScanModal}
+        mounted={mounted}
+        onClose={() => setShowScanModal(false)}
+        userCat={userCat}
+        scanning={scanning}
+        savingExpense={savingExpense}
+        hasSavedGeminiKey={hasSavedGeminiKey}
+        onOpenAiKeyModal={() => setShowAiKeyModal(true)}
+        onReceiptImageChange={handleReceiptImage}
+        ocrErrorToast={ocrErrorToast}
+        ocrSuccessToast={ocrSuccessToast}
+        scannedData={scannedData}
+        setScannedData={setScannedData}
+        fxRate={fxRate}
+        categories={categories}
+        allMembersForSplit={allMembersForSplit}
+        addSplitMode={addSplitMode}
+        setAddSplitMode={setAddSplitMode}
+        addSplitWith={addSplitWith}
+        setAddSplitWith={setAddSplitWith}
+        splitAsSeparateExpenses={splitAsSeparateExpenses}
+        setSplitAsSeparateExpenses={setSplitAsSeparateExpenses}
+        onSaveExpense={handleSaveExpense}
+      />
 
-            {/* Modal Body */}
-            <div className="p-4 sm:p-5 pt-3 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-4">
-              
-              {/* 1. Receipt Upload Area */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between px-1 text-[11px]">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">⚡ สแกนตัวหนังสือตามภาพจริง (ไม่สุ่มมั่ว)</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowAiKeyModal(true)}
-                    className="inline-flex items-center gap-1 font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 cursor-pointer active:scale-95"
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    <span>{hasSavedGeminiKey ? 'Gemini Key (เชื่อมต่อแล้ว)' : 'ตั้งค่า AI Key'}</span>
-                  </button>
-                </div>
+      {/* 11. Activity Form Modal (Extracted Component) */}
+      <ActivityFormModal
+        isOpen={showActivityModal}
+        mounted={mounted}
+        editingActivity={editingActivity}
+        savingActivity={savingActivity}
+        activityForm={activityForm}
+        setActivityForm={setActivityForm}
+        onClose={() => setShowActivityModal(false)}
+        onSubmit={handleSaveActivity}
+      />
 
-                <label className="relative overflow-hidden flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-blue-200 dark:border-[#24324a] rounded-2xl cursor-pointer bg-blue-50/20 dark:bg-[#1a202c] hover:border-blue-400 hover:opacity-95 transition-all">
-                  {scanning && <div className="animate-scan-laser z-20" />}
+      {/* 12. Receipt Fullscreen Preview Modal (Extracted Component) */}
+      <ReceiptPreviewModal
+        previewImage={previewImage}
+        mounted={mounted}
+        onClose={() => setPreviewImage(null)}
+        onDownloadReceipt={handleDownloadReceiptImage}
+      />
 
-                  {scanning ? (
-                    <div className="flex flex-col items-center gap-1.5 text-blue-600 dark:text-blue-400 z-10">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                      <span className="text-xs font-black tracking-wide">⚡ AI กำลังสแกนแยกรายการจากใบเสร็จ...</span>
-                    </div>
-                  ) : scannedData.receipt_url ? (
-                    <div className="flex items-center gap-2.5 p-2 text-xs font-bold text-blue-600 dark:text-blue-400">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
-                      <span className="truncate">แนบรูปใบเสร็จแล้ว (แตะเพื่อเปลี่ยนรูป)</span>
-                    </div>
-                  ) : (
-                    <>
-                      <Camera className="h-6 w-6 text-blue-500 mb-1 animate-float-slow" />
-                      <span className="text-xs font-black text-blue-600 dark:text-blue-400">
-                        ถ่ายรูปใบเสร็จ หรือเลือกรูปจากโทรศัพท์
-                      </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                        AI ช่วยเติมชื่อร้าน ยอดเงิน และรายการสินค้าให้อัตโนมัติ
-                      </span>
-                    </>
-                  )}
-                  <input type="file" accept="image/*" className="hidden" disabled={scanning} onChange={handleReceiptImage} />
-                </label>
-              </div>
+      {/* 13. Share Trip & Public Read-Only Link Modal (Extracted Component) */}
+      <ShareTripModal
+        isOpen={showShareModal}
+        isOwner={isOwner}
+        mounted={mounted}
+        tripId={tripId}
+        copiedLink={copiedLink}
+        copiedAuthLink={copiedAuthLink}
+        copiedCode={copiedCode}
+        sharePrivacy={sharePrivacy}
+        setSharePrivacy={setSharePrivacy}
+        onClose={() => setShowShareModal(false)}
+        onNativeShare={handleNativeShare}
+        onCopyInviteLink={copyInviteLink}
+        onCopyAuthInviteLink={copyAuthInviteLink}
+        onCopyTripCode={copyTripCode}
+      />
 
-              {ocrErrorToast && (
-                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/80 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-start justify-between gap-2 animate-in fade-in">
-                  <div className="flex items-start gap-2 min-w-0">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-500 mt-0.5" />
-                    <span className="leading-snug">{ocrErrorToast}</span>
-                  </div>
-                  {!hasSavedGeminiKey && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAiKeyModal(true)}
-                      className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black shrink-0 cursor-pointer shadow-xs active:scale-95"
-                    >
-                      ใส่ API Key
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {ocrSuccessToast && (
-                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                  <span className="line-clamp-2">{ocrSuccessToast}</span>
-                </div>
-              )}
-
-              {/* 2. Main Expense Fields Card */}
-              <div className="space-y-3 p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 dark:bg-[#1a202c] border border-slate-200/80 dark:border-[#24324a]">
-                {/* 1-Tap Quick Expense Presets (Real-World Travel Micro-Tool) */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-black text-slate-700 dark:text-slate-200 flex items-center gap-1">
-                      ⚡ กดเลือกด่วน 1-Tap (ไม่ต้องพิมพ์เอง):
-                    </span>
-                    <span className="text-[10px] font-semibold text-slate-400">
-                      เลื่อนซ้าย-ขวา ➔
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar overscroll-x-contain">
-                    {QUICK_EXPENSE_PRESETS.map((preset) => {
-                      const isActive = scannedData.title === preset.title;
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => {
-                            setScannedData((prev: any) => ({
-                              ...prev,
-                              title: preset.title,
-                              category: preset.category,
-                              payment_method: preset.paymentMethod,
-                              amount: preset.defaultAmount ? String(preset.defaultAmount) : prev.amount,
-                            }));
-                          }}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold shrink-0 border transition-all cursor-pointer active:scale-95 ${
-                            isActive
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                              : 'bg-white dark:bg-[#161c27] text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-[#24324a] hover:border-blue-400'
-                          }`}
-                        >
-                          <span>{preset.emoji}</span>
-                          <span>{preset.label}</span>
-                          {preset.defaultAmount && (
-                            <span className={`text-[10px] font-mono ${isActive ? 'text-blue-100' : 'text-blue-600 dark:text-blue-400'}`}>
-                              ¥{preset.defaultAmount}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Store / Merchant Name */}
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
-                    ชื่อรายการ / ร้านค้า *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="เช่น KFC พระโขนง, Shabu Buffet, ร้านขายยา Matsumoto"
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold transition-all"
-                    value={scannedData.title}
-                    onChange={(e) => setScannedData({ ...scannedData, title: e.target.value })}
-                  />
-                </div>
-
-                {/* Amount & Currency */}
-                <div className="space-y-2.5">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                        <span>ยอดเงินรวม *</span>
-                        {scannedData.items && scannedData.items.length > 0 && (
-                          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
-                            (คำนวณจากรายการ)
-                          </span>
-                        )}
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        placeholder="0.00"
-                        className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-black transition-all"
-                        value={scannedData.amount}
-                        onChange={(e) => setScannedData({ ...scannedData, amount: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">สกุลเงิน</label>
-                        <div className="flex items-center gap-1">
-                          {(['JPY', 'THB'] as const).map((quickCurr) => {
-                            const active = scannedData.currency === quickCurr;
-                            return (
-                              <button
-                                key={quickCurr}
-                                type="button"
-                                onClick={() => setScannedData({ ...scannedData, currency: quickCurr })}
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-black transition-all cursor-pointer border ${
-                                  active
-                                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                                    : 'bg-slate-100 dark:bg-[#1a202c] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:border-blue-400'
-                                }`}
-                              >
-                                {quickCurr === 'JPY' ? '🇯🇵 JPY' : '🇹🇭 THB'}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      <select
-                        className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
-                        value={scannedData.currency}
-                        onChange={(e) => setScannedData({ ...scannedData, currency: e.target.value })}
-                      >
-                        <option value="THB">THB (฿)</option>
-                        <option value="JPY">JPY (¥)</option>
-                        <option value="CNY">CNY (元)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                        <option value="KRW">KRW (₩)</option>
-                        <option value="GBP">GBP (£)</option>
-                        <option value="SGD">SGD (S$)</option>
-                      </select>
-                    </div>
-                  </div>
-                  {Number(scannedData.amount) > 0 && (
-                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1a202c]/70 border border-slate-200/70 dark:border-[#24324a] text-[11px]">
-                      <span className="text-slate-500 dark:text-slate-400 font-bold">ยอดแปลงประมาณการ</span>
-                      <span className="font-black text-blue-600 dark:text-blue-400">
-                        {scannedData.currency === 'THB'
-                          ? `≈ ¥${Math.round(convertCurrency(Number(scannedData.amount), 'THB', 'JPY', fxRate)).toLocaleString()} JPY`
-                          : `≈ ฿${convertCurrency(Number(scannedData.amount), scannedData.currency, 'THB', fxRate).toLocaleString(undefined, { maximumFractionDigits: 2 })} THB`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Category & Date */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">หมวดหมู่</label>
-                    <select
-                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
-                      value={scannedData.category}
-                      onChange={(e) => setScannedData({ ...scannedData, category: e.target.value })}
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.icon} {cat.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">วันที่ใช้จ่าย</label>
-                    <input
-                      type="date"
-                      className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
-                      value={scannedData.spent_at}
-                      onChange={(e) => setScannedData({ ...scannedData, spent_at: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {/* Payer (ผู้สำรองจ่าย) */}
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
-                    💳 ใครเป็นคนสำรองจ่ายเงินไปก่อน?
-                  </label>
-                  <select
-                    className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 font-bold transition-all"
-                    value={scannedData.payer_id || 'me'}
-                    onChange={(e) => {
-                      const newPayerId = e.target.value;
-                      setScannedData({ ...scannedData, payer_id: newPayerId });
-                      if (addSplitMode === 'single') {
-                        setAddSplitWith([newPayerId]);
-                      }
-                    }}
-                  >
-                    {allMembersForSplit.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Payment Source Selector (Tactile Large Buttons) */}
-                <div>
-                  <label className="block text-xs font-bold mb-1.5 text-slate-800 dark:text-slate-200">
-                    👛 จ่ายด้วยวิธีไหน? (ตัดจากกระเป๋าเงิน)
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setScannedData({ ...scannedData, payment_method: 'cash' })}
-                      className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
-                        (scannedData.payment_method || 'cash') === 'cash'
-                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 shadow-xs'
-                          : 'bg-white dark:bg-[#161c27] border-slate-200 dark:border-[#24324a] text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="text-xl">💵</span>
-                      <span>เงินสด</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setScannedData({ ...scannedData, payment_method: 'travel_card' })}
-                      className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
-                        scannedData.payment_method === 'travel_card'
-                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 shadow-xs'
-                          : 'bg-white dark:bg-[#161c27] border-slate-200 dark:border-[#24324a] text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="text-xl">💳</span>
-                      <span>Travel Card</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setScannedData({ ...scannedData, payment_method: 'credit_card' })}
-                      className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 border text-xs font-black transition-all cursor-pointer active:scale-95 ${
-                        scannedData.payment_method === 'credit_card'
-                          ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/20 shadow-xs'
-                          : 'bg-white dark:bg-[#161c27] border-slate-200 dark:border-[#24324a] text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="text-xl">💳</span>
-                      <span>บัตรเครดิต</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Split With Section for Add Modal (Lump-sum bills) */}
-                {(!scannedData.items || scannedData.items.length === 0) && (() => {
-                  const effectiveSplit = (addSplitWith && addSplitWith.length > 0)
-                    ? addSplitWith
-                    : allMembersForSplit.map((m) => m.id);
-                  const isSingle = addSplitMode === 'single' || (effectiveSplit.length === 1 && effectiveSplit[0] === (scannedData.payer_id || 'me'));
-                  const isAll = addSplitMode === 'all' || effectiveSplit.length === allMembersForSplit.length;
-
-                  return (
-                    <div className="space-y-2.5 pt-2 border-t border-slate-200/70 dark:border-[#24324a]">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                          👥 ใครร่วมหารรายการนี้บ้าง? (Split With)
-                        </label>
-                        <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
-                          {effectiveSplit.length} คน
-                        </span>
-                      </div>
-
-                      {/* Preset Buttons */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAddSplitMode('all');
-                            setAddSplitWith(allMembersForSplit.map((m) => m.id));
-                          }}
-                          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
-                            isAll
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                              : 'bg-white dark:bg-[#161c27] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:border-blue-300'
-                          }`}
-                        >
-                          <span>👥 หารทุกคน ({allMembersForSplit.length} คน)</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAddSplitMode('single');
-                            setAddSplitWith([scannedData.payer_id || 'me']);
-                          }}
-                          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
-                            isSingle
-                              ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                              : 'bg-white dark:bg-[#161c27] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#24324a] hover:border-amber-300'
-                          }`}
-                        >
-                          <span>👤 จ่ายคนเดียว (ไม่หาร)</span>
-                        </button>
-                      </div>
-
-                      {/* Member Toggle Pills */}
-                      <div className="p-2.5 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-white/70 dark:bg-[#161c27]/70 space-y-2">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-                          แตะเลือกสมาชิกที่ร่วมหาร:
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          {allMembersForSplit.map((m) => {
-                            const isSelected = effectiveSplit.includes(m.id);
-                            const cat = getCatAvatar(m.avatar);
-                            return (
-                              <button
-                                key={m.id}
-                                type="button"
-                                onClick={() => {
-                                  setAddSplitMode('custom');
-                                  if (isSelected) {
-                                    if (effectiveSplit.length > 1) {
-                                      setAddSplitWith(effectiveSplit.filter((id) => id !== m.id));
-                                    }
-                                  } else {
-                                    setAddSplitWith([...effectiveSplit, m.id]);
-                                  }
-                                }}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-blue-50 dark:bg-blue-950/80 border-blue-500 text-blue-700 dark:text-blue-300 ring-1 ring-blue-500/20'
-                                    : 'bg-slate-100 dark:bg-[#1a202c] border-slate-200 dark:border-[#24324a] text-slate-400 dark:text-slate-400 opacity-60'
-                                }`}
-                              >
-                                <CatAvatarBadge cat={cat} size="xs" />
-                                <span>{m.name}</span>
-                                {isSelected && <span className="text-blue-600 dark:text-blue-400 font-black">✓</span>}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Split Amount Summary */}
-                        {Number(scannedData.amount) > 0 && (
-                          <div className="pt-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center justify-between border-t border-slate-100 dark:border-[#24324a]/60 mt-1">
-                            <span>
-                              {effectiveSplit.length === 1 ? (
-                                <span className="text-amber-600 dark:text-amber-400 font-bold">👤 บันทึกจ่ายคนเดียวเต็มจำนวน (ไม่หาร)</span>
-                              ) : (
-                                <span>ยอดหารเฉลี่ย ({effectiveSplit.length} คน):</span>
-                              )}
-                            </span>
-                            <span className="text-blue-600 dark:text-blue-400 font-black">
-                              {effectiveSplit.length > 1
-                                ? `คนละ ≈ ${(Number(scannedData.amount) / effectiveSplit.length).toLocaleString(undefined, { maximumFractionDigits: 0 })} ${scannedData.currency || 'THB'}`
-                                : `${Number(scannedData.amount).toLocaleString()} ${scannedData.currency || 'THB'}`}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* 3. Itemized Split Section (แยกรายชิ้น / เลือกคนหาร) */}
-              <div className="space-y-3 pt-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Utensils className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                      แยกรายการสินค้า / สมาชิกที่ร่วมหาร
-                    </h3>
-                    {scannedData.items && scannedData.items.length > 0 && (
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-600 text-white">
-                        {scannedData.items.length} รายการ
-                      </span>
-                    )}
-                  </div>
-
-                  {(!scannedData.items || scannedData.items.length === 0) && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const defaultItem: ItemizedDish = {
-                          id: `item_${Date.now()}`,
-                          name: scannedData.title || 'รายการที่ 1',
-                          amount: Number(scannedData.amount) || 0,
-                          qty: 1,
-                          assignedMemberIds: allMembersForSplit.map((m) => m.id),
-                        };
-                        setScannedData((prev: any) => ({
-                          ...prev,
-                          items: [defaultItem],
-                        }));
-                      }}
-                      className="text-xs font-black text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1 cursor-pointer active:scale-95"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span>+ เพิ่มรายการแยกคนหาร</span>
-                    </button>
-                  )}
-                </div>
-
-                {/* If items exist */}
-                {scannedData.items && scannedData.items.length > 0 ? (
-                  <div className="space-y-3">
-                    <ItemizedReceiptSplitter
-                      items={scannedData.items}
-                      onChangeItems={(newItems) => {
-                        setScannedData((prev: any) => {
-                          const newSum = newItems.reduce((sum, it) => sum + Number(it.amount || 0), 0);
-                          return {
-                            ...prev,
-                            items: newItems,
-                            amount: newSum > 0 ? String(newSum) : prev.amount,
-                          };
-                        });
-                      }}
-                      members={allMembersForSplit}
-                      currency={scannedData.currency || 'THB'}
-                      totalReceiptAmount={Number(scannedData.amount) || 0}
-                      onUpdateTotalAmount={(newTotal) => setScannedData((prev: any) => ({ ...prev, amount: String(newTotal) }))}
-                    />
-
-                    {/* Separate Expenses Checkbox Toggle */}
-                    <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-blue-50/20 dark:bg-[#1a202c] border border-blue-100 dark:border-[#24324a] cursor-pointer hover:border-blue-400 transition-all shadow-2xs">
-                      <input
-                        type="checkbox"
-                        checked={splitAsSeparateExpenses}
-                        onChange={(e) => setSplitAsSeparateExpenses(e.target.checked)}
-                        className="w-4 h-4 mt-0.5 rounded text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs font-black text-slate-900 dark:text-white block">
-                          แยกบันทึกเป็นรายการของแต่ละคนอัตโนมัติ 🪄
-                        </span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-300 block font-medium mt-0.5">
-                          ระบบจะสร้างรายการค่าใช้จ่ายแยกชื่อตามยอดที่แต่ละคนกิน/ใช้จริง เพื่อให้เห็นสถิติชัดเจนในกราฟ
-                        </span>
-                      </div>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="p-3.5 rounded-2xl border border-dashed border-slate-200 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#1a202c]/40 text-center space-y-1">
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                      💡 บิลนี้จะบันทึกเป็นยอดรวมก้อนเดียว ({scannedData.amount || '0'} {scannedData.currency || 'THB'})
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      หรือกด <button type="button" onClick={() => {
-                        const defaultItem: ItemizedDish = {
-                          id: `item_${Date.now()}`,
-                          name: scannedData.title || 'รายการที่ 1',
-                          amount: Number(scannedData.amount) || 0,
-                          qty: 1,
-                          assignedMemberIds: allMembersForSplit.map((m) => m.id),
-                        };
-                        setScannedData((prev: any) => ({
-                          ...prev,
-                          items: [defaultItem],
-                        }));
-                      }} className="text-blue-600 dark:text-blue-400 font-bold underline cursor-pointer">+ เพิ่มรายการย่อย</button> เพื่อเลือกว่าเมนูไหนใครกินบ้าง
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Modal Footer Buttons */}
-            <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#24324a] flex gap-2.5 bg-slate-50/90 dark:bg-[#1a202c]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
-              <button
-                type="button"
-                onClick={() => setShowScanModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveExpense}
-                disabled={scanning || savingExpense}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 min-h-[42px] touch-manipulation"
-              >
-                {savingExpense ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> กำลังบันทึก...
-                  </>
-                ) : (
-                  splitAsSeparateExpenses && scannedData.items?.length > 0 
-                    ? 'แยกบันทึกรายคน' 
-                    : (addSplitWith.length === 1 || (addSplitMode === 'single'))
-                      ? '✓ บันทึกรายการ (จ่ายคนเดียว)'
-                      : `✓ บันทึกรายการ (หารทุกคน ${allMembersForSplit.length} คน)`
-                )}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* 11. Activity Modal */}
-      {showActivityModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] shadow-2xl border border-slate-200/90 dark:border-[#24324a] glow-blue max-h-[90dvh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-4 sm:p-6 pb-3 flex justify-between items-center border-b border-slate-200/90 dark:border-[#24324a] shrink-0">
-              <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  {editingActivity ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรมในแผนเที่ยว'}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowActivityModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form id="activity-form" onSubmit={handleSaveActivity} className="p-4 sm:p-6 pt-3 sm:pt-4 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain flex-1 min-h-0 custom-scrollbar space-y-3.5">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">วัน / Day (เช่น 04-Dec)</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Day 1 (04-Dec)"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium transition-all"
-                    value={activityForm.date_label}
-                    onChange={(e) => setActivityForm({ ...activityForm, date_label: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">เวลา (เช่น 09:00 - 12:00)</label>
-                  <input
-                    type="text"
-                    placeholder="09:00 - 12:00"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium transition-all"
-                    value={activityForm.time_slot}
-                    onChange={(e) => setActivityForm({ ...activityForm, time_slot: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-1">
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">เมือง / ย่าน</label>
-                  <input
-                    type="text"
-                    placeholder="Osaka / Namba"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium transition-all"
-                    value={activityForm.city}
-                    onChange={(e) => setActivityForm({ ...activityForm, city: e.target.value })}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">สถานที่หลัก *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="เช่น Universal Studios Japan"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold transition-all"
-                    value={activityForm.main_place}
-                    onChange={(e) => setActivityForm({ ...activityForm, main_place: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">ลิงก์ Google Maps ของสถานที่หลัก</label>
-                {activityForm.main_place_links.map((link, lIdx) => (
-                  <div key={lIdx} className="flex gap-2 mb-2">
-                    <input
-                      type="url"
-                      placeholder="https://maps.app.goo.gl/..."
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#1a202c] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium transition-all"
-                      value={link}
-                      onChange={(e) => {
-                        const updated = [...activityForm.main_place_links];
-                        updated[lIdx] = e.target.value;
-                        setActivityForm({ ...activityForm, main_place_links: updated });
-                      }}
-                    />
-                    {activityForm.main_place_links.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = activityForm.main_place_links.filter((_, i) => i !== lIdx);
-                          setActivityForm({ ...activityForm, main_place_links: updated });
-                        }}
-                        className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer"
-                        title="ลบลิงก์"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Transit & Train Guide: Platform & Best Recommendation */}
-              <div className="p-3.5 rounded-2xl bg-blue-50/20 dark:bg-[#1a202c] border border-blue-100 dark:border-[#24324a] space-y-3">
-                <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-white">
-                  <Bus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span>ข้อมูลการเดินทาง รถไฟ & ชานชาลา (Transit Guide)</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
-                      🚉 ชานชาลา / ประตูทางออก (Platform / Exit)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="เช่น ชานชาลา 3 (Track 3) / ทางออก 14"
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium transition-all"
-                      value={activityForm.platform}
-                      onChange={(e) => setActivityForm({ ...activityForm, platform: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
-                      💡 ทางเลือกที่ดีที่สุด & จุดขึ้นรถ
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="เช่น ขึ้นตู้ที่ 4-5 เดินใกล้บันไดเลื่อน / เร็วสุด"
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium transition-all"
-                      value={activityForm.best_route_tip}
-                      onChange={(e) => setActivityForm({ ...activityForm, best_route_tip: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold mb-1 text-slate-800 dark:text-slate-200">
-                    สายรถไฟ / รายละเอียดการเดินทาง (Transport Info)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="เช่น นั่งสาย Midosuji Line ลงสถานี Namba"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium transition-all"
-                    value={activityForm.transport_info}
-                    onChange={(e) => setActivityForm({ ...activityForm, transport_info: e.target.value })}
-                  />
-                  {/* TabiPlan Smart Transit Autocomplete Templates */}
-                  <div className="pt-2 space-y-1.5">
-                    <div className="text-[10px] font-black text-blue-600 dark:text-blue-400">
-                      ⚡ กดเลือกสายรถไฟและเส้นทางยอดฮิตภูมิภาคคันไซ (คลิกเพื่อเติมอัตโนมัติ):
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {KANSAI_TRANSIT_SUGGESTIONS.filter((s) => s.category === 'route-template').map((tpl) => (
-                        <button
-                          key={tpl.label}
-                          type="button"
-                          onClick={() => setActivityForm({ ...activityForm, transport_info: tpl.insertText })}
-                          className="px-2 py-1 rounded-lg bg-white dark:bg-[#161c27] hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-300 border border-blue-200/70 dark:border-[#2a2e39] text-[10px] font-bold cursor-pointer transition-all"
-                        >
-                          {tpl.badge} {tpl.label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-1 pt-0.5">
-                      {KANSAI_TRANSIT_SUGGESTIONS.filter((s) => s.category === 'station').map((stTpl) => (
-                        <button
-                          key={stTpl.label}
-                          type="button"
-                          onClick={() =>
-                            setActivityForm({
-                              ...activityForm,
-                              transport_info: activityForm.transport_info
-                                ? `${activityForm.transport_info} • ${stTpl.insertText}`
-                                : stTpl.insertText,
-                            })
-                          }
-                          className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#0d131f] hover:bg-blue-100 text-slate-600 dark:text-slate-400 text-[9px] font-bold cursor-pointer"
-                        >
-                          + {stTpl.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </form>
-
-            <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-t border-slate-200/90 dark:border-[#24324a] flex gap-2.5 bg-slate-50/90 dark:bg-[#1a202c]/90 backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
-              <button
-                type="button"
-                onClick={() => setShowActivityModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer transition-colors min-h-[42px] touch-manipulation active:scale-95"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="submit"
-                form="activity-form"
-                disabled={savingActivity}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all min-h-[42px] touch-manipulation"
-              >
-                {savingActivity ? 'กำลังบันทึก...' : 'บันทึกกิจกรรม'}
-              </button>
-            </div>
-
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* 12. Preview Receipt Image */}
-      {previewImage && mounted && createPortal(
-        <div 
-          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md animate-in fade-in duration-200 overscroll-contain"
-          onClick={() => setPreviewImage(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="relative max-w-lg w-full bg-white dark:bg-[#161c27] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#24324a] shadow-2xl space-y-3 animate-in zoom-in-95 duration-200 max-h-[92dvh] overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center pb-2 border-b border-slate-200/90 dark:border-[#24324a]">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ImageIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" /> 
-                <span>รูปภาพใบเสร็จ</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setPreviewImage(null)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[58dvh] sm:max-h-[62dvh]">
-              <img src={previewImage} alt="Receipt Preview" className="max-h-[56dvh] sm:max-h-[60dvh] w-auto object-contain rounded-xl shadow-md" />
-            </div>
-
-            <div className="pt-2 flex flex-col gap-2">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleDownloadReceiptImage(previewImage)}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 hover:scale-[1.01] active:scale-95 transition-all cursor-pointer min-h-[42px] touch-manipulation"
-                >
-                  <HardDriveDownload className="h-4 w-4" />
-                  <span>บันทึกรูปภาพ / แชร์ลงโทรศัพท์</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewImage(null)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
-                >
-                  ปิด
-                </button>
-              </div>
-              <p className="text-[10px] text-center text-slate-400">
-                💡 บนมือถือ: สามารถกดปุ่มบันทึก หรือแตะค้างที่รูปภาพเพื่อเลือกบันทึกลงโทรศัพท์ (Save to Photos) ได้
-              </p>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* 13. Share Modal (Owner Only) */}
-      {showShareModal && isOwner && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/80 p-3 sm:p-4 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#24324a] glow-blue animate-in zoom-in-95 duration-200 space-y-4 max-h-[90dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain">
-            
-            <div className="flex justify-between items-center pb-3 border-b border-slate-200/90 dark:border-[#24324a]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
-                  <Share2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-slate-900 dark:text-white">แชร์ทริปนี้ให้เพื่อน ✈️</h2>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                    ส่งให้เพื่อนเพื่อร่วมวางแผนเที่ยวและบันทึกค่าใช้จ่าย
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowShareModal(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] transition-colors cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3.5">
-              {/* 1-Tap LINE / AirDrop / Native Share Sheet */}
-              <button
-                type="button"
-                onClick={handleNativeShare}
-                className="w-full py-3 min-h-[44px] rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 touch-manipulation"
-              >
-                <Share2 className="h-4 w-4" />
-                <span>แชร์ส่งเข้า LINE / AirDrop ทันที 📲</span>
-              </button>
-
-              <div className="p-3.5 rounded-2xl border border-blue-100 dark:border-[#24324a] bg-blue-50/20 dark:bg-[#1a202c] space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    🔗 ลิงก์ตรงเข้าหน้าทริป (Direct Link)
-                  </label>
-                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-                    แนะนำ
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  สำหรับเพื่อนที่มีบัญชีแล้ว หรือต้องการเปิดดูรายละเอียดทริปทันที
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-xs font-mono text-slate-900 dark:text-white select-all"
-                    value={typeof window !== 'undefined' ? `${window.location.origin}/trips/${tripId}?invite=${tripId}` : ''}
-                  />
-                  <button
-                    type="button"
-                    onClick={copyInviteLink}
-                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer active:scale-95 flex items-center gap-1.5"
-                  >
-                    {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    <span>{copiedLink ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/50 dark:bg-[#1a202c] space-y-2">
-                <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                  👥 ลิงก์เชิญเพื่อนใหม่ (สมัครเสร็จแล้วเข้าทริปทันที)
-                </label>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  เพื่อนที่ยังไม่มีบัญชี กดลิงก์นี้เพื่อสมัครสมาชิกแล้วระบบจะดึงเข้ากลุ่มทริปนี้ให้อัตโนมัติ
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-xs font-mono text-slate-900 dark:text-white select-all"
-                    value={typeof window !== 'undefined' ? `${window.location.origin}/login?invite=${tripId}` : ''}
-                  />
-                  <button
-                    type="button"
-                    onClick={copyAuthInviteLink}
-                    className="px-4 py-2.5 bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#24324a] hover:border-blue-400 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer active:scale-95 flex items-center gap-1.5"
-                  >
-                    {copiedAuthLink ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-blue-500" />}
-                    <span>{copiedAuthLink ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">รหัสเชิญประจำทริป (Trip ID)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs font-mono text-slate-900 dark:text-white select-all font-bold"
-                    value={tripId}
-                  />
-                  <button
-                    type="button"
-                    onClick={copyTripCode}
-                    className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 dark:bg-[#1a202c] dark:hover:bg-[#24324a] text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold transition-colors shrink-0 cursor-pointer active:scale-95 min-h-[42px] touch-manipulation"
-                  >
-                    {copiedCode ? 'คัดลอกแล้ว' : 'คัดลอก'}
-                  </button>
-                </div>
-              </div>
-
-              {/* TabiPlan Privacy Share Toggles */}
-              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#24324a] bg-slate-50/70 dark:bg-[#0d131f] space-y-2.5">
-                <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <span>🛡️ ตั้งค่าความเป็นส่วนตัวเมื่อแชร์ทริป (Share Privacy)</span>
-                </div>
-                <label className="flex items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-300 font-bold cursor-pointer">
-                  <span>ซ่อนวันที่เดินทางจริง (แสดงเฉพาะ Day 1, Day 2...)</span>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(sharePrivacy.hideDates)}
-                    onChange={(e) => {
-                      const next = { ...sharePrivacy, hideDates: e.target.checked };
-                      setSharePrivacy(next);
-                      localStorage.setItem(`travel_share_privacy_${tripId}`, JSON.stringify(next));
-                      syncTripMetadataToSupabase(tripId, { sharePrivacy: next }).catch(() => {});
-                    }}
-                    className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-300 font-bold cursor-pointer">
-                  <span>ซ่อนชื่อโรงแรมและรหัสการจองที่พักจากผู้ชมทั่วไป</span>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(sharePrivacy.hideHotels)}
-                    onChange={(e) => {
-                      const next = { ...sharePrivacy, hideHotels: e.target.checked };
-                      setSharePrivacy(next);
-                      localStorage.setItem(`travel_share_privacy_${tripId}`, JSON.stringify(next));
-                      syncTripMetadataToSupabase(tripId, { sharePrivacy: next }).catch(() => {});
-                    }}
-                    className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Modal: ตั้งค่า Gemini API Key สำหรับ AI Vision สแกนใบเสร็จจริง */}
-      {showAiKeyModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 backdrop-blur-md bg-black/80 overscroll-contain overflow-x-hidden animate-in fade-in duration-200 select-none" role="dialog" aria-modal="true">
-          <div className="relative w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#161c27] border border-slate-200/90 dark:border-[#24324a] shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90dvh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain animate-in zoom-in-95 duration-200 glow-blue">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-base">
-                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <span>ตั้งค่า AI สแกนใบเสร็จ (Gemini)</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAiKeyModal(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1a202c] cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              เพื่อให้ระบบอ่านตัวหนังสือ ชื่อร้าน ราคาสินค้า (อุปกรณ์ไอที, เสื้อผ้า, ค่าเดินทาง, อาหาร) จากใบเสร็จจริงโดย<strong>ไม่สุ่มหรือสมมุติข้อมูล</strong> กรุณาระบุ Google Gemini API Key
-            </p>
-
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noreferrer"
-              className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex items-center justify-between gap-2 text-xs font-bold text-amber-800 dark:text-amber-200 hover:opacity-95 transition-opacity"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-base">🎁</span>
-                <span>รับ Gemini API Key ฟรีจาก Google AI Studio</span>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-amber-600" />
-            </a>
-
-            <div>
-              <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
-                Google Gemini API Key
-              </label>
-              <input
-                type="password"
-                value={geminiApiKeyInput}
-                onChange={(e) => setGeminiApiKeyInput(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] bg-slate-50 dark:bg-[#1a202c] text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-              />
-              <p className="text-[10px] text-slate-400 mt-1">
-                คีย์จะถูกบันทึกไว้ใน Browser ของคุณอย่างปลอดภัย หรือใส่ GEMINI_API_KEY ใน .env.local ก็ได้
-              </p>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              {hasSavedGeminiKey && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGeminiApiKeyInput('');
-                    handleSaveGeminiKey('');
-                  }}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-[#24324a] text-slate-500 hover:text-rose-600 text-xs font-bold transition-colors cursor-pointer min-h-[42px] touch-manipulation active:scale-95"
-                >
-                  ล้างค่า
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => handleSaveGeminiKey(geminiApiKeyInput)}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95 min-h-[42px] touch-manipulation"
-              >
-                บันทึก API Key
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* 13.5 Gemini AI Key Setup Modal (Extracted Component) */}
+      <AiKeySetupModal
+        isOpen={showAiKeyModal}
+        mounted={mounted}
+        geminiApiKeyInput={geminiApiKeyInput}
+        setGeminiApiKeyInput={setGeminiApiKeyInput}
+        hasSavedGeminiKey={hasSavedGeminiKey}
+        onSaveGeminiKey={handleSaveGeminiKey}
+        onClose={() => setShowAiKeyModal(false)}
+      />
 
       {/* Global Success / Feedback Floating Toast (Positioned at bottom for iPhone 17 Pro Max Safe Zone) */}
       <AnimatePresence>

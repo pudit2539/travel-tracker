@@ -4,8 +4,8 @@
   "description": "Itinerary Planner & AI Expense Tracker with Cat Companions",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#090611",
-  "theme_color": "#ec4899",
+  "background_color": "#0d131f",
+  "theme_color": "#2563eb",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -21,7 +21,7 @@
     },
     {
       "src": "/app-logo.png",
-      "sizes": "1024x1024",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]

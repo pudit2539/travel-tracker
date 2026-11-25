@@ -4,10 +4,18 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
   X, ArrowRightLeft, Sparkles, Plus, 
-  Coins, Check, Store, CreditCard, Users, Loader2, RefreshCw
+  Coins, Check, Store, CreditCard, Users, Loader2, RefreshCw, Lock, Unlock
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getCustomJpyToThbRate, setCustomJpyToThbRate, convertCurrency, formatExchangeRateDisplay, syncLiveJpyToThb } from '@/lib/currency';
+import {
+  getCustomJpyToThbRate,
+  setCustomJpyToThbRate,
+  convertCurrency,
+  formatExchangeRateDisplay,
+  syncLiveJpyToThb,
+  isFxRateLocked,
+  setFxRateLocked,
+} from '@/lib/currency';
 import { triggerHaptic } from '@/lib/haptics';
 import { supabase } from '@/lib/supabase';
 import { setExpensePaymentMethod, PaymentMethod } from '@/lib/paymentMethods';
@@ -179,17 +187,30 @@ export default function QuickCurrencyCalculator({
   };
 
   const [isSyncingRate, setIsSyncingRate] = useState(false);
+  const [rateLocked, setRateLocked] = useState<boolean>(() => isFxRateLocked());
+
+  const handleToggleRateLock = () => {
+    const next = !rateLocked;
+    setRateLocked(next);
+    setFxRateLocked(next);
+    triggerHaptic('light');
+    toast.info(
+      next
+        ? `🔒 ล็อกเรท ${fxRate.toFixed(3)} THB (ตามบัตร Travel Card ของคุณ)`
+        : '🔓 ปลดล็อกเรทแล้ว สามารถซิงก์เรทตลาดสดอัตโนมัติได้'
+    );
+  };
 
   const handleSyncLiveRate = async () => {
     setIsSyncingRate(true);
     triggerHaptic('light');
     try {
-      const res = await syncLiveJpyToThb();
+      const res = await syncLiveJpyToThb({ force: true });
       if (res && res.success) {
         setFxRate(res.rate);
         setTempRate(String(res.rate.toFixed(3)));
         triggerHaptic('success');
-        toast.success(`อัปเดตเรท JPY/THB ล่าสุดแล้ว: ฿${res.rate.toFixed(3)} 🔄`);
+        toast.success(`อัปเดตเรท JPY/THB ตลาดสดแล้ว: ฿${res.rate.toFixed(3)} 🔄`);
       } else {
         toast.error('ไม่สามารถดึงเรทสดได้ในขณะนี้');
       }
@@ -405,6 +426,20 @@ export default function QuickCurrencyCalculator({
                 >
                   <RefreshCw className={`h-3 w-3 ${isSyncingRate ? 'animate-spin' : ''}`} />
                   <span>{isSyncingRate ? 'ดึง...' : 'ดึงเรทสด'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleToggleRateLock}
+                  aria-pressed={rateLocked}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all active:scale-95 ${
+                    rateLocked
+                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/40'
+                      : 'bg-slate-200/70 dark:bg-[#0d131f] text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                  title={rateLocked ? 'ปลดล็อกเรทแลกเปลี่ยน' : 'ล็อกเรทที่แลกไว้ในบัตร Travel Card'}
+                >
+                  {rateLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                  <span>{rateLocked ? 'ล็อกเรท' : 'ล็อก'}</span>
                 </button>
               </div>
             ) : (

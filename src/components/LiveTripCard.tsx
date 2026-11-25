@@ -27,7 +27,7 @@ import {
   getShoppingBagSummary,
   subscribeShoppingBag,
 } from '@/lib/shoppingBag';
-import { syncTripMetadataToSupabase } from '@/lib/tripMetadata';
+import { publishLivePresence } from '@/lib/livePresence';
 import { ShowToStaffModal } from '@/components/trip-detail/ShowToStaffModal';
 import { useIsMounted } from '@/lib/useIsMounted';
 
@@ -400,22 +400,20 @@ function LiveTripCard({
           handleCheckIn(nextUpActivity, 'เข้าใกล้รัศมี 80 ม.');
         }
 
-        // Sync privacy-graded presence
+        // Broadcast privacy-graded presence over ephemeral Realtime channel (zero DB clobbering)
         if (tripId && privacyLevel !== 'off') {
-          syncTripMetadataToSupabase(tripId, {
-            livePresence: {
-              privacyLevel,
-              progressPct: proj.pct,
-              district:
-                privacyLevel === 'district' || privacyLevel === 'exact'
-                  ? getActivityCity(nextUpActivity)
-                  : undefined,
-              coords:
-                privacyLevel === 'exact'
-                  ? { lat: userCoord.lat, lng: userCoord.lng }
-                  : undefined,
-              updatedAt: new Date().toISOString(),
-            },
+          void publishLivePresence(tripId, {
+            privacyLevel,
+            progressPct: proj.pct,
+            district:
+              privacyLevel === 'district' || privacyLevel === 'exact'
+                ? getActivityCity(nextUpActivity)
+                : undefined,
+            coords:
+              privacyLevel === 'exact'
+                ? { lat: userCoord.lat, lng: userCoord.lng }
+                : undefined,
+            updatedAt: new Date().toISOString(),
           });
         }
       },
@@ -467,12 +465,14 @@ function LiveTripCard({
       // ignore
     }
     if (tripId) {
-      syncTripMetadataToSupabase(tripId, {
-        livePresence: {
+      void publishLivePresence(
+        tripId,
+        {
           privacyLevel: level,
           updatedAt: new Date().toISOString(),
         },
-      });
+        { force: true }
+      );
     }
   };
 

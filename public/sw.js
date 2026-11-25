@@ -1,5 +1,5 @@
 // public/sw.js
-const CACHE_NAME = 'travel-tracker-cache-v3';
+const CACHE_NAME = 'travel-tracker-cache-v4';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
