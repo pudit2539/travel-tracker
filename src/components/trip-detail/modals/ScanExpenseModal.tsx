@@ -22,6 +22,80 @@ import { calculateJapanTaxFree, convertCurrency } from '@/lib/currency';
 import { triggerHaptic } from '@/lib/haptics';
 import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
 
+export interface PotentialDuplicateExpense {
+  id: string;
+  title: string;
+  amount: number;
+  currency: string;
+  spent_at?: string;
+  category?: string;
+  payer_name?: string;
+  reason: 'exact_title_amount_date' | 'same_amount_date_category';
+}
+
+/**
+ * Detects potential duplicate bills in the current trip (same rounded amount, currency, and date,
+ * plus overlapping merchant title or category) to prevent friends from double-logging the same receipt.
+ */
+export function findPotentialDuplicateExpenses(
+  candidate: {
+    title?: string;
+    amount?: number | string;
+    currency?: string;
+    spent_at?: string;
+    category?: string;
+  },
+  existingExpenses: Array<Record<string, any>> = []
+): PotentialDuplicateExpense[] {
+  const numAmount = Math.round(Number(candidate?.amount) || 0);
+  if (numAmount <= 0 || !Array.isArray(existingExpenses) || existingExpenses.length === 0) {
+    return [];
+  }
+
+  const candCurrency = String(candidate.currency || 'JPY').toUpperCase().trim();
+  const candDate = String(candidate.spent_at || '').slice(0, 10);
+  const candTitle = String(candidate.title || '').trim().toLowerCase();
+  const candCategory = String(candidate.category || '').trim().toLowerCase();
+
+  const matches: PotentialDuplicateExpense[] = [];
+
+  for (const exp of existingExpenses) {
+    if (!exp) continue;
+    const expAmount = Math.round(Number(exp.amount) || 0);
+    if (expAmount !== numAmount) continue;
+
+    const expCurrency = String(exp.currency || 'JPY').toUpperCase().trim();
+    if (expCurrency !== candCurrency) continue;
+
+    const expDate = String(exp.spent_at || '').slice(0, 10);
+    if (candDate && expDate && candDate !== expDate) continue;
+
+    const expTitle = String(exp.title || '').trim().toLowerCase();
+    const isTitleOverlap = Boolean(
+      candTitle &&
+        expTitle &&
+        (candTitle === expTitle || candTitle.includes(expTitle) || expTitle.includes(candTitle))
+    );
+    const expCat = String(exp.category || '').trim().toLowerCase();
+    const isSameCategory = Boolean(!candCategory || !expCat || candCategory === expCat);
+
+    if (isTitleOverlap || isSameCategory) {
+      matches.push({
+        id: String(exp.id || `dup-${matches.length}`),
+        title: String(exp.title || 'รายการใช้จ่าย'),
+        amount: expAmount,
+        currency: expCurrency,
+        spent_at: expDate || undefined,
+        category: exp.category,
+        payer_name: exp.payer_name,
+        reason: isTitleOverlap ? 'exact_title_amount_date' : 'same_amount_date_category',
+      });
+    }
+  }
+
+  return matches;
+}
+
 interface ScanExpenseModalProps {
   isOpen: boolean;
   mounted: boolean;
@@ -46,6 +120,7 @@ interface ScanExpenseModalProps {
   splitAsSeparateExpenses: boolean;
   setSplitAsSeparateExpenses: (val: boolean) => void;
   onSaveExpense: () => void;
+  existingExpenses?: Array<Record<string, any>>;
 }
 
 export const ScanExpenseModal = React.memo(function ScanExpenseModal({
@@ -72,12 +147,32 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
   splitAsSeparateExpenses,
   setSplitAsSeparateExpenses,
   onSaveExpense,
+  existingExpenses = [],
 }: ScanExpenseModalProps) {
+  const [confirmedDupSig, setConfirmedDupSig] = React.useState<string | null>(null);
+
+  const numericAmount = Number(scannedData?.amount) || 0;
+  const duplicateMatches = React.useMemo(
+    () => findPotentialDuplicateExpenses(scannedData || {}, existingExpenses),
+    [scannedData, existingExpenses]
+  );
+  const currentDupSig = `${Math.round(numericAmount)}:${scannedData?.currency || 'JPY'}:${(scannedData?.spent_at || '').slice(0, 10)}:${(scannedData?.title || '').trim()}`;
+  const isDuplicateAcknowledged = confirmedDupSig === currentDupSig;
+
   if (!isOpen || !mounted) return null;
 
-  const numericAmount = Number(scannedData.amount) || 0;
   const isJpy = (scannedData.currency || '').toUpperCase() === 'JPY';
   const taxFree = isJpy && numericAmount > 0 ? calculateJapanTaxFree(numericAmount) : null;
+
+  const handleConfirmOrSave = () => {
+    if (duplicateMatches.length > 0 && !isDuplicateAcknowledged) {
+      triggerHaptic('medium');
+      setConfirmedDupSig(currentDupSig);
+      toast.warning('⚠️ พบรายการยอดและวันที่ซ้ำกัน! กดปุ่มบันทึกอีกครั้งเพื่อยืนยันบันทึกซ้ำ');
+      return;
+    }
+    onSaveExpense();
+  };
 
   const handleApplyTaxFree = (mode: '10' | '8') => {
     if (!taxFree) return;
@@ -380,6 +475,47 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
                       <span className="font-mono text-[#0284c7] dark:text-[#7bd0ff]">
                         → ¥{taxFree.netAmount8.toLocaleString()}
                       </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Automatic Duplicate Bill Warning Banner */}
+              {duplicateMatches.length > 0 && (
+                <div
+                  role="alert"
+                  className="p-3 rounded-xl bg-amber-50/90 dark:bg-amber-950/45 border border-amber-300 dark:border-amber-700/70 space-y-2 animate-in fade-in duration-150"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div className="min-w-0 text-xs">
+                        <span className="font-black text-amber-900 dark:text-amber-200 block">
+                          ⚠️ พบรายการยอดซ้ำในวันเดียวกัน ({duplicateMatches.length} รายการ)
+                        </span>
+                        <span className="text-[11px] font-medium text-amber-800 dark:text-amber-300/90 block truncate">
+                          ตรงกับ &ldquo;{duplicateMatches[0].title}&rdquo; •{' '}
+                          {duplicateMatches[0].amount.toLocaleString()} {duplicateMatches[0].currency}
+                          {duplicateMatches[0].payer_name
+                            ? ` (โดย ${duplicateMatches[0].payer_name})`
+                            : ''}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="ยืนยันบันทึกบิลซ้ำ"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setConfirmedDupSig(isDuplicateAcknowledged ? null : currentDupSig);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-black shrink-0 cursor-pointer border transition-all ${
+                        isDuplicateAcknowledged
+                          ? 'bg-amber-600 text-white border-amber-600'
+                          : 'bg-white dark:bg-[#161c27] text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700 hover:bg-amber-100'
+                      }`}
+                    >
+                      {isDuplicateAcknowledged ? '✓ ยืนยันบันทึกซ้ำ' : 'แตะยืนยันซ้ำ'}
                     </button>
                   </div>
                 </div>
@@ -729,14 +865,20 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
           </button>
           <button
             type="button"
-            onClick={onSaveExpense}
+            onClick={handleConfirmOrSave}
             disabled={scanning || savingExpense}
-            className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 min-h-[42px] touch-manipulation"
+            className={`flex-1 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition-all disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5 min-h-[42px] touch-manipulation ${
+              duplicateMatches.length > 0 && !isDuplicateAcknowledged
+                ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
+                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/25'
+            }`}
           >
             {savingExpense ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" /> กำลังบันทึก...
               </>
+            ) : duplicateMatches.length > 0 && !isDuplicateAcknowledged ? (
+              '⚠️ ยืนยันบันทึกซ้ำ?'
             ) : splitAsSeparateExpenses && scannedData.items?.length > 0 ? (
               'แยกบันทึกรายคน'
             ) : addSplitWith.length === 1 || addSplitMode === 'single' ? (

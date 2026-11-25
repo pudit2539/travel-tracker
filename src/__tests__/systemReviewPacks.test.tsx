@@ -10,13 +10,26 @@ import {
   GET as placePhotoGET,
 } from '@/app/api/place-photo/route';
 import {
+  checkScanReceiptRateLimit,
+  resetScanReceiptRateLimiterForTests,
+  isAllowedScanReceiptOrigin,
+} from '@/app/api/scan-receipt/route';
+import {
+  checkAiAssistantRateLimit,
+  resetAiAssistantRateLimiterForTests,
+  isAllowedAiAssistantOrigin,
+} from '@/app/api/ai-assistant/route';
+import {
   calculateJapanTaxFree,
   isFxRateLocked,
   setFxRateLocked,
   syncLiveJpyToThb,
   setCustomJpyToThbRate,
 } from '@/lib/currency';
-import { ScanExpenseModal } from '@/components/trip-detail/modals/ScanExpenseModal';
+import {
+  ScanExpenseModal,
+  findPotentialDuplicateExpenses,
+} from '@/components/trip-detail/modals/ScanExpenseModal';
 import { ShareTripModal } from '@/components/trip-detail/modals/ShareTripModal';
 import { ItineraryCompactRow } from '@/components/trip-detail/ItineraryStopCard';
 import {
@@ -25,6 +38,7 @@ import {
   resetOfflineMemoryCachesForTests,
 } from '@/hooks/useOfflineSync';
 import { publishLivePresence } from '@/lib/livePresence';
+import { mergeMetadataEntityArray, slimMetadataPayload } from '@/lib/tripMetadata';
 import { getCatAvatar } from '@/lib/avatars';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
@@ -60,6 +74,8 @@ describe('System Review Packs 1–3 Verification', () => {
     root = createRoot(container);
     localStorage.clear();
     resetPlacePhotoRateLimiterForTests();
+    resetScanReceiptRateLimiterForTests();
+    resetAiAssistantRateLimiterForTests();
     resetOfflineMemoryCachesForTests();
     mockSend.mockClear();
     vi.restoreAllMocks();
@@ -318,6 +334,144 @@ describe('System Review Packs 1–3 Verification', () => {
 
       setItemSpy.mockRestore();
       resetOfflineMemoryCachesForTests();
+    });
+  });
+
+  describe('Pack 4 & 5.4: Metadata ID-Based Smart Merge, AI Rate Limiters & Duplicate Bill Detector', () => {
+    it('merges concurrent multi-device shoppingBag & packingChecklist updates without clobbering checked items', () => {
+      // Device A checked item-1 at t=2000; Device B checked item-2 at t=2500 while its copy of item-1 was still planned (no updatedAt)
+      const remoteOnCloud = [
+        { id: 'item-1', name: 'Uji Matcha', status: 'bought', updatedAt: 2000 },
+        { id: 'item-2', name: 'Heattech', status: 'planned', updatedAt: 1000 },
+      ];
+      const incomingFromDeviceB = [
+        { id: 'item-1', name: 'Uji Matcha', status: 'planned' },
+        { id: 'item-2', name: 'Heattech', status: 'bought', updatedAt: 2500 },
+      ];
+
+      const merged = mergeMetadataEntityArray(remoteOnCloud, incomingFromDeviceB);
+      expect(merged.find((i) => i.id === 'item-1')?.status).toBe('bought');
+      expect(merged.find((i) => i.id === 'item-2')?.status).toBe('bought');
+
+      // Explicit deletion via deletedEntityIds removes the deleted item cleanly
+      const afterDelete = mergeMetadataEntityArray(merged, incomingFromDeviceB, { 'item-1': 3000 });
+      expect(afterDelete.find((i) => i.id === 'item-1')).toBeUndefined();
+      expect(afterDelete).toHaveLength(1);
+
+      // Oversized base64 blobs (>180KB) in ticketsVault are slimmed automatically
+      const hugeBase64 = `data:image/png;base64,${'A'.repeat(200_000)}`;
+      const slimmed = slimMetadataPayload({
+        ticketsVault: [{ id: 'vjw-1', title: 'Visit Japan Web', qrCodeUrl: hugeBase64 }],
+      });
+      expect(slimmed.ticketsVault?.[0].qrCodeUrl).toBeUndefined();
+      expect(slimmed.ticketsVault?.[0].hasLargeLocalQr).toBe(true);
+    });
+
+    it('enforces burst rate limits and cross-origin guards on /api/scan-receipt and /api/ai-assistant', () => {
+      for (let i = 0; i < 15; i++) {
+        expect(checkScanReceiptRateLimit('203.0.113.88').allowed).toBe(true);
+      }
+      expect(checkScanReceiptRateLimit('203.0.113.88').allowed).toBe(false);
+
+      for (let i = 0; i < 25; i++) {
+        expect(checkAiAssistantRateLimit('203.0.113.99').allowed).toBe(true);
+      }
+      expect(checkAiAssistantRateLimit('203.0.113.99').allowed).toBe(false);
+
+      const crossReq = new Request('https://app.example.com/api/scan-receipt', {
+        method: 'POST',
+        headers: { host: 'app.example.com', 'sec-fetch-site': 'cross-site' },
+      });
+      expect(isAllowedScanReceiptOrigin(crossReq)).toBe(false);
+      expect(isAllowedAiAssistantOrigin(crossReq)).toBe(false);
+    });
+
+    it('detects duplicate bills by amount, currency, date, and merchant/category and guards double-saving in ScanExpenseModal', async () => {
+      const existingExpenses = [
+        {
+          id: 'exp-101',
+          title: 'AEON MALL KYOTO',
+          amount: 5500,
+          currency: 'JPY',
+          category: 'shopping',
+          spent_at: '2026-12-07',
+          payer_name: 'Pudit',
+        },
+      ];
+
+      const dups = findPotentialDuplicateExpenses(
+        {
+          title: 'AEON MALL KYOTO Supermarket',
+          amount: '5500',
+          currency: 'JPY',
+          category: 'shopping',
+          spent_at: '2026-12-07',
+        },
+        existingExpenses
+      );
+      expect(dups).toHaveLength(1);
+      expect(dups[0].reason).toBe('exact_title_amount_date');
+
+      const onSaveExpense = vi.fn();
+      await act(async () => {
+        root.render(
+          <ScanExpenseModal
+            isOpen={true}
+            mounted={true}
+            onClose={() => {}}
+            userCat={getCatAvatar('cat_pink')}
+            scanning={false}
+            savingExpense={false}
+            hasSavedGeminiKey={true}
+            onOpenAiKeyModal={() => {}}
+            onReceiptImageChange={() => {}}
+            ocrErrorToast={null}
+            ocrSuccessToast={null}
+            scannedData={{
+              title: 'AEON MALL KYOTO',
+              amount: '5500',
+              currency: 'JPY',
+              category: 'shopping',
+              spent_at: '2026-12-07',
+              payer_id: 'me',
+              payment_method: 'cash',
+              items: [],
+            }}
+            setScannedData={() => {}}
+            fxRate={0.235}
+            categories={[{ id: 'shopping', label: 'ช้อปปิ้ง', icon: '🛍️', color: 'pink' }]}
+            allMembersForSplit={[{ id: 'me', name: 'Pudit (ฉัน)', avatar: 'cat_pink' }]}
+            addSplitMode="all"
+            setAddSplitMode={() => {}}
+            addSplitWith={['me']}
+            setAddSplitWith={() => {}}
+            splitAsSeparateExpenses={false}
+            setSplitAsSeparateExpenses={() => {}}
+            onSaveExpense={onSaveExpense}
+            existingExpenses={existingExpenses}
+          />
+        );
+      });
+
+      const alertBanner = document.body.querySelector('[role="alert"]');
+      expect(alertBanner?.textContent).toContain('พบรายการยอดซ้ำในวันเดียวกัน');
+
+      // First click on Save button asks for duplicate confirmation instead of immediately saving
+      const saveBtn = Array.from(document.body.querySelectorAll('button')).find((b) =>
+        (b.textContent || '').includes('ยืนยันบันทึกซ้ำ?')
+      ) as HTMLButtonElement;
+      expect(saveBtn).toBeTruthy();
+
+      await act(async () => {
+        saveBtn.click();
+      });
+      expect(onSaveExpense).not.toHaveBeenCalled();
+
+      // Second click after confirmation proceeds with save
+      await act(async () => {
+        saveBtn.click();
+      });
+      expect(onSaveExpense).toHaveBeenCalledTimes(1);
     });
   });
 });

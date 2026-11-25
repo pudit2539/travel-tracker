@@ -2,6 +2,63 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+const SCAN_RATE_WINDOW_MS = 60_000;
+const MAX_SCAN_REQ_PER_MIN = 15;
+const MAX_TRACKED_SCAN_IPS = 300;
+const scanIpBuckets = new Map<string, number[]>();
+
+const OCR_DEDUP_TTL_MS = 60_000;
+const ocrDedupCache = new Map<string, { expiresAt: number; data: any }>();
+
+export function resetScanReceiptRateLimiterForTests(): void {
+  scanIpBuckets.clear();
+  ocrDedupCache.clear();
+}
+
+export function checkScanReceiptRateLimit(
+  ip: string,
+  nowMs: number = Date.now()
+): { allowed: boolean; retryAfterSec: number } {
+  const key = (ip || 'unknown').trim().slice(0, 80);
+  if (!scanIpBuckets.has(key) && scanIpBuckets.size >= MAX_TRACKED_SCAN_IPS) {
+    const oldest = scanIpBuckets.keys().next().value;
+    if (oldest !== undefined) scanIpBuckets.delete(oldest);
+  }
+  const cutoff = nowMs - SCAN_RATE_WINDOW_MS;
+  const active = (scanIpBuckets.get(key) || []).filter((t) => t > cutoff);
+  if (active.length >= MAX_SCAN_REQ_PER_MIN) {
+    const retryMs = Math.max(1000, active[0] + SCAN_RATE_WINDOW_MS - nowMs);
+    scanIpBuckets.set(key, active);
+    return { allowed: false, retryAfterSec: Math.ceil(retryMs / 1000) };
+  }
+  active.push(nowMs);
+  scanIpBuckets.set(key, active);
+  return { allowed: true, retryAfterSec: 0 };
+}
+
+export function isAllowedScanReceiptOrigin(req: Request): boolean {
+  const secFetchSite = req.headers.get('sec-fetch-site');
+  if (secFetchSite && secFetchSite === 'cross-site') return false;
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+  const origin = req.headers.get('origin');
+  if (origin && host) {
+    try {
+      if (new URL(origin).host !== host) return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
+function buildReceiptDedupKey(imageBase64: string, currency: string): string {
+  const len = imageBase64.length;
+  const head = imageBase64.slice(0, 48);
+  const mid = imageBase64.slice(Math.floor(len / 2), Math.floor(len / 2) + 48);
+  const tail = imageBase64.slice(Math.max(0, len - 48));
+  return `${currency}:${len}:${head}:${mid}:${tail}`;
+}
+
 function buildOcrPrompt(contextCurrency: string = 'THB'): string {
   return `You are a high-precision receipt scanner and OCR engine.
 Analyze this receipt image and extract ONLY information that is physically printed on the receipt.
@@ -45,6 +102,31 @@ Return ONLY a JSON object matching this schema without any markdown formatting o
 
 export async function POST(req: Request) {
   try {
+    if (!isAllowedScanReceiptOrigin(req)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Cross-origin request denied' },
+        { status: 403 }
+      );
+    }
+
+    const clientIp =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      'local';
+    const rateCheck = checkScanReceiptRateLimit(clientIp);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `สแกนใบเสร็จถี่เกินไป กรุณารอ ${rateCheck.retryAfterSec} วินาทีแล้วลองใหม่`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateCheck.retryAfterSec) },
+        }
+      );
+    }
+
     // Auth Check: Protect AI vision quotas from unauthorized bots
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.replace(/^Bearer\s+/i, '');
@@ -69,6 +151,15 @@ export async function POST(req: Request) {
     }
 
     const contextCurrency = String(tripCurrency || 'THB').toUpperCase().trim().substring(0, 3) || 'THB';
+    const dedupKey = buildReceiptDedupKey(imageBase64, contextCurrency);
+    const cachedDedup = ocrDedupCache.get(dedupKey);
+    if (cachedDedup && cachedDedup.expiresAt > Date.now()) {
+      return NextResponse.json({
+        success: true,
+        deduplicated: true,
+        data: cachedDedup.data,
+      });
+    }
     const ocrPrompt = buildOcrPrompt(contextCurrency);
 
     // Check API Keys: Priority header > environment variable
@@ -219,6 +310,11 @@ export async function POST(req: Request) {
         : new Date().toISOString().split('T')[0],
       items: sanitizedItems,
     };
+
+    ocrDedupCache.set(dedupKey, {
+      expiresAt: Date.now() + OCR_DEDUP_TTL_MS,
+      data: resultData,
+    });
 
     return NextResponse.json({
       success: true,

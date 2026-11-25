@@ -2,8 +2,82 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+const AI_RATE_WINDOW_MS = 60_000;
+const MAX_AI_REQ_PER_MIN = 25;
+const MAX_TRACKED_AI_IPS = 300;
+const aiIpBuckets = new Map<string, number[]>();
+
+const AI_DEDUP_TTL_MS = 60_000;
+const aiDedupCache = new Map<string, { expiresAt: number; payload: any }>();
+
+export function resetAiAssistantRateLimiterForTests(): void {
+  aiIpBuckets.clear();
+  aiDedupCache.clear();
+}
+
+export function checkAiAssistantRateLimit(
+  ip: string,
+  nowMs: number = Date.now()
+): { allowed: boolean; retryAfterSec: number } {
+  const key = (ip || 'unknown').trim().slice(0, 80);
+  if (!aiIpBuckets.has(key) && aiIpBuckets.size >= MAX_TRACKED_AI_IPS) {
+    const oldest = aiIpBuckets.keys().next().value;
+    if (oldest !== undefined) aiIpBuckets.delete(oldest);
+  }
+  const cutoff = nowMs - AI_RATE_WINDOW_MS;
+  const active = (aiIpBuckets.get(key) || []).filter((t) => t > cutoff);
+  if (active.length >= MAX_AI_REQ_PER_MIN) {
+    const retryMs = Math.max(1000, active[0] + AI_RATE_WINDOW_MS - nowMs);
+    aiIpBuckets.set(key, active);
+    return { allowed: false, retryAfterSec: Math.ceil(retryMs / 1000) };
+  }
+  active.push(nowMs);
+  aiIpBuckets.set(key, active);
+  return { allowed: true, retryAfterSec: 0 };
+}
+
+export function isAllowedAiAssistantOrigin(req: Request): boolean {
+  const secFetchSite = req.headers.get('sec-fetch-site');
+  if (secFetchSite && secFetchSite === 'cross-site') return false;
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+  const origin = req.headers.get('origin');
+  if (origin && host) {
+    try {
+      if (new URL(origin).host !== host) return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    if (!isAllowedAiAssistantOrigin(req)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Cross-origin request denied' },
+        { status: 403 }
+      );
+    }
+
+    const clientIp =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      'local';
+    const rateCheck = checkAiAssistantRateLimit(clientIp);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `เรียกใช้ AI Assistant ถี่เกินไป กรุณารอ ${rateCheck.retryAfterSec} วินาทีแล้วลองใหม่`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateCheck.retryAfterSec) },
+        }
+      );
+    }
+
     // Auth Check: Protect AI API quotas from unauthorized bots
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.replace(/^Bearer\s+/i, '');
@@ -20,6 +94,11 @@ export async function POST(req: NextRequest) {
     const city = String(body?.city || 'Osaka').trim().slice(0, 80);
     const requestType = String(body?.requestType || '').trim().slice(0, 60);
     const query = String(body?.query || '').trim().slice(0, 240);
+    const dedupKey = `${city.toLowerCase()}::${requestType.toLowerCase()}::${query.toLowerCase()}`;
+    const cachedAi = aiDedupCache.get(dedupKey);
+    if (cachedAi && cachedAi.expiresAt > Date.now()) {
+      return NextResponse.json({ ...cachedAi.payload, deduplicated: true });
+    }
 
     const headerGeminiKey = req.headers.get('x-gemini-key')?.trim() || '';
     const headerAnthropicKey = req.headers.get('x-anthropic-key')?.trim() || '';
@@ -95,13 +174,18 @@ No other text.`;
           const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
           const parsed = extractJsonArray(rawText);
           if (parsed && parsed.length > 0) {
-            return NextResponse.json({
+            const payload = {
               success: true,
               provider: 'gemini',
               model,
               isFallback: false,
               data: { recommendations: parsed },
+            };
+            aiDedupCache.set(dedupKey, {
+              expiresAt: Date.now() + AI_DEDUP_TTL_MS,
+              payload,
             });
+            return NextResponse.json(payload);
           }
         } catch {
           // Try next Gemini model

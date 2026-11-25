@@ -8,6 +8,7 @@ export interface ChecklistItem {
   isAiSuggested?: boolean;
   weatherTag?: string;
   assignee?: string;
+  updatedAt?: number;
 }
 
 export const DEFAULT_PACKING_ITEMS: Omit<ChecklistItem, 'id'>[] = [

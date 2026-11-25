@@ -31,6 +31,7 @@ export interface ShoppingBagItem {
   status: ShoppingItemStatus;
   boughtAt?: string;
   linkedExpenseId?: string;
+  updatedAt?: number;
 }
 
 export const SHOPPING_CATEGORY_META: Record<
@@ -211,9 +212,11 @@ export function addShoppingBagItem(
   item: Omit<ShoppingBagItem, 'id'>
 ): ShoppingBagItem[] {
   const current = getShoppingBag(tripId);
+  const now = Date.now();
   const created: ShoppingBagItem = {
     ...item,
-    id: `shop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    id: `shop-${now}-${Math.random().toString(36).slice(2, 6)}`,
+    updatedAt: now,
   };
   return saveShoppingBag(tripId, [created, ...current]);
 }
@@ -224,14 +227,29 @@ export function updateShoppingBagItem(
   patch: Partial<ShoppingBagItem>
 ): ShoppingBagItem[] {
   const current = getShoppingBag(tripId);
-  const next = current.map((it) => (it.id === itemId ? { ...it, ...patch } : it));
+  const now = Date.now();
+  const next = current.map((it) =>
+    it.id === itemId ? { ...it, ...patch, updatedAt: patch.updatedAt ?? now } : it
+  );
   return saveShoppingBag(tripId, next);
 }
 
 export function deleteShoppingBagItem(tripId: string, itemId: string): ShoppingBagItem[] {
   const current = getShoppingBag(tripId);
   const next = current.filter((it) => it.id !== itemId);
-  return saveShoppingBag(tripId, next);
+  if (typeof window !== 'undefined' && tripId) {
+    try {
+      const serialized = JSON.stringify(next);
+      localStorage.setItem(`${STORAGE_PREFIX}${tripId}`, serialized);
+      shoppingBagMemoryCache.set(tripId, { raw: serialized, parsed: next });
+      window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: { tripId } }));
+      void syncTripMetadataToSupabase(tripId, {
+        shoppingBag: next,
+        deletedEntityIds: { [itemId]: Date.now() },
+      });
+    } catch {}
+  }
+  return next;
 }
 
 export function hydrateShoppingBagFromSupabase(tripId: string, remoteItems: unknown): boolean {

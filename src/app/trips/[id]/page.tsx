@@ -3533,6 +3533,7 @@ export default function TripDetailPage() {
         splitAsSeparateExpenses={splitAsSeparateExpenses}
         setSplitAsSeparateExpenses={setSplitAsSeparateExpenses}
         onSaveExpense={handleSaveExpense}
+        existingExpenses={expenses}
       />
 
       {/* 11. Activity Form Modal (Extracted Component) */}
