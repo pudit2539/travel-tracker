@@ -32,6 +32,12 @@ import {
   getRecentUniqueExpenseTemplates,
 } from '@/components/trip-detail/modals/ScanExpenseModal';
 import { DailyStoryCardModal, buildDailyStorySummaryText } from '@/components/trip-detail/modals/DailyStoryCardModal';
+import { JapanesePhrasebookModal } from '@/components/trip-detail/modals/JapanesePhrasebookModal';
+import {
+  JAPANESE_PHRASEBOOK,
+  filterJapanesePhrases,
+  toggleFavoritePhraseId,
+} from '@/data/japanesePhrasebook';
 import { ShareTripModal } from '@/components/trip-detail/modals/ShareTripModal';
 import { ItineraryCompactRow } from '@/components/trip-detail/ItineraryStopCard';
 import {
@@ -638,6 +644,30 @@ describe('System Review Packs 1–3 Verification', () => {
       const preview = document.body.querySelector('[data-testid="daily-story-card-preview"]');
       expect(preview?.textContent).toContain('AEON MALL KYOTO');
       expect(preview?.textContent).toContain('Hotel The M’s Kyoto');
+    });
+
+    it('renders Japanese Phrasebook dictionary, filters by Thai phonetic/query, toggles favorites, and opens big show card', async () => {
+      const filtered = filterJapanesePhrases(JAPANESE_PHRASEBOOK, 'conbini', 'เวฟ');
+      expect(filtered.some((p) => p.id === 'c3')).toBe(true);
+
+      const favAfterAdd = toggleFavoritePhraseId('c3');
+      expect(favAfterAdd).toContain('c3');
+
+      await act(async () => {
+        root.render(
+          <JapanesePhrasebookModal isOpen={true} mounted={true} onClose={() => {}} />
+        );
+      });
+
+      expect(document.body.textContent).toContain('สมุดพกภาษาญี่ปุ่น');
+      const showCardBtn = document.body.querySelector(
+        'button[aria-label*="ยื่นจอให้ดู"]'
+      ) as HTMLButtonElement;
+      expect(showCardBtn).toBeTruthy();
+      await act(async () => {
+        showCardBtn.click();
+      });
+      expect(document.body.querySelector('[data-testid="phrase-big-show-card"]')).toBeTruthy();
     });
   });
 });

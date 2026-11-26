@@ -19,6 +19,7 @@ import {
   FileText,
   Wrench,
   Stamp,
+  Languages,
 } from 'lucide-react';
 import { ModalPortal } from '@/components/ModalPortal';
 import { triggerHaptic } from '@/lib/haptics';
@@ -50,6 +51,7 @@ interface TripToolsSheetProps {
   onOpenTravelHub: () => void;
   onOpenPrintable: () => void;
   onOpenPassport?: (tab?: 'passport' | 'wrapped') => void;
+  onOpenPhrasebook?: () => void;
 }
 
 interface ToolTile {
@@ -90,6 +92,7 @@ export function TripToolsSheet({
   onOpenTravelHub,
   onOpenPrintable,
   onOpenPassport,
+  onOpenPhrasebook,
 }: TripToolsSheetProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -213,6 +216,18 @@ export function TripToolsSheet({
       accent: 'bg-slate-900/10 text-slate-800 dark:bg-blue-500/15 dark:text-blue-300',
       onClick: () => runAction(onOpenTravelHub),
     },
+    ...(onOpenPhrasebook
+      ? [
+          {
+            id: 'phrasebook',
+            label: 'สมุดคำพูดญี่ปุ่น',
+            subtitle: 'ฝึกพูด • ฟังเสียง • Flashcard',
+            icon: <Languages className="h-4 w-4" />,
+            accent: 'bg-blue-500/12 text-[#2563eb] dark:bg-[#4cd7f6]/15 dark:text-[#4cd7f6]',
+            onClick: () => runAction(onOpenPhrasebook),
+          },
+        ]
+      : []),
   ];
 
   const planAndMemoryTools: ToolTile[] = [

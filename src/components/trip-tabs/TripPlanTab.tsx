@@ -49,6 +49,7 @@ import {
   findOutdoorStopsAfterSunset,
 } from '@/lib/smartTimeline';
 import { DailyStoryCardModal } from '@/components/trip-detail/modals/DailyStoryCardModal';
+import { JapanesePhrasebookModal } from '@/components/trip-detail/modals/JapanesePhrasebookModal';
 import { useIsMounted } from '@/lib/useIsMounted';
 import {
   ShoppingBagItem,
@@ -171,6 +172,7 @@ export const TripPlanTab = React.memo(function TripPlanTab({
 }: TripPlanTabProps) {
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
   const [showDailyStoryModal, setShowDailyStoryModal] = useState(false);
+  const [showPhrasebookModal, setShowPhrasebookModal] = useState(false);
   const isMounted = useIsMounted();
   const [draggedStopId, setDraggedStopId] = useState<string | null>(null);
   const [dragOverStopId, setDragOverStopId] = useState<string | null>(null);
@@ -766,6 +768,19 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             >
               <Utensils className="h-3.5 w-3.5 text-[#0284c7] dark:text-[#b4c5ff] shrink-0" />
               <span>ร้านอร่อย</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setShowPhrasebookModal(true);
+              }}
+              aria-label="เปิดสมุดคำพูดภาษาญี่ปุ่น"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1d4ed8] dark:text-[#4cd7f6] bg-[#eff6ff] dark:bg-[#080e19] border border-[#bfdbfe] dark:border-[#4cd7f6]/30 hover:border-[#2563eb] px-2.5 sm:px-3 py-1.5 rounded-full transition-all cursor-pointer shrink-0 active:scale-95"
+            >
+              <span>🇯🇵</span>
+              <span>คำพูดญี่ปุ่น</span>
             </button>
           </div>
 
@@ -1906,6 +1921,14 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         onOpenTravelHub={() => setShowTravelHubModal(true)}
         onOpenPrintable={() => setShowPrintableModal(true)}
         onOpenPassport={onOpenPassport}
+        onOpenPhrasebook={() => setShowPhrasebookModal(true)}
+      />
+
+      {/* Japanese Dictionary & Speaking Phrasebook Modal */}
+      <JapanesePhrasebookModal
+        isOpen={showPhrasebookModal}
+        mounted={isMounted}
+        onClose={() => setShowPhrasebookModal(false)}
       />
 
       {/* 9:16 Daily Story Card Modal (IG Story / LINE Share) */}
