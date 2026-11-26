@@ -21,6 +21,7 @@ import { getCatAvatar } from '@/lib/avatars';
 import { CategoryItem } from '@/lib/categories';
 import { calculateJapanTaxFree, convertCurrency } from '@/lib/currency';
 import { triggerHaptic } from '@/lib/haptics';
+import { matchMerchantTag } from '@/lib/merchantMatcher';
 import { QUICK_EXPENSE_PRESETS } from '@/lib/tripStatus';
 
 export interface PotentialDuplicateExpense {
@@ -445,16 +446,40 @@ export const ScanExpenseModal = React.memo(function ScanExpenseModal({
 
             {/* Store / Merchant Name */}
             <div>
-              <label className="block text-xs font-bold mb-1 text-slate-800 dark:text-slate-200">
-                ชื่อรายการ / ร้านค้า *
-              </label>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  ชื่อรายการ / ร้านค้า *
+                </label>
+                {(() => {
+                  const merchantMatch = matchMerchantTag(scannedData.title || '');
+                  if (!merchantMatch) return null;
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${merchantMatch.badgeClass}`}
+                    >
+                      <span>{merchantMatch.emoji}</span>
+                      <span>{merchantMatch.label}</span>
+                    </span>
+                  );
+                })()}
+              </div>
               <input
                 type="text"
                 required
                 placeholder="เช่น KFC พระโขนง, Shabu Buffet, ร้านขายยา Matsumoto"
                 className="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-[#24324a] bg-white dark:bg-[#161c27] text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-bold transition-all"
                 value={scannedData.title}
-                onChange={(e) => setScannedData({ ...scannedData, title: e.target.value })}
+                onChange={(e) => {
+                  const nextTitle = e.target.value;
+                  const matched = matchMerchantTag(nextTitle);
+                  setScannedData((prev: any) => ({
+                    ...prev,
+                    title: nextTitle,
+                    ...(matched && (!prev.category || prev.category === 'อื่นๆ')
+                      ? { category: matched.suggestedCategory }
+                      : {}),
+                  }));
+                }}
               />
             </div>
 

@@ -1,7 +1,7 @@
 // src/components/trip-detail/TripHeroCover.tsx
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Calendar, Clock, Compass, Check, Plane } from 'lucide-react';
 import AnimatedNumber from '@/components/AnimatedNumber';
 
@@ -20,6 +20,32 @@ export function TripHeroCover({
   currency = 'JPY',
   showBudget = true 
 }: TripHeroCoverProps) {
+  const parallaxImgRef = useRef<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    let rafId = 0;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        const img = parallaxImgRef.current;
+        if (!img) return;
+        const y = Math.min(window.scrollY || 0, 260);
+        const translateY = Math.round(y * 0.14);
+        img.style.transform = `translate3d(0, ${translateY}px, 0) scale(1.06)`;
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   // Destination Cover Image detection based on trip name or country
   const coverImage = useMemo(() => {
     if (trip?.cover_image) return trip.cover_image;
@@ -126,10 +152,12 @@ export function TripHeroCover({
       <div className="min-h-[136px] sm:min-h-[180px] md:min-h-[204px] w-full relative overflow-hidden flex flex-col justify-between p-3.5 sm:p-5 bg-[#080e19]">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <img
+            ref={parallaxImgRef}
             src={coverImage}
             alt={trip?.name || 'Trip Destination Cover'}
+            style={{ transform: 'translate3d(0, 0, 0) scale(1.06)' }}
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-85"
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-85 will-change-transform"
           />
           {/* Oceanic Glacial Vignette for crisp badge contrast */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#080e19]/80 via-[#080e19]/25 to-[#080e19]/45" />

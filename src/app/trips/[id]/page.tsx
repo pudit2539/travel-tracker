@@ -68,6 +68,7 @@ import { hydrateStopMetaFromSupabase } from '@/lib/smartTimeline';
 import { hydrateShoppingBagFromSupabase, updateShoppingBagItem, ShoppingBagItem, ShoppingItemStatus } from '@/lib/shoppingBag';
 import { hydrateTicketsVaultFromSupabase } from '@/lib/ticketsVault';
 import { hydratePackingChecklistFromSupabase } from '@/lib/packingChecklist';
+import { hydrateStarredPlacesFromSupabase } from '@/lib/starredPlaces';
 import { useTripModals } from '@/hooks/useTripModals';
 import { ScanExpenseModal } from '@/components/trip-detail/modals/ScanExpenseModal';
 import { ActivityFormModal } from '@/components/trip-detail/modals/ActivityFormModal';
@@ -604,6 +605,9 @@ export default function TripDetailPage() {
             }
             if (parsed.packingChecklist && Array.isArray(parsed.packingChecklist) && typeof window !== 'undefined') {
               hydratePackingChecklistFromSupabase(tripId, parsed.packingChecklist);
+            }
+            if (parsed.starredPlaces && Array.isArray(parsed.starredPlaces) && typeof window !== 'undefined') {
+              hydrateStarredPlacesFromSupabase(tripId, parsed.starredPlaces);
             }
             if (parsed.customPlacePhotos && typeof parsed.customPlacePhotos === 'object' && typeof window !== 'undefined') {
               hydrateCustomPlacePhotosFromMap(parsed.customPlacePhotos, tripId);

@@ -54,6 +54,8 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
 
   // Selected Day in Daily Wave Bar Chart
   const [selectedWaveDay, setSelectedWaveDay] = useState<string | null>(null);
+  const [selectedDonutCatId, setSelectedDonutCatId] = useState<string | null>(null);
+  const DONUT_COLORS = ['#2563eb', '#06b6d4', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981', '#6366f1', '#f97316'];
 
   // Raw Target Budget
   const rawBudget = propTargetBudget !== undefined ? propTargetBudget : Number(trip?.total_budget ?? trip?.budget ?? 0);
@@ -868,12 +870,132 @@ export const TripAnalyticsTab = React.memo(function TripAnalyticsTab({
             </div>
           )}
 
+          {/* Animated Interactive SVG Donut Chart Breakdown */}
+          {(() => {
+            const nonZeroCats = categoryMatrixData.list.filter((c) => c.spentInSelected > 0);
+            const totalCatSpend = nonZeroCats.reduce((acc, c) => acc + c.spentInSelected, 0);
+            if (nonZeroCats.length === 0 || totalCatSpend <= 0) return null;
+
+            const radius = 44;
+            const circumference = 2 * Math.PI * radius;
+            let cumulativePercent = 0;
+            const activeSlice = nonZeroCats.find((c) => c.id === selectedDonutCatId) || null;
+
+            return (
+              <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#0d131f]/70 border border-slate-200/80 dark:border-[#24324a] flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative w-32 h-32 shrink-0 flex items-center justify-center">
+                  <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90 overflow-visible">
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r={radius}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="14"
+                      className="text-slate-200/70 dark:text-[#1e293b]"
+                    />
+                    {nonZeroCats.map((cat, index) => {
+                      const sliceRatio = cat.spentInSelected / totalCatSpend;
+                      const sliceLen = Math.max(sliceRatio * circumference, 2);
+                      const dashOffset = -cumulativePercent * circumference;
+                      cumulativePercent += sliceRatio;
+                      const color = DONUT_COLORS[index % DONUT_COLORS.length];
+                      const isSelected = selectedDonutCatId === cat.id;
+
+                      return (
+                        <circle
+                          key={cat.id}
+                          cx="60"
+                          cy="60"
+                          r={radius}
+                          fill="none"
+                          stroke={color}
+                          strokeWidth={isSelected ? '17' : '14'}
+                          strokeDasharray={`${sliceLen} ${circumference}`}
+                          strokeDashoffset={dashOffset}
+                          strokeLinecap="butt"
+                          onClick={() =>
+                            setSelectedDonutCatId((prev) => (prev === cat.id ? null : cat.id))
+                          }
+                          className="cursor-pointer transition-all duration-500 ease-out hover:opacity-90"
+                        />
+                      );
+                    })}
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-3">
+                    {activeSlice ? (
+                      <>
+                        <span className="text-base leading-none">{activeSlice.icon}</span>
+                        <span className="text-xs font-black font-mono text-slate-900 dark:text-white mt-0.5">
+                          {activeSlice.catPercent}%
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 truncate max-w-[74px]">
+                          {activeSlice.label}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                          รวมทั้งหมด
+                        </span>
+                        <span className="text-xs font-black font-mono text-slate-900 dark:text-white">
+                          {totalCatSpend.toLocaleString()}
+                        </span>
+                        <span className="text-[9px] font-bold text-blue-600 dark:text-[#4cd7f6]">
+                          {selectedCurrency}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-1 w-full grid grid-cols-2 gap-1.5">
+                  {nonZeroCats.slice(0, 6).map((cat, index) => {
+                    const color = DONUT_COLORS[index % DONUT_COLORS.length];
+                    const isSelected = selectedDonutCatId === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() =>
+                          setSelectedDonutCatId((prev) => (prev === cat.id ? null : cat.id))
+                        }
+                        className={`flex items-center justify-between gap-1.5 px-2 py-1.5 rounded-xl border text-left text-[11px] transition-all cursor-pointer tactile-press ${
+                          isSelected
+                            ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 dark:border-[#4cd7f6] shadow-2xs'
+                            : 'bg-white dark:bg-[#161c27] border-slate-200/80 dark:border-[#24324a] hover:border-blue-400'
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: color }}
+                          />
+                          <span className="truncate font-bold text-slate-700 dark:text-slate-200">
+                            {cat.icon} {cat.label}
+                          </span>
+                        </span>
+                        <span className="font-mono font-black text-slate-900 dark:text-white shrink-0">
+                          {cat.catPercent}%
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Category List */}
           <div className="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar pr-1">
             {categoryMatrixData.list.map((cat) => (
               <div
                 key={cat.id}
-                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-[#1a202c]/60 border border-slate-200/80 dark:border-[#24324a] space-y-1.5 text-left hover:border-blue-400 transition-all"
+                className={`p-3 rounded-2xl border space-y-1.5 text-left transition-all ${
+                  selectedDonutCatId === cat.id
+                    ? 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-500 dark:border-[#4cd7f6] ring-1 ring-blue-500/30'
+                    : 'bg-slate-50/70 dark:bg-[#1a202c]/60 border-slate-200/80 dark:border-[#24324a] hover:border-blue-400'
+                }`}
               >
                 <div className="flex justify-between items-center text-xs">
                   <div className="flex items-center gap-2">

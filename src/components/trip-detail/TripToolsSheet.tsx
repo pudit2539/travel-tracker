@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   X,
   Plane,
@@ -20,6 +20,8 @@ import {
   Wrench,
   Stamp,
   Languages,
+  Star,
+  Film,
 } from 'lucide-react';
 import { ModalPortal } from '@/components/ModalPortal';
 import { triggerHaptic } from '@/lib/haptics';
@@ -52,6 +54,9 @@ interface TripToolsSheetProps {
   onOpenPrintable: () => void;
   onOpenPassport?: (tab?: 'passport' | 'wrapped') => void;
   onOpenPhrasebook?: () => void;
+  onOpenStarredPlaces?: () => void;
+  onOpenTripReel?: () => void;
+  starredCount?: number;
 }
 
 interface ToolTile {
@@ -93,7 +98,14 @@ export function TripToolsSheet({
   onOpenPrintable,
   onOpenPassport,
   onOpenPhrasebook,
+  onOpenStarredPlaces,
+  onOpenTripReel,
+  starredCount = 0,
 }: TripToolsSheetProps) {
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const touchStartYRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -102,6 +114,32 @@ export function TripToolsSheet({
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose]);
+
+  const handleSheetTouchStart = (e: React.TouchEvent) => {
+    touchStartYRef.current = e.touches[0]?.clientY ?? null;
+    setIsDragging(true);
+  };
+
+  const handleSheetTouchMove = (e: React.TouchEvent) => {
+    if (touchStartYRef.current === null) return;
+    const currentY = e.touches[0]?.clientY ?? touchStartYRef.current;
+    const delta = currentY - touchStartYRef.current;
+    if (delta > 0) {
+      setDragY(Math.min(delta * 0.85, 220));
+    }
+  };
+
+  const handleSheetTouchEnd = () => {
+    setIsDragging(false);
+    touchStartYRef.current = null;
+    if (dragY > 88) {
+      triggerHaptic('light');
+      setDragY(0);
+      onClose();
+    } else {
+      setDragY(0);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -231,6 +269,31 @@ export function TripToolsSheet({
   ];
 
   const planAndMemoryTools: ToolTile[] = [
+    ...(onOpenStarredPlaces
+      ? [
+          {
+            id: 'starred',
+            label: 'สถานที่ & ร้านติดดาว',
+            subtitle: 'รวมร้านเด็ดและจุดอยากไป',
+            icon: <Star className="h-4 w-4 fill-amber-400 text-amber-500" />,
+            accent: 'bg-amber-500/12 text-amber-600 dark:text-amber-400',
+            badge: starredCount > 0 ? `${starredCount}` : undefined,
+            onClick: () => runAction(onOpenStarredPlaces),
+          },
+        ]
+      : []),
+    ...(onOpenTripReel
+      ? [
+          {
+            id: 'trip-reel',
+            label: 'Trip Reel สไลด์โชว์',
+            subtitle: 'เล่นภาพไฮไลท์อัตโนมัติ',
+            icon: <Film className="h-4 w-4" />,
+            accent: 'bg-cyan-500/12 text-cyan-600 dark:text-[#4cd7f6]',
+            onClick: () => runAction(onOpenTripReel),
+          },
+        ]
+      : []),
     ...(onOpenPassport
       ? [
           {
@@ -309,11 +372,24 @@ export function TripToolsSheet({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-[#f8fafd] dark:bg-[#0d131f] border-t sm:border border-[#dbeafe] dark:border-[#4cd7f6]/20 shadow-[0_24px_48px_-12px_rgba(4,9,20,0.6)] max-h-[88dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 modal-safe-card"
+          style={{
+            transform: dragY > 0 ? `translate3d(0, ${dragY}px, 0)` : undefined,
+            transition: isDragging ? 'none' : 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
+          className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-[#f8fafd] dark:bg-[#0d131f] border-t sm:border border-[#dbeafe] dark:border-[#4cd7f6]/20 shadow-[0_24px_48px_-12px_rgba(4,9,20,0.6)] max-h-[88dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 modal-safe-card will-change-transform"
         >
           {/* Mobile Pull Handle + Oceanic Header */}
-          <div className="pt-2.5 px-4 pb-3.5 border-b border-[#e2e8f0] dark:border-[#24324a] bg-white/90 dark:bg-[#161c27]/90 backdrop-blur-xl shrink-0">
-            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-[#334155] mx-auto mb-2.5 sm:hidden" />
+          <div
+            onTouchStart={handleSheetTouchStart}
+            onTouchMove={handleSheetTouchMove}
+            onTouchEnd={handleSheetTouchEnd}
+            className="pt-2.5 px-4 pb-3.5 border-b border-[#e2e8f0] dark:border-[#24324a] bg-white/90 dark:bg-[#161c27]/90 backdrop-blur-xl shrink-0 touch-none"
+          >
+            <div
+              className={`h-1 rounded-full mx-auto mb-2.5 sm:hidden transition-all duration-150 ${
+                isDragging ? 'w-14 bg-[#2563eb] dark:bg-[#4cd7f6]' : 'w-10 bg-slate-300 dark:bg-[#334155]'
+              }`}
+            />
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#0284c7] text-white flex items-center justify-center shadow-[0_4px_14px_rgba(37,99,235,0.35)] shrink-0">

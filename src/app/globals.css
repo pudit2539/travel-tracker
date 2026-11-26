@@ -69,6 +69,84 @@
   ::view-transition-new(*) {
     animation: none;
   }
+  .animate-shimmer-sweep::after,
+  .route-line-draw,
+  .star-pop-active,
+  .trip-reel-kenburns {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Compositor-only (transform + opacity) high-FPS UX Motion Utilities */
+.tactile-press {
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease;
+}
+.tactile-press:active {
+  transform: scale(0.96);
+}
+
+.pill-spring {
+  transition: transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+.pill-spring:active {
+  transform: scale(0.94);
+}
+
+@keyframes starPopKeyframe {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.38) rotate(-8deg); }
+  65% { transform: scale(0.92) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.star-pop-active {
+  animation: starPopKeyframe 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes routeDrawKeyframe {
+  from { stroke-dashoffset: 160; }
+  to { stroke-dashoffset: 0; }
+}
+
+.route-line-draw {
+  stroke-dasharray: 160;
+  stroke-dashoffset: 0;
+  animation: routeDrawKeyframe 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes tripReelKenBurns {
+  0% { transform: scale(1) translate3d(0, 0, 0); }
+  100% { transform: scale(1.06) translate3d(-1%, -1%, 0); }
+}
+
+.trip-reel-kenburns {
+  animation: tripReelKenBurns 5.5s ease-out forwards;
+  will-change: transform;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-pop-active,
+  .route-line-draw,
+  .trip-reel-kenburns {
+    animation: none;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
 }
 
 html {
@@ -500,8 +578,73 @@ input::-ms-clear {
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
-    animation: none !important;
+    animation: none;
   }
+  .animate-shimmer-sweep::after,
+  .route-line-draw,
+  .star-pop-active,
+  .trip-reel-kenburns {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Compositor-only (transform + opacity) high-FPS UX Motion Utilities */
+.tactile-press {
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease;
+}
+.tactile-press:active {
+  transform: scale(0.96);
+}
+
+.pill-spring {
+  transition: transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+.pill-spring:active {
+  transform: scale(0.94);
+}
+
+@keyframes starPopKeyframe {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.38) rotate(-8deg); }
+  65% { transform: scale(0.92) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.star-pop-active {
+  animation: starPopKeyframe 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes routeDrawKeyframe {
+  from { stroke-dashoffset: 160; }
+  to { stroke-dashoffset: 0; }
+}
+
+.route-line-draw {
+  stroke-dasharray: 160;
+  stroke-dashoffset: 0;
+  animation: routeDrawKeyframe 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes tripReelKenBurns {
+  0% { transform: scale(1) translate3d(0, 0, 0); }
+  100% { transform: scale(1.06) translate3d(-1%, -1%, 0); }
+}
+
+.trip-reel-kenburns {
+  animation: tripReelKenBurns 5.5s ease-out forwards;
+  will-change: transform;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 

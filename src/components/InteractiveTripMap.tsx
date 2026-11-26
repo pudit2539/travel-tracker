@@ -1,7 +1,7 @@
 // src/components/InteractiveTripMap.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { 
   MapPin, ExternalLink, Navigation, Compass, 
   Clock, Bus, Utensils, Sparkles, 
@@ -11,6 +11,8 @@ import {
 interface InteractiveTripMapProps {
   itinerary: any[];
   selectedDay?: string;
+  focusedStopId?: string | null;
+  onSelectStopId?: (id: string) => void;
 }
 
 // Helper: Extract clean search query for Google Maps
@@ -45,8 +47,11 @@ export function extractCleanPlaceName(raw: string, city?: string): string {
 export default function InteractiveTripMap({
   itinerary = [],
   selectedDay = 'all',
+  focusedStopId = null,
+  onSelectStopId,
 }: InteractiveTripMapProps) {
   const [selectedStopIdx, setSelectedStopIdx] = useState<number>(0);
+  const [prevFocusedStopId, setPrevFocusedStopId] = useState<string | null>(focusedStopId);
 
   // Filter items based on selected day
   const displayItems = useMemo(() => {
@@ -56,6 +61,16 @@ export default function InteractiveTripMap({
     }
     return itinerary.filter((i) => i.date_label?.trim() === selectedDay);
   }, [itinerary, selectedDay]);
+
+  if (focusedStopId !== prevFocusedStopId) {
+    setPrevFocusedStopId(focusedStopId);
+    if (focusedStopId) {
+      const idx = displayItems.findIndex((item) => item.id === focusedStopId);
+      if (idx >= 0) {
+        setSelectedStopIdx(idx);
+      }
+    }
+  }
 
   // Robust Multi-Stop Directions URL (Capped to max 6 stops to ensure 100% Google Maps transit routing success)
   const multiStopMapsUrl = useMemo(() => {
@@ -145,7 +160,10 @@ export default function InteractiveTripMap({
               <div key={item.id || idx} className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setSelectedStopIdx(idx)}
+                  onClick={() => {
+                    setSelectedStopIdx(idx);
+                    if (item.id && onSelectStopId) onSelectStopId(item.id);
+                  }}
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-md scale-102 ring-2 ring-slate-900/10 dark:ring-white/20'

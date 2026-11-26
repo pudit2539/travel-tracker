@@ -23,6 +23,7 @@ export interface TripMetadataPayload {
   guardianMap?: Record<string, string>;
   livePresence?: Record<string, any>;
   packingChecklist?: any[];
+  starredPlaces?: any[];
   deletedEntityIds?: Record<string, number>;
   sharePrivacy?: {
     hideDates?: boolean;
@@ -270,6 +271,10 @@ export async function syncTripMetadataToSupabase(
           updates.packingChecklist !== undefined
             ? mergeMetadataEntityArray(payload.packingChecklist, updates.packingChecklist, deletedEntityIds)
             : payload.packingChecklist,
+        starredPlaces:
+          updates.starredPlaces !== undefined
+            ? mergeMetadataEntityArray(payload.starredPlaces, updates.starredPlaces, deletedEntityIds)
+            : payload.starredPlaces,
         trainBookings:
           updates.trainBookings !== undefined
             ? mergeMetadataEntityArray(payload.trainBookings, updates.trainBookings, deletedEntityIds)

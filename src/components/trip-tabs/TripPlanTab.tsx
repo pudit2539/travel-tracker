@@ -8,7 +8,8 @@ import {
   LayoutGrid, Rows3, Plane, FolderDown, Sparkles, ExternalLink,
   Clock, ArrowUpToLine, ArrowDownToLine,
   Search, X, Shield, Calendar, Copy, Users,
-  SlidersHorizontal, Zap, Receipt, CheckCircle2, CloudRain, Eye, EyeOff
+  SlidersHorizontal, Zap, Receipt, CheckCircle2, CloudRain, Eye, EyeOff,
+  Star, Film, Luggage
 } from 'lucide-react';
 import { copyToClipboard } from '@/lib/clipboard';
 import { toast } from 'sonner';
@@ -50,6 +51,9 @@ import {
 } from '@/lib/smartTimeline';
 import { DailyStoryCardModal } from '@/components/trip-detail/modals/DailyStoryCardModal';
 import { JapanesePhrasebookModal } from '@/components/trip-detail/modals/JapanesePhrasebookModal';
+import { StarredPlacesModal } from '@/components/trip-detail/modals/StarredPlacesModal';
+import { TripReelModal } from '@/components/trip-detail/modals/TripReelModal';
+import { getStarredPlaces, subscribeStarredPlaces } from '@/lib/starredPlaces';
 import { useIsMounted } from '@/lib/useIsMounted';
 import {
   ShoppingBagItem,
@@ -173,7 +177,20 @@ export const TripPlanTab = React.memo(function TripPlanTab({
   const [showWishlistDrawer, setShowWishlistDrawer] = useState(false);
   const [showDailyStoryModal, setShowDailyStoryModal] = useState(false);
   const [showPhrasebookModal, setShowPhrasebookModal] = useState(false);
+  const [showStarredModal, setShowStarredModal] = useState(false);
+  const [showTripReelModal, setShowTripReelModal] = useState(false);
+  const [focusedMapStopId, setFocusedMapStopId] = useState<string | null>(null);
+  const [packingReminderDismissed, setPackingReminderDismissed] = useState(false);
+  const [starredCount, setStarredCount] = useState(0);
   const isMounted = useIsMounted();
+
+  React.useEffect(() => {
+    const tId = trip?.id;
+    if (!tId) return;
+    const syncStars = () => setStarredCount(getStarredPlaces(tId).length);
+    syncStars();
+    return subscribeStarredPlaces(syncStars);
+  }, [trip?.id]);
   const [draggedStopId, setDraggedStopId] = useState<string | null>(null);
   const [dragOverStopId, setDragOverStopId] = useState<string | null>(null);
   const [reorderAnnouncement, setReorderAnnouncement] = useState('');
@@ -782,6 +799,53 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               <span>🇯🇵</span>
               <span>คำพูดญี่ปุ่น</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setShowStarredModal(true);
+              }}
+              aria-label="เปิดรายการสถานที่และร้านติดดาว"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 hover:border-amber-400 px-2.5 sm:px-3 py-1.5 rounded-full transition-all cursor-pointer shrink-0 active:scale-95 tactile-press"
+            >
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500 shrink-0" />
+              <span>ติดดาว{starredCount > 0 ? ` (${starredCount})` : ''}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setShowTripReelModal(true);
+              }}
+              aria-label="เล่น Trip Reel สไลด์โชว์"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-700 dark:text-[#4cd7f6] bg-cyan-50 dark:bg-[#080e19] border border-cyan-200 dark:border-[#4cd7f6]/30 hover:border-cyan-400 px-2.5 sm:px-3 py-1.5 rounded-full transition-all cursor-pointer shrink-0 active:scale-95 tactile-press"
+            >
+              <Film className="h-3.5 w-3.5 shrink-0" />
+              <span>Reel</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                triggerHaptic('success');
+                const targetStop = displayedItinerary[0] || itinerary[0];
+                const placeLabel = targetStop?.main_place || trip?.destination || trip?.name || 'จุดนัดพบทริป';
+                const cityLabel = targetStop?.city ? ` (${targetStop.city})` : '';
+                const mapsUrl =
+                  targetStop?.main_place_links?.[0] ||
+                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${placeLabel}${cityLabel} Japan`)}`;
+                const msg = `📍 นัดเจอกันที่นี่นะ!\nสถานที่: ${placeLabel}${cityLabel}\nแผนที่: ${mapsUrl}`;
+                await copyToClipboard(msg);
+                toast.success('คัดลอกพิกัดนัดเจอสำหรับส่งใน LINE แล้ว 📍');
+              }}
+              aria-label="คัดลอกหมุดนัดเจอส่ง LINE"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 hover:border-emerald-400 px-2.5 sm:px-3 py-1.5 rounded-full transition-all cursor-pointer shrink-0 active:scale-95 tactile-press"
+            >
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <span>นัดเจอ</span>
+            </button>
           </div>
 
           {/* Right Pinned Controls: On-Trip Focus Toggle + All Tools Sheet */}
@@ -816,6 +880,52 @@ export const TripPlanTab = React.memo(function TripPlanTab({
             </button>
           </div>
         </div>
+
+        {/* Weather-Smart Packing Reminder (shown when trip starts within 14 days) */}
+        {(() => {
+          if (!trip?.start_date || !onOpenPacking || packingReminderDismissed) return null;
+          const start = new Date(trip.start_date);
+          if (Number.isNaN(start.getTime())) return null;
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          start.setHours(0, 0, 0, 0);
+          const daysLeft = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysLeft < 0 || daysLeft > 14) return null;
+          return (
+            <div className="pt-2 border-t border-[#e2e8f0] dark:border-[#24324a] flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-7 h-7 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Luggage className="h-3.5 w-3.5" />
+                </span>
+                <span className="font-bold text-slate-700 dark:text-slate-200 truncate">
+                  {daysLeft === 0
+                    ? 'วันนี้เดินทางแล้ว! เช็กกระเป๋า & เอกสารให้ครบก่อนออก'
+                    : `อีก ${daysLeft} วันจะเดินทาง เช็กสภาพอากาศและจัดกระเป๋ากันเถอะ`}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    onOpenPacking();
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black cursor-pointer tactile-press"
+                >
+                  จัดกระเป๋าเลย
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPackingReminderDismissed(true)}
+                  aria-label="ซ่อนแจ้งเตือนจัดกระเป๋า"
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Active On-Trip Focus Mode Quick One-Hand Bar */}
         {onTripFocusMode && (
@@ -1285,13 +1395,29 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         )}
 
         {/* Bottom Row: Smart Sticky Day Filter Pills with City, Progress & Scroll-Spy */}
-        {availableDays.length > 1 && (
-          <div
-            ref={dayStripRef}
-            className="relative flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5 pb-0.5"
-            role="tablist"
-            aria-label="เลือกวันในแผนเที่ยว"
-          >
+        {availableDays.length > 1 && (() => {
+          const recommendedDay = pickRecommendedFocusDay(daySummaries);
+          return (
+            <div
+              ref={dayStripRef}
+              className="relative flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5 pb-0.5"
+              role="tablist"
+              aria-label="เลือกวันในแผนเที่ยว"
+            >
+              {recommendedDay && selectedDayFilter !== recommendedDay && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    handleSelectDay(recommendedDay);
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-black bg-emerald-600 text-white shadow-xs shrink-0 cursor-pointer tactile-press"
+                  title={`ข้ามกลับมาที่ ${recommendedDay}`}
+                >
+                  <Calendar className="h-3 w-3" />
+                  <span>กลับไปวันนี้</span>
+                </button>
+              )}
             <button
               type="button"
               onClick={() => handleSelectDay('all')}
@@ -1367,7 +1493,8 @@ export const TripPlanTab = React.memo(function TripPlanTab({
               );
             })}
           </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Active Stay Banner for selected day if applicable (with Last Train Home Transit Radar) */}
@@ -1654,25 +1781,41 @@ export const TripPlanTab = React.memo(function TripPlanTab({
                 <span>iPad / Split View</span>
               </div>
               {displayedItinerary.map((item, idx) => (
-                <ItineraryCompactRow
+                <div
                   key={item.id || idx}
-                  item={item}
-                  idx={idx}
-                  canEditPlan={canEditPlan}
-                  currentUser={currentUser}
-                  onOpenEditActivity={handleOpenEditActivity}
-                  onLogExpenseForStop={onLogExpenseForStop}
-                  isDragOver={dragOverStopId === String(item.id) && draggedStopId !== String(item.id)}
-                  onDragStartStop={onReorderActivity ? handleDragStartStop : undefined}
-                  onDragOverStop={onReorderActivity ? handleDragOverStop : undefined}
-                  onDropOnStop={onReorderActivity ? handleDropOnStop : undefined}
-                  onDragEndStop={handleDragEndStop}
-                  onKeyboardMoveStop={handleKeyboardMoveCompactStop}
-                />
+                  onClick={() => {
+                    if (item.id) setFocusedMapStopId(item.id);
+                  }}
+                  className={`rounded-2xl transition-all ${
+                    focusedMapStopId && focusedMapStopId === item.id
+                      ? 'ring-2 ring-[#2563eb] dark:ring-[#4cd7f6]'
+                      : ''
+                  }`}
+                >
+                  <ItineraryCompactRow
+                    item={item}
+                    idx={idx}
+                    canEditPlan={canEditPlan}
+                    currentUser={currentUser}
+                    onOpenEditActivity={handleOpenEditActivity}
+                    onLogExpenseForStop={onLogExpenseForStop}
+                    isDragOver={dragOverStopId === String(item.id) && draggedStopId !== String(item.id)}
+                    onDragStartStop={onReorderActivity ? handleDragStartStop : undefined}
+                    onDragOverStop={onReorderActivity ? handleDragOverStop : undefined}
+                    onDropOnStop={onReorderActivity ? handleDropOnStop : undefined}
+                    onDragEndStop={handleDragEndStop}
+                    onKeyboardMoveStop={handleKeyboardMoveCompactStop}
+                  />
+                </div>
               ))}
             </div>
             <div className="lg:col-span-7 lg:sticky lg:top-24">
-              <InteractiveTripMap itinerary={itinerary} selectedDay={selectedDayFilter} />
+              <InteractiveTripMap
+                itinerary={itinerary}
+                selectedDay={selectedDayFilter}
+                focusedStopId={focusedMapStopId}
+                onSelectStopId={setFocusedMapStopId}
+              />
             </div>
           </div>
         ) : displayLayout === 'thumbnail' ? (
@@ -1922,6 +2065,35 @@ export const TripPlanTab = React.memo(function TripPlanTab({
         onOpenPrintable={() => setShowPrintableModal(true)}
         onOpenPassport={onOpenPassport}
         onOpenPhrasebook={() => setShowPhrasebookModal(true)}
+        onOpenStarredPlaces={() => setShowStarredModal(true)}
+        onOpenTripReel={() => setShowTripReelModal(true)}
+        starredCount={starredCount}
+      />
+
+      {/* Starred Places & Restaurants Modal */}
+      <StarredPlacesModal
+        isOpen={showStarredModal}
+        mounted={isMounted}
+        onClose={() => setShowStarredModal(false)}
+        tripId={trip?.id || ''}
+        onAddToItinerary={(place) => {
+          handleOpenAddActivity(
+            {
+              title: place.title,
+              location: place.city || '',
+            },
+            selectedDayFilter === 'all' ? availableDays[0] : selectedDayFilter
+          );
+        }}
+      />
+
+      {/* Trip Reel Auto Slideshow Modal */}
+      <TripReelModal
+        isOpen={showTripReelModal}
+        mounted={isMounted}
+        onClose={() => setShowTripReelModal(false)}
+        tripTitle={trip?.name || 'ทริปของคุณ'}
+        itinerary={displayedItinerary.length > 0 ? displayedItinerary : itinerary}
       />
 
       {/* Japanese Dictionary & Speaking Phrasebook Modal */}

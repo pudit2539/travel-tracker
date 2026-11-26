@@ -1,7 +1,7 @@
 // src/components/RouteVisualizer.tsx
 'use client';
 
-import { ExternalLink, Navigation, Compass, ChevronRight } from 'lucide-react';
+import { ExternalLink, Navigation, Compass } from 'lucide-react';
 import { extractCleanPlaceName } from '@/components/InteractiveTripMap';
 
 interface RouteVisualizerProps {
@@ -116,8 +116,24 @@ export default function RouteVisualizer({ dayLabel, items = [] }: RouteVisualize
               </a>
 
               {!isLast && (
-                <div className="flex items-center text-slate-300 dark:text-slate-600">
-                  <ChevronRight className="h-4 w-4" />
+                <div className="flex items-center text-[#0284c7] dark:text-[#4cd7f6] px-0.5" aria-hidden="true">
+                  <svg className="w-7 h-4 overflow-visible" viewBox="0 0 28 16" fill="none">
+                    <path
+                      d="M1 8 H23"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeDasharray="4 4"
+                      className="route-line-draw opacity-70"
+                    />
+                    <path
+                      d="M19 4 L24 8 L19 12"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </div>
               )}
             </div>

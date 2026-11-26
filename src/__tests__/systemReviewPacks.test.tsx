@@ -33,6 +33,11 @@ import {
 } from '@/components/trip-detail/modals/ScanExpenseModal';
 import { DailyStoryCardModal, buildDailyStorySummaryText } from '@/components/trip-detail/modals/DailyStoryCardModal';
 import { JapanesePhrasebookModal } from '@/components/trip-detail/modals/JapanesePhrasebookModal';
+import { StarredPlacesModal } from '@/components/trip-detail/modals/StarredPlacesModal';
+import { TripReelModal } from '@/components/trip-detail/modals/TripReelModal';
+import { ReceiptPreviewModal } from '@/components/trip-detail/modals/ReceiptAndAiKeyModals';
+import { toggleStarredPlace, isPlaceStarred, getStarredPlaces } from '@/lib/starredPlaces';
+import { matchMerchantTag } from '@/lib/merchantMatcher';
 import {
   JAPANESE_PHRASEBOOK,
   filterJapanesePhrases,
@@ -668,6 +673,66 @@ describe('System Review Packs 1–3 Verification', () => {
         showCardBtn.click();
       });
       expect(document.body.querySelector('[data-testid="phrase-big-show-card"]')).toBeTruthy();
+    });
+
+    it('toggles starred places/restaurants, matches known merchants, and renders StarredPlacesModal, TripReelModal, and ReceiptPreviewModal zoom/rotate', async () => {
+      const tripId = 'test-starred-trip';
+      const toggled = toggleStarredPlace(tripId, {
+        name: 'Ichiran Ramen Dotonbori',
+        kind: 'food',
+        city: 'Osaka',
+      });
+      expect(toggled.starred).toBe(true);
+      expect(isPlaceStarred(tripId, 'Ichiran Ramen Dotonbori')).toBe(true);
+      expect(getStarredPlaces(tripId).length).toBe(1);
+
+      const merchant = matchMerchantTag('7-Eleven Osaka Station');
+      expect(merchant?.label).toBe('Konbini');
+      expect(merchant?.suggestedCategory).toBe('food');
+
+      await act(async () => {
+        root.render(
+          <StarredPlacesModal isOpen={true} mounted={true} onClose={() => {}} tripId={tripId} />
+        );
+      });
+      expect(document.body.textContent).toContain('Ichiran Ramen Dotonbori');
+
+      await act(async () => {
+        root.render(
+          <TripReelModal
+            isOpen={true}
+            mounted={true}
+            onClose={() => {}}
+            tripTitle="Osaka Trip"
+            itinerary={[{ id: '1', main_place: 'Dotonbori', city: 'Osaka', date_label: 'Day 1' }]}
+          />
+        );
+      });
+      expect(document.body.textContent).toContain('Dotonbori');
+
+      await act(async () => {
+        root.render(
+          <ReceiptPreviewModal
+            previewImage="https://example.com/receipt.jpg"
+            mounted={true}
+            onClose={() => {}}
+            onDownloadReceipt={() => {}}
+          />
+        );
+      });
+      const zoomInBtn = document.body.querySelector('button[aria-label="ซูมเข้า"]') as HTMLButtonElement;
+      const rotateBtn = document.body.querySelector('button[aria-label="หมุนรูป 90 องศา"]') as HTMLButtonElement;
+      expect(zoomInBtn).toBeTruthy();
+      expect(rotateBtn).toBeTruthy();
+
+      await act(async () => {
+        zoomInBtn.click();
+        rotateBtn.click();
+      });
+      expect(document.body.textContent).toContain('150%');
+      const img = document.body.querySelector('img[alt="Receipt Preview"]') as HTMLImageElement;
+      expect(img.style.transform).toContain('scale(1.5)');
+      expect(img.style.transform).toContain('rotate(90deg)');
     });
   });
 });

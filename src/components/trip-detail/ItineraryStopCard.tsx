@@ -3,7 +3,7 @@ import {
   Clock, ExternalLink, Utensils, Bus, ChevronUp, 
   ChevronDown, ArrowUp, ArrowDown, Edit3, Trash2, Shield,
   Navigation, Eye, MoreHorizontal, Camera, ZoomIn,
-  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send, Receipt, GripVertical, ThumbsUp
+  SkipForward, RotateCcw, ShoppingBag, MessageSquare, Calendar, Plus, Send, Receipt, GripVertical, ThumbsUp, Star
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseTransitInfo } from '@/lib/transitGuide';
@@ -40,6 +40,7 @@ import {
 } from '@/components/trip-detail/CustomPlacePhotoModal';
 import { usePlaceVisualMeta, PlaceVisualMeta } from '@/lib/placeThumbnails';
 import { triggerHaptic } from '@/lib/haptics';
+import { isPlaceStarred, subscribeStarredPlaces, toggleStarredPlace } from '@/lib/starredPlaces';
 
 function hasMeaningfulText(val?: string | null): boolean {
   const trimmed = (val || '').trim();
@@ -227,6 +228,31 @@ function ItineraryStopCardComponent({
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [showAdminMenu, setShowAdminMenu] = React.useState(false);
   const [showMoveDayList, setShowMoveDayList] = React.useState(false);
+  const [isStarred, setIsStarred] = React.useState(false);
+
+  React.useEffect(() => {
+    const syncStar = () => {
+      if (item?.trip_id && item?.main_place) {
+        setIsStarred(isPlaceStarred(item.trip_id, item.main_place));
+      }
+    };
+    syncStar();
+    return subscribeStarredPlaces(syncStar);
+  }, [item?.trip_id, item?.main_place]);
+
+  const handleToggleStar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!item?.trip_id || !item?.main_place) return;
+    const result = toggleStarredPlace(item.trip_id, {
+      name: item.main_place,
+      kind: item.food_notes && !item.main_place?.match(/วัด|ศาลเจ้า|ปราสาท|สวน|พิพิธภัณฑ์/) ? 'food' : 'place',
+      city: item.city,
+      mapsUrl: item.main_place_links?.[0],
+    });
+    setIsStarred(result.starred);
+    triggerHaptic(result.starred ? 'success' : 'light');
+    toast.success(result.starred ? `ติดดาว "${item.main_place}" แล้ว ⭐` : `เอาดาว "${item.main_place}" ออกแล้ว`);
+  };
   const [detailsOverride, setDetailsOverride] = React.useState<{
     base: boolean;
     value: boolean;
@@ -527,6 +553,21 @@ function ItineraryStopCardComponent({
                   title={visited ? 'คลิกเพื่อยกเลิกสถานะเช็กอิน (คืนค่าเดิม)' : 'ประทับตราเช็กอิน ⛩️'}
                 >
                   <span>{visited ? `VISITED ${meta?.at || '済'}` : 'CHECK-IN'}</span>
+                </button>
+
+                {/* Starred Favorite Button */}
+                <button
+                  type="button"
+                  onClick={handleToggleStar}
+                  className={`p-1.5 rounded-[6px] border backdrop-blur-xs cursor-pointer transition-all tactile-press ${
+                    isStarred
+                      ? 'bg-amber-400/90 text-slate-950 border-amber-300 shadow-xs star-pop-active'
+                      : 'bg-black/55 hover:bg-black/80 text-white border-white/25'
+                  }`}
+                  title={isStarred ? 'เอาดาวออก' : 'ติดดาวสถานที่/ร้านนี้ ⭐'}
+                  aria-label={isStarred ? 'เอาดาวออก' : 'ติดดาวสถานที่นี้'}
+                >
+                  <Star className={`h-3.5 w-3.5 ${isStarred ? 'fill-slate-950 text-slate-950' : ''}`} />
                 </button>
 
                 {/* Change Photo Quick Button */}
@@ -866,6 +907,32 @@ function ItineraryStopCardComponent({
 
                   {isDetailsOpen && (
                     <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-150">
+                      {/* 1-Tap Coin Locker & Restroom Finder */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            'coin locker ' + (item.main_place || '') + ' ' + (item.city || 'Japan')
+                          )}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#0d131f] hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-[#24324a] text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors tactile-press"
+                        >
+                          <span>🛅</span>
+                          <span>ตู้ฝากกระเป๋า (Locker)</span>
+                        </a>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            'restroom ' + (item.main_place || '') + ' ' + (item.city || 'Japan')
+                          )}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#0d131f] hover:bg-cyan-50 dark:hover:bg-cyan-950/40 border border-slate-200 dark:border-[#24324a] text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors tactile-press"
+                        >
+                          <span>🚻</span>
+                          <span>ห้องน้ำใกล้สุด</span>
+                        </a>
+                      </div>
+
                       {/* Oceanic Pills Container (Amenities, Elevator, Last Train & Smart Badges) */}
                       {(amenities.length > 0 ||
                         elevatorTip ||

@@ -1,9 +1,9 @@
 // src/components/trip-detail/modals/ReceiptAndAiKeyModals.tsx
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, HardDriveDownload, Image as ImageIcon, Sparkles, X } from 'lucide-react';
+import { ChevronRight, HardDriveDownload, Image as ImageIcon, RotateCw, Sparkles, X, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface ReceiptPreviewModalProps {
   previewImage: string | null;
@@ -18,6 +18,14 @@ export const ReceiptPreviewModal = React.memo(function ReceiptPreviewModal({
   onClose,
   onDownloadReceipt,
 }: ReceiptPreviewModalProps) {
+  const [zoom, setZoom] = useState<number>(1);
+  const [rotation, setRotation] = useState<number>(0);
+
+  useEffect(() => {
+    setZoom(1);
+    setRotation(0);
+  }, [previewImage]);
+
   if (!previewImage || !mounted) return null;
 
   return createPortal(
@@ -45,11 +53,66 @@ export const ReceiptPreviewModal = React.memo(function ReceiptPreviewModal({
           </button>
         </div>
 
-        <div className="rounded-2xl overflow-hidden bg-slate-950/20 flex items-center justify-center max-h-[58dvh] sm:max-h-[62dvh]">
+        <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-2xl bg-slate-100/90 dark:bg-[#0d131f] border border-slate-200/80 dark:border-[#24324a]">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(1, Number((z - 0.5).toFixed(1))))}
+              disabled={zoom <= 1}
+              aria-label="ซูมออก"
+              className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#24324a] text-slate-700 dark:text-slate-200 disabled:opacity-40 flex items-center gap-1 cursor-pointer tactile-press"
+            >
+              <ZoomOut className="h-3.5 w-3.5" />
+              <span>-</span>
+            </button>
+            <span className="px-2 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 tabular-nums">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(2.5, Number((z + 0.5).toFixed(1))))}
+              disabled={zoom >= 2.5}
+              aria-label="ซูมเข้า"
+              className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#24324a] text-slate-700 dark:text-slate-200 disabled:opacity-40 flex items-center gap-1 cursor-pointer tactile-press"
+            >
+              <ZoomIn className="h-3.5 w-3.5" />
+              <span>+</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setRotation((r) => (r + 90) % 360)}
+              aria-label="หมุนรูป 90 องศา"
+              className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#161c27] border border-slate-200 dark:border-[#24324a] text-slate-700 dark:text-slate-200 hover:border-blue-400 flex items-center gap-1 cursor-pointer tactile-press"
+            >
+              <RotateCw className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <span>หมุน 90°</span>
+            </button>
+            {(zoom !== 1 || rotation !== 0) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setZoom(1);
+                  setRotation(0);
+                }}
+                className="px-2 py-1.5 rounded-xl text-[10px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white cursor-pointer"
+              >
+                รีเซ็ต
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-2xl overflow-auto bg-slate-950/20 flex items-center justify-center max-h-[54dvh] sm:max-h-[58dvh] p-2">
           <img
             src={previewImage}
             alt="Receipt Preview"
-            className="max-h-[56dvh] sm:max-h-[60dvh] w-auto object-contain rounded-xl shadow-md"
+            style={{
+              transform: `scale(${zoom}) rotate(${rotation}deg)`,
+              transformOrigin: 'center center',
+            }}
+            className="max-h-[50dvh] sm:max-h-[54dvh] w-auto object-contain rounded-xl shadow-md transition-transform duration-200 ease-out will-change-transform"
           />
         </div>
 
